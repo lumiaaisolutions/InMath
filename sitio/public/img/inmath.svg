@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="Cursos Inmath">
+  <!--
+    Isotipo Cursos Inmath v3: libro abierto, solo trazo (sin caja, sin relleno
+    sólido, sin borde) — coherente con el resto de íconos del sistema: una
+    mancha de color difuminada detrás, transparente en los bordes.
+  -->
+  <defs>
+    <linearGradient id="libro-trazo" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3B6FF5"/>
+      <stop offset="1" stop-color="#8B6FF0"/>
+    </linearGradient>
+    <radialGradient id="libro-splash" cx="50%" cy="56%" r="62%">
+      <stop offset="0" stop-color="#8B6FF0" stop-opacity=".38"/>
+      <stop offset="55%" stop-color="#3B6FF5" stop-opacity=".14"/>
+      <stop offset="100%" stop-color="#3B6FF5" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- splash difuminado detrás del libro, sin geometría dura -->
+  <ellipse cx="24" cy="26" rx="23" ry="21" fill="url(#libro-splash)"/>
+  <!-- libro abierto: dos páginas + lomo, solo línea de gradiente -->
+  <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5"
+        fill="none" stroke="url(#libro-trazo)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M24 15 C 31 10.5 38 10 42 13.5 V 33 C 38 29.5 31 30 24 34.5"
+        fill="none" stroke="url(#libro-trazo)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="24" y1="15" x2="24" y2="34.5" stroke="url(#libro-trazo)" stroke-width="1.6" stroke-linecap="round" opacity=".5"/>
+</svg>

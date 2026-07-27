@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cursos Inmath · Mantenimiento</title>
+<style>
+  :root{ --tinta:#16261F; --muted:#55625B; --pino:#3B6FF5; --sol:#F4A62A; --crema:#FBF8F1; --linea:#EAE3D4; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:var(--crema);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--tinta)}
+  .escena{position:fixed;inset:0;display:grid;place-items:center;padding:24px}
+  .escena::before{content:"";position:absolute;inset:0;
+    background-image:linear-gradient(var(--linea) 1px,transparent 1px),linear-gradient(90deg,var(--linea) 1px,transparent 1px);
+    background-size:34px 34px;-webkit-mask-image:radial-gradient(120% 90% at 50% 40%,#000 25%,transparent 75%);
+    mask-image:radial-gradient(120% 90% at 50% 40%,#000 25%,transparent 75%);opacity:.7}
+  .stage{position:relative;text-align:center;display:flex;flex-direction:column;align-items:center;gap:24px;max-width:440px}
+  .tile{width:76px;height:76px;border-radius:22px;background:linear-gradient(120deg,var(--pino),#8B6FF0);
+    display:grid;place-items:center;box-shadow:0 18px 40px rgba(14,90,78,.28)}
+  /* la curva se desdibuja y se rehace en bucle: "reorganizando" */
+  .curva{stroke-dasharray:100;stroke-dashoffset:0;animation:rehacer 4.5s ease-in-out infinite}
+  @keyframes rehacer{0%,12%{stroke-dashoffset:0}38%{stroke-dashoffset:100}50%{stroke-dashoffset:100}76%,100%{stroke-dashoffset:0}}
+  .meta-pt{transform-origin:center;transform-box:fill-box;animation:parpadeo 4.5s ease-in-out infinite}
+  @keyframes parpadeo{0%,38%{opacity:0}62%,100%{opacity:1}}
+  .badge{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--pino);background:#DCEFE8;padding:8px 14px;border-radius:999px}
+  .badge::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--sol)}
+  h1{font-size:22px;font-weight:700;letter-spacing:-.01em}
+  p{color:var(--muted);font-size:14.5px;line-height:1.55;margin-top:8px}
+  .eta{margin-top:6px;font-size:12px;color:var(--pino);letter-spacing:.06em;font-weight:600}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}.curva{stroke-dashoffset:0}.meta-pt{opacity:1}}
+</style>
+</head>
+<body>
+<div class="escena">
+  <div class="stage">
+    <div class="tile" aria-hidden="true">
+      <svg width="50" height="50" viewBox="0 0 48 48">
+        <g stroke="#fff" stroke-opacity=".22" stroke-width="1"><line x1="10" y1="12" x2="10" y2="38"/><line x1="10" y1="38" x2="40" y2="38"/></g>
+        <path d="M10 34 C 17 33, 20 28, 25 24 S 34 14, 39 11" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/>
+        <circle cx="10" cy="34" r="2.4" fill="#fff"/><circle cx="39" cy="11" r="4.2" fill="#fff"/><circle cx="39" cy="11" r="1.9" fill="#F4A62A"/>
+      </svg>
+    </div>
+    <svg viewBox="0 0 340 150" style="width:300px;height:132px" aria-hidden="true">
+      <defs><linearGradient id="g" x1="20" y1="130" x2="320" y2="20" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#3B6FF5"/><stop offset="1" stop-color="#F4A62A"/></linearGradient></defs>
+      <g stroke="#EAE3D4" stroke-width="1"><line x1="30" y1="14" x2="30" y2="126"/><line x1="30" y1="126" x2="320" y2="126"/><line x1="30" y1="70" x2="320" y2="70"/></g>
+      <path class="curva" pathLength="100" d="M40 116 C 90 110, 120 92, 150 76 S 220 46, 250 34 T 320 20"
+        fill="none" stroke="url(#g)" stroke-width="4" stroke-linecap="round"/>
+      <circle class="meta-pt" cx="320" cy="20" r="6" fill="#fff" stroke="#F4A62A" stroke-width="3.5"/>
+    </svg>
+    <div>
+      <span class="badge">Mantenimiento</span>
+      <h1 style="margin-top:16px">Estamos afinando el sistema</h1>
+      <p>Cursos Inmath vuelve en unos minutos. Tu progreso está a salvo — no se pierde nada.</p>
+      <div class="eta">Reanudación estimada · pocos minutos</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,71 @@
+{
+  "name": "07 - Recuperación de carritos abandonados (cron cada hora)",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [{ "field": "hours", "hoursInterval": 1 }] } },
+      "id": "cron",
+      "name": "Cada hora",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.BACKEND_URL }}/api/pagos/abandonados",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" }] }
+      },
+      "id": "abandonados",
+      "name": "Pagos abandonados",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $env.WHATSAPP_PHONE_ID }}/messages",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "Authorization", "value": "=Bearer {{ $env.WHATSAPP_TOKEN }}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.telefono_whatsapp, type: 'template', template: { name: 'recordatorio_pago', language: { code: 'es_MX' }, components: [{ type: 'body', parameters: [{ type: 'text', text: $json.prospecto_nombre ?? 'Hola' }, { type: 'text', text: $json.link_pago }] }] } }) }}"
+      },
+      "id": "recordar",
+      "name": "Enviar plantilla recordatorio_pago",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 0],
+      "notes": "Requiere plantilla 'recordatorio_pago' aprobada por Meta"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.BACKEND_URL }}/api/pagos/{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ recordatorio_enviado_en: $now.toFormat('yyyy-MM-dd HH:mm:ss') }) }}"
+      },
+      "id": "marcar",
+      "name": "Marcar recordatorio enviado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 0]
+    }
+  ],
+  "connections": {
+    "Cada hora": { "main": [[{ "node": "Pagos abandonados", "type": "main", "index": 0 }]] },
+    "Pagos abandonados": { "main": [[{ "node": "Enviar plantilla recordatorio_pago", "type": "main", "index": 0 }]] },
+    "Enviar plantilla recordatorio_pago": { "main": [[{ "node": "Marcar recordatorio enviado", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

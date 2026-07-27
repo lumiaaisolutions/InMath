@@ -1,0 +1,81 @@
+{
+  "name": "04 - Recordatorio de citas (cron cada 15 min)",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [{ "field": "minutes", "minutesInterval": 15 }] } },
+      "id": "cron",
+      "name": "Cada 15 minutos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.BACKEND_URL }}/api/citas/por-recordar",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" }] }
+      },
+      "id": "citas-por-recordar",
+      "name": "Citas por recordar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": { "fieldToSplitOut": "data", "options": {} },
+      "id": "split",
+      "name": "Una cita por item",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [440, 0],
+      "notes": "Ajustar el campo si la respuesta es un arreglo raíz"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $env.WHATSAPP_PHONE_ID }}/messages",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "Authorization", "value": "=Bearer {{ $env.WHATSAPP_TOKEN }}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.telefono_whatsapp, type: 'template', template: { name: 'recordatorio_cita', language: { code: 'es_MX' }, components: [{ type: 'body', parameters: [{ type: 'text', text: $json.prospecto_nombre ?? 'Hola' }, { type: 'text', text: $json.inicio }, { type: 'text', text: $json.meet_link ?? 'por WhatsApp' }] }] } }) }}"
+      },
+      "id": "enviar-recordatorio",
+      "name": "Enviar plantilla recordatorio_cita",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 0],
+      "notes": "Requiere plantilla 'recordatorio_cita' aprobada por Meta (mensaje iniciado por el negocio)"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.BACKEND_URL }}/api/citas/{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ recordatorio_enviado_en: $now.toFormat('yyyy-MM-dd HH:mm:ss') }) }}"
+      },
+      "id": "marcar-enviado",
+      "name": "Marcar recordatorio enviado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 0]
+    }
+  ],
+  "connections": {
+    "Cada 15 minutos": { "main": [[{ "node": "Citas por recordar", "type": "main", "index": 0 }]] },
+    "Citas por recordar": { "main": [[{ "node": "Una cita por item", "type": "main", "index": 0 }]] },
+    "Una cita por item": { "main": [[{ "node": "Enviar plantilla recordatorio_cita", "type": "main", "index": 0 }]] },
+    "Enviar plantilla recordatorio_cita": { "main": [[{ "node": "Marcar recordatorio enviado", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

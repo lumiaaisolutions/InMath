@@ -1,0 +1,131 @@
+{
+  "name": "08 - Reportes semanales de avance (cron lunes 08:00)",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [{ "field": "cronExpression", "expression": "0 8 * * 1" }] } },
+      "id": "cron",
+      "name": "Lunes 08:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.BACKEND_URL }}/api/reportes/generar",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" }] }
+      },
+      "id": "generar",
+      "name": "Generar PDFs de la semana",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [200, 0]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.BACKEND_URL }}/api/reportes/pendientes-envio",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" }] }
+      },
+      "id": "pendientes",
+      "name": "Reportes pendientes de envío",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [400, 0]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.BACKEND_URL }}/api/reportes/{{ $json.id }}/archivo",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" }] },
+        "options": { "response": { "response": { "responseFormat": "file" } } }
+      },
+      "id": "descargar",
+      "name": "Descargar PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [600, 0]
+    },
+    {
+      "parameters": {
+        "conditions": { "options": { "caseSensitive": true }, "conditions": [
+          { "leftValue": "={{ $json.canal }}", "rightValue": "whatsapp", "operator": { "type": "string", "operation": "equals" } }
+        ]}
+      },
+      "id": "por-canal",
+      "name": "¿WhatsApp o correo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [800, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $env.WHATSAPP_PHONE_ID }}/messages",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "Authorization", "value": "=Bearer {{ $env.WHATSAPP_TOKEN }}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.telefono, type: 'template', template: { name: 'reporte_semanal', language: { code: 'es_MX' }, components: [{ type: 'header', parameters: [{ type: 'document', document: { link: $env.BACKEND_URL + '/api/reportes/' + $json.id + '/archivo', filename: 'reporte-avance.pdf' } }] }, { type: 'body', parameters: [{ type: 'text', text: $json.alumno_nombre }] }] } }) }}"
+      },
+      "id": "enviar-wa",
+      "name": "Enviar por WhatsApp (plantilla reporte_semanal)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, -80],
+      "notes": "Plantilla con header de documento aprobada por Meta. Nota: el link del documento debe ser accesible por Meta; alternativa: subir el binario a /media y usar el id."
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "Tu reporte semanal de avance — Cursos Inmath",
+        "message": "Hola {{ $json.alumno_nombre }}, te compartimos tu reporte semanal de avance adjunto.",
+        "options": { "attachmentsUi": { "attachmentsBinary": [{ "property": "data" }] } }
+      },
+      "id": "enviar-mail",
+      "name": "Enviar por correo",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1000, 80],
+      "credentials": { "smtp": { "id": "CONFIGURAR", "name": "SMTP (configurar en n8n)" } }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.BACKEND_URL }}/api/reportes/{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ enviado_en: $now.toFormat('yyyy-MM-dd HH:mm:ss') }) }}"
+      },
+      "id": "marcar",
+      "name": "Marcar enviado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 0]
+    }
+  ],
+  "connections": {
+    "Lunes 08:00": { "main": [[{ "node": "Generar PDFs de la semana", "type": "main", "index": 0 }]] },
+    "Generar PDFs de la semana": { "main": [[{ "node": "Reportes pendientes de envío", "type": "main", "index": 0 }]] },
+    "Reportes pendientes de envío": { "main": [[{ "node": "Descargar PDF", "type": "main", "index": 0 }]] },
+    "Descargar PDF": { "main": [[{ "node": "¿WhatsApp o correo?", "type": "main", "index": 0 }]] },
+    "¿WhatsApp o correo?": { "main": [
+      [{ "node": "Enviar por WhatsApp (plantilla reporte_semanal)", "type": "main", "index": 0 }],
+      [{ "node": "Enviar por correo", "type": "main", "index": 0 }]
+    ]},
+    "Enviar por WhatsApp (plantilla reporte_semanal)": { "main": [[{ "node": "Marcar enviado", "type": "main", "index": 0 }]] },
+    "Enviar por correo": { "main": [[{ "node": "Marcar enviado", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

@@ -1,0 +1,109 @@
+{
+  "name": "01 - WhatsApp entrante → bot → respuesta",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "whatsapp",
+        "responseMode": "lastNode"
+      },
+      "id": "webhook-verificacion",
+      "name": "Webhook verificación (GET de Meta)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, -160]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Meta verifica el webhook con hub.challenge\nconst q = $input.first().json.query;\nif (q['hub.verify_token'] !== $env.WHATSAPP_VERIFY_TOKEN) {\n  throw new Error('Verify token inválido');\n}\nreturn [{ json: { challenge: q['hub.challenge'] } }];"
+      },
+      "id": "responder-challenge",
+      "name": "Responder challenge",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, -160]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp",
+        "responseMode": "onReceived"
+      },
+      "id": "webhook-mensajes",
+      "name": "Webhook mensajes (POST de Meta)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 120]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrae los mensajes de texto del payload de Meta (ignora estados de entrega)\nconst salida = [];\nfor (const entry of $input.first().json.body.entry ?? []) {\n  for (const change of entry.changes ?? []) {\n    const v = change.value ?? {};\n    const contacto = (v.contacts ?? [])[0];\n    for (const m of v.messages ?? []) {\n      if (m.type !== 'text' && m.type !== 'interactive') continue;\n      salida.push({ json: {\n        telefono_whatsapp: m.from,\n        contenido: m.type === 'text' ? m.text.body : (m.interactive?.button_reply?.title ?? m.interactive?.list_reply?.title ?? ''),\n        wa_message_id: m.id,\n        nombre: contacto?.profile?.name ?? null,\n        tipo: m.type === 'text' ? 'texto' : 'interactivo'\n      }});\n    }\n  }\n}\nreturn salida;"
+      },
+      "id": "extraer-mensajes",
+      "name": "Extraer mensajes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 120]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.BACKEND_URL }}/api/bot/procesar",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "procesar-bot",
+      "name": "Backend: procesar con el bot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 120]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Una salida por cada respuesta del bot; conserva el teléfono destino\nconst r = $input.first().json;\nconst tel = $('Extraer mensajes').first().json.telefono_whatsapp;\nreturn (r.respuestas ?? []).map(texto => ({ json: { telefono: tel, texto, accion: r.accion, prospecto_id: r.prospecto_id } }));"
+      },
+      "id": "preparar-envios",
+      "name": "Preparar envíos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 120]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $env.WHATSAPP_PHONE_ID }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.WHATSAPP_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.telefono, type: 'text', text: { body: $json.texto } }) }}"
+      },
+      "id": "enviar-whatsapp",
+      "name": "Enviar por WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 120]
+    }
+  ],
+  "connections": {
+    "Webhook verificación (GET de Meta)": { "main": [[{ "node": "Responder challenge", "type": "main", "index": 0 }]] },
+    "Webhook mensajes (POST de Meta)": { "main": [[{ "node": "Extraer mensajes", "type": "main", "index": 0 }]] },
+    "Extraer mensajes": { "main": [[{ "node": "Backend: procesar con el bot", "type": "main", "index": 0 }]] },
+    "Backend: procesar con el bot": { "main": [[{ "node": "Preparar envíos", "type": "main", "index": 0 }]] },
+    "Preparar envíos": { "main": [[{ "node": "Enviar por WhatsApp", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

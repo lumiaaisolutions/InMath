@@ -1,0 +1,95 @@
+{
+  "name": "03 - Cita creada → evento Google Calendar + Meet + confirmación",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cita-creada",
+        "responseMode": "onReceived"
+      },
+      "id": "webhook-cita",
+      "name": "Webhook cita creada",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "notes": "El flujo 01 llama aquí cuando la respuesta del backend trae 'cita'. Body esperado: { cita: {...}, telefono, prospecto_nombre }"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.BACKEND_URL }}/api/asesores",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" }] }
+      },
+      "id": "obtener-asesores",
+      "name": "Obtener calendario del asesor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "resource": "event",
+        "operation": "create",
+        "calendar": "={{ $json.asesores.find(a => a.id === $('Webhook cita creada').first().json.cita.asesor_id)?.google_calendar_id }}",
+        "start": "={{ $('Webhook cita creada').first().json.cita.inicio }}",
+        "end": "={{ $('Webhook cita creada').first().json.cita.fin }}",
+        "additionalFields": {
+          "summary": "=Asesoría Cursos Inmath — {{ $('Webhook cita creada').first().json.prospecto_nombre }}",
+          "conferenceDataUi": { "conferenceDataValues": { "conferenceSolution": "hangoutsMeet" } }
+        }
+      },
+      "id": "crear-evento",
+      "name": "Crear evento con Meet",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [440, 0],
+      "credentials": { "googleCalendarOAuth2Api": { "id": "CONFIGURAR", "name": "Google Calendar (configurar en n8n)" } }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.BACKEND_URL }}/api/citas/{{ $('Webhook cita creada').first().json.cita.id }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ google_event_id: $json.id, meet_link: $json.hangoutLink ?? null }) }}"
+      },
+      "id": "guardar-evento",
+      "name": "Guardar event_id y meet_link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $env.WHATSAPP_PHONE_ID }}/messages",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "Authorization", "value": "=Bearer {{ $env.WHATSAPP_TOKEN }}" },
+          { "name": "Content-Type", "value": "application/json" }
+        ]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $('Webhook cita creada').first().json.telefono, type: 'text', text: { body: 'Tu cita quedó confirmada. Enlace de la videollamada: ' + ($('Crear evento con Meet').first().json.hangoutLink ?? 'te lo compartimos en breve') } }) }}"
+      },
+      "id": "confirmar-whatsapp",
+      "name": "Confirmación por WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 0]
+    }
+  ],
+  "connections": {
+    "Webhook cita creada": { "main": [[{ "node": "Obtener calendario del asesor", "type": "main", "index": 0 }]] },
+    "Obtener calendario del asesor": { "main": [[{ "node": "Crear evento con Meet", "type": "main", "index": 0 }]] },
+    "Crear evento con Meet": { "main": [[{ "node": "Guardar event_id y meet_link", "type": "main", "index": 0 }]] },
+    "Guardar event_id y meet_link": { "main": [[{ "node": "Confirmación por WhatsApp", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

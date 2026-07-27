@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cursos Inmath · Pantallas de estado</title>
+<style>
+  :root{ --tinta:#16261F; --muted:#55625B; --pino:#3B6FF5; --sol:#F4A62A; --crema:#FBF8F1; --linea:#EAE3D4; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--crema);color:var(--tinta);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:32px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  header h1{font-size:18px;font-weight:700}
+  header h1 span{color:var(--pino)}
+  .tabs{display:flex;gap:8px;margin:22px 0}
+  .tabs button{font:600 13px/1 inherit;border:1px solid var(--linea);background:#fff;color:var(--muted);
+    padding:9px 15px;border-radius:999px;cursor:pointer;transition:.15s}
+  .tabs button.on{background:var(--pino);color:#fff;border-color:var(--pino)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .grid.solo{grid-template-columns:1fr;max-width:900px}
+  figure{margin:0;border:1px solid var(--linea);border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(22,38,31,.07)}
+  figure figcaption{padding:10px 14px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--linea)}
+  iframe{width:100%;height:360px;border:0;display:block}
+  .grid.solo iframe{height:560px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+  <header>
+    <svg width="30" height="30" viewBox="0 0 48 48"><defs><linearGradient id="i" x1="4" y1="44" x2="44" y2="4" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3B6FF5"/><stop offset="1" stop-color="#F4A62A"/></linearGradient></defs><rect x="2" y="2" width="44" height="44" rx="13" fill="url(#i)"/><path d="M10 34 C 17 33, 20 28, 25 24 S 34 14, 39 11" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/><circle cx="10" cy="34" r="2.4" fill="#fff"/><circle cx="39" cy="11" r="4.2" fill="#fff"/><circle cx="39" cy="11" r="1.9" fill="#F4A62A"/></svg>
+    <h1>Cursos <span>Inmath</span> · Pantallas de estado</h1>
+  </header>
+  <div class="tabs">
+    <button class="on" data-v="grid">Las tres</button>
+    <button data-v="normal">Cargando</button>
+    <button data-v="maintenance">Mantenimiento</button>
+    <button data-v="server-down">503</button>
+  </div>
+  <div id="vista" class="grid">
+    <figure><iframe src="loading-normal.html"></iframe><figcaption>Cargando</figcaption></figure>
+    <figure><iframe src="loading-maintenance.html"></iframe><figcaption>Mantenimiento programado</figcaption></figure>
+    <figure><iframe src="loading-server-down.html"></iframe><figcaption>503 · servicio no disponible</figcaption></figure>
+  </div>
+<script>
+  var vista=document.getElementById('vista'),archivo={normal:'loading-normal.html',maintenance:'loading-maintenance.html','server-down':'loading-server-down.html'};
+  document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){
+    document.querySelectorAll('.tabs button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');
+    var v=b.dataset.v;
+    if(v==='grid'){vista.className='grid';vista.innerHTML=
+      '<figure><iframe src="loading-normal.html"></iframe><figcaption>Cargando</figcaption></figure>'+
+      '<figure><iframe src="loading-maintenance.html"></iframe><figcaption>Mantenimiento programado</figcaption></figure>'+
+      '<figure><iframe src="loading-server-down.html"></iframe><figcaption>503 · servicio no disponible</figcaption></figure>';}
+    else{vista.className='grid solo';vista.innerHTML='<figure><iframe src="'+archivo[v]+'"></iframe></figure>';}
+  };});
+</script>
+</body>
+</html>
