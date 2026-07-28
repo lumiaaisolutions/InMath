@@ -353,10 +353,12 @@ function pieSitio(): void
 </footer>
 <?= agenteIA() ?>
 <script>
-/* Alterna de .scrub: en navegadores sin animation-timeline:view() (Safari)
-   recalcula a mano el mismo crossfade + Ken Burns leyendo el scroll. */
+/* Alterna de .scrub: en navegadores donde animation-timeline:view() no corre
+   de verdad (Safari, incluso versiones donde CSS.supports() miente y dice
+   que sí lo soporta) recalcula a mano el mismo crossfade + Ken Burns leyendo
+   el scroll. La detección usa getAnimations() (ver más abajo) en vez de
+   CSS.supports, que resultó poco fiable en Safari. */
 (function () {
-  if (window.CSS && CSS.supports && CSS.supports('animation-timeline: view()')) return;
   if (window.matchMedia && !matchMedia('(prefers-reduced-motion: no-preference)').matches) return;
   var cajas = Array.prototype.slice.call(document.querySelectorAll('.scrub'));
   if (!cajas.length) return;
@@ -379,19 +381,34 @@ function pieSitio(): void
       var f1 = caja.querySelector('.scrub-frame.f1'), f2 = caja.querySelector('.scrub-frame.f2');
       if (!f1 || !f2) return;
       var p = progreso(caja), lp = enRango(p, 0.15, 0.85);
-      f1.style.opacity = opacidadCruce(lp, false);
-      f2.style.opacity = opacidadCruce(lp, true);
-      f1.style.transform = 'scale(' + mezcla(1.1, 1, p) + ') translate(' + mezcla(0, -1.5, p) + '%, ' + mezcla(0, 1.5, p) + '%)';
-      f2.style.transform = 'scale(' + mezcla(1, 1.1, p) + ') translate(' + mezcla(1.5, 0, p) + '%, ' + mezcla(-1.5, 0, p) + '%)';
+      f1.style.setProperty('opacity', opacidadCruce(lp, false), 'important');
+      f2.style.setProperty('opacity', opacidadCruce(lp, true), 'important');
+      f1.style.setProperty('transform', 'scale(' + mezcla(1.1, 1, p) + ') translate(' + mezcla(0, -1.5, p) + '%, ' + mezcla(0, 1.5, p) + '%)', 'important');
+      f2.style.setProperty('transform', 'scale(' + mezcla(1, 1.1, p) + ') translate(' + mezcla(1.5, 0, p) + '%, ' + mezcla(-1.5, 0, p) + '%)', 'important');
     });
     marcado = false;
   }
   var marcado = false;
   function pedir() { if (!marcado) { marcado = true; requestAnimationFrame(pintar); } }
+  function activarFallback() {
+    window.addEventListener('scroll', pedir, { passive: true });
+    window.addEventListener('resize', pedir);
+    pintar();
+  }
 
-  window.addEventListener('scroll', pedir, { passive: true });
-  window.addEventListener('resize', pedir);
-  pintar();
+  // Prueba real (no CSS.supports, poco fiable en Safari): usamos la Web
+  // Animations API para ver si el navegador de verdad tiene programada la
+  // animación scrubOut/kenburns1 en el elemento. getAnimations() solo
+  // devuelve animaciones que el motor realmente va a ejecutar. Se espera un
+  // frame a que termine el layout antes de preguntar.
+  var primera = cajas[0].querySelector('.scrub-frame.f1');
+  if (!primera || typeof primera.getAnimations !== 'function') { activarFallback(); return; }
+  requestAnimationFrame(function () {
+    var corriendo = primera.getAnimations().some(function (anim) {
+      return anim.animationName === 'scrubOut' || anim.animationName === 'kenburns1';
+    });
+    if (!corriendo) activarFallback();
+  });
 })();
 </script>
 </body>

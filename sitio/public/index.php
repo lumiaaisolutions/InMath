@@ -45,7 +45,6 @@ cabeceraSitio('Cursos Inmath — Aprende en línea a tu ritmo');
   <?= mallaSitio() ?>
   <div class="heroe-rej">
     <div class="heroe-texto reveal-mueve">
-      <span class="eyebrow"><?= icono('book', 'ic-ey') ?> Cursos en línea</span>
       <h1>Cursos en línea que sí terminas, con <span class="marca">acompañamiento</span> de verdad.</h1>
       <p class="entrada">Clases para estudiar cuando puedas, un asesor que te guía por WhatsApp
         y un reporte de tu avance cada semana. Aprendes a tu ritmo, sin perder el hilo.</p>

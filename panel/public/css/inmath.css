@@ -17,7 +17,9 @@
   --pino-900:   #171F45;
   --sol:        #F4A62A;   /* apoyo */
   --sol-600:    #E08E12;
-  --lila:       #8B6FF0;
+  /* --lila conserva el nombre por compatibilidad, pero ya no es morado:
+     es un teal-cian que combina con azul/verde (sin morado en el sistema). */
+  --lila:       #1E9EB8;
   --grad:       linear-gradient(120deg, var(--pino), var(--lila));
 
   --ok:         #12855C;  --ok-suave:     #E4F5EC;
@@ -262,7 +264,7 @@ table.lista tbody tr:hover td { background: var(--crema); }
    Superficies suaves (paridad con el sitio): nada cuadrado, sin bordes duros,
    borde superior desvanecido a transparente y splash de color difuminado.
    ========================================================================= */
-:root { --r-s: 12px; --r-m: 18px; --r-l: 24px; --p-lila:#E9E1FF; --p-cielo:#D9EEFB; }
+:root { --r-s: 12px; --r-m: 18px; --r-l: 24px; --p-lila:#D6F1F3; --p-cielo:#D9EEFB; }
 
 .tarjeta, .tarjeta-prospecto, .chat, .login-caja {
   border: 0 !important;

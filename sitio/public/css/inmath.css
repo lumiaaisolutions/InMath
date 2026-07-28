@@ -25,11 +25,14 @@
   --pino: #0E9E7E;   /* pino aclarado hacia teal para armonizar con azul */
   --sol:  #F4A62A;
   --rosa: #E5568A;
-  --lila: #8B6FF0;
+  /* --lila: se conserva el nombre de la variable por compatibilidad con el
+     resto del CSS, pero ya no es morado — es un teal-cian que combina con
+     azul/pino (regla: sin morado en el sistema, solo azul/verde/pastel). */
+  --lila: #1E9EB8;
 
   /* Pasteles (30% — washes y malla) */
   --p-azul:    #DCE8FF;
-  --p-lila:    #E9E1FF;
+  --p-lila:    #D6F1F3;
   --p-menta:   #D6F2E8;
   --p-durazno: #FCE6D4;
   --p-rosa:    #FBE1EC;
@@ -765,27 +768,27 @@ body::before {
   content: "" !important; position: absolute !important; inset: -36% !important; z-index: -1 !important;
   border-radius: 29% 71% 68% 32% / 38% 32% 68% 62% !important; transform: rotate(-9deg) !important;
   background:
-    radial-gradient(120% 120% at 28% 22%, rgba(255,255,255,.35), transparent 32%),
-    color-mix(in srgb, var(--acc, var(--azul)) 30%, transparent) !important;
-  filter: blur(6px);
-  opacity: .85;
+    radial-gradient(120% 120% at 28% 22%, rgba(255,255,255,.45), transparent 32%),
+    color-mix(in srgb, var(--acc, var(--azul)) 18%, transparent) !important;
+  filter: blur(7px);
+  opacity: .75;
   transition: filter var(--t), transform var(--t), border-radius var(--t);
 }
 .tile-ic::after, .paso-ic::after, .mock-play::after, .area .pt::after {
   content: "" !important; position: absolute !important; inset: -22% -30% -30% -18% !important; z-index: -1 !important;
   border-radius: 66% 34% 42% 58% / 60% 55% 45% 40% !important; transform: rotate(12deg) !important;
-  background: color-mix(in srgb, var(--acc, var(--azul)) 22%, transparent) !important;
-  filter: blur(7px);
-  opacity: .7;
+  background: color-mix(in srgb, var(--acc, var(--azul)) 13%, transparent) !important;
+  filter: blur(8px);
+  opacity: .6;
   transition: filter var(--t), transform var(--t), border-radius var(--t);
 }
 .tile-ic svg, .paso-ic svg, .mock-play svg { position: relative; z-index: 1; }
 .tile-ic.alt::before {
   background:
-    radial-gradient(120% 120% at 28% 22%, rgba(255,255,255,.35), transparent 32%),
-    color-mix(in srgb, var(--lila) 30%, transparent) !important;
+    radial-gradient(120% 120% at 28% 22%, rgba(255,255,255,.45), transparent 32%),
+    color-mix(in srgb, var(--lila) 18%, transparent) !important;
 }
-.tile-ic.alt::after { background: color-mix(in srgb, var(--lila) 22%, transparent) !important; }
+.tile-ic.alt::after { background: color-mix(in srgb, var(--lila) 13%, transparent) !important; }
 .card:hover .tile-ic { transform: translateY(-6px) rotate(-4deg); }
 .card:hover .tile-ic::before { filter: blur(8px); transform: scale(1.1) rotate(-16deg); border-radius: 68% 32% 35% 65% / 55% 65% 35% 45%; }
 .card:hover .tile-ic::after { filter: blur(9px); transform: scale(1.12) rotate(22deg); }
