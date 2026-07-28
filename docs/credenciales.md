@@ -108,10 +108,27 @@ Estas dependen del cliente y aún no existen (ver [`fases-y-pendientes.md`](fase
 
 ## Checklist de endurecimiento antes de producción
 
-- [ ] Cambiar la contraseña de los 4 usuarios seed.
-- [ ] Generar `API_KEY` nueva (32 bytes) y ponerla también en n8n.
-- [ ] Generar `PAGO_WEBHOOK_SECRET` nuevo.
-- [ ] `APP_ENV=produccion` (oculta el detalle de los errores 500).
-- [ ] Usuario de MySQL dedicado con permisos mínimos (no `root`).
-- [ ] Servir todo por HTTPS (Meta exige HTTPS para el webhook de WhatsApp).
-- [ ] Quitar `BOT_SIMULADO` cuando exista `ANTHROPIC_API_KEY`.
+- [ ] Cambiar la contraseña de los 4 usuarios seed. *(producción sigue con la contraseña de prueba documentada arriba — cambiarla antes de dar acceso real a asesores)*
+- [x] Generar `API_KEY` nueva (32 bytes) y ponerla también en n8n. *(generada en producción; falta configurarla en n8n cuando exista)*
+- [x] Generar `PAGO_WEBHOOK_SECRET` nuevo. *(generado en producción)*
+- [x] `APP_ENV=produccion` (oculta el detalle de los errores 500).
+- [x] Usuario de MySQL dedicado con permisos mínimos (no `root`).
+- [x] Servir todo por HTTPS (Meta exige HTTPS para el webhook de WhatsApp). *(SSL automático de Hostinger)*
+- [ ] Quitar `BOT_SIMULADO` cuando exista `ANTHROPIC_API_KEY`. *(sigue en `1`; el bot de WhatsApp no está conectado aún, solo el agente Mathy vía Gemini)*
+
+## Agente de IA "Mathy" (Gemini) — producción
+
+- **Variables:** `GEMINI_API_KEY`, `GEMINI_MODEL=gemini-3.6-flash` en `backend/.env`.
+- **Cliente:** `backend/src/IA/GeminiClient.php`. Fija
+  `generationConfig.thinkingConfig.thinkingLevel = "low"` — necesario porque,
+  con la configuración por defecto, Gemini 3.6 Flash gasta la mayoría del
+  presupuesto de `maxOutputTokens` en razonamiento interno y la respuesta al
+  usuario llega cortada a la mitad (`finishReason: MAX_TOKENS` con el texto
+  final trunco). Confirmado contra la API real antes de fijar el valor.
+- **Endpoints:** `sitio/public/api/agente.php` (público, valida CSRF) y
+  `/panel/accion/agente-ia` (requiere sesión de panel, en
+  `panel/lib/acciones.php`). Cada uno tiene su propio system prompt — el del
+  sitio orientado a prospectos, el del panel orientado a asesores usando el
+  CRM.
+- Generar una API key nueva desde [Google AI Studio](https://aistudio.google.com/apikey)
+  si hay que rotarla.

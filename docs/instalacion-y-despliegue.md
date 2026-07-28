@@ -76,3 +76,62 @@ mantenimiento / 503). Para usarlas como página de error:
 ## Seguridad al desplegar
 
 Ver el checklist de endurecimiento en [`credenciales.md`](credenciales.md#checklist-de-endurecimiento-antes-de-producción).
+
+## Producción actual: Hostinger (inmath.lumiaaisolutions.com)
+
+El sitio y el panel están desplegados en un hosting compartido de Hostinger
+(plan Business, cuenta `u221820910`), bajo el subdominio
+`inmath.lumiaaisolutions.com`, con SSL automático (Let's Encrypt vía hPanel).
+
+**Disposición de carpetas (distinta al repo local):** en el servidor, el
+contenido de `sitio/public/` se despliega directo en `public_html/` (sin la
+carpeta `sitio/` ni `public/` intermedias), y el de `panel/public/` en
+`public_html/panel/`. `backend/` cuelga de la raíz de la cuenta, **fuera** de
+`public_html/` (no accesible por HTTP). Por eso `BACKEND_PATH` y `PANEL_PATH`
+en `sitio/public/_comun.php` y `panel/public/index.php` no usan una
+profundidad fija de `dirname()`: prueban primero si `../backend` existe a 1
+nivel y si no, prueban a 2 (ver el comentario en cada archivo). Si cambia la
+disposición de despliegue, revisar esa lógica antes de asumir que un
+`dirname(__DIR__, N)` fijo va a funcionar.
+
+El panel se sirve como subcarpeta del mismo dominio
+(`inmath.lumiaaisolutions.com/panel`), no como subdominio propio — por eso
+existe `PANEL_BASE_PATH=/panel` en `backend/.env` y el helper `u()` /
+`rutaPanel()` en `panel/lib/ayuda.php` que agregan/quitan ese prefijo en vez
+de asumir que el panel vive en la raíz de su propio host.
+
+**Despliegue de código:** GIT deploy de hPanel (Advanced → GIT), apuntando al
+repo público `https://github.com/lumiaaisolutions/InMath.git`, rama `main`.
+hPanel clona a un directorio temporal dentro de `public_html/`; hay que mover
+manualmente el contenido a su lugar final (ver estructura arriba) porque el
+clon conserva la disposición del repo (`sitio/public/`, `panel/public/`, etc.)
+y no la disposición aplanada que ya vive en el servidor. **Al mover archivos
+individuales sobre un archivo ya existente con el mismo nombre, el "Move" del
+file manager de Hostinger falla en silencio (no sobreescribe, no avisa)** —
+hay que borrar el archivo destino primero y luego mover el nuevo.
+
+**Base de datos:** MySQL de Hostinger, base `u221820910_inmath`, usuario
+dedicado `u221820910_inmath` (no root). Migraciones y seeds se cargaron a mano
+vía el editor SQL de phpMyAdmin (no hay SSH con acceso a `mysql` CLI en este
+plan para el usuario de la app, aunque sí hay SSH de cuenta — ver abajo).
+
+**Agente de IA (Mathy):** usa Google Gemini (`gemini-3.6-flash`), configurado
+en `backend/.env` con `GEMINI_API_KEY` y `GEMINI_MODEL`. El cliente
+(`backend/src/IA/GeminiClient.php`) fija `thinkingConfig.thinkingLevel: low`
+— sin esto, el modelo gasta la mayoría de `maxOutputTokens` en razonamiento
+interno ("thinking") y la respuesta llega cortada a la mitad (visto en vivo:
+383 de 400 tokens usados en pensamiento, texto final trunco en
+`finishReason: MAX_TOKENS`).
+
+**SSH:** hay acceso SSH a la cuenta (`ssh -p 65002 u221820910@86.38.202.72`),
+pero requiere contraseña que no se ha configurado en esta sesión — todo el
+despliegue se hizo vía hPanel (GIT deploy) y el file manager web
+(`srv943-files.hstgr.io`), sin necesitar terminal.
+
+**Variables de entorno de producción** (`backend/.env`, no versionado):
+mismas claves que `backend/.env.example` más `GEMINI_API_KEY`,
+`GEMINI_MODEL` y `PANEL_BASE_PATH=/panel`. El archivo `.env` no se puede
+guardar directamente vía el editor del file manager si el WAF de Hostinger
+bloquea escrituras a archivos llamados exactamente `.env` (protección
+anti-scanner común en hosting compartido) — el workaround es crear el
+contenido bajo otro nombre de archivo y renombrarlo después.
