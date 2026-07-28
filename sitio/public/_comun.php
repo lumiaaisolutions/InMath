@@ -13,7 +13,11 @@ if (PHP_SAPI === 'cli-server') {
     }
 }
 
-define('BACKEND_PATH', dirname(__DIR__, 2) . '/backend');
+// dirname(__DIR__, 2) asume la disposición del repo local (sitio/public ->
+// raíz, junto a backend/). Algunos hostings resuelven __DIR__ como una ruta
+// real más plana (p. ej. si el contenido de sitio/public/ se despliega
+// directo en public_html/), así que se detecta cada caso.
+define('BACKEND_PATH', dirname(__DIR__, is_dir(dirname(__DIR__, 1) . '/backend') ? 1 : 2) . '/backend');
 
 spl_autoload_register(function (string $clase): void {
     if (str_starts_with($clase, 'App\\')) {
@@ -172,7 +176,7 @@ function agenteIA(): string
     $csrf = e(csrfSitio());
     return <<<HTML
 <div class="agente-ia" id="agenteIA" data-endpoint="/api/agente.php" data-csrf="{$csrf}">
-  <button type="button" class="agente-btn" id="agenteBtn" aria-expanded="false" aria-controls="agentePanel" aria-label="Abrir asistente de Cursos Inmath">
+  <button type="button" class="agente-btn" id="agenteBtn" aria-expanded="false" aria-controls="agentePanel" aria-label="Abrir a Mathy, el asistente de Cursos Inmath">
     <svg class="agente-libro" viewBox="0 0 48 48" aria-hidden="true">
       <defs>
         <linearGradient id="agicono-trazo" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
@@ -182,20 +186,31 @@ function agenteIA(): string
       <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="url(#agicono-trazo)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
       <path d="M24 15 C 31 10.5 38 10 42 13.5 V 33 C 38 29.5 31 30 24 34.5" fill="none" stroke="url(#agicono-trazo)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
       <line x1="24" y1="15" x2="24" y2="34.5" stroke="url(#agicono-trazo)" stroke-width="1.6" stroke-linecap="round" opacity=".5"/>
-      <rect class="agente-ojo i" x="19.4" y="19" width="2.8" height="2.8"/>
-      <rect class="agente-ojo d" x="25.8" y="19" width="2.8" height="2.8"/>
+      <rect class="agente-ojo i" x="18.6" y="18.4" width="3.8" height="3.8"/>
+      <rect class="agente-ojo d" x="25.6" y="18.4" width="3.8" height="3.8"/>
     </svg>
   </button>
-  <div class="agente-panel abriendo" id="agentePanel" role="dialog" aria-modal="false" aria-label="Asistente de Cursos Inmath" hidden>
+  <div class="agente-panel abriendo" id="agentePanel" role="dialog" aria-modal="false" aria-label="Mathy, el asistente de Cursos Inmath" hidden>
     <div class="ap-cab">
       <div class="ap-quien">
-        <img src="/img/inmath.svg" alt="" width="26" height="26">
-        <div><b>Asistente Inmath</b><span>Resuelve tus dudas al momento</span></div>
+        <svg class="agente-libro ap-avatar" viewBox="0 0 48 48" aria-hidden="true">
+          <defs>
+            <linearGradient id="agicono-trazo-cab" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#3B6FF5"/><stop offset="1" stop-color="#8B6FF0"/>
+            </linearGradient>
+          </defs>
+          <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="url(#agicono-trazo-cab)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M24 15 C 31 10.5 38 10 42 13.5 V 33 C 38 29.5 31 30 24 34.5" fill="none" stroke="url(#agicono-trazo-cab)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="24" y1="15" x2="24" y2="34.5" stroke="url(#agicono-trazo-cab)" stroke-width="1.6" stroke-linecap="round" opacity=".5"/>
+          <rect class="agente-ojo i" x="18.6" y="18.4" width="3.8" height="3.8"/>
+          <rect class="agente-ojo d" x="25.6" y="18.4" width="3.8" height="3.8"/>
+        </svg>
+        <div><b>Mathy</b><span>La IA de Cursos Inmath</span></div>
       </div>
       <button type="button" class="ap-cerrar" id="agenteCerrar" aria-label="Cerrar asistente">✕</button>
     </div>
     <div class="ap-mensajes" id="agenteMensajes">
-      <div class="ap-msg bot">¡Hola! Soy el asistente de Cursos Inmath. ¿Qué te gustaría saber sobre el curso, el precio o cómo inscribirte?</div>
+      <div class="ap-msg bot">¡Hola! Soy Mathy, la IA de Cursos Inmath. ¿Qué te gustaría saber sobre el curso, el precio o cómo inscribirte?</div>
     </div>
     <div class="ap-entrada">
       <input type="text" id="agenteInput" placeholder="Escribe tu pregunta…" maxlength="500" autocomplete="off">

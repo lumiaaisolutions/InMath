@@ -597,6 +597,11 @@ body::before {
   -webkit-mask-image: radial-gradient(120% 115% at 50% 42%, #000 58%, transparent 100%);
           mask-image: radial-gradient(120% 115% at 50% 42%, #000 58%, transparent 100%);
   filter: saturate(.92) contrast(1.02);
+  /* Fuerza su propia capa de composición: sin esto, Safari a veces no repinta
+     un elemento con mask-image/filter cuando solo cambian opacity/transform
+     por JS (como hace el fallback de scroll sin animation-timeline). */
+  will-change: opacity, transform;
+  -webkit-backface-visibility: hidden;
 }
 .scrub-frame.f1 { position: relative; opacity: 1; }
 .scrub-frame.f2 { opacity: 0; }
@@ -871,6 +876,7 @@ body::before {
 .agente-panel.abriendo { opacity: 0; transform: scale(.94) translateY(10px); }
 .ap-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,.6); }
 .ap-quien { display: flex; align-items: center; gap: 10px; }
+.ap-quien .ap-avatar { width: 28px; height: 28px; flex: 0 0 auto; }
 .ap-quien b { display: block; font: 600 .92rem var(--display); color: var(--tinta); }
 .ap-quien span { display: block; font-size: .74rem; color: var(--tinta-3); }
 .ap-cerrar { width: 28px; height: 28px; border-radius: 50%; border: 0; background: rgba(255,255,255,.65); color: var(--tinta-2); cursor: pointer; display: grid; place-items: center; }

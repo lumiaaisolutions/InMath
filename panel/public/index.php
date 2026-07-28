@@ -10,8 +10,13 @@ if (PHP_SAPI === 'cli-server') {
     }
 }
 
-define('BACKEND_PATH', dirname(__DIR__, 2) . '/backend');
-define('PANEL_PATH', dirname(__DIR__));
+// Rutas relativas: en el repo local panel/public/index.php cuelga de
+// panel/ (que a su vez cuelga de la raíz, junto a backend/). Algunos
+// hostings resuelven __DIR__ como una ruta real más plana (p. ej. si el
+// contenido de panel/public/ se despliega directo en public_html/panel/,
+// sin la carpeta "public" intermedia), así que se detecta cada caso.
+define('BACKEND_PATH', dirname(__DIR__, is_dir(dirname(__DIR__, 1) . '/backend') ? 1 : 2) . '/backend');
+define('PANEL_PATH', is_dir(__DIR__ . '/lib') ? __DIR__ : dirname(__DIR__));
 
 spl_autoload_register(function (string $clase): void {
     if (str_starts_with($clase, 'App\\')) {

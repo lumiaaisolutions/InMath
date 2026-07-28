@@ -31,7 +31,7 @@ function ejecutarAccion(string $ruta): void
             $historial = [];
         }
         $historial = array_slice($historial, -12);
-        $sistema = 'Eres el asistente de IA del CRM interno de Cursos Inmath. Ayudas a asesores '
+        $sistema = 'Eres Mathy, el asistente de IA del CRM interno de Cursos Inmath. Ayudas a asesores '
             . 'y administradores a usar el panel: mover prospectos de etapa en el pipeline, agendar '
             . 'y gestionar citas, revisar alumnos y pagos, y (solo administradores) editar el prompt '
             . 'del bot y la configuración. Respondes en español, breve y directo (máximo 3-4 frases). '
