@@ -400,9 +400,9 @@ section { position:relative; padding:clamp(52px,8vw,104px) clamp(16px,5vw,48px);
 .slots { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; }
 .slot { position:relative; }
 .slot input { position:absolute; inset:0; opacity:0; cursor:pointer; }
-.slot span { display:block; text-align:center; font:500 .84rem/1.35 var(--cuerpo); color:var(--tinta-2); border:1.5px solid var(--linea-2); border-radius:var(--r-s); padding:12px 8px; transition:border-color var(--t),background var(--t),color var(--t),transform var(--t); }
+.slot span { display:block; text-align:center; font:500 .84rem/1.35 var(--cuerpo); color:var(--tinta-2); border:1.5px solid color-mix(in srgb, var(--blanco) 60%, var(--linea-2)); border-radius:var(--r-s); padding:12px 8px; background:color-mix(in srgb, var(--blanco) 55%, transparent); backdrop-filter:blur(6px); transition:border-color var(--t),background var(--t),color var(--t),transform var(--t),box-shadow var(--t); }
 .slot span:hover { transform:translateY(-2px); }
-.slot input:checked + span { border-color:var(--azul); background:var(--azul-suave); color:var(--azul-600); font-weight:700; }
+.slot input:checked + span { border-color:transparent; background:linear-gradient(135deg, var(--azul), var(--pino)); color:var(--blanco); font-weight:700; box-shadow:var(--sombra-s); }
 .slot input:focus-visible + span { box-shadow:0 0 0 3px rgba(59,111,245,.28); }
 .aviso { border-radius:var(--r-s); padding:14px 16px; font:500 .92rem/1.5 var(--cuerpo); margin-bottom:22px; display:flex; gap:10px; align-items:center; }
 .aviso svg { width:18px; height:18px; flex:0 0 auto; }
@@ -427,10 +427,29 @@ section { position:relative; padding:clamp(52px,8vw,104px) clamp(16px,5vw,48px);
 .agenda-respaldo span { display:inline-flex; align-items:center; gap:8px; }
 .agenda-respaldo svg { width:17px; height:17px; color:var(--azul); flex:0 0 auto; }
 .agenda-form-col { position:sticky; top:96px; }
+@media (max-width:900px){ .agenda-form-col { position:static; } }
 .campo label { display:flex; align-items:center; gap:7px; }
 .campo label svg { width:15px; height:15px; color:var(--azul); flex:0 0 auto; }
+
+/* Calendario "liquid glass" — tarjeta de vidrio esmerilado con orbes de color
+   difuminados detrás (referencia: widgets de calendario tipo iOS), para el
+   selector de horario de la agenda. */
+.dia-grupo { position:relative; isolation:isolate; overflow:hidden; border-radius:var(--r-l); padding:18px 16px 16px; margin-top:4px;
+  background:color-mix(in srgb, var(--blanco) 62%, transparent);
+  border:1px solid color-mix(in srgb, var(--blanco) 55%, var(--linea));
+  backdrop-filter:blur(20px) saturate(1.7); -webkit-backdrop-filter:blur(20px) saturate(1.7);
+  box-shadow:var(--sombra-s);
+}
+.dia-grupo::before {
+  content:""; position:absolute; inset:-45% -15%; z-index:-1;
+  background:
+    radial-gradient(38% 50% at 16% 20%, color-mix(in srgb, var(--azul) 55%, transparent) 0%, transparent 72%),
+    radial-gradient(42% 54% at 86% 28%, color-mix(in srgb, var(--lila) 50%, transparent) 0%, transparent 74%),
+    radial-gradient(48% 58% at 46% 96%, color-mix(in srgb, var(--sol) 40%, transparent) 0%, transparent 76%);
+  filter:blur(34px);
+}
 .dia-grupo + .dia-grupo { margin-top:14px; }
-.dia-etiqueta { display:block; font:600 .78rem/1 var(--mono); color:var(--tinta-2); text-transform:uppercase; letter-spacing:.04em; margin-bottom:9px; }
+.dia-etiqueta { display:block; font:700 1.05rem/1.15 var(--display); letter-spacing:-.01em; color:var(--tinta); text-transform:none; margin-bottom:12px; }
 
 /* =========================================================================
    Animaciones ligadas al scroll (reveal) — CSS puro con fallback visible
