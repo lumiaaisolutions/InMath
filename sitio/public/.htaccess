@@ -1,3 +1,13 @@
 RewriteEngine On
+
+# Oculta la extensión .php de agenda y pago en la URL visible del navegador
+# (index.php ya se sirve en / sin extensión; /api/*.php no se toca porque
+# lo consume fetch() por POST y una redirección rompería la petición).
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\s/(agenda|pago)\.php[\s?] [NC]
+RewriteRule ^ /%1 [R=301,L]
+
+RewriteRule ^agenda/?$ agenda.php [QSA,L]
+RewriteRule ^pago/?$ pago.php [QSA,L]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^ index.php [QSA,L]

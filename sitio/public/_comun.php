@@ -313,8 +313,8 @@ function cabeceraSitio(string $titulo, string $activo = ''): void
   <nav id="navPrincipal">
     <a href="/#como" class="n-como <?= $activo === 'como' ? 'activo' : '' ?>"><?= icono('route') ?> Cómo funciona</a>
     <a href="/#incluye" class="n-incl"><?= icono('list') ?> Qué incluye</a>
-    <a href="/agenda.php" class="n-ases <?= $activo === 'agenda' ? 'activo' : '' ?>"><?= icono('calendar') ?> Asesoría gratis</a>
-    <a href="/pago.php" class="cta <?= $activo === 'pago' ? 'activo' : '' ?>">Inscribirme</a>
+    <a href="/agenda" class="n-ases <?= $activo === 'agenda' ? 'activo' : '' ?>"><?= icono('calendar') ?> Asesoría gratis</a>
+    <a href="/pago" class="cta <?= $activo === 'pago' ? 'activo' : '' ?>">Inscribirme</a>
   </nav>
 </header>
 <script>
@@ -346,8 +346,8 @@ function pieSitio(): void
     <nav>
       <a href="/#como">Cómo funciona</a>
       <a href="/#incluye">Qué incluye</a>
-      <a href="/agenda.php">Agendar asesoría</a>
-      <a href="/pago.php">Inscribirme</a>
+      <a href="/agenda">Agendar asesoría</a>
+      <a href="/pago">Inscribirme</a>
     </nav>
   </div>
 </footer>

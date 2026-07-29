@@ -323,6 +323,7 @@ section { position:relative; padding:clamp(52px,8vw,104px) clamp(16px,5vw,48px);
 .area h3 { font:600 1.04rem/1.3 var(--cuerpo); }
 .area p { font-size:.92rem; color:var(--tinta-2); }
 .grafica-wrap { position:sticky; top:96px; }
+@media (max-width:900px){ .grafica-wrap { position:static; } }
 
 /* Sección "acompaña": foto con scroll-scrubbing a la izquierda + 2 puntos de
    valor a la derecha (mismo lenguaje de .areas/.area/.pt que "incluye", pero

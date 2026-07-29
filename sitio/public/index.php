@@ -49,8 +49,8 @@ cabeceraSitio('Cursos Inmath — Aprende en línea a tu ritmo');
       <p class="entrada">Clases para estudiar cuando puedas, un asesor que te guía por WhatsApp
         y un reporte de tu avance cada semana. Aprendes a tu ritmo, sin perder el hilo.</p>
       <div class="acciones">
-        <a class="boton glow glow-halo grande" href="/pago.php">Inscribirme <?= icono('arrow', 'flecha') ?></a>
-        <a class="boton pastel grande" href="/agenda.php">Agendar asesoría gratis</a>
+        <a class="boton glow glow-halo grande" href="/pago">Inscribirme <?= icono('arrow', 'flecha') ?></a>
+        <a class="boton pastel grande" href="/agenda">Agendar asesoría gratis</a>
       </div>
       <div class="respaldo">
         <span><?= icono('clock') ?> Acceso inmediato</span>
@@ -74,7 +74,7 @@ cabeceraSitio('Cursos Inmath — Aprende en línea a tu ritmo');
 <section class="proceso" id="como">
   <div class="centrado">
     <div class="cab-seccion reveal-mueve">
-      <a class="eyebrow link" href="/agenda.php"><?= icono('route', 'ic-ey') ?> Cómo funciona <span class="mini-arrow"><?= icono('arrow') ?></span></a>
+      <a class="eyebrow link" href="/agenda"><?= icono('route', 'ic-ey') ?> Cómo funciona <span class="mini-arrow"><?= icono('arrow') ?></span></a>
       <h2>De la primera duda a tu inscripción, sin salir de WhatsApp.</h2>
     </div>
     <div class="pasos">
@@ -186,7 +186,7 @@ cabeceraSitio('Cursos Inmath — Aprende en línea a tu ritmo');
     <div class="incluye-rej">
       <div>
         <div class="cab-seccion reveal-mueve" style="margin-bottom:24px">
-          <a class="eyebrow link" href="/pago.php"><?= icono('list', 'ic-ey') ?> Qué incluye <span class="mini-arrow"><?= icono('arrow') ?></span></a>
+          <a class="eyebrow link" href="/pago"><?= icono('list', 'ic-ey') ?> Qué incluye <span class="mini-arrow"><?= icono('arrow') ?></span></a>
           <h2>Todo lo que tu inscripción incluye.</h2>
         </div>
         <div class="areas">
@@ -223,7 +223,7 @@ cabeceraSitio('Cursos Inmath — Aprende en línea a tu ritmo');
         <li><?= icono('check') ?> Acceso a la primera clase de cada módulo</li>
         <li><?= icono('check') ?> Plan de estudio personalizado</li>
       </ul>
-      <a class="boton grande" href="/agenda.php">Empezar gratis</a>
+      <a class="boton grande" href="/agenda">Empezar gratis</a>
     </article>
     <article class="plan destacado reveal d1">
       <span class="plan-tag">Recomendado</span>
@@ -235,7 +235,7 @@ cabeceraSitio('Cursos Inmath — Aprende en línea a tu ritmo');
         <li><?= icono('check') ?> Asesorías por videollamada incluidas</li>
         <li><?= icono('check') ?> Reporte de avance cada semana por WhatsApp</li>
       </ul>
-      <a class="boton glow glow-halo grande" href="/pago.php">Inscribirme ahora</a>
+      <a class="boton glow glow-halo grande" href="/pago">Inscribirme ahora</a>
     </article>
     <article class="plan custom reveal d2">
       <span class="plan-tag">Personalizado</span>
@@ -246,7 +246,7 @@ cabeceraSitio('Cursos Inmath — Aprende en línea a tu ritmo');
         <li><?= icono('check') ?> Más sesiones de asesoría incluidas</li>
         <li><?= icono('check') ?> Un asesor te cotiza por WhatsApp</li>
       </ul>
-      <a class="boton grande" href="/agenda.php">Solicitar cotización</a>
+      <a class="boton grande" href="/agenda">Solicitar cotización</a>
     </article>
   </div>
 </section>
