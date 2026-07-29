@@ -102,6 +102,30 @@ cabeceraSitio('Cursos Inmath — Aprende en línea a tu ritmo');
   </div>
 </section>
 
+<section class="acompana">
+  <div class="centrado">
+    <div class="acompana-rej">
+      <div class="grafica-wrap">
+        <div class="scrub scrub-acompana" aria-label="De estudiar solo frente a varias laptops, a resolver dudas riendo con un asesor real">
+          <img class="scrub-frame f1" src="/img/fotos/acompana-1.jpg" alt="Escritorio visto desde arriba con varias laptops y libretas abiertas" loading="lazy">
+          <img class="scrub-frame f2" src="/img/fotos/acompana-2.jpg" alt="Grupo de personas riendo juntas mientras revisan una laptop en una biblioteca" loading="lazy">
+          <span class="tinte"></span>
+        </div>
+      </div>
+      <div>
+        <div class="cab-seccion reveal-mueve" style="margin-bottom:24px">
+          <span class="eyebrow"><?= icono('user', 'ic-ey') ?> Acompañamiento real</span>
+          <h2>No es un curso que dejas a medias en una plataforma sola.</h2>
+        </div>
+        <div class="areas">
+          <div class="area reveal"><span class="pt"><?= icono('chat') ?></span><div><h3>Dudas que sí se resuelven</h3><p>Le escribes a tu asesor por WhatsApp y te responde una persona, no un buzón.</p></div></div>
+          <div class="area reveal d1"><span class="pt"><?= icono('trend') ?></span><div><h3>Tu avance, a la vista</h3><p>Sabes en qué semana vas y qué sigue, en vez de perderte en una plataforma sola.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section>
   <?= mallaSitio() ?>
   <div class="centrado">

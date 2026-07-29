@@ -135,3 +135,11 @@ guardar directamente vía el editor del file manager si el WAF de Hostinger
 bloquea escrituras a archivos llamados exactamente `.env` (protección
 anti-scanner común en hosting compartido) — el workaround es crear el
 contenido bajo otro nombre de archivo y renombrarlo después.
+
+**phpMyAdmin (auth-db943.hstgr.io) también expira la sesión por inactividad**,
+igual que el file manager — si una consulta SQL directa es necesaria (p. ej.
+corregir un valor de configuración sin pasar por una migración), y la pestaña
+ya logueada muestra el formulario de login al volver a usarla, no hay forma de
+re-autenticar sin la contraseña de la cuenta de Hostinger — pedirle al usuario
+que la actualice él mismo o que reautorice explícitamente, no adivinar/probar
+credenciales.

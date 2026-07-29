@@ -54,7 +54,7 @@ final class GeneradorReporte
         ) ?: [];
         $primario = $marca['color_primario'] ?? '3B6FF5';
         $acentoA = $marca['color_acento_a'] ?? 'F4A62A';
-        $acentoB = $marca['color_acento_b'] ?? '8B6FF0';
+        $acentoB = $marca['color_acento_b'] ?? '1E9EB8';
 
         $avances = array_reverse(Database::todos(
             'SELECT fecha, porcentaje, detalle FROM avance_alumnos

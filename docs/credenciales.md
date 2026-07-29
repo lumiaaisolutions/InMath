@@ -132,3 +132,23 @@ Estas dependen del cliente y aún no existen (ver [`fases-y-pendientes.md`](fase
   CRM.
 - Generar una API key nueva desde [Google AI Studio](https://aistudio.google.com/apikey)
   si hay que rotarla.
+
+## Pendiente: color de acento del branding de reportes PDF en producción
+
+El seed `004_reportes_fase6.sql` usa `ON DUPLICATE KEY UPDATE clave = clave`
+(no-op), así que corregir el archivo del seed **no** actualiza una fila que ya
+existe en producción. La fila `reporte_branding` en la tabla `configuraciones`
+de producción todavía tiene `color_acento_b: "8B6FF0"` (morado, valor viejo);
+el código y el seed ya usan `1E9EB8`. Falta correr a mano en phpMyAdmin
+(`auth-db943.hstgr.io`, base `u221820910_inmath`):
+
+```sql
+UPDATE configuraciones
+SET valor = JSON_SET(valor, '$.color_acento_b', '1E9EB8')
+WHERE clave = 'reporte_branding';
+```
+
+No se pudo ejecutar en esta sesión porque la pestaña de phpMyAdmin ya logueada
+expiró y pide contraseña de nuevo (no se puede reautenticar sin la contraseña
+de la cuenta). Solo afecta el color de acento secundario en el pie del PDF de
+reporte semanal — cosmético, no bloquea nada.

@@ -113,7 +113,7 @@ function overlayCargaPanel(): string
     <svg class="carga-libro" viewBox="0 0 48 48" aria-hidden="true">
       <defs>
         <linearGradient id="carga-trazo" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stop-color="#3B6FF5"/><stop offset="1" stop-color="#8B6FF0"/>
+          <stop offset="0" stop-color="#3B6FF5"/><stop offset="1" stop-color="#1E9EB8"/>
         </linearGradient>
       </defs>
       <path pathLength="1" class="carga-pagina carga-pagina-a" d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="url(#carga-trazo)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -179,7 +179,7 @@ function agenteIAPanel(): string
     <svg class="agente-libro" viewBox="0 0 48 48" aria-hidden="true">
       <defs>
         <linearGradient id="agicono-trazo" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stop-color="#3B6FF5"/><stop offset="1" stop-color="#8B6FF0"/>
+          <stop offset="0" stop-color="#3B6FF5"/><stop offset="1" stop-color="#1E9EB8"/>
         </linearGradient>
       </defs>
       <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="url(#agicono-trazo)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -195,7 +195,7 @@ function agenteIAPanel(): string
         <svg class="agente-libro ap-avatar" viewBox="0 0 48 48" aria-hidden="true">
           <defs>
             <linearGradient id="agicono-trazo-cab" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
-              <stop offset="0" stop-color="#3B6FF5"/><stop offset="1" stop-color="#8B6FF0"/>
+              <stop offset="0" stop-color="#3B6FF5"/><stop offset="1" stop-color="#1E9EB8"/>
             </linearGradient>
           </defs>
           <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="url(#agicono-trazo-cab)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
