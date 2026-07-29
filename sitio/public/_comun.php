@@ -301,7 +301,7 @@ function cabeceraSitio(string $titulo, string $activo = ''): void
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/inmath.css">
+  <link rel="stylesheet" href="/css/inmath.css?v=<?= e((string) (@filemtime(__DIR__ . '/css/inmath.css') ?: 1)) ?>">
 </head>
 <body>
 <?= overlayCarga() ?>
