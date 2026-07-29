@@ -37,6 +37,7 @@ que n8n pueda reiniciarse o reemplazarse sin perder información.
 | Etapas del pipeline como ENUM | Son parte del contrato del producto (Prospecto → Calificado → Cita agendada → Pago pendiente → Inscrito); cambiarlas es decisión de producto, no de configuración |
 | Tabla `prompts` versionada desde Fase 1 | Fase 2 exige prompts editables sin tocar código; versionar permite revertir un prompt que degrade la conversación |
 | Tabla `configuraciones` clave-valor | Criterios de calificación, tiempos de recuperación de carrito y procesador de pago activo son ajustables por el cliente sin despliegue |
+| URLs del sitio sin `.php` (`/agenda`, `/pago`) | Cosmético/SEO — el `.htaccess` de `sitio/public/` redirige 301 de `/agenda.php`→`/agenda` y reescribe internamente `/agenda`→`agenda.php`; `/api/*.php` queda excluido a propósito porque `agente.php` recibe POST y una redirección le rompería el body |
 
 ## Concurrencia (3 asesores, sin condiciones de carrera)
 

@@ -190,6 +190,46 @@ horarios **agrupados por día** (`.dia-grupo`/`.dia-etiqueta`) en vez de repetir
 `AgendaServicio::slotsDisponibles()` sin agrupar, ahora se agrupan en PHP por el
 día de `inicio` antes de pintarlos.
 
+**Calendario "liquid glass":** cada `.dia-grupo` es una tarjeta de vidrio
+esmerilado (`backdrop-filter: blur(20px) saturate(1.7)`, fondo translúcido) con
+tres orbes de color difuminados detrás (`::before` con `radial-gradient` +
+`blur(34px)`, azul/lila/sol, referencia: widgets de calendario tipo iOS). El
+horario seleccionado usa gradiente azul→pino en vez de un tono sólido. Aplica
+también a `.slot span` (chips de hora), que ahora llevan su propio
+`backdrop-filter` sutil.
+
+**Bug recurrente — `position:sticky` sin desactivar en el breakpoint móvil:**
+dos columnas que colapsan a una a `max-width:900px` (`.acompana-rej`,
+`.incluye-rej`, `.agenda-rej`) tenían su columna de imagen/formulario con
+`position:sticky` fija SOLO para el layout de escritorio. Si el elemento
+correspondiente (`.grafica-wrap`, `.agenda-form-col`) no agrega
+`position:static` dentro del mismo `@media (max-width:900px)`, en móvil la
+columna se queda pegada al hacer scroll y tapa el contenido que debería
+aparecer debajo. Ya se corrigió en ambos casos — al agregar una nueva sección
+de dos columnas con imagen sticky, replicar el mismo patrón de raíz.
+
+## Caché del CDN de Hostinger — por qué un cambio de CSS "no se ve"
+
+El CDN de Hostinger (`x-hcdn-cache-status`) cachea `/css/inmath.css` hasta 7
+días (`cache-control: public, max-age=604800`) **sin invalidarlo cuando el
+archivo cambia en el servidor** — ni el toggle "Automatic cache" del hPanel
+(que es un caché distinto y separado) lo controla. Reemplazar el archivo por
+FTP/git-deploy no basta: el navegador (y hasta un hard-reload) puede seguir
+recibiendo la versión vieja desde el edge del CDN.
+
+Solución aplicada: `_comun.php` ahora genera el link como
+`/css/inmath.css?v=<?= filemtime(...) ?>` — cada vez que el archivo se
+reemplaza en el servidor, su `mtime` cambia, la URL cambia, y el CDN la trata
+como un recurso nuevo (cache miss) sin necesidad de purgar nada a mano. Para
+verificar si un cambio de CSS realmente llegó a producción sin depender del
+caché del navegador: `curl -s "https://dominio/css/inmath.css?v=$(date +%s)"`
+(la query string fuerza un cache-miss) y comparar contra el archivo local.
+
+**Pendiente:** el panel (`panel/vistas/login.php`,
+`panel/vistas/_layout-inicio.php`) referencia su propio `inmath.css` sin este
+cache-busting — aplicar el mismo patrón si un cambio de CSS del panel no se
+refleja en producción.
+
 ## Rebranding a otro cliente
 
 Cambiar solo el bloque `:root` de cada `inmath.css` (colores y tipografía) y el
