@@ -7,7 +7,7 @@ Meta (WhatsApp Cloud API) ──webhook──▶ n8n flujo 01 ──▶ POST /ap
                                           ▲                     │
                                           │              MotorBot (backend):
                                      envía respuestas    prompt de BD + historial
-                                     por WhatsApp        → API de Claude (Haiku)
+                                     por WhatsApp        → API de Gemini
                                                          → decide y persiste todo
 ```
 
@@ -15,13 +15,16 @@ n8n **solo transporta** (recibe el webhook de Meta y envía mensajes); el cerebr
 en el backend (`backend/src/Bot/`), donde es versionable y testeable:
 
 - `MotorBot.php` — orquesta: upsert del prospecto, registro idempotente del mensaje,
-  contexto (prompt + historial + curso + criterios), llamada a Claude, aplicación de
+  contexto (prompt + historial + curso + criterios), llamada a Gemini, aplicación de
   la decisión (calificación → puntaje → etapa; traspaso a asesor; oferta de cita/pago).
-- `ClaudeClient.php` — cliente cURL de la API de mensajes de Claude. Con
-  `BOT_SIMULADO=1` en `.env` responde de forma determinista (para desarrollo y
-  pruebas sin API key).
+- `GeminiClient.php` (namespace `App\Bot`) — cliente cURL de la API de Gemini, con
+  el mismo contrato de mensajes (`role`/`content`) que tenía el antiguo
+  `ClaudeClient`. Con `BOT_SIMULADO=1` en `.env` responde de forma determinista
+  (para desarrollo y pruebas sin API key). **No confundir con `App\IA\GeminiClient`**,
+  el cliente independiente que usa el agente "Mathy" del sitio/panel — mismo
+  proveedor, contrato distinto, dos clases separadas a propósito.
 
-## Contrato del bot con Claude
+## Contrato del bot con Gemini
 
 El prompt de sistema vive en la tabla `prompts` (clave `sistema_bot`, versionado,
 editable desde el panel en Fase 5 sin tocar código). Exige respuesta JSON:
@@ -62,5 +65,9 @@ El asesor devuelve el control poniendo la conversación en estado `bot` (PATCH
 - Flujo completo probado end-to-end en modo simulado (`BOT_SIMULADO=1`): alta,
   calificación con puntaje, oferta de cita, traspaso a asesor, silencio del bot
   cuando la conversación es del asesor, idempotencia ante webhooks repetidos.
-- **No probado aún**: llamada real a la API de Claude (falta `ANTHROPIC_API_KEY`) y
-  webhook real de Meta (falta la app del cliente).
+- **Motor real de IA:** conectado a Gemini en producción (`BOT_SIMULADO=0`,
+  reutiliza el mismo `GEMINI_API_KEY` que el agente Mathy).
+- **No probado aún**: webhook real de Meta — falta la app de WhatsApp Business
+  Cloud API del cliente (pendiente explícitamente, ver
+  [`fases-y-pendientes.md`](../docs/fases-y-pendientes.md)), así que el motor no
+  ha recibido tráfico real todavía aunque ya esté conectado.

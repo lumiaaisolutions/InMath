@@ -30,7 +30,7 @@ satura un solo `.md`). Punto de entrada: **[`docs/README.md`](docs/README.md)**.
 | `backend/` | API PHP/MySQL — núcleo que consumen n8n y el panel | 1 |
 | `database/` | Migraciones y seeds de MySQL | 1 |
 | `automatizaciones-n8n/` | Workflows de n8n (mensajería, agenda, reportes) | 1–6 |
-| `chatbot/` | Chatbot de WhatsApp con IA (Claude) | 2 |
+| `chatbot/` | Chatbot de WhatsApp con IA (Gemini) | 2 |
 | `panel/` | Panel de control CRM multiusuario | 5 |
 | `reportes/` | Generación de reportes PDF de avance | 6 |
 | `sitio/` | Sitio web del curso (rediseño) | 7 |
@@ -39,9 +39,9 @@ satura un solo `.md`). Punto de entrada: **[`docs/README.md`](docs/README.md)**.
 ## Estado de fases
 
 - [x] **Fase 1** — Fundamentos: esquema de BD, backend PHP, contrato de API para n8n
-- [x] **Fase 2** — Chatbot de WhatsApp con IA *(falta: ANTHROPIC_API_KEY y app de Meta del cliente)*
-- [x] **Fase 3** — Agenda automática *(falta: conectar credenciales de Google en n8n)*
-- [x] **Fase 4** — Pagos *(falta: decidir procesador — Stripe/Conekta/MercadoPago — y escribir su driver)*
+- [x] **Fase 2** — Chatbot de WhatsApp con IA *(conectado a Gemini; falta: app de WhatsApp Business Cloud API del cliente, pendiente explícitamente)*
+- [x] **Fase 3** — Agenda automática *(falta: conectar credenciales de Google en n8n, pendiente explícitamente)*
+- [x] **Fase 4** — Pagos *(MercadoPago elegido, driver real listo; falta: credenciales de producción del cliente)*
 - [x] **Fase 5** — Panel de control (CRM)
 - [x] **Fase 6** — Reportes automáticos *(falta: plantillas de WhatsApp aprobadas por Meta y SMTP)*
 - [x] **Fase 7** — Sitio web *(falta: URL del sitio actual para la auditoría/migración)*

@@ -16,7 +16,8 @@ final class Fabrica
     {
         return match ($nombre) {
             'simulado' => new DriverSimulado(),
-            'stripe', 'conekta', 'mercadopago' => new DriverPendiente($nombre),
+            'mercadopago' => new DriverMercadoPago(),
+            'stripe', 'conekta' => new DriverPendiente($nombre),
             default => throw new \RuntimeException(
                 'No hay procesador de pago configurado (clave procesador_pago_activo).'
             ),

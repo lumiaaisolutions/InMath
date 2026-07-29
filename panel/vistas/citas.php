@@ -53,7 +53,7 @@ foreach ($asesores as $i => $a) {
       <?php foreach ($dias as $d): ?>
         <div class="celda">
           <?php foreach ($porCelda[date('Y-m-d', $d) . ' ' . sprintf('%02d', $h)] ?? [] as $c): ?>
-            <a class="cita-bloque" style="--asesor-color: <?= $mapaColor[$c['asesor_id']] ?? '#8B5CF6' ?>"
+            <a class="cita-bloque" style="--asesor-color: <?= $mapaColor[$c['asesor_id']] ?? '#3B6FF5' ?>"
                href="<?= e(u('/prospectos/' . (int) $c['prospecto_id'])) ?>"
                title="<?= e($c['estado']) ?>">
               <?= e(date('H:i', strtotime($c['inicio']))) ?> · <?= e($c['prospecto_nombre'] ?? $c['telefono_whatsapp']) ?>

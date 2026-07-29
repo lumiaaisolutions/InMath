@@ -10,7 +10,7 @@ WhatsApp Business Cloud API (Meta) ──webhook──▶ n8n (self-hosted)
                                                   │
                                     ┌─────────────┼──────────────┐
                                     ▼             ▼              ▼
-                              API de Claude   Google Calendar  Procesador de pago
+                              API de Gemini   Google Calendar  Procesador de pago
                               (bot IA, F2)    (citas, F3)      (links, F4)
                                     │
                                     ▼
@@ -19,7 +19,7 @@ WhatsApp Business Cloud API (Meta) ──webhook──▶ n8n (self-hosted)
 ```
 
 **Principio rector:** el backend PHP/MySQL es la única fuente de verdad. n8n orquesta
-los flujos (recibe webhooks de WhatsApp, llama a Claude, agenda, cobra) pero todo
+los flujos (recibe webhooks de WhatsApp, llama a Gemini, agenda, cobra) pero todo
 estado — prospectos, etapas, mensajes, citas, pagos — se persiste a través de la API
 del backend. Esto permite que el panel CRM (Fase 5) lea siempre datos consistentes y
 que n8n pueda reiniciarse o reemplazarse sin perder información.
@@ -56,7 +56,7 @@ que n8n pueda reiniciarse o reemplazarse sin perder información.
 
 500 alumnos / ~algunos miles de prospectos en 6 meses es volumen bajo para MySQL con
 los índices definidos (etapa, asesor, conversación+fecha). El punto de presión real
-será el rate limit de la API de WhatsApp y la latencia de Claude, no la base de datos.
+será el rate limit de la API de WhatsApp y la latencia de Gemini, no la base de datos.
 
 ## Zona horaria
 

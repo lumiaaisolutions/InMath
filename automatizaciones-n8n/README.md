@@ -38,5 +38,5 @@ que las versiones de nodos coincidan con la versión de n8n instalada.
 
 - `BACKEND_URL`, `BACKEND_API_KEY` — API del backend
 - `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_VERIFY_TOKEN` — Cloud API de Meta (Fase 2)
-- `ANTHROPIC_API_KEY` — motor conversacional (Fase 2)
-- Credenciales de Google Calendar (Fase 3) y del procesador de pago (Fase 4)
+- `GEMINI_API_KEY` — motor conversacional (Fase 2, en `backend/.env`, no en n8n)
+- Credenciales de Google Calendar (Fase 3) y de MercadoPago (Fase 4, en `backend/.env`)

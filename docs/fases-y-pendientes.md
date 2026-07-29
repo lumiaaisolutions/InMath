@@ -8,24 +8,29 @@ temporal + `php -S`; bot en modo simulado `BOT_SIMULADO=1`).
 | Fase | Qué cubre | Estado |
 |---|---|---|
 | 1 — Fundamentos | Esquema BD, backend PHP, contrato de API para n8n | ✅ Completa |
-| 2 — Chatbot IA | WhatsApp Cloud API + motor con Claude (Haiku), calificación configurable, prompts editables | ✅ Construida · falta credencial real |
+| 2 — Chatbot IA | WhatsApp Cloud API + motor conversacional (Gemini, antes Claude), calificación configurable, prompts editables | ✅ Construida y conectada a Gemini (`BOT_SIMULADO=0`) · falta WhatsApp Business Cloud API de Meta |
 | 3 — Agenda | Disponibilidad por asesor, Google Calendar + Meet, recordatorios | ✅ Construida · falta conectar Google en n8n |
-| 4 — Pagos | Capa de procesador configurable, link en el chat, webhook → inscripción, recuperación de carrito | ✅ Construida · falta elegir procesador |
+| 4 — Pagos | Capa de procesador configurable, link en el chat, webhook → inscripción, recuperación de carrito | ✅ Construida · MercadoPago elegido y con driver real listo, falta credenciales del cliente (ver [`pagos.md`](pagos.md)) |
 | 5 — Panel CRM | Multiusuario, pipeline visual, bitácora, calendario, editor de prompts | ✅ Completa |
-| 6 — Reportes | Job semanal, PDF de avance, envío por WhatsApp/correo, branding configurable | ✅ Construida · faltan plantillas Meta + SMTP |
+| 6 — Reportes | Job semanal, PDF de avance, envío por WhatsApp/correo, branding configurable | ✅ Construida · el flujo de correo en n8n ya tiene el nodo y el contrato de datos listos, solo falta la credencial SMTP |
 | 7 — Sitio web | Landing + página de pago + agenda embebida | ✅ Construida · falta auditoría del sitio actual del cliente |
 
 ## Pendientes que dependen del usuario/cliente
 
-- **`ANTHROPIC_API_KEY`** — para el bot real (quitar `BOT_SIMULADO`).
 - **App de WhatsApp Business Cloud API (Meta)** — token, phone id, verify token.
-- **Google Calendar OAuth** en n8n (Fase 3).
-- **Procesador de pago**: decidir Stripe / Conekta / MercadoPago. Solo existe el
-  driver `simulado`; los reales son esqueletos en `backend/src/Pagos/`. Ver
-  [`pagos.md`](pagos.md).
+  Sin esto el motor del bot (ya conectado a Gemini) no recibe ni envía mensajes
+  reales — queda pendiente explícitamente a petición del cliente.
+- **Google Calendar OAuth** en n8n (Fase 3). Pendiente explícitamente.
+- **Credenciales de MercadoPago** (`MERCADOPAGO_ACCESS_TOKEN`,
+  `MERCADOPAGO_WEBHOOK_SECRET`) — el driver ya está implementado y verificado
+  contra la documentación oficial, solo falta que el cliente genere las
+  credenciales de producción en su cuenta de MercadoPago. Ver [`pagos.md`](pagos.md).
 - **Plantillas de WhatsApp** por aprobar en Meta: `recordatorio_cita`,
   `recordatorio_pago`, `reporte_semanal`.
-- **SMTP** para el envío de reportes por correo (en n8n).
+- **SMTP** para el envío de reportes por correo (en n8n) — pendiente
+  explícitamente; el flujo `08-reportes-semanales.json` ya tiene el nodo
+  `emailSend` con un slot de credencial marcado `"CONFIGURAR"`, listo para que
+  se le asigne una cuenta SMTP real desde la UI de n8n.
 - **URL del sitio actual** del cliente para la auditoría/migración (Fase 7).
 
 ## Decisiones de producto por validar (van marcadas como *placeholder* en el código)

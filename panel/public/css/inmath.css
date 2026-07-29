@@ -111,7 +111,8 @@ button { font: inherit; cursor: pointer; }
 .boton {
   --bg: var(--pino); --fg: #fff;
   display: inline-flex; align-items: center; gap: 7px; border: 0; border-radius: var(--r-s);
-  padding: 9px 16px; font: 600 .82rem/1 var(--cuerpo); background: var(--bg); color: var(--fg);
+  padding: 9px 16px; font: 600 .82rem/1 var(--cuerpo); color: var(--fg);
+  background: linear-gradient(125deg, rgba(255,255,255,.22) 0%, transparent 32%, transparent 68%, rgba(255,255,255,.08) 100%), var(--bg);
   transition: transform var(--transicion), box-shadow var(--transicion), opacity var(--transicion);
 }
 .boton:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(59,111,245,.22); }
@@ -127,13 +128,13 @@ button { font: inherit; cursor: pointer; }
 .boton.glow { position: relative; isolation: isolate; }
 .boton.glow::before {
   content: ""; position: absolute; inset: -2.5px; border-radius: inherit; padding: 2.5px;
-  background: linear-gradient(120deg, #9CC0FF, #C9B6FF 50%, var(--pino));
+  background: linear-gradient(120deg, #9CC0FF, var(--lila) 50%, var(--pino));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude; z-index: -1; opacity: .9;
 }
 .boton.glow::after {
   content: ""; position: absolute; inset: -7px; border-radius: inherit; z-index: -2;
-  background: linear-gradient(120deg, #9CC0FF, #C9B6FF 50%, var(--pino)); filter: blur(15px); opacity: .32; transition: opacity var(--transicion);
+  background: linear-gradient(120deg, #9CC0FF, var(--lila) 50%, var(--pino)); filter: blur(15px); opacity: .32; transition: opacity var(--transicion);
 }
 .boton.glow:hover::after { opacity: .55; }
 

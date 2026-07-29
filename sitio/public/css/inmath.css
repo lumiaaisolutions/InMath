@@ -129,7 +129,11 @@ svg { display:block; width:1em; height:1em; }
   position:relative; isolation:isolate; overflow:hidden;
   display:inline-flex; align-items:center; justify-content:center; gap:9px;
   font:600 .95rem/1 var(--cuerpo); letter-spacing:.005em;
-  background:var(--bg); color:var(--fg); border:0; border-radius:999px;
+  /* sheen liquid-glass permanente + el color sólido del botón debajo */
+  background:
+    linear-gradient(125deg, rgba(255,255,255,.32) 0%, transparent 30%, transparent 65%, rgba(255,255,255,.12) 100%),
+    var(--bg);
+  color:var(--fg); border:0; border-radius:999px;
   padding:13px 22px; cursor:pointer;
   transition:transform var(--t), box-shadow var(--t), background var(--t);
 }
@@ -148,13 +152,13 @@ svg { display:block; width:1em; height:1em; }
 /* Anillo degradado + halo */
 .boton.glow::before {
   content:""; position:absolute; inset:-2.5px; border-radius:inherit; padding:2.5px; z-index:-1;
-  background:linear-gradient(120deg,#9CC0FF,#C9B6FF 50%,var(--azul));
+  background:linear-gradient(120deg,#9CC0FF,var(--lila) 50%,var(--azul));
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
   -webkit-mask-composite:xor; mask-composite:exclude; opacity:.95;
 }
 .boton.glow-halo::before {
   content:""; position:absolute; inset:-8px; border-radius:inherit; z-index:-2;
-  background:linear-gradient(120deg,#9CC0FF,#C9B6FF 50%,var(--azul)); filter:blur(16px);
+  background:linear-gradient(120deg,#9CC0FF,var(--lila) 50%,var(--azul)); filter:blur(16px);
   opacity:.32; transition:opacity var(--t);
 }
 .boton.glow-halo:hover::before { opacity:.55; }
@@ -207,6 +211,11 @@ svg { display:block; width:1em; height:1em; }
    bajamos el tamaño aquí para que la palabra siga cabiendo sin desbordar. */
 @media (max-width:420px){ .heroe h1 { font-size:clamp(1.7rem,8.6vw,2.3rem); } }
 .heroe h1 .marca { position:relative; white-space:nowrap; }
+/* Segundo tono editorial en el h1 (mezcla de énfasis tipo Udemy: no todo el
+   titular pesa igual). Bricolage Grotesque no trae itálica real en Google
+   Fonts — pedirla cae a "itálica falsa" (slant sintético) y se ve mal en una
+   grotesca geométrica, así que el énfasis es de color, no de estilo. */
+.heroe h1 .marca-pino { color:var(--pino); }
 /* El subrayado real (swoosh degradado) se define en el bloque v4, más abajo. */
 .heroe p.entrada { font-size:1.14rem; color:var(--tinta-2); max-width:30rem; margin-bottom:30px; }
 .heroe .acciones { display:flex; gap:12px; flex-wrap:wrap; }
@@ -403,6 +412,26 @@ section { position:relative; padding:clamp(52px,8vw,104px) clamp(16px,5vw,48px);
 .resumen-pago b { font:700 1.35rem/1 var(--display); }
 
 /* =========================================================================
+   Página de agenda: dos columnas (foto real + reaseguro / formulario),
+   mismo lenguaje que el héroe en vez de un formulario angosto y solo.
+   ========================================================================= */
+.agenda-hero { position:relative; padding:clamp(28px,5vw,52px) clamp(16px,5vw,24px) clamp(56px,8vw,96px); }
+.agenda-hero .volver { position:relative; z-index:1; }
+.agenda-rej { position:relative; z-index:1; display:grid; grid-template-columns:.95fr 1.05fr; gap:clamp(28px,5vw,60px); align-items:start; }
+@media (max-width:900px){ .agenda-rej { grid-template-columns:1fr; } }
+.agenda-lado h1 { font:700 clamp(1.9rem,4vw,2.7rem)/1.08 var(--display); letter-spacing:-.025em; margin-bottom:12px; }
+.agenda-lado .cab-seccion p { color:var(--tinta-2); font-size:1.05rem; }
+.scrub-agenda { aspect-ratio:4 / 3; margin-bottom:20px; }
+.agenda-respaldo { display:flex; gap:18px; flex-wrap:wrap; font:500 .86rem/1.3 var(--cuerpo); color:var(--tinta-2); }
+.agenda-respaldo span { display:inline-flex; align-items:center; gap:8px; }
+.agenda-respaldo svg { width:17px; height:17px; color:var(--azul); flex:0 0 auto; }
+.agenda-form-col { position:sticky; top:96px; }
+.campo label { display:flex; align-items:center; gap:7px; }
+.campo label svg { width:15px; height:15px; color:var(--azul); flex:0 0 auto; }
+.dia-grupo + .dia-grupo { margin-top:14px; }
+.dia-etiqueta { display:block; font:600 .78rem/1 var(--mono); color:var(--tinta-2); text-transform:uppercase; letter-spacing:.04em; margin-bottom:9px; }
+
+/* =========================================================================
    Animaciones ligadas al scroll (reveal) — CSS puro con fallback visible
    ========================================================================= */
 @supports (animation-timeline: view()) {
@@ -515,10 +544,13 @@ body::before {
   overflow: visible !important;
   border: 1px solid rgba(255,255,255,.6) !important;
   border-radius: 26px;
+  /* "liquid glass": barrido especular diagonal encima del wash de color, como
+     luz pegando en vidrio curvo — mismo lenguaje en .plan/.cta-caja/.precio-caja. */
   background:
+    linear-gradient(122deg, rgba(255,255,255,.55) 0%, transparent 26%, transparent 68%, rgba(255,255,255,.22) 100%),
     radial-gradient(130% 85% at 18% -8%, color-mix(in srgb, var(--acc, var(--azul)) 26%, transparent), transparent 58%),
     linear-gradient(158deg, rgba(255,255,255,.72), rgba(255,255,255,.42)) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(1.35); backdrop-filter: blur(22px) saturate(1.35);
+  -webkit-backdrop-filter: blur(22px) saturate(1.45); backdrop-filter: blur(22px) saturate(1.45);
   box-shadow: 0 24px 54px rgba(46,64,140,.13), inset 0 1px 0 rgba(255,255,255,.8) !important;
   padding-top: 40px;
 }
@@ -557,8 +589,10 @@ body::before {
 
 /* Otras superficies a vidrio, coherentes */
 .precio-caja, .tarjeta-form, .demo-chat, .grafica-firma {
-  background: linear-gradient(158deg, rgba(255,255,255,.78), rgba(255,255,255,.5)) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(1.3); backdrop-filter: blur(20px) saturate(1.3);
+  background:
+    linear-gradient(122deg, rgba(255,255,255,.45) 0%, transparent 26%, transparent 68%, rgba(255,255,255,.18) 100%),
+    linear-gradient(158deg, rgba(255,255,255,.78), rgba(255,255,255,.5)) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
   border: 1px solid rgba(255,255,255,.6) !important;
   box-shadow: 0 24px 54px rgba(46,64,140,.13), inset 0 1px 0 rgba(255,255,255,.8) !important;
 }
@@ -629,12 +663,16 @@ body::before {
    scroll (no es un crossfade plano — la imagen "se mueve" mientras scrolleas). */
 @keyframes kenburns1 { from { transform: scale(1.1) translate(0%, 0%); } to { transform: scale(1) translate(-1.5%, 1.5%); } }
 @keyframes kenburns2 { from { transform: scale(1) translate(1.5%, -1.5%); } to { transform: scale(1.1) translate(0%, 0%); } }
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .scrub-frame.f1 { animation: scrubOut linear both, kenburns1 linear both; animation-timeline: view(), view(); animation-range: cover 15% cover 85%, cover 0% cover 100%; }
-    .scrub-frame.f2 { position: absolute; animation: scrubIn linear both, kenburns2 linear both; animation-timeline: view(), view(); animation-range: cover 15% cover 85%, cover 0% cover 100%; }
-  }
-}
+/* Nota: el crossfade + Ken Burns ya NO se maneja con animation-timeline nativo.
+   Se probó dos veces (CSS.supports() y luego getAnimations()) como detección de
+   soporte real de Safari para activar un fallback JS, y las dos veces Safari
+   mintió: registraba la animación (getAnimations() la devolvía) pero no la
+   corría ligada al scroll de verdad, dejando los frames congelados a medio
+   cruce (efecto "encimado"/fantasma). El fallback JS (más abajo, en el bloque
+   <script> de pieSitio()) ahora corre siempre, sin intentar detectar soporte
+   — es el único camino, funciona igual en todos los navegadores y elimina esta
+   clase de bug por completo. .scrub-frame.f2 ya se superpone a f1 vía la regla
+   base .scrub-frame (position:absolute), sin depender de este bloque. */
 .scrub-hero { aspect-ratio: 4 / 5; }
 .scrub-avance { aspect-ratio: 16 / 11; }
 
@@ -648,9 +686,10 @@ body::before {
   position: relative; overflow: visible; display: flex; flex-direction: column;
   border-radius: var(--r-xl); padding: 30px 26px 28px; border: 1px solid rgba(255,255,255,.6);
   background:
+    linear-gradient(122deg, rgba(255,255,255,.5) 0%, transparent 26%, transparent 68%, rgba(255,255,255,.2) 100%),
     radial-gradient(130% 85% at 15% -10%, color-mix(in srgb, var(--acc, var(--azul)) 22%, transparent), transparent 58%),
     linear-gradient(158deg, rgba(255,255,255,.72), rgba(255,255,255,.42));
-  -webkit-backdrop-filter: blur(20px) saturate(1.3); backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
   box-shadow: 0 20px 46px rgba(46,64,140,.11), inset 0 1px 0 rgba(255,255,255,.8);
   transition: transform var(--t), box-shadow var(--t);
 }
@@ -688,10 +727,11 @@ body::before {
 .cta-caja {
   text-align: left; border: 1px solid rgba(255,255,255,.6);
   background:
+    linear-gradient(122deg, rgba(255,255,255,.4) 0%, transparent 24%, transparent 70%, rgba(255,255,255,.16) 100%),
     radial-gradient(130% 90% at 15% -12%, color-mix(in srgb, var(--azul) 20%, transparent), transparent 55%),
     radial-gradient(95% 75% at 105% 112%, color-mix(in srgb, var(--lila) 16%, transparent), transparent 58%),
     linear-gradient(158deg, rgba(255,255,255,.7), rgba(255,255,255,.42));
-  -webkit-backdrop-filter: blur(20px) saturate(1.3); backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
   box-shadow: 0 24px 54px rgba(46,64,140,.12), inset 0 1px 0 rgba(255,255,255,.8);
 }
 /* Foto real de fondo, muy tenue, difuminada hacia el texto (solo se asoma del

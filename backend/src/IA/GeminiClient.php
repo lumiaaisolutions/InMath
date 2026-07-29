@@ -6,8 +6,10 @@ use App\Core\Env;
 
 /**
  * Cliente mínimo de la API de Gemini (sin SDK, cURL puro) para el agente de
- * IA del sitio y del panel — independiente del bot de WhatsApp (que usa
- * Claude vía ClaudeClient).
+ * IA del sitio y del panel ("Mathy") — independiente de App\Bot\GeminiClient,
+ * que usa Gemini para el motor conversacional del bot de WhatsApp con un
+ * contrato distinto (mensajes role/content estilo Claude, en vez de
+ * historial rol/texto, y sin el manejo de BOT_SIMULADO).
  */
 final class GeminiClient
 {

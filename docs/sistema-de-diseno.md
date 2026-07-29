@@ -27,6 +27,18 @@ lattice.com. Tokens **bloqueados**: ningún color o tipografía fuera del bloque
 > `004_reportes_fase6.sql`). **Lección:** al pedir "quita el morado", no basta con
 > buscar `var(--lila)` — hay que además grepear hex/rgb literales
 > (`#8B6FF0` / `rgba(139,111,240,...)`) por si algún sitio no pasó por el token.
+>
+> **Segunda ronda:** grepear hex conocidos no basta — aparecieron dos morados
+> distintos que ningún grep anterior tenía en su lista: `#C9B6FF` en el anillo
+> degradado de los botones `.boton.glow`/`.glow-halo` (¡en todos los CTA
+> primarios del sitio y del panel desde el inicio!) y `#8B5CF6` como color de
+> respaldo en el calendario de citas del panel (`panel/vistas/citas.php`). Se
+> encontraron con un barrido por **tono (hue)**, no por valor exacto: un script
+> en Python convierte cada hex/rgb del repo a HSL y marca cualquiera con hue
+> 255–330° (rango morado/violeta/magenta), saturación >12% y luminosidad entre
+> 10–92% — así no importa si es un morado "nuevo" que nadie había visto todavía.
+> Repetir este barrido por tono (no solo buscar hex conocidos) cada vez que se
+> pida "quita todo el morado".
 
 ## Tipografía
 
@@ -61,26 +73,67 @@ de sistema a propósito (deben verse aunque el servidor/CDN esté caído).
   parallax de los blobs y dibujo de la curva de avance en una sección *sticky*.
 - **Image sequence scrubbing** (`.scrub`/`.scrub-frame`, definido una vez en
   `inmath.css` alrededor de la línea 590): dos fotos reales en crossfade + Ken Burns
-  mapeados 1:1 al scroll vía `animation-timeline: view()`. Componente genérico —
-  cualquier `<div class="scrub scrub-X">` con dos `.scrub-frame` (`f1`/`f2`) y un
-  `.tinte` lo hereda automáticamente, sin CSS adicional salvo el `aspect-ratio` de
-  `scrub-X`. Usado en: `.scrub-hero` (héroe), `.scrub-avance` ("Qué incluye"),
-  `.scrub-acompana` (sección "Acompañamiento real", agregada entre "Cómo funciona"
-  y "Por qué Inmath" para alternar ritmo texto/foto en vez de dos secciones
-  seguidas sin imagen).
-  - **Compatibilidad Safari:** `CSS.supports('animation-timeline: view()')` **no es
-    confiable** — puede reportar `true` sin que el navegador realmente corra el
-    timeline. El fallback real usa `element.getAnimations()` tras un `requestAnimationFrame`
-    para confirmar si la animación (`scrubOut`/`kenburns1`) está genuinamente
-    corriendo; si no, un fallback JS por scroll activa las mismas clases con
-    `style.setProperty(..., 'important')`. Código en `pieSitio()` dentro de
-    `_comun.php`. Ya no es "estático en Safari" — el scrubbing funciona ahí también.
+  mapeados 1:1 al scroll. Componente genérico — cualquier `<div class="scrub
+  scrub-X">` con dos `.scrub-frame` (`f1`/`f2`) y un `.tinte` lo hereda
+  automáticamente, sin CSS adicional salvo el `aspect-ratio` de `scrub-X`. Usado
+  en: `.scrub-hero` (héroe), `.scrub-avance` ("Qué incluye"), `.scrub-acompana`
+  ("Acompañamiento real", entre "Cómo funciona" y "Por qué Inmath"),
+  `.scrub-agenda` (página de agendar cita — ver más abajo).
+  - **Ya NO usa `animation-timeline` nativo de CSS.** Se intentó dos veces
+    detectar si Safari soportaba el timeline de verdad (primero
+    `CSS.supports('animation-timeline: view()')`, luego `element.getAnimations()`
+    tras un `requestAnimationFrame`) y **las dos veces Safari mintió**: registraba
+    la animación pero no la corría ligada al scroll real, dejando los frames
+    congelados a medio cruce — efecto "encimado"/fantasma, visible incluso arriba
+    de la página sin haber scrolleado nada. El motor ahora es un único script JS
+    (en `pieSitio()`, `_comun.php`) que **siempre** corre, sin intentar detectar
+    soporte: lee la posición real de cada `.scrub` con `getBoundingClientRect()` y
+    aplica opacidad/transform con `style.setProperty(..., 'important')` en cada
+    frame de scroll. Resultado idéntico en todos los navegadores, sin la clase de
+    bug de "el navegador dice que sí pero no corre".
+  - **Bug de fórmula (no de navegador):** el cálculo de progreso original,
+    `(vh - top) / (vh + height)`, asume que el elemento empieza invisible y entra
+    por abajo — funciona para secciones bajo el pliegue, pero el héroe está
+    visible **desde la carga**, así que esa fórmula ya lo daba a medio camino del
+    cruce sin que el usuario hubiera scrolleado un solo píxel (el bug real detrás
+    del "se ven encimadas" reportado). El fix: el progreso se ancla a la
+    **distancia de scroll recorrida desde la carga**, no a la posición cruda en
+    el viewport — cada caja guarda un "ancla" en `scrollY` (`0` si ya es visible
+    al cargar, o el `scrollY` en el que empezaría a entrar si está más abajo),
+    garantizando frame 1 limpio en `scrollY=0` siempre, sin importar dónde viva
+    el elemento en la página.
 - **Fotos de fondo tenues:** además del scrubbing, `.cta-caja::after` (CTA final)
   aplica una foto real (`/img/fotos/cta-whatsapp.jpg`) como textura de fondo a
   opacidad muy baja (~26%), enmascarada con `mask-image` para que solo se asome del
   lado del formulario y no compita con el texto — mismo lenguaje de "foto real
   desaturada" que `.scrub`, pero estático.
 - Todo respeta `prefers-reduced-motion`.
+
+## Liquid glass — barrido especular
+
+Todas las superficies de vidrio principales (`.card`, `.plan`, `.cta-caja`,
+`.precio-caja`/`.tarjeta-form`/`.demo-chat`/`.grafica-firma`, `.boton`) llevan
+una capa adicional de `background`: un `linear-gradient(122deg, rgba(255,255,255,X)
+0%, transparent 26%, transparent 68%, rgba(255,255,255,Y) 100%)` colocado como
+**primera** capa (se pinta encima de las demás). Simula luz especular pegando en
+vidrio curvo — más claro arriba-izquierda, se apaga hacia abajo-derecha — en vez
+de un panel translúcido plano. Se combina con `saturate()` un poco más alto en el
+`backdrop-filter` (1.3→1.4/1.45) para que el color detrás del vidrio se sienta más
+vivo. Para agregar esta capa a una superficie nueva: es el primer gradiente en la
+lista de `background`, nunca reemplaza los que ya había (wash de color, tinte del
+fondo) — solo se antepone.
+
+## Tipografía editorial — énfasis de dos tonos
+
+El h1 del héroe usa `<span class="marca-pino">` para pintar "sí terminas" en el
+verde de marca (`--pino`), inspirado en el patrón de Udemy de mezclar pesos/estilos
+dentro de un mismo titular para que no todo pese igual ("Learn *essential* career
+and life skills"). **No se usó itálica** para esto: Bricolage Grotesque no tiene un
+archivo de itálica real en Google Fonts (se verificó pidiendo el eje `ital` a la
+API — la devuelve igual sin él), así que `<em>`/`font-style:italic` caerían en
+itálica falsa (slant sintético), que se ve mal en una grotesca geométrica como
+esta. El énfasis es de **color**, no de estilo, por esa razón puntual — no por
+preferencia general.
 
 ## Imágenes reales — disciplina de curaduría
 
@@ -125,6 +178,17 @@ instalador `npx skills add` en este entorno — una skill es solo un directorio 
   puntos de entrada, el resto son sub-skills de `skills/_jutsu/`).
 - **lumia-loading-screens** (local del usuario) — base de las pantallas de estado
   (rebrandeadas a la identidad Inmath).
+
+## Página de agenda (`agenda.php`)
+
+Rediseñada de un formulario angosto de una columna a dos columnas, con el mismo
+lenguaje que el héroe/"Acompañamiento real": foto real con `.scrub-agenda`
+(videollamada con asesor → agenda de papel), lista de reaseguro con iconos
+(`.agenda-respaldo`), y el formulario a la derecha con labels con ícono y los
+horarios **agrupados por día** (`.dia-grupo`/`.dia-etiqueta`) en vez de repetir
+"Miércoles 29 de julio" en cada botón de horario — antes eran filas planas de
+`AgendaServicio::slotsDisponibles()` sin agrupar, ahora se agrupan en PHP por el
+día de `inicio` antes de pintarlos.
 
 ## Rebranding a otro cliente
 

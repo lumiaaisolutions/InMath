@@ -15,27 +15,54 @@ mecánica del embudo ya funciona con el driver `simulado`:
    `recuperacion_carrito_horas`) + flujo 07 de n8n → recordatorio por WhatsApp y
    marca `recordatorio_enviado_en` (un solo recordatorio por pago).
 
-## Estado: PENDIENTE DE DECISIÓN DEL CLIENTE
+## Estado: MercadoPago elegido — driver real implementado, falta credenciales
 
-Los drivers reales son esqueletos (`DriverPendiente`) hasta que el cliente confirme
-el procesador. **No se escribió integración especulativa**: las APIs de pago cambian
-y deben verificarse contra la documentación oficial al momento de integrar.
+El cliente eligió **MercadoPago**. `App\Pagos\DriverMercadoPago` ya implementa la
+interfaz completa (`crearLink`, `verificarWebhook`) contra la documentación oficial
+vigente al integrar (mercadopago.com.mx/developers, Checkout Pro — verificada en
+vivo, no escrita de memoria):
 
-### Plan de integración por candidato (a verificar en docs oficiales vigentes)
+- **Crear preferencia:** `POST https://api.mercadopago.com/checkout/preferences`
+  con `Authorization: Bearer {access_token}`. La respuesta trae `init_point` (URL
+  de pago) e `id` (referencia externa que se guarda en `pagos.referencia_externa`).
+- **Webhook:** MercadoPago llama a `notification_url` con `{type, data:{id}}` y dos
+  headers de firma: `x-signature` (formato `ts=...,v1=...`) y `x-request-id`. Se
+  valida armando el manifest `id:{data.id en minúsculas};request-id:{x-request-id};ts:{ts};`,
+  calculando HMAC-SHA256 con el secreto del webhook y comparando en tiempo
+  constante contra `v1`. El cuerpo del webhook **no se usa directamente** para
+  decidir el estado del pago (MercadoPago lo documenta como no confiable por sí
+  solo) — el driver re-consulta `GET /v1/payments/{id}` antes de aplicar el evento.
 
-| | Stripe | Conekta | MercadoPago |
-|---|---|---|---|
-| Link de pago | Checkout Session (URL) | Checkout / Payment Link | Preferencia (init_point) |
-| Webhook | firma HMAC en header | validar re-consultando la orden | firma x-signature o re-consulta |
-| Credenciales | secret key + webhook signing secret | private key | access token |
-| Consideración MX | tarjetas int'l, sin OXXO nativo fácil | fuerte en MX (OXXO, SPEI) | muy usado en MX (OXXO, transferencia) |
+**Para activarlo en producción** (todavía en `simulado` a propósito, ver abajo):
 
-Recomendación preliminar (a validar con el cliente según sus cuentas bancarias y si
-necesita pagos en efectivo): **Conekta o MercadoPago** si el público paga con
-OXXO/SPEI — común en estudiantes —; Stripe si predominan tarjetas.
+1. Obtener `MERCADOPAGO_ACCESS_TOKEN` (credenciales de producción) y
+   `MERCADOPAGO_WEBHOOK_SECRET` (Webhooks → Configurar notificaciones) desde el
+   panel de desarrolladores de MercadoPago — cuenta del cliente.
+2. Ponerlos en `backend/.env` junto con `APP_URL` (URL pública del sitio, sin
+   slash final — se usa para armar `notification_url`/`back_urls`).
+3. Cambiar la fila `procesador_pago_activo` en la tabla `configuraciones` de
+   `simulado` a `mercadopago`.
+
+**Por qué sigue en `simulado` por ahora:** la integración de WhatsApp Business
+Cloud API (Meta) todavía está pendiente — sin eso el bot no recibe/envía mensajes
+reales, así que activar MercadoPago sin credenciales solo generaría un error si
+alguien intentara pagar. El código ya está listo; falta el paso 1–3 de arriba
+cuando el cliente tenga las credenciales a la mano.
+
+### Candidatos no elegidos (quedan como esqueleto `DriverPendiente`)
+
+| | Stripe | Conekta |
+|---|---|---|
+| Link de pago | Checkout Session (URL) | Checkout / Payment Link |
+| Webhook | firma HMAC en header | validar re-consultando la orden |
+| Credenciales | secret key + webhook signing secret | private key |
+
+Si en el futuro se necesita alguno de estos, seguir el mismo principio que se usó
+para MercadoPago: **no escribir integración especulativa** — verificar la
+documentación oficial vigente al momento de integrar, no de memoria.
 
 Cada driver implementa la interfaz `App\Pagos\ProcesadorPago` (2 métodos:
-`crearLink`, `verificarWebhook`); integrar uno son ~100 líneas + credenciales en
+`crearLink`, `verificarWebhook`); integrar uno son ~100–150 líneas + credenciales en
 `.env` + URL del webhook en el dashboard del procesador.
 
 ## Driver simulado (desarrollo)

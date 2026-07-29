@@ -91,20 +91,36 @@ DB_PASS=
 API_KEY=clave-de-prueba-local-123
 APP_ENV=desarrollo
 APP_TZ=America/Mexico_City
-BOT_SIMULADO=1            # el bot responde de forma simulada, sin llamar a Claude
+BOT_SIMULADO=1            # el bot responde de forma simulada, sin llamar a Gemini
 PAGO_WEBHOOK_SECRET=secreto-pruebas-999
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-3.6-flash
+APP_URL=
+MERCADOPAGO_ACCESS_TOKEN=
+MERCADOPAGO_WEBHOOK_SECRET=
 ```
+
+> Nota: en producción `BOT_SIMULADO=0` — el motor del bot (`App\Bot\MotorBot`)
+> ya llama a Gemini de verdad usando el mismo `GEMINI_API_KEY` que el agente
+> Mathy (son dos clientes independientes: `App\Bot\GeminiClient` para el bot,
+> `App\IA\GeminiClient` para Mathy). Localmente sigue en `1` porque no tiene
+> caso llamar a la API real en desarrollo — cambiar a mano si se necesita
+> probar el flujo real desde local.
 
 ## Credenciales que faltan (producción)
 
 Estas dependen del cliente y aún no existen (ver [`fases-y-pendientes.md`](fases-y-pendientes.md)):
 
-- `ANTHROPIC_API_KEY` — motor del bot (quitar `BOT_SIMULADO` al tenerla).
 - WhatsApp Business Cloud API de Meta: `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`,
-  `WHATSAPP_VERIFY_TOKEN` (se configuran en n8n).
-- Google Calendar OAuth (en n8n).
-- Credenciales del procesador de pago elegido.
-- SMTP para el envío de reportes por correo (en n8n).
+  `WHATSAPP_VERIFY_TOKEN` (se configuran en n8n). Pendiente explícitamente —
+  sin esto el bot (ya conectado a Gemini) no recibe tráfico real.
+- Google Calendar OAuth (en n8n). Pendiente explícitamente.
+- `MERCADOPAGO_ACCESS_TOKEN` y `MERCADOPAGO_WEBHOOK_SECRET` — procesador
+  elegido (MercadoPago), driver ya implementado (`DriverMercadoPago`), solo
+  falta que el cliente genere las credenciales de producción. Ver [`pagos.md`](pagos.md).
+- SMTP para el envío de reportes por correo (en n8n) — pendiente
+  explícitamente; el nodo de envío ya existe en el flujo, solo falta la
+  credencial.
 
 ## Checklist de endurecimiento antes de producción
 
@@ -114,7 +130,7 @@ Estas dependen del cliente y aún no existen (ver [`fases-y-pendientes.md`](fase
 - [x] `APP_ENV=produccion` (oculta el detalle de los errores 500).
 - [x] Usuario de MySQL dedicado con permisos mínimos (no `root`).
 - [x] Servir todo por HTTPS (Meta exige HTTPS para el webhook de WhatsApp). *(SSL automático de Hostinger)*
-- [ ] Quitar `BOT_SIMULADO` cuando exista `ANTHROPIC_API_KEY`. *(sigue en `1`; el bot de WhatsApp no está conectado aún, solo el agente Mathy vía Gemini)*
+- [x] Motor del bot conectado a un proveedor de IA real. *(`BOT_SIMULADO=0` en producción, usando Gemini vía `App\Bot\GeminiClient`; falta solo la conexión de WhatsApp Business Cloud API de Meta para que le llegue tráfico real — ver [`fases-y-pendientes.md`](fases-y-pendientes.md))*
 
 ## Agente de IA "Mathy" (Gemini) — producción
 

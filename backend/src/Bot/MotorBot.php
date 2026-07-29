@@ -3,13 +3,14 @@
 namespace App\Bot;
 
 use App\Core\Database;
+use App\Core\Env;
 use App\Servicios\AgendaServicio;
 use App\Servicios\ConversacionServicio;
 use App\Servicios\ProspectoServicio;
 
 /**
  * Motor conversacional: recibe un mensaje entrante de WhatsApp, arma el contexto
- * (prompt de BD + datos del curso + historial), llama a Claude, aplica la decisión
+ * (prompt de BD + datos del curso + historial), llama a Gemini, aplica la decisión
  * (calificación, traspaso a asesor, oferta de cita/pago) y persiste todo.
  *
  * n8n solo transporta: recibe el webhook de Meta, llama a POST /api/bot/procesar
@@ -122,9 +123,9 @@ final class MotorBot
     {
         $sistema = self::armarPromptSistema($prospecto);
         $historial = self::armarHistorial($conversacionId);
-        $modelo = self::config('modelo_bot', 'claude-haiku-4-5-20251001');
+        $modelo = self::config('modelo_bot', Env::get('GEMINI_MODEL', 'gemini-3.6-flash'));
 
-        $crudo = ClaudeClient::completar($sistema, $historial, $modelo);
+        $crudo = GeminiClient::completar($sistema, $historial, $modelo);
         return self::interpretar($crudo);
     }
 

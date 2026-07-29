@@ -353,20 +353,42 @@ function pieSitio(): void
 </footer>
 <?= agenteIA() ?>
 <script>
-/* Alterna de .scrub: en navegadores donde animation-timeline:view() no corre
-   de verdad (Safari, incluso versiones donde CSS.supports() miente y dice
-   que sí lo soporta) recalcula a mano el mismo crossfade + Ken Burns leyendo
-   el scroll. La detección usa getAnimations() (ver más abajo) en vez de
-   CSS.supports, que resultó poco fiable en Safari. */
+/* Motor único (sin CSS animation-timeline) del crossfade + Ken Burns de .scrub:
+   recalcula a mano la opacidad/transform de cada frame leyendo el scroll real.
+   Antes esto solo corría como "fallback" cuando se detectaba que el navegador
+   no soportaba animation-timeline:view() — la detección se intentó dos veces
+   (CSS.supports(), luego getAnimations()) y las dos veces Safari mintió: el
+   navegador registraba la animación pero no la corría ligada al scroll de
+   verdad, dejando los frames congelados a medio cruce (efecto "encimado"/
+   fantasma, visible incluso arriba de la página). Correr siempre este motor
+   JS, sin intentar detectar soporte nativo, elimina esa clase de bug por
+   completo — el resultado es idéntico en todos los navegadores. */
 (function () {
   if (window.matchMedia && !matchMedia('(prefers-reduced-motion: no-preference)').matches) return;
   var cajas = Array.prototype.slice.call(document.querySelectorAll('.scrub'));
   if (!cajas.length) return;
 
-  function progreso(el) {
-    var r = el.getBoundingClientRect(), vh = window.innerHeight || document.documentElement.clientHeight;
-    var p = (vh - r.top) / (vh + r.height);
-    return Math.min(1, Math.max(0, p));
+  // El progreso se ancla a la distancia de scroll recorrida desde la carga,
+  // no a la posición cruda del elemento en el viewport. Con la posición cruda
+  // (vh - top)/(vh + height), un elemento ya visible al cargar (el héroe, que
+  // vive arriba del todo) arranca con progreso >0 sin que el usuario haya
+  // scrolleado nada — eso mezclaba las dos fotos desde el primer render (el
+  // bug "se ven encimadas" reportado, visible incluso sin tocar el scroll).
+  // Aquí cada caja guarda un "ancla" en scrollY: 0 si ya está visible al
+  // cargar (garantiza frame 1 limpio en scrollY=0), o el scrollY en el que
+  // empezaría a entrar al viewport si está más abajo en la página.
+  var medidas = [];
+  function medir() {
+    var scrollY = window.scrollY || window.pageYOffset, vh = window.innerHeight || document.documentElement.clientHeight;
+    medidas = cajas.map(function (caja) {
+      var r = caja.getBoundingClientRect();
+      var absTop = r.top + scrollY;
+      return { caja: caja, ancla: Math.max(0, absTop - vh), recorrido: Math.max(280, r.height) };
+    });
+  }
+  function progreso(m) {
+    var scrollY = window.scrollY || window.pageYOffset;
+    return Math.min(1, Math.max(0, (scrollY - m.ancla) / m.recorrido));
   }
   function enRango(p, ini, fin) { return Math.min(1, Math.max(0, (p - ini) / (fin - ini))); }
   function mezcla(a, b, t) { return a + (b - a) * t; }
@@ -377,10 +399,10 @@ function pieSitio(): void
   }
 
   function pintar() {
-    cajas.forEach(function (caja) {
-      var f1 = caja.querySelector('.scrub-frame.f1'), f2 = caja.querySelector('.scrub-frame.f2');
+    medidas.forEach(function (m) {
+      var f1 = m.caja.querySelector('.scrub-frame.f1'), f2 = m.caja.querySelector('.scrub-frame.f2');
       if (!f1 || !f2) return;
-      var p = progreso(caja), lp = enRango(p, 0.15, 0.85);
+      var p = progreso(m), lp = enRango(p, 0.15, 0.85);
       f1.style.setProperty('opacity', opacidadCruce(lp, false), 'important');
       f2.style.setProperty('opacity', opacidadCruce(lp, true), 'important');
       f1.style.setProperty('transform', 'scale(' + mezcla(1.1, 1, p) + ') translate(' + mezcla(0, -1.5, p) + '%, ' + mezcla(0, 1.5, p) + '%)', 'important');
@@ -390,25 +412,11 @@ function pieSitio(): void
   }
   var marcado = false;
   function pedir() { if (!marcado) { marcado = true; requestAnimationFrame(pintar); } }
-  function activarFallback() {
-    window.addEventListener('scroll', pedir, { passive: true });
-    window.addEventListener('resize', pedir);
-    pintar();
-  }
-
-  // Prueba real (no CSS.supports, poco fiable en Safari): usamos la Web
-  // Animations API para ver si el navegador de verdad tiene programada la
-  // animación scrubOut/kenburns1 en el elemento. getAnimations() solo
-  // devuelve animaciones que el motor realmente va a ejecutar. Se espera un
-  // frame a que termine el layout antes de preguntar.
-  var primera = cajas[0].querySelector('.scrub-frame.f1');
-  if (!primera || typeof primera.getAnimations !== 'function') { activarFallback(); return; }
-  requestAnimationFrame(function () {
-    var corriendo = primera.getAnimations().some(function (anim) {
-      return anim.animationName === 'scrubOut' || anim.animationName === 'kenburns1';
-    });
-    if (!corriendo) activarFallback();
-  });
+  function remedir() { medir(); pedir(); }
+  window.addEventListener('scroll', pedir, { passive: true });
+  window.addEventListener('resize', remedir);
+  medir();
+  pintar();
 })();
 </script>
 </body>

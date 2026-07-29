@@ -5,17 +5,18 @@ namespace App\Bot;
 use App\Core\Env;
 
 /**
- * Cliente mínimo de la API de mensajes de Claude (sin SDK, cURL puro).
- * Con BOT_SIMULADO=1 responde de forma determinista sin llamar a la API —
- * usado en pruebas locales y mientras no haya ANTHROPIC_API_KEY.
+ * Motor conversacional del bot de WhatsApp — Gemini (cURL puro, sin SDK).
+ * Reemplaza al antiguo ClaudeClient: mismo contrato (completar()), mismo
+ * fallback simulado con BOT_SIMULADO=1, misma expectativa de que el prompt
+ * de sistema (tabla prompts) le pida a el modelo responder en JSON
+ * ({respuesta, accion, calificacion, cita}) que MotorBot::interpretar() lee.
  */
-final class ClaudeClient
+final class GeminiClient
 {
-    private const URL = 'https://api.anthropic.com/v1/messages';
-    private const VERSION = '2023-06-01';
+    private const URL = 'https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent';
 
     /**
-     * @param array<int,array{role:string,content:string}> $mensajes
+     * @param array<int,array{role:string,content:string}> $mensajes roles: 'user'|'assistant'
      */
     public static function completar(string $sistema, array $mensajes, string $modelo, int $maxTokens = 1024): string
     {
@@ -23,15 +24,31 @@ final class ClaudeClient
             return self::respuestaSimulada($mensajes);
         }
 
-        $apiKey = Env::requerir('ANTHROPIC_API_KEY');
+        $apiKey = Env::requerir('GEMINI_API_KEY');
+
+        $contents = [];
+        foreach ($mensajes as $mensaje) {
+            $contents[] = [
+                'role' => ($mensaje['role'] ?? '') === 'assistant' ? 'model' : 'user',
+                'parts' => [['text' => (string) ($mensaje['content'] ?? '')]],
+            ];
+        }
+
         $payload = json_encode([
-            'model' => $modelo,
-            'max_tokens' => $maxTokens,
-            'system' => $sistema,
-            'messages' => $mensajes,
+            'systemInstruction' => ['parts' => [['text' => $sistema]]],
+            'contents' => $contents,
+            // thinkingLevel bajo: sin esto, Gemini gasta la mayoría de
+            // maxOutputTokens en razonamiento interno y el JSON de salida
+            // llega cortado a la mitad (mismo problema ya documentado y
+            // resuelto para el agente Mathy en App\IA\GeminiClient).
+            'generationConfig' => [
+                'temperature' => 0.5,
+                'maxOutputTokens' => $maxTokens,
+                'thinkingConfig' => ['thinkingLevel' => 'low'],
+            ],
         ], JSON_UNESCAPED_UNICODE);
 
-        $ch = curl_init(self::URL);
+        $ch = curl_init(sprintf(self::URL, $modelo));
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
@@ -39,8 +56,7 @@ final class ClaudeClient
             CURLOPT_TIMEOUT => 60,
             CURLOPT_HTTPHEADER => [
                 'Content-Type: application/json',
-                'x-api-key: ' . $apiKey,
-                'anthropic-version: ' . self::VERSION,
+                'x-goog-api-key: ' . $apiKey,
             ],
         ]);
         $respuesta = curl_exec($ch);
@@ -49,18 +65,16 @@ final class ClaudeClient
         curl_close($ch);
 
         if ($respuesta === false) {
-            throw new \RuntimeException("Error de red al llamar a Claude: {$errorCurl}");
+            throw new \RuntimeException("Error de red al llamar a Gemini: {$errorCurl}");
         }
         $datos = json_decode($respuesta, true);
         if ($codigo !== 200) {
             $detalle = $datos['error']['message'] ?? substr($respuesta, 0, 300);
-            throw new \RuntimeException("API de Claude respondió {$codigo}: {$detalle}");
+            throw new \RuntimeException("API de Gemini respondió {$codigo}: {$detalle}");
         }
         $texto = '';
-        foreach ($datos['content'] ?? [] as $bloque) {
-            if (($bloque['type'] ?? '') === 'text') {
-                $texto .= $bloque['text'];
-            }
+        foreach ($datos['candidates'][0]['content']['parts'] ?? [] as $bloque) {
+            $texto .= $bloque['text'] ?? '';
         }
         return $texto;
     }
@@ -76,7 +90,6 @@ final class ClaudeClient
             }
         }
 
-        // Selección de horario: "opción 2" tras una lista de slots del asistente.
         if (preg_match('/opci[oó]n\s*(\d+)|^(\d)$/u', $ultimo, $m)) {
             $indice = (int) ($m[1] !== '' ? $m[1] : $m[2]) - 1;
             for ($i = count($mensajes) - 1; $i >= 0; $i--) {
