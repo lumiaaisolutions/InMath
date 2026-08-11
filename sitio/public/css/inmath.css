@@ -1213,3 +1213,239 @@ body::after {
 /* Enlace "Entrar" del nav (acceso al panel CRM): pill discreto, mismo lenguaje */
 .barra nav a.n-login { --pill: rgba(255,255,255,.75); --pillfg: var(--tinta); }
 .barra nav a.n-login:hover { --pillfg: var(--azul-600); }
+
+/* =========================================================================
+   v9 — Nuevo carácter tipográfico + color vivo + calendario de agenda
+   (referencia: widget de calendario de vidrio con gradiente rosa→ámbar,
+   día seleccionado en círculo de gradiente, fechas navegables).
+   ========================================================================= */
+
+/* ---- Fuentes: Sora (display geométrica) + Figtree (cuerpo humanista) ---- */
+:root {
+  --display: "Sora", "Figtree", system-ui, sans-serif;
+  --cuerpo:  "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.heroe h1 { letter-spacing: -.036em; font-weight: 800; }
+.cab-seccion h2, .cta-caja h2, .agenda-lado h1, .pagina-form h1 { letter-spacing: -.026em; font-weight: 700; }
+.logo b { letter-spacing: -.015em; }
+
+/* ---- Color: el lienzo gana el rosa/coral→ámbar de la referencia ---- */
+body::before {
+  background:
+    linear-gradient(168deg, rgba(203,228,252,.85) 0%, rgba(214,241,243,.5) 26%, rgba(255,255,255,0) 50%),
+    linear-gradient(340deg, rgba(251,205,178,.9) 0%, rgba(247,185,208,.65) 30%, rgba(255,255,255,0) 60%),
+    radial-gradient(52% 44% at 78% 86%, rgba(229,86,138,.28), transparent 74%),
+    radial-gradient(46% 40% at 96% 44%, rgba(244,166,42,.22), transparent 74%);
+}
+
+/* ---- Widget de calendario (agenda): tarjeta de gradiente vivo ---- */
+.dias-strip {
+  display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 10px;
+  scrollbar-width: none;
+}
+.dias-strip::-webkit-scrollbar { display: none; }
+.dia-chip {
+  display: grid; place-items: center; gap: 2px; flex: 0 0 auto;
+  min-width: 56px; padding: 9px 10px; border-radius: 18px;
+  background: linear-gradient(158deg, rgba(255,255,255,.85), rgba(255,255,255,.55));
+  border: 1px solid rgba(255,255,255,.85);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  box-shadow: 0 8px 20px rgba(46,64,140,.1);
+  transition: transform var(--t), box-shadow var(--t);
+}
+.dia-chip:hover { transform: translateY(-3px); box-shadow: 0 14px 28px rgba(46,64,140,.16); }
+.dia-chip:active { transform: scale(.95); }
+.dia-chip .dc-sem { font: 600 .68rem/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--tinta-2); }
+.dia-chip .dc-num {
+  font: 700 1.15rem/1 var(--display); color: #fff;
+  width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%;
+  background: linear-gradient(135deg, var(--rosa), var(--sol));
+  box-shadow: 0 6px 14px rgba(229,86,138,.35);
+}
+
+/* La tarjeta del día: gradiente vivo rosa→ámbar con vidrio, texto blanco */
+.dia-grupo {
+  scroll-margin-top: 110px;
+  background:
+    linear-gradient(122deg, rgba(255,255,255,.34) 0%, transparent 30%, transparent 72%, rgba(255,255,255,.16) 100%),
+    linear-gradient(135deg, color-mix(in srgb, var(--rosa) 82%, transparent) 0%, color-mix(in srgb, #E2707F 78%, transparent) 46%, color-mix(in srgb, var(--sol) 80%, transparent) 100%);
+  border: 1px solid rgba(255,255,255,.55);
+}
+.dia-grupo::before {
+  background:
+    radial-gradient(40% 52% at 14% 18%, rgba(255,255,255,.5) 0%, transparent 70%),
+    radial-gradient(46% 56% at 88% 30%, color-mix(in srgb, var(--sol) 62%, transparent) 0%, transparent 74%),
+    radial-gradient(50% 60% at 44% 98%, color-mix(in srgb, var(--rosa) 55%, transparent) 0%, transparent 78%);
+}
+.dia-grupo:target { box-shadow: 0 0 0 3px rgba(255,255,255,.9), var(--sombra-m); }
+.dia-etiqueta { display: none; }
+.dia-cab { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; color: #fff; }
+.dia-cab .dia-num { font: 700 2.5rem/1 var(--display); letter-spacing: -.03em; text-shadow: 0 2px 10px rgba(120,30,60,.25); }
+.dia-cab .dia-fecha { display: grid; gap: 2px; }
+.dia-cab .dia-fecha b { font: 600 1.02rem/1.1 var(--display); }
+.dia-cab .dia-fecha small { font: 500 .8rem/1 var(--cuerpo); opacity: .85; text-transform: capitalize; }
+
+/* Chips de hora sobre el gradiente: blanco translúcido; elegido = blanco pleno */
+.dia-grupo .slot span {
+  color: #fff; border-color: rgba(255,255,255,.5);
+  background: rgba(255,255,255,.18);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  font-weight: 600;
+}
+.dia-grupo .slot span:hover { background: rgba(255,255,255,.3); }
+.dia-grupo .slot input:checked + span {
+  background: #fff; color: var(--rosa); border-color: transparent;
+  box-shadow: 0 10px 24px rgba(120,30,60,.3);
+}
+.dia-grupo .slot input:focus-visible + span { box-shadow: 0 0 0 3px rgba(255,255,255,.85); }
+
+/* =========================================================================
+   v9.1 — Widget de calendario de la agenda (referencia: glass calendar con
+   gradiente vivo, mes y día grandes, tira horizontal de fechas y horas que
+   se despliegan con animación al elegir día).
+   ========================================================================= */
+.cal-widget {
+  position: relative; isolation: isolate; overflow: hidden;
+  border-radius: 30px; padding: 22px 20px 20px;
+  background:
+    linear-gradient(122deg, rgba(255,255,255,.32) 0%, transparent 30%, transparent 72%, rgba(255,255,255,.16) 100%),
+    linear-gradient(135deg, color-mix(in srgb, var(--rosa) 84%, transparent) 0%, #E2707F 46%, color-mix(in srgb, var(--sol) 85%, transparent) 100%);
+  border: 1px solid rgba(255,255,255,.55);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5); backdrop-filter: blur(20px) saturate(1.5);
+  box-shadow: 0 26px 60px rgba(120,30,60,.28), inset 0 1px 0 rgba(255,255,255,.55);
+  color: #fff;
+}
+.cal-widget::before {
+  content: ""; position: absolute; inset: -40% -12%; z-index: -1;
+  background:
+    radial-gradient(38% 48% at 16% 16%, rgba(255,255,255,.45) 0%, transparent 70%),
+    radial-gradient(44% 54% at 88% 26%, color-mix(in srgb, var(--sol) 66%, transparent) 0%, transparent 74%),
+    radial-gradient(48% 58% at 40% 100%, color-mix(in srgb, var(--rosa) 60%, transparent) 0%, transparent 78%);
+  filter: blur(30px);
+}
+.cal-cab { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+.cal-titulo { display: grid; gap: 2px; }
+.cal-mes { font: 700 clamp(1.9rem, 4vw, 2.5rem)/1 var(--display); letter-spacing: -.03em; text-shadow: 0 2px 12px rgba(120,30,60,.3); }
+.cal-sem { font: 500 .88rem/1 var(--cuerpo); opacity: .85; }
+.cal-num { font: 700 clamp(2.2rem, 4.6vw, 3rem)/1 var(--display); letter-spacing: -.03em; text-shadow: 0 2px 12px rgba(120,30,60,.3); font-feature-settings: "tnum" 1; }
+.cal-mes.cambia, .cal-num.cambia, .cal-sem.cambia { animation: calCambia 320ms cubic-bezier(0.23,1,0.32,1); }
+@keyframes calCambia { from { opacity: 0; transform: translateY(6px) scale(.96); } }
+
+/* Tira horizontal de días: scroll con snap, disponibles resaltados */
+.cal-strip {
+  display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 12px;
+  scroll-snap-type: x proximity; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(90deg, #000 92%, transparent);
+          mask-image: linear-gradient(90deg, #000 92%, transparent);
+}
+.cal-strip::-webkit-scrollbar { display: none; }
+.cal-dia {
+  flex: 0 0 auto; scroll-snap-align: start;
+  display: grid; place-items: center; gap: 5px;
+  min-width: 52px; padding: 8px 6px; border: 0; border-radius: 16px;
+  background: transparent; color: #fff; cursor: pointer; font-family: var(--cuerpo);
+  transition: transform 180ms cubic-bezier(0.23,1,0.32,1), background 180ms ease;
+}
+.cal-dia .cd-sem { font: 600 .66rem/1 var(--mono); text-transform: uppercase; letter-spacing: .07em; opacity: .8; }
+.cal-dia .cd-num {
+  font: 700 1.05rem/1 var(--display); width: 36px; height: 36px;
+  display: grid; place-items: center; border-radius: 50%;
+  transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms cubic-bezier(0.23,1,0.32,1);
+}
+.cal-dia[disabled] { opacity: .38; cursor: default; }
+.cal-dia.disp .cd-num { box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.65); background: rgba(255,255,255,.14); }
+.cal-dia.disp:hover { transform: translateY(-3px); }
+.cal-dia.disp:hover .cd-num { background: rgba(255,255,255,.3); }
+.cal-dia.disp:active { transform: scale(.92); }
+.cal-dia.activo .cd-num {
+  background: #fff; color: var(--rosa); box-shadow: 0 8px 20px rgba(120,30,60,.35);
+  animation: calPulso 420ms cubic-bezier(0.23,1,0.32,1);
+}
+@keyframes calPulso { 0% { transform: scale(.7); } 55% { transform: scale(1.12); } 100% { transform: scale(1); } }
+.cal-dia:focus-visible { outline: 2.5px solid rgba(255,255,255,.9); outline-offset: 2px; border-radius: 16px; }
+
+/* Horas del día activo: chips blancos translúcidos con stagger al desplegarse */
+.cal-horas { border-top: 1px solid rgba(255,255,255,.3); padding-top: 14px; }
+.cal-grupo .slots { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+.cal-grupo .slot span {
+  color: #fff; border-color: rgba(255,255,255,.5);
+  background: rgba(255,255,255,.16);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  font-weight: 600;
+}
+.cal-grupo .slot span:hover { background: rgba(255,255,255,.3); }
+.cal-grupo .slot input:checked + span {
+  background: #fff; color: var(--rosa); border-color: transparent;
+  box-shadow: 0 10px 24px rgba(120,30,60,.3);
+}
+.cal-grupo .slot input:focus-visible + span { box-shadow: 0 0 0 3px rgba(255,255,255,.85); }
+.cal-grupo.anima .slot { animation: slotEntra 300ms cubic-bezier(0.23,1,0.32,1) both; }
+.cal-grupo.anima .slot:nth-child(2) { animation-delay: 40ms; }
+.cal-grupo.anima .slot:nth-child(3) { animation-delay: 80ms; }
+.cal-grupo.anima .slot:nth-child(4) { animation-delay: 120ms; }
+.cal-grupo.anima .slot:nth-child(5) { animation-delay: 160ms; }
+.cal-grupo.anima .slot:nth-child(6) { animation-delay: 200ms; }
+.cal-grupo.anima .slot:nth-child(n+7) { animation-delay: 240ms; }
+@keyframes slotEntra { from { opacity: 0; transform: translateY(10px) scale(.96); } }
+@media (prefers-reduced-motion: reduce) {
+  .cal-grupo.anima .slot, .cal-mes.cambia, .cal-num.cambia, .cal-sem.cambia, .cal-dia.activo .cd-num { animation: none !important; }
+}
+
+/* Badge "Desarrollado por LUMIA" en el pie (enlace a lumiaaisolutions.com) */
+.lumia-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  font: 500 .84rem/1 var(--cuerpo); color: var(--tinta-2);
+  background: rgba(255,255,255,.66); border: 1px solid rgba(255,255,255,.85);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  padding: 9px 14px 9px 11px; border-radius: 999px;
+  box-shadow: 0 8px 20px rgba(46,64,140,.1);
+  transition: transform var(--t), box-shadow var(--t), color var(--t);
+}
+.lumia-badge img { width: 18px; height: 18px; }
+.lumia-badge b { font-weight: 700; background: linear-gradient(120deg, #8B5CF6, #4D9EF7); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lumia-badge:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(46,64,140,.16); color: var(--tinta); }
+.lumia-badge:active { transform: scale(.96); }
+
+/* =========================================================================
+   v10 — Regla 60-30-10 restaurada: BLANCO domina, pasteles fríos de apoyo,
+   y el 10% de acento en los colores del logo (azul #3B6FF5 / teal #1E9EB8 /
+   meta ámbar). Se elimina el rosa del sistema (esta capa sobreescribe los
+   gradientes rosas de v9 sin tocar su estructura).
+   ========================================================================= */
+
+/* Lienzo: blanco con washes fríos suaves — ya no rosa/durazno intensos */
+body::before {
+  background:
+    linear-gradient(168deg, rgba(217,238,251,.55) 0%, rgba(214,241,243,.35) 30%, rgba(255,255,255,0) 52%),
+    linear-gradient(340deg, rgba(220,232,255,.45) 0%, rgba(214,242,232,.3) 28%, rgba(255,255,255,0) 55%),
+    radial-gradient(46% 38% at 85% 90%, rgba(30,158,184,.14), transparent 74%),
+    radial-gradient(40% 34% at 90% 12%, rgba(59,111,245,.12), transparent 72%);
+}
+
+/* Tira de fechas: el círculo del día pasa al gradiente del logo */
+.dia-chip .dc-num { background: linear-gradient(135deg, var(--azul), var(--lila)); box-shadow: 0 6px 14px rgba(59,111,245,.35); }
+
+/* Widget del calendario: gradiente azul→teal del logo, mismo lenguaje glass */
+.cal-widget {
+  background:
+    linear-gradient(122deg, rgba(255,255,255,.34) 0%, transparent 30%, transparent 72%, rgba(255,255,255,.16) 100%),
+    linear-gradient(135deg, color-mix(in srgb, var(--azul) 88%, transparent) 0%, #2E86D8 48%, color-mix(in srgb, var(--lila) 88%, transparent) 100%);
+  box-shadow: 0 26px 60px rgba(36,84,214,.28), inset 0 1px 0 rgba(255,255,255,.55);
+}
+.cal-widget::before {
+  background:
+    radial-gradient(38% 48% at 16% 16%, rgba(255,255,255,.45) 0%, transparent 70%),
+    radial-gradient(44% 54% at 88% 26%, color-mix(in srgb, var(--lila) 62%, transparent) 0%, transparent 74%),
+    radial-gradient(48% 58% at 40% 100%, color-mix(in srgb, var(--azul) 55%, transparent) 0%, transparent 78%);
+}
+.cal-mes, .cal-num { text-shadow: 0 2px 12px rgba(20,50,120,.3); }
+.cal-dia.activo .cd-num { color: var(--azul-600); box-shadow: 0 8px 20px rgba(20,50,120,.35); }
+.cal-grupo .slot input:checked + span { color: var(--azul-600); box-shadow: 0 10px 24px rgba(20,50,120,.3); }
+
+/* Cualquier resto rosa de v9 en grupos por día (si se reutilizan) */
+.dia-grupo {
+  background:
+    linear-gradient(122deg, rgba(255,255,255,.34) 0%, transparent 30%, transparent 72%, rgba(255,255,255,.16) 100%),
+    linear-gradient(135deg, color-mix(in srgb, var(--azul) 82%, transparent) 0%, #2E86D8 46%, color-mix(in srgb, var(--lila) 80%, transparent) 100%);
+}
+.dia-grupo .slot input:checked + span { color: var(--azul-600); }

@@ -324,7 +324,7 @@ function cabeceraSitio(string $titulo, string $activo = ''): void
   <link rel="icon" type="image/svg+xml" href="/img/inmath.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/inmath.css?v=<?= e((string) (@filemtime(__DIR__ . '/css/inmath.css') ?: 1)) ?>">
 </head>
 <body>
@@ -379,6 +379,10 @@ function pieSitio(): void
         <a href="<?= e($panelPie) ?>">Acceso asesores</a>
       <?php endif; ?>
     </nav>
+    <a class="lumia-badge" href="https://lumiaaisolutions.com/" target="_blank" rel="noopener">
+      <img src="/img/lumia.svg" alt="" width="18" height="18">
+      Desarrollado por <b>LUMIA</b>
+    </a>
   </div>
 </footer>
 <?= agenteIA() ?>

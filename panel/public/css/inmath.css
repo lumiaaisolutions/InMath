@@ -455,3 +455,112 @@ body::before {
   .agente-ia { right: 14px; bottom: 14px; }
   .agente-panel { bottom: 68px; }
 }
+
+/* =========================================================================
+   v9 — Armonía con la landing: mismas fuentes (Sora + Figtree), mismo lienzo
+   degradado cielo→durazno con grano, y login rediseñado en split con carrusel
+   de fotos/videos (public/img/login/, administrable desde Configuración).
+   ========================================================================= */
+:root {
+  --display: "Sora", "Figtree", system-ui, sans-serif;
+  --cuerpo:  "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+body::before {
+  content: ""; position: fixed; inset: -10%; z-index: -2; pointer-events: none;
+  background:
+    linear-gradient(168deg, rgba(203,228,252,.8) 0%, rgba(214,241,243,.45) 28%, rgba(255,255,255,0) 52%),
+    linear-gradient(340deg, rgba(251,205,178,.7) 0%, rgba(247,185,208,.45) 28%, rgba(255,255,255,0) 58%),
+    radial-gradient(50% 42% at 80% 88%, rgba(229,86,138,.16), transparent 74%);
+}
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  opacity: .3; mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.86' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.16'/%3E%3C/svg%3E");
+}
+
+/* ---- Login split: media a la izquierda, tarjeta de vidrio a la derecha ---- */
+.login-body { min-height: 100vh; background: var(--lienzo, #FBFCFF); }
+.login-split { display: grid; grid-template-columns: 1.08fr .92fr; min-height: 100vh; }
+.login-media { position: relative; overflow: hidden;
+  background:
+    radial-gradient(60% 55% at 30% 30%, rgba(96,165,250,.5), transparent 70%),
+    radial-gradient(55% 50% at 75% 70%, rgba(229,86,138,.4), transparent 72%),
+    linear-gradient(150deg, #DCE8FF, #FBE1EC 55%, #FCE6D4);
+}
+.login-media .lm-item {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transition: opacity 1.1s ease; will-change: opacity;
+}
+.login-media .lm-item.activo { opacity: 1; }
+.login-media .lm-velo { position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(120deg, rgba(22,26,39,.14), transparent 45%),
+              linear-gradient(300deg, rgba(22,26,39,.1), transparent 50%); }
+.login-lado {
+  position: relative; display: grid; place-items: center; padding: 72px 28px 40px;
+  background:
+    linear-gradient(160deg, rgba(217,238,251,.75), rgba(251,225,236,.55) 55%, rgba(252,230,212,.65)),
+    var(--lienzo, #FBFCFF);
+}
+.login-volver {
+  position: absolute; top: 20px; left: 22px;
+  display: inline-flex; align-items: center; gap: 9px;
+  font: 600 .88rem/1 var(--cuerpo); color: var(--tinta, #161A27); text-decoration: none;
+  background: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.85);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  padding: 9px 15px 9px 11px; border-radius: 999px;
+  box-shadow: 0 10px 24px rgba(46,64,140,.12);
+  transition: transform 180ms cubic-bezier(0.23,1,0.32,1), box-shadow 180ms ease;
+}
+.login-volver:hover { transform: translateY(-2px); box-shadow: 0 16px 32px rgba(46,64,140,.18); }
+.login-volver:active { transform: scale(.96); }
+.login-caja {
+  width: min(400px, 100%);
+  background:
+    linear-gradient(122deg, rgba(255,255,255,.6) 0%, transparent 30%, transparent 70%, rgba(255,255,255,.25) 100%),
+    linear-gradient(158deg, rgba(255,255,255,.82), rgba(255,255,255,.55)) !important;
+  border: 1px solid rgba(255,255,255,.8) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.4); backdrop-filter: blur(22px) saturate(1.4);
+  border-radius: 28px; padding: 30px 28px;
+  box-shadow: 0 30px 70px rgba(46,64,140,.18), inset 0 1px 0 rgba(255,255,255,.85) !important;
+  animation: loginEntra .5s cubic-bezier(0.23,1,0.32,1) both;
+}
+@keyframes loginEntra { from { opacity: 0; transform: translateY(14px) scale(.98); } }
+.login-caja .marca h1, .login-caja .marca span { color: var(--tinta, #161A27); }
+.login-caja .marca span { opacity: .65; }
+.login-caja .campo label { color: var(--tinta-2, #565D72); }
+@media (max-width: 860px) {
+  .login-split { grid-template-columns: 1fr; }
+  .login-media { position: absolute; inset: 0; }
+  .login-media .lm-velo { background: rgba(255,255,255,.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .login-lado { min-height: 100vh; background: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-caja { animation: none; }
+  .login-media .lm-item { transition: none; }
+}
+
+/* Login sin "CRM": logo pequeño + saludo grande (referencias meetmind/artisan) */
+.login-logo { display: flex; align-items: center; gap: 9px; margin-bottom: 18px; }
+.login-logo b { font: 700 .98rem/1 var(--display); color: var(--tinta, #161A27); letter-spacing: -.015em; }
+.login-logo b span { color: #3B6FF5; }
+.login-saludo { font: 700 1.7rem/1.1 var(--display); letter-spacing: -.028em; color: var(--tinta, #161A27); margin: 0 0 4px; }
+.login-sub { font: 400 .92rem/1.4 var(--cuerpo); color: var(--tinta-2, #565D72); margin: 0 0 18px; }
+
+/* v10 — 60-30-10: blanco domina, sin rosa; acentos del logo (azul/teal) */
+body::before {
+  background:
+    linear-gradient(168deg, rgba(217,238,251,.5) 0%, rgba(214,241,243,.32) 30%, rgba(255,255,255,0) 52%),
+    linear-gradient(340deg, rgba(220,232,255,.4) 0%, rgba(214,242,232,.26) 28%, rgba(255,255,255,0) 55%),
+    radial-gradient(46% 38% at 85% 90%, rgba(30,158,184,.12), transparent 74%);
+}
+.login-media {
+  background:
+    radial-gradient(60% 55% at 30% 30%, rgba(96,165,250,.5), transparent 70%),
+    radial-gradient(55% 50% at 75% 70%, rgba(30,158,184,.4), transparent 72%),
+    linear-gradient(150deg, #DCE8FF, #D9EEFB 55%, #D6F2E8);
+}
+.login-lado {
+  background:
+    linear-gradient(160deg, rgba(217,238,251,.7), rgba(220,232,255,.5) 55%, rgba(214,242,232,.55)),
+    #FBFCFF;
+}

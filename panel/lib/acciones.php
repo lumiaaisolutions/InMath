@@ -141,6 +141,42 @@ function ejecutarAccion(string $ruta): void
             flash('Configuración guardada');
             redirigir($volver);
 
+        case '/accion/login-media-subir':
+            requiereAdmin();
+            $archivo = $_FILES['media'] ?? null;
+            if ($archivo === null || ($archivo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+                flash('Elige un archivo válido', 'error');
+                redirigir('/configuracion');
+            }
+            $ext = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+            $tiposOk = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'mp4' => 'video/mp4'];
+            if (!isset($tiposOk[$ext]) || $tiposOk[$ext] !== mime_content_type($archivo['tmp_name'])) {
+                flash('Solo se aceptan JPG, PNG, WebP o MP4', 'error');
+                redirigir('/configuracion');
+            }
+            if ($archivo['size'] > 25 * 1024 * 1024) {
+                flash('El archivo no puede pesar más de 25 MB', 'error');
+                redirigir('/configuracion');
+            }
+            $dirMedia = dirname(__DIR__) . '/public/img/login';
+            if (!is_dir($dirMedia)) {
+                mkdir($dirMedia, 0775, true);
+            }
+            $nombreMedia = date('Ymd-His') . '-' . bin2hex(random_bytes(4)) . '.' . $ext;
+            move_uploaded_file($archivo['tmp_name'], $dirMedia . '/' . $nombreMedia);
+            flash('Archivo agregado al carrusel del login');
+            redirigir('/configuracion');
+
+        case '/accion/login-media-borrar':
+            requiereAdmin();
+            $nombreMedia = basename($_POST['archivo'] ?? '');
+            $rutaMedia = dirname(__DIR__) . '/public/img/login/' . $nombreMedia;
+            if ($nombreMedia !== '' && is_file($rutaMedia)) {
+                unlink($rutaMedia);
+                flash('Archivo eliminado del carrusel');
+            }
+            redirigir('/configuracion');
+
         case '/accion/prompt':
             requiereAdmin();
             $clave = $_POST['clave'] ?? 'sistema_bot';

@@ -301,3 +301,32 @@ Bloque v8 al final de `sitio/public/css/inmath.css`:
 - **Detalles:** chips del héroe y eyebrows en vidrio real (blur + anillo),
   inputs con radio 14px y focus de doble sombra, respuesta del FAQ entra con
   fade+desplazamiento (240ms), scrollbar discreto redondeado.
+
+## v9/v10 — Nueva tipografía, calendario de agenda y regla 60-30-10 sin rosa
+
+- **Fuentes nuevas (token-level, sitio y panel):** Display **Sora**, cuerpo
+  **Figtree** (JetBrains Mono se queda para datos). Links de Google Fonts
+  actualizados en `_comun.php`, `panel/vistas/login.php` y `_layout-inicio.php`.
+- **Widget de calendario de la agenda** (`.cal-widget`, v9.1 + recolor v10):
+  tarjeta de vidrio con gradiente del logo (azul→teal), mes y día grandes que
+  se actualizan con micro-animación, **tira horizontal de 7 días** (scroll con
+  snap) donde los días con horarios se resaltan (anillo blanco) y los que no,
+  se atenúan deshabilitados; al elegir día las horas se despliegan con
+  **stagger** (40ms entre chips). JS inline en `agenda.php`; al cambiar de día
+  se des-selecciona cualquier hora del día anterior.
+- **v10 — sin rosa:** el lienzo vuelve a blanco dominante (60%) con washes
+  fríos suaves (30%) y acentos del logo azul `#3B6FF5` / teal `#1E9EB8` (10%).
+  La capa v10 sobreescribe los gradientes rosas de v9.
+- **Login del panel rediseñado** (split, referencia meetmind/artisan): lado
+  izquierdo = **carrusel de fotos/videos** que el admin sube desde
+  Configuración → "Carrusel del login" (`/accion/login-media-subir|borrar`,
+  archivos en `panel/public/img/login/`, JPG/PNG/WebP/MP4 ≤25MB; sin archivos
+  cae a un degradado azul/teal); lado derecho = tarjeta de vidrio con logo
+  pequeño + "¡Hola de nuevo!" (sin la palabra CRM) y **píldora "Volver al
+  sitio"** con el logo (usa `APP_URL`, fallback local :8125).
+- **Badge del pie:** "Desarrollado por LUMIA" (`.lumia-badge`) con
+  `img/lumia.svg` (gradiente morado→azul propio de la marca LUMIA — excepción
+  puntual a la regla "sin morado", por ser logo de terceros) → enlaza a
+  https://lumiaaisolutions.com/.
+- **PANEL_URL** en `backend/.env`: alimenta el enlace "Entrar" del nav del
+  sitio y "Acceso asesores" del pie.
