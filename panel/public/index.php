@@ -91,6 +91,9 @@ if ($ruta === '/' || $ruta === '/pipeline') {
 } elseif ($ruta === '/configuracion') {
     requiereAdmin();
     vista('configuracion', ['configuraciones' => listaConfiguraciones()]);
+} elseif ($ruta === '/personalizar-login') {
+    requiereAdmin();
+    vista('personalizar-login', ['configuraciones' => listaConfiguraciones()]);
 } elseif ($ruta === '/prompts') {
     requiereAdmin();
     vista('prompts', ['prompts' => listaPrompts()]);

@@ -9,8 +9,8 @@
 <?php
 // Solo se muestran los ajustes que le sirven al cliente, con nombre y
 // explicación en lenguaje claro. Las claves técnicas (JSON internos, modelo
-// de IA, procesador de pago, branding del PDF) se administran por soporte y
-// no aparecen aquí.
+// de IA, procesador de pago, branding del PDF, textos del login) se
+// administran desde sus propias pantallas o por soporte.
 $ajustesAmigables = [
     'duracion_cita_minutos'      => ['Duración de la asesoría', 'Minutos que dura cada cita agendada.'],
     'horario_atencion'           => ['Horario de atención', 'Días y horas en que se ofrecen citas para asesorías.'],
@@ -19,13 +19,6 @@ $ajustesAmigables = [
     'recuperacion_carrito_horas' => ['Recordatorio de pago', 'Horas de espera tras generar el link de pago antes de recordar al alumno.'],
 ];
 $visibles = array_values(array_filter($configuraciones, fn ($c) => isset($ajustesAmigables[$c['clave']])));
-
-$textosActuales = [];
-foreach ($configuraciones as $c) {
-    if (in_array($c['clave'], ['login_titulo', 'login_texto'], true)) {
-        $textosActuales[$c['clave']] = $c['valor'];
-    }
-}
 ?>
 <div class="tarjeta">
   <table class="lista">
@@ -62,8 +55,6 @@ foreach ($configuraciones as $c) {
                   a <input type="time" class="hu-fin" value="<?= e($h['fin'] ?? '19:00') ?>" style="width:auto">
                 </div>
               </div>
-            <?php elseif ($c['tipo'] === 'json' || mb_strlen($c['valor']) > 80): ?>
-              <textarea name="valor" style="flex:1;min-height:70px"><?= e($c['valor']) ?></textarea>
             <?php else: ?>
               <input type="text" name="valor" value="<?= e($c['valor']) ?>" style="flex:1">
             <?php endif; ?>
@@ -76,8 +67,6 @@ foreach ($configuraciones as $c) {
   </table>
 </div>
 <script>
-// El horario de atención se edita con días + horas; al guardar se arma el
-// JSON que espera el backend sin que el cliente lo vea.
 document.querySelectorAll('form').forEach(function (form) {
   var ui = form.querySelector('.horario-ui');
   if (!ui) return;
@@ -89,61 +78,3 @@ document.querySelectorAll('form').forEach(function (form) {
   });
 });
 </script>
-
-<div class="tarjeta" style="margin-top:18px">
-  <h2 style="font:600 1rem var(--display);margin-bottom:4px">Pantalla de inicio de sesión</h2>
-  <p style="font:var(--t-mini);color:var(--tinta-3);margin-bottom:14px">
-    Personaliza el saludo y las fotos o videos que se muestran al entrar al panel.
-  </p>
-  <form method="post" action="<?= e(u('/accion/login-textos')) ?>" style="display:grid;gap:10px;max-width:520px;margin-bottom:20px">
-    <input type="hidden" name="csrf" value="<?= e(csrfToken()) ?>">
-    <label style="display:grid;gap:5px;font:600 .8rem var(--cuerpo);color:var(--tinta-2)">
-      Título de bienvenida
-      <input type="text" name="login_titulo" maxlength="60" placeholder="¡Hola de nuevo!"
-             value="<?= e($textosActuales['login_titulo'] ?? '') ?>">
-    </label>
-    <label style="display:grid;gap:5px;font:600 .8rem var(--cuerpo);color:var(--tinta-2)">
-      Texto de apoyo
-      <input type="text" name="login_texto" maxlength="120" placeholder="Inicia sesión para continuar."
-             value="<?= e($textosActuales['login_texto'] ?? '') ?>">
-    </label>
-    <div><button class="boton mini">Guardar textos</button></div>
-  </form>
-
-  <?php
-  $mediaDirLogin = dirname(__DIR__) . '/public/img/login';
-  $mediaLogin = is_dir($mediaDirLogin)
-      ? array_values(array_filter(scandir($mediaDirLogin), fn ($f) => preg_match('/\.(jpe?g|png|webp|mp4)$/i', $f)))
-      : [];
-  ?>
-  <h3 style="font:600 .9rem var(--display);margin-bottom:4px">Fotos y videos</h3>
-  <p style="font:var(--t-mini);color:var(--tinta-3);margin-bottom:12px">
-    Rotan automáticamente en el inicio de sesión. Acepta JPG, PNG, WebP o MP4 de hasta 25 MB.
-  </p>
-  <form method="post" action="<?= e(u('/accion/login-media-subir')) ?>" enctype="multipart/form-data"
-        style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
-    <input type="hidden" name="csrf" value="<?= e(csrfToken()) ?>">
-    <input type="file" name="media" accept=".jpg,.jpeg,.png,.webp,.mp4" required>
-    <button class="boton mini">Subir</button>
-  </form>
-  <?php if ($mediaLogin === []): ?>
-    <p style="font:var(--t-mini);color:var(--tinta-3)">Aún no hay archivos — se muestra la foto por defecto.</p>
-  <?php else: ?>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <?php foreach ($mediaLogin as $m): ?>
-        <div style="width:130px">
-          <?php if (preg_match('/\.mp4$/i', $m)): ?>
-            <video src="<?= e(u('/img/login/' . $m)) ?>" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px" muted></video>
-          <?php else: ?>
-            <img src="<?= e(u('/img/login/' . $m)) ?>" alt="" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px">
-          <?php endif; ?>
-          <form method="post" action="<?= e(u('/accion/login-media-borrar')) ?>" style="margin-top:6px">
-            <input type="hidden" name="csrf" value="<?= e(csrfToken()) ?>">
-            <input type="hidden" name="archivo" value="<?= e($m) ?>">
-            <button class="boton mini" style="width:100%">Eliminar</button>
-          </form>
-        </div>
-      <?php endforeach; ?>
-    </div>
-  <?php endif; ?>
-</div>

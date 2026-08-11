@@ -28,7 +28,7 @@
           '/pagos' => ['Pagos', 'pagos'],
       ];
       if (($u['rol'] ?? '') === 'admin') {
-          $items['/prompts'] = ['Prompts del bot', 'prompts'];
+          $items['/personalizar-login'] = ['Personalizar login', 'imagen'];
           $items['/configuracion'] = ['Configuración', 'config'];
       }
       foreach ($items as $href => [$texto, $ic]):
