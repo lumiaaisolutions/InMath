@@ -1552,3 +1552,33 @@ body::before {
 .cal-grupo .slot input:checked + span, .dia-grupo .slot input:checked + span { color: var(--rojo); }
 .mock-num { color: var(--rojo); }
 .card-fav { color: var(--rojo); }
+
+/* =========================================================================
+   v22 — Acentos multicolor en la landing: cada grupo repetido con su tono
+   (azul, teal, ámbar, verde, coral) sin perder el blanco dominante.
+   ========================================================================= */
+.pasos .paso:nth-child(1) .paso-ic { --acc: #6B9FFF; }
+.pasos .paso:nth-child(2) .paso-ic { --acc: #17A2B8; }
+.pasos .paso:nth-child(3) .paso-ic { --acc: #F4A62A; }
+.pasos .paso:nth-child(4) .paso-ic { --acc: #12855C; }
+.pasos .paso:nth-child(1) .num { color: #6B9FFF; }
+.pasos .paso:nth-child(2) .num { color: #17A2B8; }
+.pasos .paso:nth-child(3) .num { color: #C4801E; }
+.pasos .paso:nth-child(4) .num { color: #12855C; }
+
+.card.azul    { --acc: #6B9FFF; }
+.card.rosa    { --acc: #E5568A; }
+.card.menta   { --acc: #12855C; }
+.card.durazno { --acc: #F4A62A; }
+
+.area:nth-child(1) .pt { --acc: #6B9FFF; }
+.area:nth-child(2) .pt { --acc: #17A2B8; }
+.area:nth-child(3) .pt { --acc: #F4A62A; }
+.area:nth-child(4) .pt { --acc: #E5568A; }
+
+.chip-flota.arriba { color: #12855C; }
+.chip-flota.abajo { color: #6B9FFF; }
+.heroe .respaldo span:nth-child(1) svg { color: #6B9FFF; }
+.heroe .respaldo span:nth-child(2) svg { color: #17A2B8; }
+.heroe .respaldo span:nth-child(3) svg { color: #F4A62A; }
+.wa-directo { color: #12855C; background: #E4F5EC; }

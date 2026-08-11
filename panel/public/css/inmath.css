@@ -1262,3 +1262,34 @@ input[type="range"].aj-zoom::-webkit-slider-thumb:hover { transform: scale(1.15)
 .interruptor input:disabled + i { opacity: .6; cursor: default; }
 .interruptor input:focus-visible + i { outline: 2.5px solid #6B9FFF; outline-offset: 3px; }
 @media (max-width: 560px) { .us-campos { grid-template-columns: 1fr; } }
+
+/* =========================================================================
+   v22 — El color comunica estado: cada etapa del pipeline con color propio,
+   y acentos multicolor repartidos por el panel (blanco sigue dominando).
+   ========================================================================= */
+:root {
+  --etapa-1: #6B9FFF;  /* Prospecto — azul: recién llegó */
+  --etapa-2: #17A2B8;  /* Calificado — teal: ya evaluado */
+  --etapa-3: #F4A62A;  /* Cita agendada — ámbar: en agenda */
+  --etapa-4: #F0784F;  /* Pago pendiente — naranja: por cerrar */
+  --etapa-5: #12855C;  /* Inscrito — verde: ganado */
+}
+/* La tarjeta hereda el color de su etapa: barra izquierda + avatar (ya usa --col) */
+.tarjeta-prospecto { border-left: 4px solid var(--col); }
+.pipeline .columna-cab h2 { color: color-mix(in srgb, var(--col) 72%, var(--tinta)); }
+
+/* Sidebar: cada módulo con su acento al pasar y activo */
+.nav a:nth-child(1):hover { color: #6B9FFF !important; background: rgba(107,159,255,.12) !important; }
+.nav a:nth-child(2):hover { color: #17A2B8 !important; background: rgba(23,162,184,.1) !important; }
+.nav a:nth-child(3):hover { color: #12855C !important; background: rgba(18,133,92,.1) !important; }
+.nav a:nth-child(4):hover { color: #F0784F !important; background: rgba(240,120,79,.12) !important; }
+.nav a:nth-child(5):hover { color: #F4A62A !important; background: rgba(244,166,42,.12) !important; }
+.nav a:nth-child(6):hover { color: #E5568A !important; background: rgba(229,86,138,.1) !important; }
+
+/* Chips de estadísticas y badges con más vida */
+.ch-stat b { color: #6B9FFF; }
+.gaje.grad { color: #F4A62A; }
+
+/* Toast ok en verde, error rojo (ya), y barra de tiempo por tipo */
+.toast-barra { background: linear-gradient(90deg, #12855C, #17A2B8); }
+.toast.error .toast-barra { background: linear-gradient(90deg, #C0392B, #F4A62A); }
