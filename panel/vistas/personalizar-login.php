@@ -57,6 +57,19 @@ $primerMedia = $mediaLogin[0] ?? null;
           <span>o haz clic para elegir un archivo</span>
         </label>
       </form>
+      <div class="aj-caja" id="ajCaja" hidden>
+        <canvas class="aj-lienzo" id="ajLienzo" width="432" height="540"></canvas>
+        <div class="aj-controles">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M8 11h6"/></svg>
+          <input type="range" class="aj-zoom" id="ajZoom" min="100" max="250" value="100" aria-label="Acercar o alejar la foto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M8 11h6M11 8v6"/></svg>
+        </div>
+        <p class="aj-nota">Arrastra la foto para encuadrarla y usa el control para acercar — así se verá en el login.</p>
+        <div class="aj-botones">
+          <button type="button" class="boton fantasma" id="ajCancelar">Cancelar</button>
+          <button type="button" class="boton primario" id="ajUsar">Usar esta foto</button>
+        </div>
+      </div>
       <?php if ($mediaLogin === []): ?>
         <p class="pl-ayuda" style="margin-top:12px">Aún no hay archivos — el login muestra la foto por defecto.</p>
       <?php else: ?>
@@ -120,19 +133,90 @@ $primerMedia = $mediaLogin[0] ?? null;
   if (t && pt) t.addEventListener('input', function () { pt.textContent = t.value; });
   if (x && px) x.addEventListener('input', function () { px.textContent = x.value; });
 
-  // Dropzone: subir al soltar o al elegir archivo (sin botón extra)
+  // Dropzone + ajuste de encuadre: los videos se suben directo; las fotos
+  // pasan por el encuadre 4:5 (pan + zoom) para ver cómo quedarán en el login.
   var drop = document.getElementById('plDrop'), file = document.getElementById('plFile'), form = document.getElementById('formMedia');
-  if (drop && file && form) {
-    file.addEventListener('change', function () { if (file.files.length) form.submit(); });
-    ['dragenter', 'dragover'].forEach(function (ev) {
-      drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('activa'); });
-    });
-    ['dragleave', 'drop'].forEach(function (ev) {
-      drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('activa'); });
-    });
-    drop.addEventListener('drop', function (e) {
-      if (e.dataTransfer.files.length) { file.files = e.dataTransfer.files; form.submit(); }
-    });
+  var caja = document.getElementById('ajCaja'), lienzo = document.getElementById('ajLienzo');
+  var zoom = document.getElementById('ajZoom'), usar = document.getElementById('ajUsar'), cancelar = document.getElementById('ajCancelar');
+  if (!drop || !file || !form) return;
+
+  var ctx = lienzo.getContext('2d'), img = null, escBase = 1, z = 1, ox = 0, oy = 0, arrastre = null;
+
+  function pintar() {
+    if (!img) return;
+    var s = escBase * z, w = img.naturalWidth * s, h = img.naturalHeight * s;
+    ox = Math.min(0, Math.max(lienzo.width - w, ox));
+    oy = Math.min(0, Math.max(lienzo.height - h, oy));
+    ctx.clearRect(0, 0, lienzo.width, lienzo.height);
+    ctx.drawImage(img, ox, oy, w, h);
   }
+  function abrirAjuste(archivo) {
+    img = new Image();
+    img.onload = function () {
+      escBase = Math.max(lienzo.width / img.naturalWidth, lienzo.height / img.naturalHeight);
+      z = 1; zoom.value = 100;
+      ox = (lienzo.width - img.naturalWidth * escBase) / 2;
+      oy = (lienzo.height - img.naturalHeight * escBase) / 2;
+      caja.hidden = false; drop.parentElement.querySelector('.pl-dropzone').style.display = 'none';
+      pintar();
+    };
+    img.src = URL.createObjectURL(archivo);
+  }
+  function cerrarAjuste() {
+    caja.hidden = true; img = null; file.value = '';
+    drop.parentElement.querySelector('.pl-dropzone').style.display = '';
+  }
+  function alElegir() {
+    if (!file.files.length) return;
+    var f = file.files[0];
+    if (/\.mp4$/i.test(f.name) || f.type === 'video/mp4') { form.submit(); return; }
+    abrirAjuste(f);
+  }
+
+  file.addEventListener('change', alElegir);
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('activa'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('activa'); });
+  });
+  drop.addEventListener('drop', function (e) {
+    if (e.dataTransfer.files.length) { file.files = e.dataTransfer.files; alElegir(); }
+  });
+
+  zoom.addEventListener('input', function () {
+    var zNuevo = zoom.value / 100;
+    // acercar manteniendo el centro del encuadre
+    var cx = lienzo.width / 2, cy = lienzo.height / 2;
+    ox = cx - (cx - ox) * (zNuevo / z); oy = cy - (cy - oy) * (zNuevo / z);
+    z = zNuevo; pintar();
+  });
+  lienzo.addEventListener('pointerdown', function (e) {
+    arrastre = { x: e.clientX, y: e.clientY }; lienzo.setPointerCapture(e.pointerId);
+  });
+  lienzo.addEventListener('pointermove', function (e) {
+    if (!arrastre) return;
+    var r = lienzo.getBoundingClientRect(), f = lienzo.width / r.width;
+    ox += (e.clientX - arrastre.x) * f; oy += (e.clientY - arrastre.y) * f;
+    arrastre = { x: e.clientX, y: e.clientY }; pintar();
+  });
+  ['pointerup', 'pointercancel'].forEach(function (ev) {
+    lienzo.addEventListener(ev, function () { arrastre = null; });
+  });
+  cancelar.addEventListener('click', cerrarAjuste);
+  usar.addEventListener('click', function () {
+    if (!img) return;
+    var salida = document.createElement('canvas');
+    salida.width = 1080; salida.height = 1350;
+    var f = salida.width / lienzo.width, sctx = salida.getContext('2d');
+    var s = escBase * z * f;
+    sctx.drawImage(img, ox * f, oy * f, img.naturalWidth * s, img.naturalHeight * s);
+    salida.toBlob(function (blob) {
+      var dt = new DataTransfer();
+      dt.items.add(new File([blob], 'encuadre.jpg', { type: 'image/jpeg' }));
+      file.files = dt.files;
+      form.submit();
+    }, 'image/jpeg', 0.9);
+  });
 })();
 </script>

@@ -1490,3 +1490,50 @@ body::before {
 .plan ul { margin: 0; padding: 0 6px; border-top: 1px solid var(--linea); padding-top: 16px; }
 .plan li { color: var(--tinta-2); }
 .plan li svg { color: var(--tinta-3); }
+
+/* =========================================================================
+   v18 — Acentos de color en el contenido: detalles pequeños dentro de la
+   familia azul (sin saturar, blanco sigue dominando). Cada grupo repetido
+   varía su tono para que la página no se vea plana.
+   ========================================================================= */
+/* Pasos: cada tile con su tono de la familia */
+.pasos .paso:nth-child(1) .paso-ic { --acc: #668DC0; }
+.pasos .paso:nth-child(2) .paso-ic { --acc: #4E77AC; }
+.pasos .paso:nth-child(3) .paso-ic { --acc: #304A6E; }
+.pasos .paso:nth-child(4) .paso-ic { --acc: #93B2DF; }
+.paso .num { color: #668DC0; }
+.pasos .paso:nth-child(3) .num { color: #304A6E; }
+
+/* Tarjetas "Por qué Inmath": acentos distintos por tarjeta */
+.card.azul    { --acc: #668DC0; }
+.card.rosa    { --acc: #4E77AC; }
+.card.menta   { --acc: #304A6E; }
+.card.durazno { --acc: #93B2DF; }
+
+/* Áreas numeradas (Qué incluye): números con tono propio */
+.area:nth-child(1) .pt { --acc: #668DC0; }
+.area:nth-child(2) .pt { --acc: #4E77AC; }
+.area:nth-child(3) .pt { --acc: #304A6E; }
+.area:nth-child(4) .pt { --acc: #93B2DF; }
+
+/* Checks de los planes: azul secundario (oscuro en Recomendado) */
+.plan li svg { color: #668DC0; }
+.plan.destacado li svg { color: #304A6E; }
+
+/* Eyebrows alternando tinte claro con texto principal */
+.eyebrow { color: #304A6E; box-shadow: inset 0 0 0 1px rgba(102,141,192,.35); }
+.eyebrow .ic-ey { color: #668DC0; }
+
+/* Respaldo del héroe y de la agenda: icono en secundario */
+.heroe .respaldo svg, .agenda-respaldo svg { color: #668DC0; }
+
+/* FAQ: el "+" con anillo secundario que se rellena al abrir */
+.faq summary .mas { box-shadow: inset 0 0 0 1.5px #668DC0; color: #668DC0; }
+.faq details[open] summary .mas { background: #668DC0; color: #fff; }
+
+/* Chips flotantes del héroe: texto con su acento */
+.chip-flota.arriba { color: #304A6E; }
+.chip-flota.abajo { color: #668DC0; }
+
+/* Links del pie al hover en secundario */
+.pie nav a:hover { color: #668DC0; }
