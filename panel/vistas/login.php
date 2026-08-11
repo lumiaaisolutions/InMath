@@ -103,11 +103,22 @@ $overlayTexto  = trim($textosLogin['login_texto'] ?? '');
 (function () {
   var items = document.querySelectorAll('.login-media .lm-item');
   if (items.length > 1) {
+    var media = document.getElementById('loginMedia');
+    var puntos = document.createElement('div');
+    puntos.className = 'lm-dots';
+    items.forEach(function (_, i) {
+      var d = document.createElement('i');
+      d.className = 'lm-dot' + (i === 0 ? ' activo' : '');
+      puntos.appendChild(d);
+    });
+    media.appendChild(puntos);
     var actual = 0;
     setInterval(function () {
       items[actual].classList.remove('activo');
+      puntos.children[actual].classList.remove('activo');
       actual = (actual + 1) % items.length;
       items[actual].classList.add('activo');
+      puntos.children[actual].classList.add('activo');
     }, 6500);
   }
   var btn = document.getElementById('verPass'), pass = document.getElementById('password');

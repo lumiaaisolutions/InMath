@@ -1582,3 +1582,50 @@ body::before {
 .heroe .respaldo span:nth-child(2) svg { color: #17A2B8; }
 .heroe .respaldo span:nth-child(3) svg { color: #F4A62A; }
 .wa-directo { color: #12855C; background: #E4F5EC; }
+
+/* =========================================================================
+   v23 — Íconos "glass" (referencia glassmorphism): tiles de vidrio con
+   gradiente del color del acento, brillo superior y glow suave. Reemplaza
+   las manchas orgánicas de v5 en tiles/pasos/números.
+   ========================================================================= */
+.tile-ic, .paso-ic, .mock-play {
+  width: 54px !important; height: 54px !important; border-radius: 16px !important;
+  background:
+    linear-gradient(120deg, rgba(255,255,255,.75), transparent 46%),
+    linear-gradient(150deg, color-mix(in srgb, var(--acc, #6B9FFF) 34%, #fff), color-mix(in srgb, var(--acc, #6B9FFF) 12%, #fff)) !important;
+  border: 1px solid rgba(255,255,255,.95) !important;
+  box-shadow:
+    0 10px 22px color-mix(in srgb, var(--acc, #6B9FFF) 32%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.95) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(1.3); backdrop-filter: blur(8px) saturate(1.3);
+  color: color-mix(in srgb, var(--acc, #6B9FFF) 82%, #1B2F52) !important;
+  overflow: hidden !important;
+}
+.tile-ic::before, .tile-ic::after, .paso-ic::before, .paso-ic::after,
+.mock-play::before, .mock-play::after { display: none !important; }
+.tile-ic svg, .paso-ic svg, .mock-play svg {
+  stroke-width: 2.3;
+  filter: drop-shadow(0 2px 3px color-mix(in srgb, var(--acc, #6B9FFF) 45%, transparent));
+}
+.mock-play { width: 34px !important; height: 34px !important; border-radius: 11px !important; }
+.tile-ic.alt { --acc: #17A2B8; }
+
+/* Números/íconos de .area como mini-tiles de vidrio */
+.area .pt {
+  border-radius: 12px !important;
+  background:
+    linear-gradient(120deg, rgba(255,255,255,.75), transparent 48%),
+    linear-gradient(150deg, color-mix(in srgb, var(--acc, #6B9FFF) 30%, #fff), color-mix(in srgb, var(--acc, #6B9FFF) 10%, #fff)) !important;
+  border: 1px solid rgba(255,255,255,.95);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--acc, #6B9FFF) 26%, transparent), inset 0 1px 0 rgba(255,255,255,.95);
+  color: color-mix(in srgb, var(--acc, #6B9FFF) 80%, #1B2F52) !important;
+}
+.area .pt::before, .area .pt::after { display: none !important; }
+
+/* Eyebrows y FAQ: glifo en el acento con glow suave */
+.eyebrow .ic-ey { filter: drop-shadow(0 2px 3px rgba(107,159,255,.4)); }
+.faq summary .mas { box-shadow: inset 0 0 0 1.5px #6B9FFF, 0 4px 10px rgba(107,159,255,.25); }
+
+/* Hover: el tile de vidrio se levanta con su glow */
+.card:hover .tile-ic { transform: translateY(-5px) rotate(-3deg); box-shadow: 0 16px 30px color-mix(in srgb, var(--acc, #6B9FFF) 42%, transparent), inset 0 1px 0 rgba(255,255,255,.95) !important; }
+.paso:hover .paso-ic { transform: translateY(-4px) scale(1.05); }
