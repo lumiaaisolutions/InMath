@@ -47,16 +47,21 @@
       $fotoPerfil = PANEL_PATH . '/public/img/avatars/' . (int) $u['id'] . '.jpg';
       $fotoUrl = is_file($fotoPerfil) ? u('/img/avatars/' . (int) $u['id'] . '.jpg') . '?v=' . filemtime($fotoPerfil) : null;
     ?>
-    <a class="pie perfil-widget" href="<?= e(u('/perfil')) ?>" title="Ver mi perfil">
-      <span class="pw-avatar">
-        <?php if ($fotoUrl !== null): ?><img src="<?= e($fotoUrl) ?>" alt=""><?php else: ?><?= e(mb_strtoupper(mb_substr($u['nombre'], 0, 1))) ?><?php endif; ?>
-      </span>
-      <span class="pw-quien">
-        <b><?= e($u['nombre']) ?></b>
-        <i class="pw-chip <?= $u['rol'] === 'admin' ? 'admin' : '' ?>"><?= e($u['rol'] === 'admin' ? 'Administrador' : 'Asesor') ?></i>
-      </span>
-      <span class="pw-flecha"><?= icono('logout', 'ic-oculto') ?><?= icono('user') ?></span>
-    </a>
+    <div class="pie perfil-widget">
+      <a class="pw-link" href="<?= e(u('/perfil')) ?>" title="Ver mi perfil">
+        <span class="pw-avatar">
+          <?php if ($fotoUrl !== null): ?><img src="<?= e($fotoUrl) ?>" alt=""><?php else: ?><?= e(mb_strtoupper(mb_substr($u['nombre'], 0, 1))) ?><?php endif; ?>
+        </span>
+        <span class="pw-quien">
+          <b><?= e($u['nombre']) ?></b>
+          <i class="pw-chip <?= $u['rol'] === 'admin' ? 'admin' : '' ?>"><?= e($u['rol'] === 'admin' ? 'Administrador' : 'Asesor') ?></i>
+        </span>
+      </a>
+      <form method="post" action="<?= e(u('/accion/logout')) ?>" class="pw-salir-form">
+        <input type="hidden" name="csrf" value="<?= e(csrfToken()) ?>">
+        <button type="submit" class="pw-salir" title="Cerrar sesión" aria-label="Cerrar sesión"><?= icono('logout') ?></button>
+      </form>
+    </div>
   </aside>
   <main class="contenido">
   <?php if ($f = flash()): ?>
