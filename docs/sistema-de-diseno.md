@@ -381,3 +381,22 @@ Bloque v8 al final de `sitio/public/css/inmath.css`:
   (tokens, gradientes, sombras teñidas, logo inmath.svg y pantalla de carga).
   Los semánticos (error rojo, alerta ámbar) se conservan. Pendiente episódico:
   la fila reporte_branding en la BD de producción sigue con colores viejos.
+
+## v16/v17 — Bug de clicks del panel, paleta azul, favicon y planes
+
+- **Bug crítico corregido:** `.confirmar-velo` (diálogo de confirmación) tenía
+  `display:grid` que le ganaba al atributo `hidden` → una capa fija invisible
+  cubría todo el panel y **bloqueaba todos los clicks**. Fix + guarda global
+  `[hidden]{display:none!important}` en ambos CSS (tercera vez que esta clase
+  de bug aparece: ojo del login, velo, ¿siguiente? — la guarda lo previene).
+- **Paleta azul (referencia del cliente, blanco predominante):** principal
+  `#304A6E`, secundario `#668DC0`, claro `#C0D0EF`, neutro `#C2C6CE`, oscuro
+  `#0F1C30` (nueva tinta). Reemplazo global de la paleta menta anterior en
+  tokens, gradientes, sombras teñidas, logo y pantalla de carga. Favicon con
+  cache-busting (?v=mtime) en sitio y panel (el navegador lo cachea fuerte);
+  el CSS del layout del panel también quedó con cache-busting.
+- **Planes (referencia pricing):** tarjeta blanca sólida con cabecera interna
+  tintada (`.plan-cab` — neutra; azul claro en Recomendado) que contiene tag
+  de pastilla blanca + precio grande; CTA de píldora oscura `#0F1C30` a lo
+  ancho; checks bajo un divisor. Orden del markup: cabecera → sub → CTA →
+  lista.

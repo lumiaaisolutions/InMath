@@ -30,7 +30,7 @@ $overlayTexto  = trim($textosLogin['login_texto'] ?? '');
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= e(u('/css/inmath.css')) ?>?v=<?= e((string) (@filemtime(dirname(__DIR__) . '/public/css/inmath.css') ?: 1)) ?>">
-  <link rel="icon" type="image/svg+xml" href="<?= e(u('/img/inmath.svg')) ?>">
+  <link rel="icon" type="image/svg+xml" href="<?= e(u('/img/inmath.svg')) ?>?v=<?= e((string) (@filemtime(PANEL_PATH . '/public/img/inmath.svg') ?: 1)) ?>">
 </head>
 <body class="login-body">
 <?= overlayCargaPanel() ?>

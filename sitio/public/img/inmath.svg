@@ -6,13 +6,13 @@
   -->
   <defs>
     <linearGradient id="libro-trazo" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#4FB3A5"/>
-      <stop offset="1" stop-color="#38857A"/>
+      <stop offset="0" stop-color="#668DC0"/>
+      <stop offset="1" stop-color="#304A6E"/>
     </linearGradient>
     <radialGradient id="libro-splash" cx="50%" cy="56%" r="62%">
-      <stop offset="0" stop-color="#38857A" stop-opacity=".38"/>
-      <stop offset="55%" stop-color="#4FB3A5" stop-opacity=".14"/>
-      <stop offset="100%" stop-color="#4FB3A5" stop-opacity="0"/>
+      <stop offset="0" stop-color="#304A6E" stop-opacity=".38"/>
+      <stop offset="55%" stop-color="#668DC0" stop-opacity=".14"/>
+      <stop offset="100%" stop-color="#668DC0" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <!-- splash difuminado detrás del libro, sin geometría dura -->

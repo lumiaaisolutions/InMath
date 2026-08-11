@@ -139,7 +139,7 @@ function overlayCarga(): string
     <svg class="carga-libro" viewBox="0 0 48 48" aria-hidden="true">
       <defs>
         <linearGradient id="carga-trazo" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stop-color="#4FB3A5"/><stop offset="1" stop-color="#6FC5BA"/>
+          <stop offset="0" stop-color="#668DC0"/><stop offset="1" stop-color="#9DB8E4"/>
         </linearGradient>
       </defs>
       <path pathLength="1" class="carga-pagina carga-pagina-a" d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="url(#carga-trazo)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -208,7 +208,7 @@ function agenteIA(): string
     <svg class="agente-libro" viewBox="0 0 48 48" aria-hidden="true">
       <defs>
         <linearGradient id="agicono-trazo" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stop-color="#4FB3A5"/><stop offset="1" stop-color="#6FC5BA"/>
+          <stop offset="0" stop-color="#668DC0"/><stop offset="1" stop-color="#9DB8E4"/>
         </linearGradient>
       </defs>
       <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="url(#agicono-trazo)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -224,7 +224,7 @@ function agenteIA(): string
         <svg class="agente-libro ap-avatar" viewBox="0 0 48 48" aria-hidden="true">
           <defs>
             <linearGradient id="agicono-trazo-cab" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
-              <stop offset="0" stop-color="#4FB3A5"/><stop offset="1" stop-color="#6FC5BA"/>
+              <stop offset="0" stop-color="#668DC0"/><stop offset="1" stop-color="#9DB8E4"/>
             </linearGradient>
           </defs>
           <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="url(#agicono-trazo-cab)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -325,7 +325,7 @@ function cabeceraSitio(string $titulo, string $activo = ''): void
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?= e($titulo) ?></title>
   <meta name="description" content="Cursos Inmath: cursos en línea con asesoría 1 a 1 por WhatsApp y reporte de tu avance cada semana. Aprende a tu ritmo.">
-  <link rel="icon" type="image/svg+xml" href="/img/inmath.svg">
+  <link rel="icon" type="image/svg+xml" href="/img/inmath.svg?v=<?= e((string) (@filemtime(__DIR__ . '/img/inmath.svg') ?: 1)) ?>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">

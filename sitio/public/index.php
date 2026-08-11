@@ -218,38 +218,44 @@ cabeceraSitio('Cursos Inmath — Aprende en línea a tu ritmo');
   </div>
   <div class="precios-grid">
     <article class="plan gratis reveal">
-      <span class="plan-tag">Gratis</span>
-      <div class="plan-precio">$0 <small>/ sin costo</small></div>
+      <div class="plan-cab">
+        <span class="plan-tag">Gratis</span>
+        <div class="plan-precio">$0 <small>/ sin costo</small></div>
+      </div>
       <p class="plan-sub">Conoce el método antes de decidir.</p>
+      <a class="boton grande plan-cta" href="/agenda">Empezar gratis</a>
       <ul>
         <li><?= icono('check') ?> Asesoría de diagnóstico por videollamada</li>
         <li><?= icono('check') ?> Acceso a la primera clase de cada módulo</li>
         <li><?= icono('check') ?> Plan de estudio personalizado</li>
       </ul>
-      <a class="boton grande" href="/agenda">Empezar gratis</a>
     </article>
     <article class="plan destacado reveal d1">
-      <span class="plan-tag">Recomendado</span>
-      <div class="plan-precio"><?= e($precio) ?> <small>MXN</small></div>
+      <div class="plan-cab">
+        <span class="plan-tag">Recomendado</span>
+        <div class="plan-precio"><?= e($precio) ?> <small>MXN</small></div>
+      </div>
       <p class="plan-sub"><?= e($curso['nombre'] ?? 'Curso completo') ?> · pago único</p>
+      <a class="boton grande plan-cta" href="/pago">Inscribirme ahora</a>
       <ul>
         <li><?= icono('check') ?> Acceso completo por <?= e((string) $semanas) ?> semanas</li>
         <li><?= icono('check') ?> Todas las clases y materiales descargables</li>
         <li><?= icono('check') ?> Asesorías por videollamada incluidas</li>
         <li><?= icono('check') ?> Reporte de avance cada semana por WhatsApp</li>
       </ul>
-      <a class="boton glow glow-halo grande" href="/pago">Inscribirme ahora</a>
     </article>
     <article class="plan custom reveal d2">
-      <span class="plan-tag">Personalizado</span>
-      <div class="plan-precio" style="font-size:2rem">Cotización</div>
+      <div class="plan-cab">
+        <span class="plan-tag">Personalizado</span>
+        <div class="plan-precio" style="font-size:2rem">Cotización</div>
+      </div>
       <p class="plan-sub">Para equipos, grupos o un plan hecho a tu medida.</p>
+      <a class="boton grande plan-cta" href="/agenda">Solicitar cotización</a>
       <ul>
         <li><?= icono('check') ?> Contenido y ritmo ajustados a tu caso</li>
         <li><?= icono('check') ?> Más sesiones de asesoría incluidas</li>
         <li><?= icono('check') ?> Un asesor te cotiza por WhatsApp</li>
       </ul>
-      <a class="boton grande" href="/agenda">Solicitar cotización</a>
     </article>
   </div>
 </section>
