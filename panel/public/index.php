@@ -102,6 +102,19 @@ if ($ruta === '/' || $ruta === '/pipeline') {
 } elseif ($ruta === '/personalizar-login') {
     requiereAdmin();
     vista('personalizar-login', ['configuraciones' => listaConfiguraciones()]);
+} elseif (preg_match('#^/comprobante/(\d+)$#', $ruta, $m)) {
+    requiereModulo('pagos');
+    $pg = App\Core\Database::uno('SELECT comprobante FROM pagos WHERE id = ?', [(int) $m[1]]);
+    $rutaArchivo = $pg !== null && $pg['comprobante'] !== null
+        ? BACKEND_PATH . '/storage/comprobantes/' . basename($pg['comprobante']) : null;
+    if ($rutaArchivo === null || !is_file($rutaArchivo)) {
+        http_response_code(404);
+        exit('Comprobante no encontrado');
+    }
+    header('Content-Type: ' . (mime_content_type($rutaArchivo) ?: 'application/octet-stream'));
+    header('Content-Disposition: inline; filename="' . basename($rutaArchivo) . '"');
+    readfile($rutaArchivo);
+    exit;
 } elseif ($ruta === '/usuarios') {
     requiereAdmin();
     vista('usuarios', ['usuarios' => App\Core\Database::todos(

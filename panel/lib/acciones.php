@@ -245,6 +245,38 @@ function ejecutarAccion(string $ruta): void
             }
             redirigir('/configuracion');
 
+        case '/accion/pago-aprobar':
+            if (!moduloPermitido($usuario, 'pagos')) {
+                flash('No tienes acceso a pagos', 'error');
+                redirigir('/');
+            }
+            $pagoAp = Database::uno('SELECT * FROM pagos WHERE id = ?', [(int) $_POST['pago_id']]);
+            if ($pagoAp === null || $pagoAp['estado'] !== 'pendiente' || $pagoAp['comprobante'] === null) {
+                flash('Ese pago no se puede aprobar', 'error');
+                redirigir('/pagos');
+            }
+            $cambiados = Database::ejecutar(
+                "UPDATE pagos SET estado = 'pagado', pagado_en = NOW() WHERE id = ? AND estado = 'pendiente'",
+                [(int) $pagoAp['id']]
+            );
+            if ($cambiados === 0) {
+                flash('Ese pago ya fue procesado por alguien más', 'error');
+                redirigir('/pagos');
+            }
+            $pagoAp['estado'] = 'pagado';
+            $alumnoId = \App\Servicios\InscripcionServicio::porPago($pagoAp);
+            // Fase 3.3: credenciales del alumno (usuario = su WhatsApp)
+            $alumnoNuevo = Database::uno('SELECT a.*, p.telefono_whatsapp FROM alumnos a JOIN prospectos p ON p.id = a.prospecto_id WHERE a.id = ?', [$alumnoId]);
+            $aviso = 'Pago aprobado y alumno inscrito.';
+            if ($alumnoNuevo !== null && $alumnoNuevo['usuario'] === null) {
+                $passTmp = substr(str_shuffle('abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789'), 0, 10);
+                Database::ejecutar('UPDATE alumnos SET usuario = ?, password_hash = ? WHERE id = ?',
+                    [$alumnoNuevo['telefono_whatsapp'], password_hash($passTmp, PASSWORD_BCRYPT), $alumnoId]);
+                $aviso .= ' Usuario: ' . $alumnoNuevo['telefono_whatsapp'] . ' · Contraseña temporal: ' . $passTmp . ' — compártela por WhatsApp.';
+            }
+            flash($aviso);
+            redirigir('/pagos');
+
         case '/accion/usuario-guardar':
             requiereAdmin();
             $uid = (int) $_POST['usuario_id'];

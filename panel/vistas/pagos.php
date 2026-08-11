@@ -8,7 +8,7 @@
 <div class="tarjeta">
   <table class="lista">
     <thead>
-      <tr><th>Prospecto</th><th>Monto</th><th>Procesador</th><th>Link generado</th><th>Recordatorio</th><th>Estado</th></tr>
+      <tr><th>Prospecto</th><th>Monto</th><th>Procesador</th><th>Comprobante</th><th>Estado</th><th></th></tr>
     </thead>
     <tbody>
       <?php if ($pagos === []): ?>
@@ -19,9 +19,22 @@
         <td><a href="<?= e(u('/prospectos/' . (int) $pg['prospecto_id'])) ?>" style="font-weight:600;color:var(--navy)"><?= e($pg['prospecto_nombre'] ?? $pg['telefono_whatsapp']) ?></a></td>
         <td><?= e(dinero((int) $pg['monto_centavos'], $pg['moneda'])) ?></td>
         <td><?= e($pg['procesador'] ?? '—') ?></td>
-        <td><?= e(fechaCorta($pg['link_generado_en'])) ?></td>
-        <td><?= e(fechaCorta($pg['recordatorio_enviado_en'])) ?></td>
+        <td>
+          <?php if (!empty($pg['comprobante'])): ?>
+            <a href="<?= e(u('/comprobante/' . (int) $pg['id'])) ?>" target="_blank" style="font-weight:600;color:#6B9FFF">Ver comprobante</a>
+            <div style="font:var(--t-mini);color:var(--tinta-3)"><?= e(fechaCorta($pg['comprobante_subido_en'])) ?></div>
+          <?php else: ?>—<?php endif; ?>
+        </td>
         <td><span class="gaje <?= $pg['estado'] === 'pagado' ? 'ok' : ($pg['estado'] === 'pendiente' ? 'alerta' : 'error') ?>"><?= e($pg['estado']) ?></span></td>
+        <td>
+          <?php if ($pg['estado'] === 'pendiente' && !empty($pg['comprobante'])): ?>
+            <form method="post" action="<?= e(u('/accion/pago-aprobar')) ?>" data-confirmar="Se marcará como pagado y se inscribirá al alumno con sus datos de acceso.">
+              <input type="hidden" name="csrf" value="<?= e(csrfToken()) ?>">
+              <input type="hidden" name="pago_id" value="<?= (int) $pg['id'] ?>">
+              <button class="boton mini primario">Aprobar e inscribir</button>
+            </form>
+          <?php endif; ?>
+        </td>
       </tr>
       <?php endforeach; ?>
     </tbody>

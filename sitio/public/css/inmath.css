@@ -1660,3 +1660,10 @@ body::before {
 .card:hover .arrow-btn { box-shadow: none; }
 .card-fav { background: none; box-shadow: none; }
 .mock-play { background: none !important; }
+
+/* v25 — Pago por transferencia (Fase 3.2) */
+.pago-sep { text-align: center; font: 600 .78rem/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--tinta-3); margin: 18px 0 14px; }
+.transferencia { border: 1px solid var(--linea); border-radius: 16px; padding: 16px 18px; background: rgba(255,255,255,.6); }
+.transferencia > b { font: 600 .95rem var(--display); }
+.datos-transferencia { font: 500 .9rem/1.6 var(--cuerpo); color: var(--tinta-2); margin-top: 6px; white-space: pre-line; }
+input[type="file"] { font: 500 .88rem var(--cuerpo); color: var(--tinta-2); }
