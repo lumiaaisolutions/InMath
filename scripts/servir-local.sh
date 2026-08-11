@@ -29,7 +29,7 @@ mysqladmin --socket="$SOCK" ping >/dev/null 2>&1 && echo "✓ MySQL OK" || echo 
 
 # 2) Servidores PHP
 echo "▶ Sitio  → http://127.0.0.1:8125"
-php -S 127.0.0.1:8125 -t "$RAIZ/sitio/public" &
+php -S 127.0.0.1:8125 -t "$RAIZ/sitio/public" "$RAIZ/sitio/public/router.php" &
 echo "▶ Panel  → http://127.0.0.1:8124  (admin@inmath.mx / Cambiar.123)"
 php -S 127.0.0.1:8124 -t "$RAIZ/panel/public" "$RAIZ/panel/public/index.php" &
 echo "▶ API    → http://127.0.0.1:8123/api/health"

@@ -134,6 +134,30 @@ que v3/v5). Referencia visual: dashboards pastel con wash cielo→durazno.
   bajo el formulario del CTA) simplemente no se pinta. Decisión de producto:
   el inicio NO usa la API de WhatsApp — solo enlace directo.
 
+## v7 — Rediseño audaz (nav píldora, lienzo pleno, fotos de borde duro)
+
+Bloque v7 al final de `sitio/public/css/inmath.css`. Evolución deliberada sobre
+v6 porque el cliente pidió cambios más notorios (referencias: dashboards pastel
+tipo app). Cambios, todos a nivel de clases genéricas:
+
+- **Nav píldora flotante** (archetype N5 de Hallmark): `.barra` se despega del
+  borde (sticky a 14px, centrada, `border-radius:999px`, vidrio con sombra).
+- **Lienzo pleno:** el degradado cielo→durazno de `body::before` sube de
+  intensidad (~.9 de alpha) y pinta toda la página, ya no se disuelve al centro.
+- **Fotos de borde duro:** `.scrub` pierde el mask radial desvanecido; ahora es
+  `overflow:hidden` + radio 28px + **anillo blanco** (`box-shadow 0 0 0 7px`) +
+  sombra profunda. `.demo-marco` pasa de gradiente pastel a tarjeta blanca de
+  vidrio (polaroid).
+- **Secciones flotantes:** `.proceso` e `.incluye` son paneles redondeados
+  (44px) centrados con vidrio, ya no bandas de borde a borde.
+- El pie queda translúcido sobre el lienzo.
+
+**Rutas en el servidor local (`php -S`):** el built-in server no procesa
+`.htaccess`, y `/agenda`//`/pago` caían de vuelta a `index.php` (los botones
+"no navegaban": recargaban el landing). Fix: `sitio/public/router.php` como
+script de router (`php -S … sitio/public/router.php`, ya cableado en
+`scripts/servir-local.sh`). Producción no cambia: sigue con `.htaccess`.
+
 ## Liquid glass — barrido especular
 
 Todas las superficies de vidrio principales (`.card`, `.plan`, `.cta-caja`,
