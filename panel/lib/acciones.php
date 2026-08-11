@@ -141,6 +141,22 @@ function ejecutarAccion(string $ruta): void
             flash('Configuración guardada');
             redirigir($volver);
 
+        case '/accion/login-textos':
+            requiereAdmin();
+            $textosLogin = [
+                'login_titulo' => 'Título de bienvenida en la pantalla de inicio de sesión.',
+                'login_texto'  => 'Texto de apoyo bajo el título del inicio de sesión.',
+            ];
+            foreach ($textosLogin as $claveTexto => $descTexto) {
+                Database::ejecutar(
+                    'INSERT INTO configuraciones (clave, valor, tipo, descripcion) VALUES (?, ?, \'texto\', ?)
+                     ON DUPLICATE KEY UPDATE valor = VALUES(valor), actualizado_por = ?',
+                    [$claveTexto, trim($_POST[$claveTexto] ?? ''), $descTexto, (int) $usuario['id']]
+                );
+            }
+            flash('Textos del login guardados');
+            redirigir('/configuracion');
+
         case '/accion/login-media-subir':
             requiereAdmin();
             $archivo = $_FILES['media'] ?? null;

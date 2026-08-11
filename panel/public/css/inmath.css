@@ -659,3 +659,68 @@ body::before {
   .lc-e, .aviso-sacudida { animation: none; }
 }
 .ver-pass svg[hidden] { display: none; }
+
+/* =========================================================================
+   v12 — Panel claro estilo landing (sidebar de vidrio blanco, tarjetas glass)
+   y login "plano": el formulario flota transparente sobre el fondo, sin caja.
+   ========================================================================= */
+
+/* ---- Sidebar: de navy oscuro a vidrio blanco con pills ---- */
+.sidebar {
+  background:
+    linear-gradient(158deg, rgba(255,255,255,.82), rgba(255,255,255,.6)) !important;
+  border-right: 1px solid rgba(255,255,255,.85);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4); backdrop-filter: blur(22px) saturate(1.4);
+  box-shadow: 8px 0 30px rgba(46,64,140,.06);
+}
+.sidebar::before { display: none !important; }
+.sidebar .marca strong { color: var(--tinta) !important; }
+.sidebar .marca span { color: var(--tinta-3) !important; }
+.nav a { color: var(--tinta-2) !important; border-radius: 999px !important; }
+.nav a:hover { background: rgba(59,111,245,.1) !important; color: var(--azul-600, #2454D6) !important; }
+.nav a.activo {
+  background: linear-gradient(135deg, #3B6FF5, #1E9EB8) !important; color: #fff !important;
+  box-shadow: 0 10px 22px rgba(59,111,245,.32) !important;
+}
+.sidebar .pie { border-top: 1px solid rgba(20,26,44,.08) !important; }
+.sidebar .pie .quien b { color: var(--tinta) !important; }
+.sidebar .pie .quien i { color: var(--tinta-3) !important; }
+.sidebar .pie button { border: 1px solid rgba(20,26,44,.16) !important; color: var(--tinta-2) !important; }
+.sidebar .pie button:hover { border-color: #3B6FF5 !important; color: #3B6FF5 !important; }
+
+/* ---- Tarjetas del contenido: mismo vidrio que la landing ---- */
+.tarjeta {
+  background:
+    linear-gradient(122deg, rgba(255,255,255,.55) 0%, transparent 30%, transparent 70%, rgba(255,255,255,.22) 100%),
+    linear-gradient(158deg, rgba(255,255,255,.8), rgba(255,255,255,.55)) !important;
+  border: 1px solid rgba(255,255,255,.75) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.35); backdrop-filter: blur(18px) saturate(1.35);
+  box-shadow: 0 18px 44px rgba(46,64,140,.1), inset 0 1px 0 rgba(255,255,255,.8) !important;
+  border-radius: 22px !important;
+}
+.cabecera h1 { font-size: 1.9rem; letter-spacing: -.03em; }
+
+/* ---- Login "plano": sin caja — el formulario flota sobre el fondo ---- */
+.login-plano {
+  background: none !important; border: 0 !important; box-shadow: none !important;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  border-radius: 0; padding: 0 !important; width: min(380px, 100%);
+  animation: none;
+}
+.login-plano .login-logo { margin-bottom: 26px; }
+.login-plano .login-saludo { font-size: 2.1rem; margin-bottom: 6px; }
+.login-plano .login-sub { margin-bottom: 26px; }
+.login-plano .campo { margin-bottom: 16px; }
+.login-plano .campo input {
+  background: rgba(255,255,255,.62); border: 1px solid rgba(255,255,255,.9);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3); backdrop-filter: blur(12px) saturate(1.3);
+  border-radius: 16px; padding: 14px 16px; font-size: .98rem;
+  box-shadow: 0 8px 22px rgba(46,64,140,.08), inset 0 1px 0 rgba(255,255,255,.9);
+}
+.login-plano .campo input:focus {
+  background: rgba(255,255,255,.85); border-color: rgba(59,111,245,.55);
+  box-shadow: 0 0 0 4px rgba(59,111,245,.14), 0 12px 26px rgba(46,64,140,.12);
+}
+.login-plano .campo-pass input { padding-right: 48px; }
+.login-plano .login-entrar { margin-top: 8px; border-radius: 999px; padding: 15px; font-size: .98rem; }
+@media (max-width: 860px) { .login-plano { width: min(400px, 92vw); } }

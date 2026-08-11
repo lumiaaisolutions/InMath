@@ -330,3 +330,23 @@ Bloque v8 al final de `sitio/public/css/inmath.css`:
   https://lumiaaisolutions.com/.
 - **PANEL_URL** en `backend/.env`: alimenta el enlace "Entrar" del nav del
   sitio y "Acceso asesores" del pie.
+
+## v12 — Panel claro estilo landing, login plano y Configuración sin tecnicismos
+
+- **Sidebar del panel:** de navy oscuro a vidrio blanco con pills; el ítem
+  activo es una pastilla con gradiente azul→teal. Tarjetas del contenido con
+  el mismo vidrio de la landing.
+- **Login "plano":** el formulario ya no vive en una caja — flota transparente
+  sobre el fondo (`.login-plano`), con inputs de vidrio individuales. El lado
+  visual SIEMPRE muestra el carrusel (sin escena SVG): si el admin no ha
+  subido nada, cae a `panel/public/img/login-default.jpg`.
+- **Título y texto del login configurables:** claves `login_titulo` /
+  `login_texto` en `configuraciones` (upsert vía `/accion/login-textos`),
+  editables desde Configuración → "Pantalla de inicio de sesión".
+- **Configuración humanizada:** solo se muestran 5 ajustes con nombre y
+  descripción en lenguaje claro (duración de asesoría, horario de atención,
+  horarios que ofrece el bot, recordatorios de cita y de pago). El horario de
+  atención se edita con **checkboxes de días + horas** (el JSON se arma por
+  JS al guardar). Las claves técnicas (criterios_calificacion,
+  max_mensajes_contexto, modelo del bot, procesador de pago, branding del
+  PDF) ya no aparecen en la UI — se administran por soporte directo en BD.
