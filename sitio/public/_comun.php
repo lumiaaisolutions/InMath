@@ -58,6 +58,16 @@ function cursoActivo(): ?array
 }
 
 /**
+ * URL del panel CRM (PANEL_URL en backend/.env) para el enlace "Entrar" del
+ * sitio. Devuelve null si no está configurada — el enlace no se pinta.
+ */
+function panelUrl(): ?string
+{
+    $url = rtrim(trim(App\Core\Env::get('PANEL_URL', '')), '/');
+    return $url !== '' ? $url : null;
+}
+
+/**
  * Enlace directo wa.me al WhatsApp del negocio (WHATSAPP_NUMERO en backend/.env,
  * formato internacional sin +). Devuelve null si no está configurado — el
  * llamador decide no pintar el botón.
@@ -328,6 +338,9 @@ function cabeceraSitio(string $titulo, string $activo = ''): void
     <a href="/#como" class="n-como <?= $activo === 'como' ? 'activo' : '' ?>"><?= icono('route') ?> Cómo funciona</a>
     <a href="/#incluye" class="n-incl"><?= icono('list') ?> Qué incluye</a>
     <a href="/agenda" class="n-ases <?= $activo === 'agenda' ? 'activo' : '' ?>"><?= icono('calendar') ?> Asesoría gratis</a>
+    <?php if (($panel = panelUrl()) !== null): ?>
+      <a href="<?= e($panel) ?>" class="n-login"><?= icono('user') ?> Entrar</a>
+    <?php endif; ?>
     <a href="/pago" class="cta <?= $activo === 'pago' ? 'activo' : '' ?>">Inscribirme</a>
   </nav>
 </header>
@@ -362,6 +375,9 @@ function pieSitio(): void
       <a href="/#incluye">Qué incluye</a>
       <a href="/agenda">Agendar asesoría</a>
       <a href="/pago">Inscribirme</a>
+      <?php if (($panelPie = panelUrl()) !== null): ?>
+        <a href="<?= e($panelPie) ?>">Acceso asesores</a>
+      <?php endif; ?>
     </nav>
   </div>
 </footer>

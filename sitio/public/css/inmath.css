@@ -1209,3 +1209,7 @@ body::after {
 @media (prefers-reduced-motion: reduce) {
   .faq details[open] p { animation: none; }
 }
+
+/* Enlace "Entrar" del nav (acceso al panel CRM): pill discreto, mismo lenguaje */
+.barra nav a.n-login { --pill: rgba(255,255,255,.75); --pillfg: var(--tinta); }
+.barra nav a.n-login:hover { --pillfg: var(--azul-600); }
