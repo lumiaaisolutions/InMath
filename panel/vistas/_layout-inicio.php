@@ -21,13 +21,19 @@
     </div>
     <nav class="nav">
       <?php
-      $items = [
-          '/' => ['Pipeline', 'pipeline'],
-          '/citas' => ['Citas', 'calendar'],
-          '/alumnos' => ['Alumnos', 'alumnos'],
-          '/pagos' => ['Pagos', 'pagos'],
-      ];
+      $items = [];
+      foreach ([
+          '/' => ['Pipeline', 'pipeline', 'pipeline'],
+          '/citas' => ['Citas', 'calendar', 'citas'],
+          '/alumnos' => ['Alumnos', 'alumnos', 'alumnos'],
+          '/pagos' => ['Pagos', 'pagos', 'pagos'],
+      ] as $href => [$texto, $ic, $mod]) {
+          if (moduloPermitido($u, $mod)) {
+              $items[$href] = [$texto, $ic];
+          }
+      }
       if (($u['rol'] ?? '') === 'admin') {
+          $items['/usuarios'] = ['Usuarios', 'user'];
           $items['/personalizar-login'] = ['Personalizar login', 'imagen'];
           $items['/configuracion'] = ['Configuración', 'config'];
       }

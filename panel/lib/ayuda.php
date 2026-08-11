@@ -153,7 +153,10 @@ function overlayCargaPanel(): string
   });
 
   document.addEventListener('submit', function (e) {
-    if (e.target && e.target.tagName === 'FORM') mostrar();
+    if (!e.target || e.target.tagName !== 'FORM') return;
+    // Esperar a que corran los demás handlers: si alguno canceló el envío
+    // (p. ej. el diálogo de confirmación), NO mostrar la pantalla de carga.
+    setTimeout(function () { if (!e.defaultPrevented) mostrar(); }, 0);
   });
 
   window.addEventListener('pageshow', function (e) {

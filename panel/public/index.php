@@ -68,6 +68,7 @@ if ($ruta === '/login') {
 requiereSesion();
 
 if ($ruta === '/' || $ruta === '/pipeline') {
+    requiereModulo('pipeline');
     vista('pipeline', [
         'columnas' => datosPipeline($_GET['asesor_id'] ?? null),
         'asesores' => listaAsesores(),
@@ -81,6 +82,7 @@ if ($ruta === '/' || $ruta === '/pipeline') {
     }
     vista('prospecto', $detalle + ['asesores' => listaAsesores()]);
 } elseif ($ruta === '/citas') {
+    requiereModulo('citas');
     $inicioSemana = strtotime($_GET['semana'] ?? 'monday this week');
     vista('citas', [
         'inicioSemana' => $inicioSemana,
@@ -89,8 +91,10 @@ if ($ruta === '/' || $ruta === '/pipeline') {
         'filtroAsesor' => $_GET['asesor_id'] ?? '',
     ]);
 } elseif ($ruta === '/alumnos') {
+    requiereModulo('alumnos');
     vista('alumnos', ['alumnos' => listaAlumnos()]);
 } elseif ($ruta === '/pagos') {
+    requiereModulo('pagos');
     vista('pagos', ['pagos' => listaPagos()]);
 } elseif ($ruta === '/configuracion') {
     requiereAdmin();
@@ -98,6 +102,11 @@ if ($ruta === '/' || $ruta === '/pipeline') {
 } elseif ($ruta === '/personalizar-login') {
     requiereAdmin();
     vista('personalizar-login', ['configuraciones' => listaConfiguraciones()]);
+} elseif ($ruta === '/usuarios') {
+    requiereAdmin();
+    vista('usuarios', ['usuarios' => App\Core\Database::todos(
+        'SELECT id, nombre, email, rol, telefono, activo, modulos FROM usuarios ORDER BY rol, nombre'
+    )]);
 } elseif ($ruta === '/perfil') {
     $yo = App\Core\Database::uno(
         'SELECT id, nombre, email, rol, telefono FROM usuarios WHERE id = ?',

@@ -245,6 +245,64 @@ function ejecutarAccion(string $ruta): void
             }
             redirigir('/configuracion');
 
+        case '/accion/usuario-guardar':
+            requiereAdmin();
+            $uid = (int) $_POST['usuario_id'];
+            $objetivo = Database::uno('SELECT * FROM usuarios WHERE id = ?', [$uid]);
+            if ($objetivo === null) {
+                flash('Usuario no encontrado', 'error');
+                redirigir('/usuarios');
+            }
+            $nombreU = trim($_POST['nombre'] ?? '');
+            $emailU = trim($_POST['email'] ?? '');
+            $rolU = $_POST['rol'] === 'admin' ? 'admin' : 'asesor';
+            $activoU = isset($_POST['activo']) ? 1 : 0;
+            if ($nombreU === '' || !filter_var($emailU, FILTER_VALIDATE_EMAIL)) {
+                flash('Nombre y correo válidos son obligatorios', 'error');
+                redirigir('/usuarios');
+            }
+            // Un admin no puede bloquearse ni quitarse el rol a sí mismo
+            if ($uid === (int) $usuario['id'] && ($rolU !== 'admin' || $activoU === 0)) {
+                flash('No puedes quitarte el acceso a ti mismo', 'error');
+                redirigir('/usuarios');
+            }
+            $modulosValidos = ['pipeline', 'citas', 'alumnos', 'pagos'];
+            $modulosU = array_values(array_intersect($modulosValidos, (array) ($_POST['modulos'] ?? [])));
+            $modulosJson = count($modulosU) === count($modulosValidos) ? null : json_encode($modulosU);
+            Database::ejecutar(
+                'UPDATE usuarios SET nombre = ?, email = ?, telefono = ?, rol = ?, activo = ?, modulos = ? WHERE id = ?',
+                [$nombreU, $emailU, trim($_POST['telefono'] ?? '') ?: null, $rolU, $activoU, $modulosJson, $uid]
+            );
+            if (($_POST['password'] ?? '') !== '') {
+                if (strlen($_POST['password']) < 8) {
+                    flash('La contraseña nueva debe tener al menos 8 caracteres', 'error');
+                    redirigir('/usuarios');
+                }
+                Database::ejecutar('UPDATE usuarios SET password_hash = ? WHERE id = ?', [password_hash($_POST['password'], PASSWORD_BCRYPT), $uid]);
+            }
+            flash('Usuario actualizado');
+            redirigir('/usuarios');
+
+        case '/accion/usuario-crear':
+            requiereAdmin();
+            $nombreU = trim($_POST['nombre'] ?? '');
+            $emailU = trim($_POST['email'] ?? '');
+            $passU = $_POST['password'] ?? '';
+            if ($nombreU === '' || !filter_var($emailU, FILTER_VALIDATE_EMAIL) || strlen($passU) < 8) {
+                flash('Nombre, correo válido y contraseña de 8+ caracteres son obligatorios', 'error');
+                redirigir('/usuarios');
+            }
+            if (Database::uno('SELECT id FROM usuarios WHERE email = ?', [$emailU]) !== null) {
+                flash('Ya existe un usuario con ese correo', 'error');
+                redirigir('/usuarios');
+            }
+            Database::ejecutar(
+                'INSERT INTO usuarios (nombre, email, password_hash, rol, activo) VALUES (?, ?, ?, ?, 1)',
+                [$nombreU, $emailU, password_hash($passU, PASSWORD_BCRYPT), $_POST['rol'] === 'admin' ? 'admin' : 'asesor']
+            );
+            flash('Usuario creado');
+            redirigir('/usuarios');
+
         case '/accion/perfil':
             $nombrePerfil = trim($_POST['nombre'] ?? '');
             if ($nombrePerfil === '') {

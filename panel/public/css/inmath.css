@@ -1213,3 +1213,52 @@ input[type="range"].aj-zoom::-webkit-slider-thumb:hover { transform: scale(1.15)
 .ch-stat.alerta { background: #FBE3E4; border-color: #F2C2C5; }
 .ch-stat.alerta b { color: var(--rojo); }
 .cabecera select { background-color: rgba(255,255,255,.85); }
+
+/* =========================================================================
+   v21 — Control de usuarios: tarjetas por usuario, interruptor de activo,
+   chips de módulos permitidos.
+   ========================================================================= */
+.us-rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; align-items: start; }
+.us-carta { display: grid; gap: 14px; padding: 20px !important; }
+.us-carta.bloqueado { opacity: .72; }
+.us-cab { display: flex; align-items: center; gap: 12px; }
+.us-quien { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.us-quien b { font: 600 .95rem/1.2 var(--display); color: var(--tinta); }
+.us-quien span { font: 400 .8rem/1.2 var(--cuerpo); color: var(--tinta-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.us-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.us-campos .pl-campo input, .us-campos .pl-campo select { width: 100%; }
+.us-campos .pl-campo small { font-weight: 400; color: var(--tinta-3); }
+.us-etiqueta { font: 600 .76rem/1 var(--cuerpo); color: var(--tinta-2); display: block; margin-bottom: 8px; }
+.us-chips { display: flex; gap: 7px; flex-wrap: wrap; }
+.chip-modulo { position: relative; cursor: pointer; }
+.chip-modulo input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.chip-modulo span {
+  display: inline-block; font: 600 .78rem/1 var(--cuerpo); color: var(--tinta-2);
+  background: rgba(255,255,255,.7); border: 1.5px solid var(--linea-2);
+  border-radius: 999px; padding: 8px 13px;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms cubic-bezier(0.23,1,0.32,1);
+}
+.chip-modulo input:checked + span { background: linear-gradient(135deg, #4E8098, #3D6E8F); color: #fff; border-color: transparent; }
+.chip-modulo input:disabled + span { opacity: .55; cursor: default; }
+.chip-modulo input:not(:disabled) + span:hover { transform: translateY(-1px); }
+.chip-modulo input:focus-visible + span { outline: 2.5px solid #3D6E8F; outline-offset: 2px; }
+.us-pie { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.us-nueva { border-style: dashed !important; }
+
+/* Interruptor (switch) propio — nada nativo */
+.interruptor { position: relative; flex: 0 0 auto; cursor: pointer; }
+.interruptor input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.interruptor i {
+  display: block; width: 42px; height: 24px; border-radius: 999px;
+  background: #C2C6CE; transition: background 200ms ease; font-style: normal;
+}
+.interruptor i::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+  border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(29,46,74,.3);
+  transition: translate 200ms cubic-bezier(0.23,1,0.32,1);
+}
+.interruptor input:checked + i { background: linear-gradient(135deg, #4E8098, #3D6E8F); }
+.interruptor input:checked + i::after { translate: 18px 0; }
+.interruptor input:disabled + i { opacity: .6; cursor: default; }
+.interruptor input:focus-visible + i { outline: 2.5px solid #3D6E8F; outline-offset: 3px; }
+@media (max-width: 560px) { .us-campos { grid-template-columns: 1fr; } }

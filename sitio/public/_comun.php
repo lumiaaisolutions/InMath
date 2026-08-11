@@ -182,7 +182,10 @@ function overlayCarga(): string
   // Enviar un formulario (inscripción, agenda, contacto): la navegación resultante
   // también dispara la pantalla de carga.
   document.addEventListener('submit', function (e) {
-    if (e.target && e.target.tagName === 'FORM') mostrar();
+    if (!e.target || e.target.tagName !== 'FORM') return;
+    // Esperar a que corran los demás handlers: si alguno canceló el envío
+    // (p. ej. el diálogo de confirmación), NO mostrar la pantalla de carga.
+    setTimeout(function () { if (!e.defaultPrevented) mostrar(); }, 0);
   });
 
   // Restaurar desde bfcache (botón atrás): asegura que no quede visible.
