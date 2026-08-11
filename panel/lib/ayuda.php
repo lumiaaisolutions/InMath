@@ -307,6 +307,16 @@ function icono(string $n, string $cls = 'ic'): string
         'alerta'   => '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h.01"/>',
         'x'        => '<path d="M18 6 6 18M6 6l12 12"/>',
     ];
-    return '<svg class="' . e($cls) . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" '
-        . 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . ($p[$n] ?? '') . '</svg>';
+    $inner = $p[$n] ?? '';
+    // Estilo "frosted glass": trazo vivo + copia blanca esmerilada desplazada.
+    static $frostId = 0;
+    $fid = 'pcf' . (++$frostId);
+    return '<svg class="' . e($cls) . '" viewBox="0 0 24 24" fill="none" '
+        . 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        . '<defs><filter id="' . $fid . '" x="-40%" y="-40%" width="180%" height="180%">'
+        . '<feGaussianBlur stdDeviation=".55"/></filter></defs>'
+        . '<g class="icg-base" stroke="currentColor" stroke-width="2.3">' . $inner . '</g>'
+        . '<g class="icg-frost" stroke="#fff" stroke-width="1.9" filter="url(#' . $fid . ')" '
+        . 'transform="translate(1.6 1.6)">' . $inner . '</g>'
+        . '</svg>';
 }

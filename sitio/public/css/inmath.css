@@ -1629,3 +1629,34 @@ body::before {
 /* Hover: el tile de vidrio se levanta con su glow */
 .card:hover .tile-ic { transform: translateY(-5px) rotate(-3deg); box-shadow: 0 16px 30px color-mix(in srgb, var(--acc, #6B9FFF) 42%, transparent), inset 0 1px 0 rgba(255,255,255,.95) !important; }
 .paso:hover .paso-ic { transform: translateY(-4px) scale(1.05); }
+
+/* =========================================================================
+   v24 — Frosted glass real (referencia Behance): el glifo ES el vidrio — dos
+   capas (trazo vivo + copia blanca esmerilada desplazada). Los íconos flotan
+   con sombra de su color, SIN contenedor: fuera los tiles de v23.
+   ========================================================================= */
+.icg-frost { mix-blend-mode: normal; opacity: .62; }
+.icg-frost [fill="currentColor"] { fill: #fff !important; }
+
+.tile-ic, .paso-ic, .mock-play, .area .pt {
+  background: none !important; border: 0 !important; box-shadow: none !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+.tile-ic, .paso-ic { width: 46px !important; height: 46px !important; }
+.tile-ic svg, .paso-ic svg { width: 38px; height: 38px; filter: drop-shadow(0 7px 12px color-mix(in srgb, var(--acc, #6B9FFF) 50%, transparent)); }
+.mock-play svg { filter: drop-shadow(0 4px 8px color-mix(in srgb, var(--acc, #6B9FFF) 45%, transparent)); }
+.area .pt { color: var(--acc, #6B9FFF) !important; filter: drop-shadow(0 5px 10px color-mix(in srgb, var(--acc, #6B9FFF) 40%, transparent)); }
+.area .pt svg { width: 24px; height: 24px; }
+.card:hover .tile-ic { transform: translateY(-5px) rotate(-3deg); box-shadow: none !important; }
+.eyebrow .ic-ey { filter: drop-shadow(0 3px 6px rgba(107,159,255,.45)); }
+.heroe .respaldo svg, .agenda-respaldo svg { filter: drop-shadow(0 3px 6px rgba(107,159,255,.35)); }
+
+/* v24.1 — Ningún ícono con caja: fuera fondos y anillos restantes */
+.faq summary .mas { box-shadow: none; background: none; color: #6B9FFF; width: 22px; height: 22px; }
+.faq details[open] summary .mas { background: none; color: #1B2F52; }
+.eyebrow .mini-arrow { box-shadow: none; background: none; }
+.eyebrow.link:hover .mini-arrow { background: none; color: #1B2F52; }
+.arrow-btn { box-shadow: none; background: none; }
+.card:hover .arrow-btn { box-shadow: none; }
+.card-fav { background: none; box-shadow: none; }
+.mock-play { background: none !important; }

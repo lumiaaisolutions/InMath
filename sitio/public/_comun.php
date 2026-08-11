@@ -111,8 +111,18 @@ function icono(string $n, string $cls = ''): string
         'logout'   => '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
     ];
     $inner = $p[$n] ?? '';
-    return '<svg class="' . e($cls) . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
-        . 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $inner . '</svg>';
+    // Estilo "frosted glass": el glifo son dos capas — el trazo en el color
+    // vivo + una copia blanca esmerilada (blur) desplazada que se superpone.
+    static $frostId = 0;
+    $fid = 'icf' . (++$frostId);
+    return '<svg class="' . e($cls) . '" viewBox="0 0 24 24" fill="none" '
+        . 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        . '<defs><filter id="' . $fid . '" x="-40%" y="-40%" width="180%" height="180%">'
+        . '<feGaussianBlur stdDeviation=".55"/></filter></defs>'
+        . '<g class="icg-base" stroke="currentColor" stroke-width="2.4">' . $inner . '</g>'
+        . '<g class="icg-frost" stroke="#fff" stroke-width="2" filter="url(#' . $fid . ')" '
+        . 'transform="translate(1.6 1.6)">' . $inner . '</g>'
+        . '</svg>';
 }
 
 function mallaSitio(): string
