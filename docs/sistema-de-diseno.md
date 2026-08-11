@@ -284,3 +284,20 @@ refleja en producción.
 Cambiar solo el bloque `:root` de cada `inmath.css` (colores y tipografía) y el
 isotipo `img/inmath.svg`. El branding del reporte PDF se ajusta desde la clave de
 configuración `reporte_branding` sin tocar código (ver [`base-de-datos.md`](base-de-datos.md)).
+
+## v8 — Pulido tipográfico y de detalles (principios emil-design-eng)
+
+Bloque v8 al final de `sitio/public/css/inmath.css`:
+
+- **Tipografía display:** Bricolage con `font-variation-settings:"opsz" 96`
+  (el eje óptico al máximo — trazo más expresivo en grandes) en h1/h2 grandes,
+  tracking -.045em en el héroe, `text-wrap:balance` en titulares y `pretty` en
+  entradas. Números con `tnum` en precios.
+- **Motion:** easing global sube a `cubic-bezier(0.23,1,0.32,1)` 200ms
+  (ease-out fuerte); botones con presión táctil `:active { scale(.97) }`
+  (160ms); hovers de lift anulados en táctil (`hover:none`).
+- **Textura:** `body::after` con grano SVG (feTurbulence) a opacidad baja en
+  `soft-light` — quita lo "plano digital" del degradado.
+- **Detalles:** chips del héroe y eyebrows en vidrio real (blur + anillo),
+  inputs con radio 14px y focus de doble sombra, respuesta del FAQ entra con
+  fade+desplazamiento (240ms), scrollbar discreto redondeado.

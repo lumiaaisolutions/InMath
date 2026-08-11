@@ -1121,3 +1121,91 @@ body::before {
 
 /* El pie vuelve a tocar los bordes pero translúcido, coherente con el lienzo */
 .pie { background: rgba(255,255,255,.55); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+
+/* =========================================================================
+   v8 — Pulido tipográfico y de detalles (emil-design-eng)
+   Tipografía display con eje óptico al máximo, easings con más carácter,
+   feedback de presión en botones, grano sutil sobre el lienzo, y detalles
+   de superficie (chips de vidrio, inputs más suaves, FAQ animado).
+   ========================================================================= */
+
+/* ---- Easing global con más carácter (ease-out fuerte, 200ms) ---- */
+:root { --t: 200ms cubic-bezier(0.23, 1, 0.32, 1); }
+
+/* ---- Tipografía: Bricolage al máximo del eje óptico + tracking cerrado ---- */
+.heroe h1 {
+  font-size: clamp(2.6rem, 5.6vw, 4.35rem);
+  letter-spacing: -.045em; line-height: .98;
+  font-variation-settings: "opsz" 96;
+  text-wrap: balance;
+}
+.cab-seccion h2, .cta-caja h2, .agenda-lado h1, .pagina-form h1 {
+  font-variation-settings: "opsz" 96;
+  letter-spacing: -.034em;
+  text-wrap: balance;
+}
+.cab-seccion h2 { font-size: clamp(1.8rem, 3.8vw, 2.8rem); }
+.heroe p.entrada, .cab-seccion p { text-wrap: pretty; }
+.precio-caja .monto, .plan-precio, .mock-num { font-variation-settings: "opsz" 96; font-feature-settings: "tnum" 1; }
+.card h3, .paso h3, .plan-tag { letter-spacing: -.015em; }
+.eyebrow { letter-spacing: .09em; }
+
+/* ---- Grano sutil: textura de papel sobre el degradado (anti-plano) ---- */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  opacity: .34; mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.86' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.16'/%3E%3C/svg%3E");
+}
+
+/* ---- Botones: presión táctil (scale down rápido) + hover solo con puntero ---- */
+.boton, .barra nav a.cta, .arrow-btn, .scrub-accion, .wa-directo {
+  transition: transform 160ms cubic-bezier(0.23,1,0.32,1), box-shadow var(--t), background var(--t), color var(--t);
+}
+.boton:active, .barra nav a.cta:active, .wa-directo:active { transform: scale(.97); }
+.scrub-accion:active { transform: scale(.94); }
+@media (hover: none) {
+  .boton:hover, .barra nav a.cta:hover { transform: none; box-shadow: none; }
+  .card:hover { transform: none; }
+}
+
+/* ---- Chips flotantes del héroe: vidrio de verdad ---- */
+.chip-flota {
+  background: linear-gradient(158deg, rgba(255,255,255,.92), rgba(255,255,255,.7));
+  border: 1px solid rgba(255,255,255,.85);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3); backdrop-filter: blur(12px) saturate(1.3);
+  box-shadow: 0 14px 30px rgba(46,64,140,.18), inset 0 1px 0 rgba(255,255,255,.9);
+}
+
+/* ---- Eyebrows: pastilla de vidrio con anillo, no relleno plano ---- */
+.eyebrow {
+  background: rgba(255,255,255,.62);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--azul) 26%, transparent);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+
+/* ---- Formularios: esquinas más amplias y focus más suave ---- */
+.campo input, .campo select, .form-cta input { border-radius: 14px; }
+.campo input:focus, .campo select:focus, .form-cta input:focus {
+  box-shadow: 0 0 0 4px rgba(59,111,245,.13), 0 1px 2px rgba(20,26,44,.06);
+}
+
+/* ---- FAQ: la respuesta entra con fade+desplazamiento al abrir ---- */
+.faq details[open] p { animation: faqEntra 240ms cubic-bezier(0.23,1,0.32,1); }
+@keyframes faqEntra { from { opacity: 0; transform: translateY(-5px); } }
+
+/* ---- Navegación: logo con tracking cerrado y estados más nítidos ---- */
+.logo b { letter-spacing: -.022em; }
+.barra nav a:not(.cta):active { transform: scale(.96); }
+
+/* ---- Scrollbar discreto acorde al lienzo ---- */
+::-webkit-scrollbar { width: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--tinta-3) 34%, transparent);
+  border-radius: 99px; border: 3px solid transparent; background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--tinta-3) 55%, transparent); border: 3px solid transparent; background-clip: padding-box; }
+
+@media (prefers-reduced-motion: reduce) {
+  .faq details[open] p { animation: none; }
+}
