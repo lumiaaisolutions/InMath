@@ -66,6 +66,7 @@ cabeceraSitio('Cursos Inmath — Aprende en línea a tu ritmo');
         <img class="scrub-frame f1" src="/img/fotos/hero-1.jpg" alt="Persona sosteniendo su teléfono para escribir por WhatsApp" loading="eager">
         <img class="scrub-frame f2" src="/img/fotos/hero-2.jpg" alt="Estudiantes repasando juntos frente a una laptop" loading="lazy">
         <span class="tinte"></span>
+        <a class="scrub-accion" href="/agenda" aria-label="Agendar una asesoría gratis"><?= icono('arrow') ?></a>
       </div>
     </div>
   </div>
@@ -110,6 +111,7 @@ cabeceraSitio('Cursos Inmath — Aprende en línea a tu ritmo');
           <img class="scrub-frame f1" src="/img/fotos/acompana-1.jpg" alt="Escritorio visto desde arriba con varias laptops y libretas abiertas" loading="lazy">
           <img class="scrub-frame f2" src="/img/fotos/acompana-2.jpg" alt="Grupo de personas riendo juntas mientras revisan una laptop en una biblioteca" loading="lazy">
           <span class="tinte"></span>
+          <a class="scrub-accion" href="/agenda" aria-label="Conocer a tu asesor en una asesoría gratis"><?= icono('arrow') ?></a>
         </div>
       </div>
       <div>
@@ -201,6 +203,7 @@ cabeceraSitio('Cursos Inmath — Aprende en línea a tu ritmo');
           <img class="scrub-frame f1" src="/img/fotos/avance-2.jpg" alt="Cuaderno abierto con notas de estudio sobre un escritorio" loading="lazy">
           <img class="scrub-frame f2" src="/img/fotos/avance-1.jpg" alt="Persona celebrando frente a su laptop tras completar un avance" loading="lazy">
           <span class="tinte"></span>
+          <a class="scrub-accion" href="/pago" aria-label="Ver qué incluye tu inscripción"><?= icono('arrow') ?></a>
         </div>
       </div>
     </div>
@@ -271,9 +274,13 @@ cabeceraSitio('Cursos Inmath — Aprende en línea a tu ritmo');
         <h2>Déjanos tus datos y te escribimos.</h2>
         <p>Un asesor te contacta por WhatsApp para resolver tus dudas y ayudarte a empezar.</p>
       </div>
+      <?php $waDirecto = whatsappUrl('Hola, quiero información del curso Inmath.'); ?>
       <?php if ($ctaExito !== null): ?>
         <div class="form-cta">
           <div class="aviso-cta"><?= icono('check') ?> ¡Gracias, <?= e($ctaExito) ?>! Te escribimos por WhatsApp en breve.</div>
+          <?php if ($waDirecto): ?>
+            <a class="wa-directo" href="<?= e($waDirecto) ?>" target="_blank" rel="noopener"><?= icono('chat') ?> ¿Prefieres escribirnos tú? Abrir WhatsApp</a>
+          <?php endif; ?>
         </div>
       <?php else: ?>
         <form method="post" class="form-cta">
@@ -284,6 +291,9 @@ cabeceraSitio('Cursos Inmath — Aprende en línea a tu ritmo');
           <input type="text" name="nombre" placeholder="Tu nombre" required value="<?= e($_POST['nombre'] ?? '') ?>">
           <input type="tel" name="telefono" placeholder="WhatsApp (10 dígitos)" required inputmode="numeric" value="<?= e($_POST['telefono'] ?? '') ?>">
           <button type="submit" class="boton glow glow-halo">Quiero que me escriban <?= icono('arrow', 'flecha') ?></button>
+          <?php if ($waDirecto): ?>
+            <a class="wa-directo" href="<?= e($waDirecto) ?>" target="_blank" rel="noopener"><?= icono('chat') ?> ¿Prefieres escribirnos tú? Abrir WhatsApp</a>
+          <?php endif; ?>
           <p class="legal">Sin spam. Solo lo usamos para contactarte por WhatsApp.</p>
         </form>
       <?php endif; ?>

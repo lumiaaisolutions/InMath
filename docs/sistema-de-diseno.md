@@ -109,6 +109,31 @@ de sistema a propósito (deben verse aunque el servidor/CDN esté caído).
   desaturada" que `.scrub`, pero estático.
 - Todo respeta `prefers-reduced-motion`.
 
+## v6 — Lienzo degradado, hover de fotos con acción, WhatsApp directo
+
+Bloque v6 al final de `sitio/public/css/inmath.css` (misma disciplina append-only
+que v3/v5). Referencia visual: dashboards pastel con wash cielo→durazno.
+
+- **Lienzo:** `body::before` pasa de manchas radiales puntuales a un wash
+  diagonal continuo — cielo/teal arriba-izquierda que se disuelve a blanco al
+  centro, durazno/rosa subiendo desde abajo-derecha. Solo cambia el
+  `background`; la deriva animada y el parallax de scroll del bloque v3 siguen
+  aplicando.
+- **Tarjetas más limpias:** el wash de color de `.card` baja de intensidad
+  (26/36% → 20/10%) para que el vidrio blanco domine y el color viva en
+  íconos/tags, como en la referencia.
+- **`.scrub-accion` (genérico):** cualquier `.scrub` con un
+  `<a class="scrub-accion" href="…">` dentro gana un botón circular de vidrio
+  con flecha (rotada -45° = ↗) que aparece al hover con lift sutil del
+  contenedor (`:has()`). En táctil (`hover:none`) y con `reduced-motion` el
+  botón queda siempre visible. Usado en las 3 fotos del landing (héroe→/agenda,
+  acompaña→/agenda, avance→/pago).
+- **WhatsApp directo (`wa.me`):** `WHATSAPP_NUMERO` en `backend/.env` (formato
+  internacional sin `+`). Helper `whatsappUrl()` en `_comun.php`; si la
+  variable está vacía devuelve `null` y el enlace `.wa-directo` (pastilla verde
+  bajo el formulario del CTA) simplemente no se pinta. Decisión de producto:
+  el inicio NO usa la API de WhatsApp — solo enlace directo.
+
 ## Liquid glass — barrido especular
 
 Todas las superficies de vidrio principales (`.card`, `.plan`, `.cta-caja`,

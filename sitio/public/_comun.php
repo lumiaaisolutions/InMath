@@ -57,6 +57,20 @@ function cursoActivo(): ?array
     return App\Core\Database::uno('SELECT * FROM cursos WHERE activo = 1 ORDER BY id LIMIT 1');
 }
 
+/**
+ * Enlace directo wa.me al WhatsApp del negocio (WHATSAPP_NUMERO en backend/.env,
+ * formato internacional sin +). Devuelve null si no está configurado — el
+ * llamador decide no pintar el botón.
+ */
+function whatsappUrl(string $texto = ''): ?string
+{
+    $numero = preg_replace('/\D+/', '', App\Core\Env::get('WHATSAPP_NUMERO', ''));
+    if ($numero === '') {
+        return null;
+    }
+    return 'https://wa.me/' . $numero . ($texto !== '' ? '?text=' . rawurlencode($texto) : '');
+}
+
 /** Iconos de línea (stroke=currentColor). Reemplazan a los antiguos puntos. */
 function icono(string $n, string $cls = ''): string
 {
