@@ -53,3 +53,19 @@ Los JSON en `automatizaciones-n8n/flujos/` son estructuralmente válidos pero **
 han importado a una instancia real de n8n** (no hubo Docker en el entorno de
 desarrollo). Al desplegar, verificar que las versiones de nodos coincidan con la
 versión de n8n instalada.
+
+## Corte agosto 2026 — Fases 1–3 COMPLETAS (plan comercial por fases)
+
+- **Fase 1 (Presencia y captación):** landing rediseñada, formulario de
+  contacto que crea prospecto, enlace directo wa.me (sin API de WhatsApp por
+  decisión del cliente). Falta solo el número real (`WHATSAPP_NUMERO`).
+- **Fase 2 (Asistente de ventas):** Mathy en el sitio conversa y **agenda
+  citas reales** (slots de AgendaServicio inyectados al prompt + comando
+  <agendar> ejecutado en servidor; verificado E2E). Prompt fijo, no editable
+  por el cliente.
+- **Fase 3 (Pago y alta):** pago en línea (MercadoPago listo, sin credenciales)
+  + pago por transferencia con subida de comprobante; aprobación en panel →
+  inscripción + usuario/contraseña del alumno. Ver `pagos.md`.
+- **Faltante del MVP:** Fase 5 (módulo de práctica/reactivos del alumno).
+  Fases 4 y 6 ya están cubiertas por el panel y la agenda actuales.
+- **Preguntas abiertas al cliente:** ver `preguntas-cliente.md`.

@@ -70,3 +70,16 @@ Cada driver implementa la interfaz `App\Pagos\ProcesadorPago` (2 métodos:
 - `procesador_pago_activo = simulado`
 - Webhook firmado con HMAC-SHA256: header `X-Firma-Simulada = hmac_sha256(cuerpo, PAGO_WEBHOOK_SECRET)`
 - Cuerpo: `{"referencia_externa": "SIM-...", "estado": "pagado|fallido"}`
+
+## Fase 3.2/3.3 — Transferencia con comprobante y credenciales (ago 2026)
+
+- Sin procesador en línea activo, `pago.php` crea un pago `transferencia` y
+  muestra los datos bancarios (clave `datos_pago` en configuraciones — AÚN
+  PLACEHOLDER) + formulario de comprobante (JPG/PNG/WebP/PDF ≤8MB, mime
+  allowlist, autorizado por sesión). Archivo en `backend/storage/comprobantes/`
+  (privado; el panel lo sirve con sesión+módulo vía `/comprobante/{id}`).
+- Panel → Pagos: "Aprobar e inscribir" (confirmación + guard anti doble
+  aprobación) marca pagado, inscribe vía `InscripcionServicio::porPago` y
+  genera credenciales del alumno: usuario = su WhatsApp, contraseña temporal
+  aleatoria (bcrypt) mostrada al asesor una sola vez.
+- MercadoPago: driver listo; faltan credenciales de producción del cliente.

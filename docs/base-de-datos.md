@@ -60,3 +60,13 @@ Resumen; detalle en [`arquitectura.md`](arquitectura.md#concurrencia-3-asesores-
 500 alumnos / miles de prospectos en 6 meses es volumen bajo para MySQL con los
 índices definidos (etapa, asesor, conversación+fecha). El cuello de botella real será
 el rate limit de WhatsApp y la latencia de Claude, no la base de datos.
+
+## Migraciones agregadas en agosto 2026
+
+- **003_usuarios_modulos.sql:** `usuarios.modulos` (JSON, NULL = todos) —
+  permisos por módulo del panel (pipeline/citas/alumnos/pagos); los admin ven
+  todo. Editables en Panel → Usuarios.
+- **004_fase3_comprobantes.sql:** `pagos.comprobante` + `comprobante_subido_en`;
+  `alumnos.usuario` + `password_hash`; config `datos_pago`. También existen
+  por upsert las claves `login_titulo`/`login_texto` (texto sobre el carrusel
+  del login).

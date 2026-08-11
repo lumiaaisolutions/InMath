@@ -112,3 +112,11 @@ Claves de configuración sembradas: `procesador_pago_activo`,
   (idempotente por alumno+semana).
 - `GET /api/reportes/pendientes-envio` · `GET /api/reportes/{id}/archivo` (PDF)
   · `PATCH /api/reportes/{id}` `{ enviado_en }`.
+
+## Agente del sitio (api/agente.php) — ahora agenda citas (ago 2026)
+
+Inyecta al prompt los horarios reales (`AgendaServicio::slotsDisponibles`);
+cuando el usuario confirma nombre + WhatsApp + horario de la lista, Gemini
+emite `<agendar>{json}</agendar>` y el SERVIDOR valida (slot en allowlist,
+teléfono 10–15 dígitos) y crea prospecto + cita. Nunca confirma sin insertar.
+Rate limit: 20 mensajes / 10 min por sesión (429).

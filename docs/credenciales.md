@@ -168,3 +168,10 @@ No se pudo ejecutar en esta sesión porque la pestaña de phpMyAdmin ya logueada
 expiró y pide contraseña de nuevo (no se puede reautenticar sin la contraseña
 de la cuenta). Solo afecta el color de acento secundario en el pie del PDF de
 reporte semanal — cosmético, no bloquea nada.
+
+## Variables nuevas (ago 2026)
+
+- `WHATSAPP_NUMERO` — número wa.me del sitio (vacío = botón oculto). PENDIENTE real.
+- `PANEL_URL` — URL del panel para el botón "Entrar" del sitio (local :8124).
+- Credenciales de alumnos: se generan al aprobar su pago (usuario = WhatsApp,
+  contraseña temporal bcrypt en `alumnos.password_hash`); se usarán en Fase 5.

@@ -400,3 +400,21 @@ Bloque v8 al final de `sitio/public/css/inmath.css`:
   de pastilla blanca + precio grande; CTA de píldora oscura `#0F1C30` a lo
   ancho; checks bajo un divisor. Orden del markup: cabecera → sub → CTA →
   lista.
+
+## v16–v25 — Resumen de la evolución visual (ago 2026)
+
+- Planes estilo pricing de referencia (cabecera tintada, CTA píldora oscura).
+- Paleta final AZUL del cliente: #F7F9FF/#D9E9FF/#AFCFFF/#6B9FFF/#1B2F52
+  (blanco dominante); pasó por menta/teal y rojo/acero antes. Logo, favicon
+  (con ?v=mtime) y pantalla de carga recolorados en cada cambio.
+- Íconos **frosted glass** (referencia Behance, técnica recreada): `icono()`
+  en sitio y panel emite DOS capas por glifo (trazo vivo + copia blanca con
+  feGaussianBlur desplazada); sin tiles ni cajas, sombra difusa del color.
+- Pipeline: drag & drop entre etapas (optimista + POST /accion/etapa),
+  color semántico por estatus (azul/teal/ámbar/naranja/verde), cabecera de
+  columna en pastilla del color; cabecera de páginas en vidrio claro con
+  subrayado de gradiente.
+- Panel: sidebar vidrio claro, toasts/diálogo/switch/chips propios (regla:
+  cero controles nativos), guarda global `[hidden]{display:none!important}`
+  (3 bugs de esa clase), overlay del login con chip+gradiente+dots, encuadre
+  4:5 al subir fotos del carrusel (canvas 1080×1350), pantalla Usuarios.
