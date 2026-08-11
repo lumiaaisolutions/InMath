@@ -1335,3 +1335,9 @@ input[type="range"].aj-zoom::-webkit-slider-thumb:hover { transform: scale(1.15)
 .pw-salir:active { transform: scale(.88); }
 .pw-salir:focus-visible { outline: 2.5px solid #6B9FFF; outline-offset: 2px; }
 .pw-flecha { display: none; }
+
+/* v22.2 — Login invertido: formulario a la izquierda, carrusel a la derecha */
+.login-split { grid-template-columns: .92fr 1.08fr; }
+.login-media { order: 2; }
+.login-lado { order: 1; }
+@media (max-width: 860px) { .login-media, .login-lado { order: initial; } }
