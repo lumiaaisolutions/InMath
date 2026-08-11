@@ -113,7 +113,7 @@ function overlayCargaPanel(): string
     <svg class="carga-libro" viewBox="0 0 48 48" aria-hidden="true">
       <defs>
         <linearGradient id="carga-trazo" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stop-color="#3B6FF5"/><stop offset="1" stop-color="#1E9EB8"/>
+          <stop offset="0" stop-color="#4FB3A5"/><stop offset="1" stop-color="#6FC5BA"/>
         </linearGradient>
       </defs>
       <path pathLength="1" class="carga-pagina carga-pagina-a" d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="url(#carga-trazo)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -179,7 +179,7 @@ function agenteIAPanel(): string
     <svg class="agente-libro" viewBox="0 0 48 48" aria-hidden="true">
       <defs>
         <linearGradient id="agicono-trazo" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stop-color="#3B6FF5"/><stop offset="1" stop-color="#1E9EB8"/>
+          <stop offset="0" stop-color="#4FB3A5"/><stop offset="1" stop-color="#6FC5BA"/>
         </linearGradient>
       </defs>
       <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="url(#agicono-trazo)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -195,7 +195,7 @@ function agenteIAPanel(): string
         <svg class="agente-libro ap-avatar" viewBox="0 0 48 48" aria-hidden="true">
           <defs>
             <linearGradient id="agicono-trazo-cab" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
-              <stop offset="0" stop-color="#3B6FF5"/><stop offset="1" stop-color="#1E9EB8"/>
+              <stop offset="0" stop-color="#4FB3A5"/><stop offset="1" stop-color="#6FC5BA"/>
             </linearGradient>
           </defs>
           <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="url(#agicono-trazo-cab)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -299,6 +299,10 @@ function icono(string $n, string $cls = 'ic'): string
         'config'   => '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9 2 2 0 1 1-2.8 2.8 1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2 2 2 0 1 1-2.8-2.8A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.5-1 2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9 2 2 0 1 1 2.8-2.8A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.5 2 2 0 1 1 4 0 1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3 2 2 0 1 1 2.8 2.8 1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1 2 2 0 1 1 0 4 1.7 1.7 0 0 0-1.5 1z"/>',
         'logout'   => '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
         'imagen'   => '<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/>',
+        'user'     => '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+        'check'    => '<path d="M20 6L9 17l-5-5"/>',
+        'alerta'   => '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h.01"/>',
+        'x'        => '<path d="M18 6 6 18M6 6l12 12"/>',
     ];
     return '<svg class="' . e($cls) . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" '
         . 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . ($p[$n] ?? '') . '</svg>';

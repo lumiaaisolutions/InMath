@@ -7,8 +7,8 @@ foreach ($configuraciones as $c) {
         $textosActuales[$c['clave']] = $c['valor'];
     }
 }
-$tituloLogin = trim($textosActuales['login_titulo'] ?? '') !== '' ? $textosActuales['login_titulo'] : '¡Hola de nuevo!';
-$textoLogin  = trim($textosActuales['login_texto'] ?? '') !== '' ? $textosActuales['login_texto'] : 'Inicia sesión para continuar.';
+$tituloLogin = trim($textosActuales['login_titulo'] ?? '');
+$textoLogin  = trim($textosActuales['login_texto'] ?? '');
 
 $mediaDirLogin = dirname(__DIR__) . '/public/img/login';
 $mediaLogin = is_dir($mediaDirLogin)
@@ -27,20 +27,21 @@ $primerMedia = $mediaLogin[0] ?? null;
   <div class="pl-col">
 
     <div class="tarjeta pl-tarjeta">
-      <h2 class="pl-titulo"><?= icono('prompts') ?> Mensaje de bienvenida</h2>
+      <h2 class="pl-titulo"><?= icono('prompts') ?> Texto sobre la imagen</h2>
+      <p class="pl-ayuda">Aparece encima de la foto o video del carrusel. Déjalo vacío si no quieres texto.</p>
       <form method="post" action="<?= e(u('/accion/login-textos')) ?>" class="pl-form" id="formTextos">
         <input type="hidden" name="csrf" value="<?= e(csrfToken()) ?>">
         <label class="pl-campo">
           Título
           <input type="text" name="login_titulo" id="plTitulo" maxlength="60"
-                 placeholder="¡Hola de nuevo!" value="<?= e($textosActuales['login_titulo'] ?? '') ?>">
+                 placeholder="Aprende a tu ritmo" value="<?= e($textosActuales['login_titulo'] ?? '') ?>">
         </label>
         <label class="pl-campo">
           Texto de apoyo
           <input type="text" name="login_texto" id="plTexto" maxlength="120"
-                 placeholder="Inicia sesión para continuar." value="<?= e($textosActuales['login_texto'] ?? '') ?>">
+                 placeholder="Cursos con acompañamiento real." value="<?= e($textosActuales['login_texto'] ?? '') ?>">
         </label>
-        <button class="boton primario">Guardar mensaje</button>
+        <button class="boton primario">Guardar texto</button>
       </form>
     </div>
 
@@ -68,7 +69,7 @@ $primerMedia = $mediaLogin[0] ?? null;
               <?php else: ?>
                 <img src="<?= e(u('/img/login/' . $m)) ?>" alt="">
               <?php endif; ?>
-              <form method="post" action="<?= e(u('/accion/login-media-borrar')) ?>" class="pl-borrar-form">
+              <form method="post" action="<?= e(u('/accion/login-media-borrar')) ?>" class="pl-borrar-form" data-confirmar="El archivo se quitará del carrusel del login.">
                 <input type="hidden" name="csrf" value="<?= e(csrfToken()) ?>">
                 <input type="hidden" name="archivo" value="<?= e($m) ?>">
                 <button class="pl-borrar" aria-label="Eliminar del carrusel">
@@ -89,6 +90,7 @@ $primerMedia = $mediaLogin[0] ?? null;
       <p class="pl-ayuda">Así se ve la pantalla de inicio de sesión ahora mismo.</p>
       <div class="pl-preview">
         <div class="plp-media">
+          <div class="plp-overlay"><b id="plpOverTitulo"><?= e($tituloLogin) ?></b><i id="plpOverTexto"><?= e($textoLogin) ?></i></div>
           <?php if ($primerMedia !== null && preg_match('/\.mp4$/i', $primerMedia)): ?>
             <video src="<?= e(u('/img/login/' . $primerMedia)) ?>" autoplay muted loop playsinline></video>
           <?php elseif ($primerMedia !== null): ?>
@@ -99,8 +101,8 @@ $primerMedia = $mediaLogin[0] ?? null;
         </div>
         <div class="plp-lado">
           <div class="plp-logo"><img src="<?= e(u('/img/inmath.svg')) ?>" alt="" width="14" height="14"> <b>Cursos <span>Inmath</span></b></div>
-          <div class="plp-saludo" id="plpSaludo"><?= e($tituloLogin) ?></div>
-          <div class="plp-texto" id="plpTexto"><?= e($textoLogin) ?></div>
+          <div class="plp-saludo">¡Hola de nuevo!</div>
+          <div class="plp-texto">Inicia sesión para continuar.</div>
           <div class="plp-input"></div>
           <div class="plp-input"></div>
           <div class="plp-boton">Entrar</div>
@@ -114,9 +116,9 @@ $primerMedia = $mediaLogin[0] ?? null;
 (function () {
   // La vista previa refleja lo que escribes, antes de guardar.
   var t = document.getElementById('plTitulo'), x = document.getElementById('plTexto');
-  var pt = document.getElementById('plpSaludo'), px = document.getElementById('plpTexto');
-  if (t && pt) t.addEventListener('input', function () { pt.textContent = t.value || '¡Hola de nuevo!'; });
-  if (x && px) x.addEventListener('input', function () { px.textContent = x.value || 'Inicia sesión para continuar.'; });
+  var pt = document.getElementById('plpOverTitulo'), px = document.getElementById('plpOverTexto');
+  if (t && pt) t.addEventListener('input', function () { pt.textContent = t.value; });
+  if (x && px) x.addEventListener('input', function () { px.textContent = x.value; });
 
   // Dropzone: subir al soltar o al elegir archivo (sin botón extra)
   var drop = document.getElementById('plDrop'), file = document.getElementById('plFile'), form = document.getElementById('formMedia');

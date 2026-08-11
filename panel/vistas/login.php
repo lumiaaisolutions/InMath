@@ -16,8 +16,10 @@ try {
 } catch (\Throwable $e) {
     // sin BD (p. ej. instalación a medias) el login sigue mostrando los textos por defecto
 }
-$tituloLogin = trim($textosLogin['login_titulo'] ?? '') !== '' ? $textosLogin['login_titulo'] : '¡Hola de nuevo!';
-$textoLogin  = trim($textosLogin['login_texto'] ?? '') !== '' ? $textosLogin['login_texto'] : 'Inicia sesión para continuar.';
+// Estos textos se muestran SOBRE la imagen del carrusel (personalizables desde
+// el panel). El saludo de la derecha es fijo.
+$overlayTitulo = trim($textosLogin['login_titulo'] ?? '');
+$overlayTexto  = trim($textosLogin['login_texto'] ?? '');
 ?><!DOCTYPE html>
 <html lang="es">
 <head>
@@ -46,6 +48,12 @@ $textoLogin  = trim($textosLogin['login_texto'] ?? '') !== '' ? $textosLogin['lo
       <?php endforeach; ?>
     <?php endif; ?>
     <span class="lm-velo"></span>
+    <?php if ($overlayTitulo !== '' || $overlayTexto !== ''): ?>
+      <div class="lm-overlay">
+        <?php if ($overlayTitulo !== ''): ?><h2><?= e($overlayTitulo) ?></h2><?php endif; ?>
+        <?php if ($overlayTexto !== ''): ?><p><?= e($overlayTexto) ?></p><?php endif; ?>
+      </div>
+    <?php endif; ?>
   </div>
   <div class="login-lado">
     <a class="login-volver" href="<?= e($sitioUrl) ?>">
@@ -57,8 +65,8 @@ $textoLogin  = trim($textosLogin['login_texto'] ?? '') !== '' ? $textosLogin['lo
         <img src="<?= e(u('/img/inmath.svg')) ?>" alt="" width="34" height="34">
         <b>Cursos <span>Inmath</span></b>
       </div>
-      <h1 class="login-saludo lc-e e2"><?= e($tituloLogin) ?></h1>
-      <p class="login-sub lc-e e3"><?= e($textoLogin) ?></p>
+      <h1 class="login-saludo lc-e e2">¡Hola de nuevo!</h1>
+      <p class="login-sub lc-e e3">Inicia sesión para continuar.</p>
       <?php if ($f = flash()): ?>
         <div class="aviso <?= e($f['tipo']) ?> aviso-sacudida"><?= e($f['texto']) ?></div>
       <?php endif; ?>

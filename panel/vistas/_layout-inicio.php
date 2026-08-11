@@ -37,16 +37,75 @@
       <a href="<?= e(u($href)) ?>" class="<?= $activo ? 'activo' : '' ?>"><?= icono($ic) ?><?= e($texto) ?></a>
       <?php endforeach; ?>
     </nav>
-    <div class="pie">
-      <div class="avatar"><?= e(mb_strtoupper(mb_substr($u['nombre'], 0, 1))) ?></div>
-      <div class="quien"><b><?= e($u['nombre']) ?></b><i><?= e($u['rol'] === 'admin' ? 'Administrador' : 'Asesor') ?></i></div>
-      <form method="post" action="<?= e(u('/accion/logout')) ?>">
-        <input type="hidden" name="csrf" value="<?= e(csrfToken()) ?>">
-        <button type="submit">Salir</button>
-      </form>
-    </div>
+    <?php
+      $fotoPerfil = PANEL_PATH . '/public/img/avatars/' . (int) $u['id'] . '.jpg';
+      $fotoUrl = is_file($fotoPerfil) ? u('/img/avatars/' . (int) $u['id'] . '.jpg') . '?v=' . filemtime($fotoPerfil) : null;
+    ?>
+    <a class="pie perfil-widget" href="<?= e(u('/perfil')) ?>" title="Ver mi perfil">
+      <span class="pw-avatar">
+        <?php if ($fotoUrl !== null): ?><img src="<?= e($fotoUrl) ?>" alt=""><?php else: ?><?= e(mb_strtoupper(mb_substr($u['nombre'], 0, 1))) ?><?php endif; ?>
+      </span>
+      <span class="pw-quien">
+        <b><?= e($u['nombre']) ?></b>
+        <i class="pw-chip <?= $u['rol'] === 'admin' ? 'admin' : '' ?>"><?= e($u['rol'] === 'admin' ? 'Administrador' : 'Asesor') ?></i>
+      </span>
+      <span class="pw-flecha"><?= icono('logout', 'ic-oculto') ?><?= icono('user') ?></span>
+    </a>
   </aside>
   <main class="contenido">
   <?php if ($f = flash()): ?>
-    <div class="aviso <?= e($f['tipo']) ?>"><?= e($f['texto']) ?></div>
+    <div class="toast <?= e($f['tipo']) ?>" id="toastFlash" role="status">
+      <span class="toast-ic"><?= icono($f['tipo'] === 'error' ? 'alerta' : 'check') ?></span>
+      <span class="toast-cuerpo">
+        <b><?= $f['tipo'] === 'error' ? 'Atención' : 'Listo' ?></b>
+        <p><?= e($f['texto']) ?></p>
+      </span>
+      <button type="button" class="toast-x" aria-label="Cerrar aviso" onclick="this.parentElement.remove()"><?= icono('x') ?></button>
+      <i class="toast-barra"></i>
+    </div>
+    <script>setTimeout(function(){var t=document.getElementById('toastFlash');if(t){t.classList.add('saliendo');setTimeout(function(){t.remove();},350);}},5200);</script>
   <?php endif; ?>
+  <div class="confirmar-velo" id="confirmarVelo" hidden>
+    <div class="confirmar-caja" role="alertdialog" aria-modal="true" aria-labelledby="confirmarTitulo">
+      <span class="toast-ic error"><?= icono('alerta') ?></span>
+      <b id="confirmarTitulo">¿Confirmar esta acción?</b>
+      <p id="confirmarTexto">Esta acción no se puede deshacer.</p>
+      <div class="confirmar-botones">
+        <button type="button" class="boton fantasma" id="confirmarNo">Cancelar</button>
+        <button type="button" class="boton peligro" id="confirmarSi">Sí, continuar</button>
+      </div>
+    </div>
+  </div>
+  <script>
+  // Confirmación con diseño propio: cualquier <form data-confirmar="mensaje">
+  // pasa por este diálogo en vez del confirm() nativo del navegador.
+  (function () {
+    var velo = document.getElementById('confirmarVelo');
+    var texto = document.getElementById('confirmarTexto');
+    var si = document.getElementById('confirmarSi'), no = document.getElementById('confirmarNo');
+    var pendiente = null;
+    document.addEventListener('submit', function (e) {
+      var form = e.target.closest('form[data-confirmar]');
+      if (!form || form.dataset.confirmado === '1') return;
+      e.preventDefault();
+      pendiente = form;
+      texto.textContent = form.dataset.confirmar || 'Esta acción no se puede deshacer.';
+      velo.hidden = false;
+      requestAnimationFrame(function () { velo.classList.add('visible'); si.focus(); });
+    });
+    function cerrar() {
+      velo.classList.remove('visible');
+      setTimeout(function () { velo.hidden = true; }, 220);
+      pendiente = null;
+    }
+    no.addEventListener('click', cerrar);
+    velo.addEventListener('click', function (e) { if (e.target === velo) cerrar(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !velo.hidden) cerrar(); });
+    si.addEventListener('click', function () {
+      if (!pendiente) return;
+      pendiente.dataset.confirmado = '1';
+      pendiente.requestSubmit();
+      cerrar();
+    });
+  })();
+  </script>

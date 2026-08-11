@@ -350,3 +350,34 @@ Bloque v8 al final de `sitio/public/css/inmath.css`:
   JS al guardar). Las claves técnicas (criterios_calificacion,
   max_mensajes_contexto, modelo del bot, procesador de pago, branding del
   PDF) ya no aparecen en la UI — se administran por soporte directo en BD.
+
+## v14/v15 — Componentes propios, perfil, agente que agenda y paleta menta
+
+- **Reglas permanentes** (pedidas por el cliente): responsive móvil primero;
+  seguridad en cada fase (skill auditor del usuario); **ningún control nativo
+  del navegador** (checkbox/select/time/confirm/alerts rediseñados en v14);
+  textos sin tecnicismos.
+- **Toasts**: `.toast` (vidrio + tile de color + barra de tiempo, 5.2s) supl.
+  a los `.aviso` del panel. **Diálogo de confirmación** propio:
+  `<form data-confirmar="mensaje">`.
+- **Carrusel del login**: toda imagen subida se recorta en servidor a
+  **1080×1350 (post de Instagram)** con GD y se re-codifica a JPG (también
+  neutraliza payloads). El texto personalizable ahora va SOBRE la imagen
+  (`.lm-overlay`); el saludo del formulario es fijo.
+- **Perfil** (`/perfil`): foto (recorte 512×512, `img/avatars/{id}.jpg`),
+  nombre/teléfono/contraseña; widget de usuario del sidebar → tarjeta con
+  avatar + chip de rol. Logout vive en el perfil.
+- **Mathy agenda de verdad** (`api/agente.php`): los horarios reales de
+  `AgendaServicio` se inyectan al prompt; cuando el usuario confirma datos,
+  Gemini emite `<agendar>{json}</agendar>` y el SERVIDOR valida (slot en
+  allowlist) y crea prospecto+cita — verificado E2E (cita en BD y panel).
+  Rate limit: 20 msgs/10 min por sesión.
+- **Seguridad**: headers (nosniff, frame-options, referrer-policy) en sitio y
+  panel; freno anti fuerza bruta en login (pausa creciente tras 5 fallos);
+  subida de archivos con allowlist ext+mime, límite de tamaño, nombre generado
+  por el servidor y re-codificación GD.
+- **v15 — paleta menta/teal** (SOLO color): acento #4FB3A5 / #38857A /
+  #6FC5BA / #5CB8AC / #468580 + pasteles menta, aplicada por reemplazo global
+  (tokens, gradientes, sombras teñidas, logo inmath.svg y pantalla de carga).
+  Los semánticos (error rojo, alerta ámbar) se conservan. Pendiente episódico:
+  la fila reporte_branding en la BD de producción sigue con colores viejos.

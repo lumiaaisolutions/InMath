@@ -5,12 +5,55 @@ use App\IA\GeminiClient;
 use App\Servicios\PagoServicio;
 use App\Servicios\ProspectoServicio;
 
+/**
+ * Recorta una imagen al tamaño exacto (cover: escala y centra) y la guarda
+ * como JPG. Se usa para normalizar el carrusel del login (1080×1350, tamaño
+ * de post de Instagram) y los avatares (512×512).
+ */
+function recortarCubrir(string $origen, int $ancho, int $alto, string $destino): bool
+{
+    $info = @getimagesize($origen);
+    if ($info === false) {
+        return false;
+    }
+    [$sw, $sh] = $info;
+    $src = match ($info['mime']) {
+        'image/jpeg' => @imagecreatefromjpeg($origen),
+        'image/png'  => @imagecreatefrompng($origen),
+        'image/webp' => @imagecreatefromwebp($origen),
+        default      => null,
+    };
+    if ($src === null || $src === false || $sw < 1 || $sh < 1) {
+        return false;
+    }
+    $escala = max($ancho / $sw, $alto / $sh);
+    $recW = (int) round($ancho / $escala);
+    $recH = (int) round($alto / $escala);
+    $sx = (int) max(0, ($sw - $recW) / 2);
+    $sy = (int) max(0, ($sh - $recH) / 2);
+    $dst = imagecreatetruecolor($ancho, $alto);
+    imagecopyresampled($dst, $src, 0, 0, $sx, $sy, $ancho, $alto, $recW, $recH);
+    $ok = imagejpeg($dst, $destino, 88);
+    imagedestroy($src);
+    imagedestroy($dst);
+    return $ok;
+}
+
 function ejecutarAccion(string $ruta): void
 {
     if ($ruta === '/accion/login') {
+        // Freno de fuerza bruta: tras 5 intentos fallidos en la sesión, pausa
+        // creciente. (Capa 1; el hosting/WAF aporta el resto por IP.)
+        $fallos = (int) ($_SESSION['login_fallos'] ?? 0);
+        if ($fallos >= 5) {
+            sleep(min(8, $fallos - 3));
+        }
         if (iniciarSesion($_POST['email'] ?? '', $_POST['password'] ?? '')) {
+            unset($_SESSION['login_fallos']);
             redirigir('/');
         }
+        $_SESSION['login_fallos'] = $fallos + 1;
+        sleep(1);
         flash('Correo o contraseña incorrectos', 'error');
         redirigir('/login');
     }
@@ -178,8 +221,17 @@ function ejecutarAccion(string $ruta): void
             if (!is_dir($dirMedia)) {
                 mkdir($dirMedia, 0775, true);
             }
-            $nombreMedia = date('Ymd-His') . '-' . bin2hex(random_bytes(4)) . '.' . $ext;
-            move_uploaded_file($archivo['tmp_name'], $dirMedia . '/' . $nombreMedia);
+            $base = date('Ymd-His') . '-' . bin2hex(random_bytes(4));
+            if ($ext === 'mp4') {
+                move_uploaded_file($archivo['tmp_name'], $dirMedia . '/' . $base . '.mp4');
+            } else {
+                // Toda imagen se normaliza al tamaño de post de Instagram
+                // (1080×1350, 4:5) recortando al centro, y se guarda como JPG.
+                if (!recortarCubrir($archivo['tmp_name'], 1080, 1350, $dirMedia . '/' . $base . '.jpg')) {
+                    flash('No pudimos procesar esa imagen, intenta con otra', 'error');
+                    redirigir('/personalizar-login');
+                }
+            }
             flash('Archivo agregado al carrusel del login');
             redirigir('/personalizar-login');
 
@@ -192,6 +244,53 @@ function ejecutarAccion(string $ruta): void
                 flash('Archivo eliminado del carrusel');
             }
             redirigir('/configuracion');
+
+        case '/accion/perfil':
+            $nombrePerfil = trim($_POST['nombre'] ?? '');
+            if ($nombrePerfil === '') {
+                flash('Escribe tu nombre', 'error');
+                redirigir('/perfil');
+            }
+            Database::ejecutar(
+                'UPDATE usuarios SET nombre = ?, telefono = ? WHERE id = ?',
+                [$nombrePerfil, trim($_POST['telefono'] ?? '') ?: null, (int) $usuario['id']]
+            );
+            $pass1 = $_POST['password'] ?? '';
+            if ($pass1 !== '') {
+                if (strlen($pass1) < 8) {
+                    flash('La contraseña nueva debe tener al menos 8 caracteres', 'error');
+                    redirigir('/perfil');
+                }
+                if ($pass1 !== ($_POST['password2'] ?? '')) {
+                    flash('Las contraseñas no coinciden', 'error');
+                    redirigir('/perfil');
+                }
+                Database::ejecutar('UPDATE usuarios SET password_hash = ? WHERE id = ?', [password_hash($pass1, PASSWORD_BCRYPT), (int) $usuario['id']]);
+            }
+            flash('Perfil actualizado');
+            redirigir('/perfil');
+
+        case '/accion/perfil-foto':
+            $foto = $_FILES['foto'] ?? null;
+            if ($foto === null || ($foto['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+                flash('Elige una imagen válida', 'error');
+                redirigir('/perfil');
+            }
+            $mimeFoto = mime_content_type($foto['tmp_name']);
+            if (!in_array($mimeFoto, ['image/jpeg', 'image/png', 'image/webp'], true) || $foto['size'] > 8 * 1024 * 1024) {
+                flash('Solo JPG, PNG o WebP de hasta 8 MB', 'error');
+                redirigir('/perfil');
+            }
+            $dirAvatars = dirname(__DIR__) . '/public/img/avatars';
+            if (!is_dir($dirAvatars)) {
+                mkdir($dirAvatars, 0775, true);
+            }
+            if (!recortarCubrir($foto['tmp_name'], 512, 512, $dirAvatars . '/' . (int) $usuario['id'] . '.jpg')) {
+                flash('No pudimos procesar esa imagen', 'error');
+                redirigir('/perfil');
+            }
+            flash('Foto de perfil actualizada');
+            redirigir('/perfil');
 
         case '/accion/prompt':
             requiereAdmin();

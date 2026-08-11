@@ -37,6 +37,10 @@ date_default_timezone_set(Env::get('APP_TZ', 'America/Mexico_City'));
 // inmath.lumiaaisolutions.com/panel), se define PANEL_BASE_PATH=/panel.
 define('PANEL_BASE', rtrim(Env::get('PANEL_BASE_PATH', ''), '/'));
 
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+
 session_name('inmath_panel');
 session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax', 'path' => PANEL_BASE !== '' ? PANEL_BASE : '/']);
 session_start();
@@ -94,6 +98,12 @@ if ($ruta === '/' || $ruta === '/pipeline') {
 } elseif ($ruta === '/personalizar-login') {
     requiereAdmin();
     vista('personalizar-login', ['configuraciones' => listaConfiguraciones()]);
+} elseif ($ruta === '/perfil') {
+    $yo = App\Core\Database::uno(
+        'SELECT id, nombre, email, rol, telefono FROM usuarios WHERE id = ?',
+        [(int) usuarioActual()['id']]
+    );
+    vista('perfil', ['yo' => $yo]);
 } elseif ($ruta === '/prompts') {
     requiereAdmin();
     vista('prompts', ['prompts' => listaPrompts()]);
