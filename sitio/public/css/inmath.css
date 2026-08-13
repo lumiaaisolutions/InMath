@@ -1667,3 +1667,20 @@ body::before {
 .transferencia > b { font: 600 .95rem var(--display); }
 .datos-transferencia { font: 500 .9rem/1.6 var(--cuerpo); color: var(--tinta-2); margin-top: 6px; white-space: pre-line; }
 input[type="file"] { font: 500 .88rem var(--cuerpo); color: var(--tinta-2); }
+
+/* v26 — Más color (estilo panel): acentos multicolor con washes visibles */
+.eyebrow { background: #E3EEFF; color: #1B2F52; box-shadow: inset 0 0 0 1px #AFCFFF; }
+.acompana .eyebrow { background: #D6F2E8; box-shadow: inset 0 0 0 1px #9FDCC3; }
+.precio .eyebrow { background: #FBEFD6; box-shadow: inset 0 0 0 1px #F4C878; }
+.card.azul { background: linear-gradient(158deg, #E9F1FF, #fff 70%) !important; }
+.card.rosa { background: linear-gradient(158deg, #FBE9EE, #fff 70%) !important; }
+.card.menta { background: linear-gradient(158deg, #E4F5EC, #fff 70%) !important; }
+.tag-pill { background: color-mix(in srgb, var(--acc, #6B9FFF) 14%, #fff); box-shadow: none; }
+.area:nth-child(1) { border-left: 4px solid #6B9FFF; }
+.area:nth-child(2) { border-left: 4px solid #17A2B8; }
+.area:nth-child(3) { border-left: 4px solid #F4A62A; }
+.area:nth-child(4) { border-left: 4px solid #E5568A; }
+.plan-cab { background: #E3EEFF; }
+.plan.gratis .plan-cab { background: #E4F5EC; }
+.plan.custom .plan-cab { background: #FBEFD6; }
+.chip-flota.arriba svg { color: #12855C; } .chip-flota.abajo svg { color: #6B9FFF; }
