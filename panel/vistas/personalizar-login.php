@@ -22,6 +22,10 @@ $mediaLogin = is_dir($mediaDirLogin)
     : [];
 usort($mediaLogin, fn ($a, $b) => (($metaMedia[$a]['orden'] ?? 50) <=> ($metaMedia[$b]['orden'] ?? 50)) ?: strcmp($a, $b));
 $primerMedia = $mediaLogin[0] ?? null;
+if ($primerMedia !== null && isset($metaMedia[$primerMedia])) {
+    $tituloLogin = $metaMedia[$primerMedia]['titulo'] ?? $tituloLogin;
+    $textoLogin = $metaMedia[$primerMedia]['texto'] ?? $textoLogin;
+}
 ?>
 <div class="cabecera">
   <div>

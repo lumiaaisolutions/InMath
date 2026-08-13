@@ -267,6 +267,58 @@ function ejecutarAccion(string $ruta): void
             }
             redirigir('/configuracion');
 
+        case '/accion/alumno-crear':
+            if (!moduloPermitido($usuario, 'alumnos')) {
+                flash('No tienes acceso a alumnos', 'error');
+                redirigir('/');
+            }
+            $nombreAl = trim($_POST['nombre'] ?? '');
+            $telAl = preg_replace('/\D+/', '', $_POST['telefono'] ?? '');
+            $cursoAl = (int) ($_POST['curso_id'] ?? 0);
+            if ($nombreAl === '' || strlen($telAl) < 10 || strlen($telAl) > 15 || $cursoAl < 1) {
+                flash('Nombre, WhatsApp válido y curso son obligatorios', 'error');
+                redirigir('/alumnos');
+            }
+            if (strlen($telAl) === 10) {
+                $telAl = '521' . $telAl;
+            }
+            $resAl = ProspectoServicio::upsertPorTelefono($telAl, ['nombre' => $nombreAl, 'fuente' => 'manual']);
+            $prosAl = $resAl['prospecto'];
+            Database::ejecutar('UPDATE prospectos SET nombre = ?, etapa = \'inscrito\' WHERE id = ?', [$nombreAl, (int) $prosAl['id']]);
+            if (Database::uno('SELECT id FROM alumnos WHERE prospecto_id = ?', [(int) $prosAl['id']]) !== null) {
+                flash('Ese teléfono ya está inscrito como alumno', 'error');
+                redirigir('/alumnos');
+            }
+            Database::ejecutar(
+                "INSERT INTO alumnos (prospecto_id, curso_id, nombre, telefono, canal_reporte, estado, inscrito_en) VALUES (?, ?, ?, ?, 'whatsapp', 'activo', NOW())",
+                [(int) $prosAl['id'], $cursoAl, $nombreAl, $telAl]
+            );
+            flash('Alumno registrado');
+            redirigir('/alumnos');
+
+        case '/accion/cita-crear':
+            if (!moduloPermitido($usuario, 'citas')) {
+                flash('No tienes acceso a citas', 'error');
+                redirigir('/');
+            }
+            $nombreCi = trim($_POST['nombre'] ?? '');
+            $telCi = preg_replace('/\D+/', '', $_POST['telefono'] ?? '');
+            $inicioCi = trim(($_POST['fecha'] ?? '') . ' ' . ($_POST['hora'] ?? ''));
+            if ($nombreCi === '' || strlen($telCi) < 10 || strlen($telCi) > 15 || !preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $inicioCi)) {
+                flash('Nombre, WhatsApp válido, fecha y hora son obligatorios', 'error');
+                redirigir('/citas');
+            }
+            if (strlen($telCi) === 10) {
+                $telCi = '521' . $telCi;
+            }
+            $resCi = ProspectoServicio::upsertPorTelefono($telCi, ['nombre' => $nombreCi, 'fuente' => 'manual']);
+            $rCita = \App\Servicios\AgendaServicio::agendar(
+                (int) $resCi['prospecto']['id'], $inicioCi,
+                !empty($_POST['asesor_id']) ? (int) $_POST['asesor_id'] : null
+            );
+            flash($rCita['error'] ?? 'Cita registrada', isset($rCita['error']) ? 'error' : 'ok');
+            redirigir('/citas');
+
         case '/accion/pago-aprobar':
             if (!moduloPermitido($usuario, 'pagos')) {
                 flash('No tienes acceso a pagos', 'error');

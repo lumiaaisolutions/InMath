@@ -1,7 +1,7 @@
 <?php
 $titulo = 'Citas';
 $coloresAsesor = ['#0E5A4E', '#3E9E86', '#EBA23C', '#6E93B5', '#D4703A'];
-$horas = range(9, 18);
+$horas = range(8, 20);
 $dias = [];
 for ($i = 0; $i < 6; $i++) {
     $dias[] = strtotime("+{$i} days", $inicioSemana);
@@ -34,7 +34,44 @@ foreach ($asesores as $i => $a) {
       </select>
     </form>
   </div>
+  <button type="button" class="boton primario" id="btnNuevaCita">+ Nueva cita</button>
 </div>
+
+<div class="us-velo" id="citaModal" hidden>
+  <div class="us-frame" role="dialog" aria-modal="true">
+    <div class="us-frame-cab">
+      <div class="us-quien"><b>Nueva cita</b><span>Se valida que el horario no se empalme</span></div>
+      <button type="button" class="toast-x us-cerrar" aria-label="Cerrar"><?= icono('x') ?></button>
+    </div>
+    <form method="post" action="<?= e(u('/accion/cita-crear')) ?>" class="pl-form">
+      <input type="hidden" name="csrf" value="<?= e(csrfToken()) ?>">
+      <label class="pl-campo">Nombre del prospecto<input type="text" name="nombre" required maxlength="120"></label>
+      <label class="pl-campo">WhatsApp (10 dígitos)<input type="tel" name="telefono" required inputmode="numeric" maxlength="15" placeholder="55 1234 5678"></label>
+      <div class="us-campos">
+        <label class="pl-campo">Fecha<input type="date" name="fecha" required min="<?= date('Y-m-d') ?>"></label>
+        <label class="pl-campo">Hora<input type="time" name="hora" required min="08:00" max="20:30" step="1800"></label>
+      </div>
+      <label class="pl-campo">Asesor
+        <select name="asesor_id">
+          <option value="">Asignar automáticamente</option>
+          <?php foreach ($asesores as $a): ?><option value="<?= (int) $a['id'] ?>"><?= e($a['nombre']) ?></option><?php endforeach; ?>
+        </select>
+      </label>
+      <div class="us-pie"><button class="boton primario">Agendar cita</button></div>
+    </form>
+  </div>
+</div>
+<script>
+(function () {
+  var v = document.getElementById('citaModal');
+  document.getElementById('btnNuevaCita').addEventListener('click', function () {
+    v.hidden = false; requestAnimationFrame(function () { v.classList.add('visible'); });
+  });
+  function cerrar() { v.classList.remove('visible'); setTimeout(function () { v.hidden = true; }, 200); }
+  v.querySelector('.us-cerrar').addEventListener('click', cerrar);
+  v.addEventListener('click', function (e) { if (e.target === v) cerrar(); });
+})();
+</script>
 
 <div style="display:flex;gap:12px;margin-bottom:14px">
   <?php foreach ($asesores as $a): ?>

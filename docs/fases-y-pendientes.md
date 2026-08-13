@@ -87,3 +87,13 @@ versión de n8n instalada.
 5. ⬜ Personalizar login: texto y ORDEN por imagen (requiere tabla o JSON
    `login_media` con archivo/titulo/texto/orden), galería clicable con frame
    de edición y preview como en el login; el login lee texto por slide.
+
+### Lote del panel — COMPLETADO (13-ago)
+1. ✅ Logo protagonista. 2. ✅ Alumnos: alta manual (frame, crea prospecto
+inscrito + alumno, valida duplicado). 3. ✅ Citas: alta manual (frame con
+fecha/hora/asesor opcional; usa AgendaServicio::agendar con validación de
+traslape; grid 8–20h). 4. ✅ Usuarios: filtros por rol, tarjetas compactas,
+frame detalle (guardar/eliminar-lógico/cerrar), frame de creación, checkbox
+"atiende citas" (es_asesor). 5. ✅ Personalizar login: texto/orden POR imagen
+(config login_media_meta JSON), galería clicable con frame de edición y
+preview vivo; el login rota el texto con cada slide y respeta el orden.

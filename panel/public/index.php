@@ -92,7 +92,7 @@ if ($ruta === '/' || $ruta === '/pipeline') {
     ]);
 } elseif ($ruta === '/alumnos') {
     requiereModulo('alumnos');
-    vista('alumnos', ['alumnos' => listaAlumnos()]);
+    vista('alumnos', ['alumnos' => listaAlumnos(), 'cursos' => App\Core\Database::todos('SELECT id, nombre FROM cursos WHERE activo = 1 ORDER BY id')]);
 } elseif ($ruta === '/pagos') {
     requiereModulo('pagos');
     vista('pagos', ['pagos' => listaPagos()]);
