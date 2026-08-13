@@ -20,6 +20,14 @@ try {
 // el panel). El saludo de la derecha es fijo.
 $overlayTitulo = trim($textosLogin['login_titulo'] ?? '');
 $overlayTexto  = trim($textosLogin['login_texto'] ?? '');
+// Meta por slide (título/texto/orden por archivo)
+$metaMedia = [];
+try {
+    $filaMeta = App\Core\Database::uno("SELECT valor FROM configuraciones WHERE clave = 'login_media_meta'");
+    $metaMedia = $filaMeta !== null ? (json_decode((string) $filaMeta['valor'], true) ?: []) : [];
+} catch (\Throwable $e) {
+}
+usort($mediaLogin, fn ($a, $b) => (($metaMedia[$a]['orden'] ?? 50) <=> ($metaMedia[$b]['orden'] ?? 50)) ?: strcmp($a, $b));
 ?><!DOCTYPE html>
 <html lang="es">
 <head>
@@ -41,19 +49,23 @@ $overlayTexto  = trim($textosLogin['login_texto'] ?? '');
     <?php else: ?>
       <?php foreach ($mediaLogin as $i => $m): ?>
         <?php if (preg_match('/\.mp4$/i', $m)): ?>
-          <video class="lm-item <?= $i === 0 ? 'activo' : '' ?>" src="<?= e(u('/img/login/' . $m)) ?>" autoplay muted loop playsinline></video>
+          <video class="lm-item <?= $i === 0 ? 'activo' : '' ?>" src="<?= e(u('/img/login/' . $m)) ?>" autoplay muted loop playsinline
+                 data-titulo="<?= e($metaMedia[$m]['titulo'] ?? '') ?>" data-texto="<?= e($metaMedia[$m]['texto'] ?? '') ?>"></video>
         <?php else: ?>
-          <img class="lm-item <?= $i === 0 ? 'activo' : '' ?>" src="<?= e(u('/img/login/' . $m)) ?>" alt="">
+          <img class="lm-item <?= $i === 0 ? 'activo' : '' ?>" src="<?= e(u('/img/login/' . $m)) ?>" alt=""
+               data-titulo="<?= e($metaMedia[$m]['titulo'] ?? '') ?>" data-texto="<?= e($metaMedia[$m]['texto'] ?? '') ?>">
         <?php endif; ?>
       <?php endforeach; ?>
     <?php endif; ?>
     <span class="lm-velo"></span>
-    <?php if ($overlayTitulo !== '' || $overlayTexto !== ''): ?>
-      <div class="lm-overlay">
-        <?php if ($overlayTitulo !== ''): ?><h2><?= e($overlayTitulo) ?></h2><?php endif; ?>
-        <?php if ($overlayTexto !== ''): ?><p><?= e($overlayTexto) ?></p><?php endif; ?>
-      </div>
-    <?php endif; ?>
+    <?php
+      $primerT = $metaMedia[$mediaLogin[0] ?? ''] ['titulo'] ?? $overlayTitulo;
+      $primerX = $metaMedia[$mediaLogin[0] ?? ''] ['texto'] ?? $overlayTexto;
+    ?>
+    <div class="lm-overlay" id="lmOverlay" <?= trim($primerT . $primerX) === '' ? 'hidden' : '' ?>>
+      <h2 id="lmOverTitulo"><?= e($primerT) ?></h2>
+      <p id="lmOverTexto"><?= e($primerX) ?></p>
+    </div>
   </div>
   <div class="login-lado">
     <a class="login-volver" href="<?= e($sitioUrl) ?>">
@@ -119,6 +131,13 @@ $overlayTexto  = trim($textosLogin['login_texto'] ?? '');
       actual = (actual + 1) % items.length;
       items[actual].classList.add('activo');
       puntos.children[actual].classList.add('activo');
+      var ov = document.getElementById('lmOverlay');
+      if (ov) {
+        var t = items[actual].dataset.titulo || '', x = items[actual].dataset.texto || '';
+        ov.hidden = (t + x).trim() === '';
+        document.getElementById('lmOverTitulo').textContent = t;
+        document.getElementById('lmOverTexto').textContent = x;
+      }
     }, 6500);
   }
   var btn = document.getElementById('verPass'), pass = document.getElementById('password');

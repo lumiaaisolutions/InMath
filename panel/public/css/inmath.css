@@ -1509,3 +1509,10 @@ body::before {
 .us-frame-cab { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; position: relative; padding-right: 34px; }
 .us-frame-cab .us-cerrar { position: absolute; right: 0; top: 0; }
 .us-eliminar-form { margin-top: 12px; text-align: right; }
+
+/* v31.1 — Slides del carrusel editables */
+.pl-item-btn { border: 0; cursor: pointer; padding: 0; background: none; }
+.pl-orden { position: absolute; top: 8px; left: 8px; font: 700 .66rem/1 var(--mono); color: #fff; background: rgba(27,47,82,.65); border-radius: 999px; padding: 4px 8px; }
+.pl-mini-overlay { position: absolute; left: 8px; bottom: 8px; right: 8px; font: 600 .68rem/1.2 var(--cuerpo); color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.6); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slide-preview { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 4 / 3; }
+.slide-preview img, .slide-preview video { width: 100%; height: 100%; object-fit: cover; }

@@ -10,10 +10,17 @@ foreach ($configuraciones as $c) {
 $tituloLogin = trim($textosActuales['login_titulo'] ?? '');
 $textoLogin  = trim($textosActuales['login_texto'] ?? '');
 
+$metaMedia = [];
+foreach ($configuraciones as $c) {
+    if ($c['clave'] === 'login_media_meta') {
+        $metaMedia = json_decode((string) $c['valor'], true) ?: [];
+    }
+}
 $mediaDirLogin = dirname(__DIR__) . '/public/img/login';
 $mediaLogin = is_dir($mediaDirLogin)
     ? array_values(array_filter(scandir($mediaDirLogin), fn ($f) => preg_match('/\.(jpe?g|png|webp|mp4)$/i', $f)))
     : [];
+usort($mediaLogin, fn ($a, $b) => (($metaMedia[$a]['orden'] ?? 50) <=> ($metaMedia[$b]['orden'] ?? 50)) ?: strcmp($a, $b));
 $primerMedia = $mediaLogin[0] ?? null;
 ?>
 <div class="cabecera">
@@ -25,25 +32,6 @@ $primerMedia = $mediaLogin[0] ?? null;
 
 <div class="pl-rejilla">
   <div class="pl-col">
-
-    <div class="tarjeta pl-tarjeta">
-      <h2 class="pl-titulo"><?= icono('prompts') ?> Texto sobre la imagen</h2>
-      <p class="pl-ayuda">Aparece encima de la foto o video del carrusel. Déjalo vacío si no quieres texto.</p>
-      <form method="post" action="<?= e(u('/accion/login-textos')) ?>" class="pl-form" id="formTextos">
-        <input type="hidden" name="csrf" value="<?= e(csrfToken()) ?>">
-        <label class="pl-campo">
-          Título
-          <input type="text" name="login_titulo" id="plTitulo" maxlength="60"
-                 placeholder="Aprende a tu ritmo" value="<?= e($textosActuales['login_titulo'] ?? '') ?>">
-        </label>
-        <label class="pl-campo">
-          Texto de apoyo
-          <input type="text" name="login_texto" id="plTexto" maxlength="120"
-                 placeholder="Cursos con acompañamiento real." value="<?= e($textosActuales['login_texto'] ?? '') ?>">
-        </label>
-        <button class="boton primario">Guardar texto</button>
-      </form>
-    </div>
 
     <div class="tarjeta pl-tarjeta">
       <h2 class="pl-titulo"><?= icono('imagen') ?> Fotos y videos del carrusel</h2>
@@ -73,22 +61,56 @@ $primerMedia = $mediaLogin[0] ?? null;
       <?php if ($mediaLogin === []): ?>
         <p class="pl-ayuda" style="margin-top:12px">Aún no hay archivos — el login muestra la foto por defecto.</p>
       <?php else: ?>
+        <p class="pl-ayuda">Haz clic en una imagen para editar su texto y su orden en el carrusel.</p>
         <div class="pl-galeria">
-          <?php foreach ($mediaLogin as $m): ?>
-            <div class="pl-item">
+          <?php foreach ($mediaLogin as $i => $m): $meta = $metaMedia[$m] ?? []; ?>
+            <button type="button" class="pl-item pl-item-btn" data-modal="slideModal<?= $i ?>">
               <?php if (preg_match('/\.mp4$/i', $m)): ?>
                 <video src="<?= e(u('/img/login/' . $m)) ?>" muted></video>
                 <span class="pl-tipo">Video</span>
               <?php else: ?>
                 <img src="<?= e(u('/img/login/' . $m)) ?>" alt="">
               <?php endif; ?>
-              <form method="post" action="<?= e(u('/accion/login-media-borrar')) ?>" class="pl-borrar-form" data-confirmar="El archivo se quitará del carrusel del login.">
-                <input type="hidden" name="csrf" value="<?= e(csrfToken()) ?>">
-                <input type="hidden" name="archivo" value="<?= e($m) ?>">
-                <button class="pl-borrar" aria-label="Eliminar del carrusel">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-                </button>
-              </form>
+              <span class="pl-orden">#<?= (int) ($meta['orden'] ?? 50) ?></span>
+              <?php if (trim(($meta['titulo'] ?? '') . ($meta['texto'] ?? '')) !== ''): ?>
+                <span class="pl-mini-overlay"><?= e($meta['titulo'] ?? '') ?></span>
+              <?php endif; ?>
+            </button>
+
+            <div class="us-velo" id="slideModal<?= $i ?>" hidden>
+              <div class="us-frame" role="dialog" aria-modal="true">
+                <div class="us-frame-cab">
+                  <div class="us-quien"><b>Editar slide</b><span>Así se verá en el login</span></div>
+                  <button type="button" class="toast-x us-cerrar" aria-label="Cerrar"><?= icono('x') ?></button>
+                </div>
+                <div class="plp-media slide-preview">
+                  <?php if (preg_match('/\.mp4$/i', $m)): ?>
+                    <video src="<?= e(u('/img/login/' . $m)) ?>" autoplay muted loop playsinline></video>
+                  <?php else: ?>
+                    <img src="<?= e(u('/img/login/' . $m)) ?>" alt="">
+                  <?php endif; ?>
+                  <div class="plp-overlay">
+                    <b class="sp-titulo"><?= e($meta['titulo'] ?? '') ?></b>
+                    <i class="sp-texto"><?= e($meta['texto'] ?? '') ?></i>
+                  </div>
+                </div>
+                <form method="post" action="<?= e(u('/accion/login-media-meta')) ?>" class="pl-form" style="margin-top:14px">
+                  <input type="hidden" name="csrf" value="<?= e(csrfToken()) ?>">
+                  <input type="hidden" name="archivo" value="<?= e($m) ?>">
+                  <label class="pl-campo">Título sobre la imagen
+                    <input type="text" name="titulo" maxlength="60" class="sp-in-titulo" value="<?= e($meta['titulo'] ?? '') ?>" placeholder="Aprende a tu ritmo"></label>
+                  <label class="pl-campo">Texto de apoyo
+                    <input type="text" name="texto" maxlength="120" class="sp-in-texto" value="<?= e($meta['texto'] ?? '') ?>" placeholder="Cursos con acompañamiento real."></label>
+                  <label class="pl-campo">Orden en el carrusel (1 = primero)
+                    <input type="number" name="orden" min="1" max="99" value="<?= (int) ($meta['orden'] ?? 50) ?>" style="width:110px"></label>
+                  <div class="us-pie"><button class="boton primario">Guardar slide</button></div>
+                </form>
+                <form method="post" action="<?= e(u('/accion/login-media-borrar')) ?>" class="us-eliminar-form" data-confirmar="El archivo se quitará del carrusel del login.">
+                  <input type="hidden" name="csrf" value="<?= e(csrfToken()) ?>">
+                  <input type="hidden" name="archivo" value="<?= e($m) ?>">
+                  <button class="boton peligro">Eliminar del carrusel</button>
+                </form>
+              </div>
             </div>
           <?php endforeach; ?>
         </div>
@@ -127,6 +149,19 @@ $primerMedia = $mediaLogin[0] ?? null;
 
 <script>
 (function () {
+  // Frames de edición por slide
+  function abrirV(id) { var v = document.getElementById(id); if (!v) return; v.hidden = false; requestAnimationFrame(function () { v.classList.add('visible'); }); }
+  function cerrarV(v) { v.classList.remove('visible'); setTimeout(function () { v.hidden = true; }, 200); }
+  document.querySelectorAll('.pl-item-btn').forEach(function (b) { b.addEventListener('click', function () { abrirV(b.dataset.modal); }); });
+  document.querySelectorAll('.us-velo').forEach(function (v) {
+    v.addEventListener('click', function (e) { if (e.target === v) cerrarV(v); });
+    var cx = v.querySelector('.us-cerrar'); if (cx) cx.addEventListener('click', function () { cerrarV(v); });
+    var ti = v.querySelector('.sp-in-titulo'), xi = v.querySelector('.sp-in-texto');
+    if (ti) ti.addEventListener('input', function () { v.querySelector('.sp-titulo').textContent = ti.value; });
+    if (xi) xi.addEventListener('input', function () { v.querySelector('.sp-texto').textContent = xi.value; });
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') document.querySelectorAll('.us-velo:not([hidden])').forEach(cerrarV); });
+
   // La vista previa refleja lo que escribes, antes de guardar.
   var t = document.getElementById('plTitulo'), x = document.getElementById('plTexto');
   var pt = document.getElementById('plpOverTitulo'), px = document.getElementById('plpOverTexto');

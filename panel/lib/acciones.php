@@ -200,6 +200,28 @@ function ejecutarAccion(string $ruta): void
             flash('Textos del login guardados');
             redirigir('/personalizar-login');
 
+        case '/accion/login-media-meta':
+            requiereAdmin();
+            $archivoMeta = basename($_POST['archivo'] ?? '');
+            if ($archivoMeta === '' || !is_file(dirname(__DIR__) . '/public/img/login/' . $archivoMeta)) {
+                flash('Archivo no encontrado', 'error');
+                redirigir('/personalizar-login');
+            }
+            $fila = Database::uno("SELECT valor FROM configuraciones WHERE clave = 'login_media_meta'");
+            $meta = $fila !== null ? (json_decode((string) $fila['valor'], true) ?: []) : [];
+            $meta[$archivoMeta] = [
+                'titulo' => mb_substr(trim($_POST['titulo'] ?? ''), 0, 60),
+                'texto'  => mb_substr(trim($_POST['texto'] ?? ''), 0, 120),
+                'orden'  => max(1, min(99, (int) ($_POST['orden'] ?? 1))),
+            ];
+            Database::ejecutar(
+                "INSERT INTO configuraciones (clave, valor, tipo, descripcion) VALUES ('login_media_meta', ?, 'json', 'Título, texto y orden por imagen del carrusel del login.')
+                 ON DUPLICATE KEY UPDATE valor = VALUES(valor), actualizado_por = ?",
+                [json_encode($meta, JSON_UNESCAPED_UNICODE), (int) $usuario['id']]
+            );
+            flash('Slide actualizado');
+            redirigir('/personalizar-login');
+
         case '/accion/login-media-subir':
             requiereAdmin();
             $archivo = $_FILES['media'] ?? null;
