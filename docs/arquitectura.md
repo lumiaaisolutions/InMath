@@ -93,3 +93,17 @@ smoke test lee usuarios/cursos reales).
 4. **F3** Webhooks MercadoPago + reportes PDF + bot WhatsApp (n8n apunta a
    las rutas nuevas).
 5. **F4** Deploy VPS (Node + proxy), corte de dominio, retirar PHP.
+
+### F1a ✅ (13-ago) — Next.js sirve la landing + Mathy agenda real
+- `inmath-next/` en :3005 (dev): landing SSR con Prisma (curso/precio reales,
+  paridad de markup 1:1 con el CSS portado), layout con barra/pie/badge LUMIA,
+  chat Mathy (React) y APIs `/api/agente` y `/api/cta`.
+- Ports fieles: `lib/agenda.ts` (slots + agendar con FOR UPDATE, reintento en
+  carrera y bitácora), `lib/prospectos.ts` (upsert con carrera), `lib/gemini.ts`
+  (thinkingLevel low). E2E verificado: Mathy listó slots reales y creó cita
+  con round-robin en la MISMA BD.
+- **Convención de fechas crítica** (`lib/fechas.ts`): la BD guarda hora local
+  de México; Prisma asume UTC → toda la agenda usa "hora de pared etiquetada
+  UTC" (Date.UTC + getUTC*). Sin esto las citas se corrían 6 horas.
+- Pendiente F1b: páginas /agenda (calendario aurora) y /pago (transferencia +
+  comprobante). Luego F2 panel, F3 webhooks/PDF, F4 deploy y borrado del PHP.
