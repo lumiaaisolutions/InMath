@@ -164,7 +164,7 @@ function overlayCarga(): string
 (function () {
   var overlay = document.getElementById('cargaOverlay');
   if (!overlay) return;
-  var MINIMO = 380;
+  var MINIMO = 60;
   var inicio = Date.now();
 
   function ocultar() {

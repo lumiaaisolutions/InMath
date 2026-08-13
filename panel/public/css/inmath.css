@@ -1516,3 +1516,12 @@ body::before {
 .pl-mini-overlay { position: absolute; left: 8px; bottom: 8px; right: 8px; font: 600 .68rem/1.2 var(--cuerpo); color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.6); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .slide-preview { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 4 / 3; }
 .slide-preview img, .slide-preview video { width: 100%; height: 100%; object-fit: cover; }
+
+/* v32 — RENDIMIENTO: blur solo donde importa (toasts, velos, sidebar) */
+.tarjeta, .cabecera, .pipeline .columna, .us-mini, .pl-dropzone, .pl-preview,
+.perfil-widget, .login-plano .campo input, .lm-overlay, .ch-stat,
+.login-media .lm-velo, .interruptor i, .chip-modulo span {
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+body::after { mix-blend-mode: normal; opacity: .1; }
+body::before { animation: none !important; }

@@ -1728,3 +1728,22 @@ input[type="file"] { font: 500 .88rem var(--cuerpo); color: var(--tinta-2); }
 .agente-btn::after { inset: -38% !important; background: rgba(107,159,255,.4); filter: blur(14px); }
 .carga-libro { width: 88px !important; height: 88px !important; }
 .carga-marca { font-size: 1.15rem; }
+
+/* =========================================================================
+   v32 — RENDIMIENTO: los blurs de fondo (backdrop-filter) son lo más caro
+   para la GPU. Se conservan solo en la barra de navegación, toasts y paneles
+   flotantes; el resto de superficies pasa a fondos casi opacos equivalentes.
+   ========================================================================= */
+.card, .plan, .precio-caja, .tarjeta-form, .demo-chat, .grafica-firma, .area,
+.faq details, .mock-caja, .proceso, .incluye, .cta-caja, .form-cta,
+.dia-grupo, .cal-widget, .cal-strip, .slot span, .cal-grupo .slot span,
+.dia-chip, .transferencia, .demo-marco, .lumia-badge, .wa-directo, .eyebrow,
+.chip-flota, .scrub-accion, .tile-ic, .paso-ic, .area .pt {
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+/* Grano sin blend-mode (el soft-light repintaba en cada scroll) */
+body::after { mix-blend-mode: normal; opacity: .12; }
+/* Manchas del lienzo estáticas (sin animación infinita) y blobs más ligeros */
+body::before { animation: none !important; }
+.blob { filter: blur(38px); }
+@media (max-width: 900px) { .blob { display: none; } }
