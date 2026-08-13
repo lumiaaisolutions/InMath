@@ -70,3 +70,26 @@ por prospecto.
 
 - Facturación fiscal (CFDI)
 - Cualquier módulo no listado en las 7 fases
+
+## DECISIÓN (13-ago-2026): migración total a Next.js + Prisma — CERO PHP
+
+El cliente-dueño ordenó eliminar PHP por completo. Stack destino elegido:
+**Next.js (TypeScript, App Router) + Prisma sobre la MISMA MySQL** (datos
+intactos), desplegado en el **VPS** (el hosting compartido no corre Node).
+Patrón strangler: el PHP sigue vivo en producción hasta que cada módulo
+migrado lo reemplaza; nada de PHP nuevo desde hoy.
+
+Proyecto: `inmath-next/` (creado; Prisma introspectó los 14 modelos y el
+smoke test lee usuarios/cursos reales).
+
+### Fases de la migración (cada una commiteada y verificada)
+1. **F0 ✅** Scaffold + Prisma + conexión a BD real.
+2. **F1** Sitio público (landing/agenda/pago) — portar `inmath.css` global,
+   páginas server-rendered, API routes: agente Mathy (con agendado),
+   comprobantes. Paridad visual 1:1.
+3. **F2** Panel: auth (sesiones + bcrypt compatibles con hashes actuales),
+   pipeline drag&drop, citas, alumnos, pagos, usuarios/permisos,
+   personalizar-login (uploads + recorte con sharp), perfil.
+4. **F3** Webhooks MercadoPago + reportes PDF + bot WhatsApp (n8n apunta a
+   las rutas nuevas).
+5. **F4** Deploy VPS (Node + proxy), corte de dominio, retirar PHP.

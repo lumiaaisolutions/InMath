@@ -1,0 +1,358 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model alumnos {
+  id                 Int                   @id @default(autoincrement()) @db.UnsignedInt
+  prospecto_id       Int                   @unique(map: "prospecto_id") @db.UnsignedInt
+  curso_id           Int                   @db.UnsignedInt
+  nombre             String                @db.VarChar(120)
+  telefono           String                @db.VarChar(20)
+  email              String?               @db.VarChar(190)
+  usuario            String?               @db.VarChar(60)
+  password_hash      String?               @db.VarChar(255)
+  canal_reporte      alumnos_canal_reporte @default(whatsapp)
+  estado             alumnos_estado        @default(activo)
+  inscrito_en        DateTime              @db.DateTime(0)
+  creado_en          DateTime              @default(now()) @db.Timestamp(0)
+  actualizado_en     DateTime              @default(now()) @db.Timestamp(0)
+  cursos             cursos                @relation(fields: [curso_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_alumnos_curso")
+  prospectos         prospectos            @relation(fields: [prospecto_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_alumnos_prospecto")
+  avance_alumnos     avance_alumnos[]
+  pagos              pagos[]
+  reportes_generados reportes_generados[]
+
+  @@index([curso_id], map: "fk_alumnos_curso")
+  @@index([estado], map: "idx_alumnos_estado")
+}
+
+model avance_alumnos {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  alumno_id  Int      @db.UnsignedInt
+  fecha      DateTime @db.Date
+  porcentaje Int      @db.UnsignedTinyInt
+  detalle    Json?
+  creado_en  DateTime @default(now()) @db.Timestamp(0)
+  alumnos    alumnos  @relation(fields: [alumno_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_avance_alumno")
+
+  @@unique([alumno_id, fecha], map: "uq_avance_alumno_fecha")
+}
+
+model bitacora_pipeline {
+  id             BigInt                   @id @default(autoincrement()) @db.UnsignedBigInt
+  prospecto_id   Int                      @db.UnsignedInt
+  etapa_anterior String?                  @db.VarChar(30)
+  etapa_nueva    String                   @db.VarChar(30)
+  origen         bitacora_pipeline_origen @default(sistema)
+  usuario_id     Int?                     @db.UnsignedInt
+  nota           String?                  @db.VarChar(255)
+  creado_en      DateTime                 @default(now()) @db.Timestamp(0)
+  prospectos     prospectos               @relation(fields: [prospecto_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_bitacora_prospecto")
+
+  @@index([prospecto_id, creado_en], map: "idx_bitacora_prospecto")
+}
+
+model citas {
+  id                      Int          @id @default(autoincrement()) @db.UnsignedInt
+  prospecto_id            Int          @db.UnsignedInt
+  asesor_id               Int          @db.UnsignedInt
+  inicio                  DateTime     @db.DateTime(0)
+  fin                     DateTime     @db.DateTime(0)
+  google_event_id         String?      @db.VarChar(190)
+  meet_link               String?      @db.VarChar(255)
+  estado                  citas_estado @default(agendada)
+  recordatorio_enviado_en DateTime?    @db.DateTime(0)
+  creado_en               DateTime     @default(now()) @db.Timestamp(0)
+  actualizado_en          DateTime     @default(now()) @db.Timestamp(0)
+  usuarios                usuarios     @relation(fields: [asesor_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_citas_asesor")
+  prospectos              prospectos   @relation(fields: [prospecto_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_citas_prospecto")
+
+  @@unique([asesor_id, inicio], map: "uq_citas_asesor_inicio")
+  @@index([asesor_id, inicio, fin], map: "idx_citas_asesor_rango")
+  @@index([prospecto_id], map: "idx_citas_prospecto")
+}
+
+model configuraciones {
+  clave           String               @id @db.VarChar(80)
+  valor           String               @db.Text
+  tipo            configuraciones_tipo @default(texto)
+  descripcion     String?              @db.VarChar(255)
+  actualizado_por Int?                 @db.UnsignedInt
+  actualizado_en  DateTime             @default(now()) @db.Timestamp(0)
+  usuarios        usuarios?            @relation(fields: [actualizado_por], references: [id], onUpdate: NoAction, map: "fk_config_usuario")
+
+  @@index([actualizado_por], map: "fk_config_usuario")
+}
+
+model conversaciones {
+  id                  Int                   @id @default(autoincrement()) @db.UnsignedInt
+  prospecto_id        Int                   @db.UnsignedInt
+  canal               conversaciones_canal  @default(whatsapp)
+  estado              conversaciones_estado @default(bot)
+  asesor_id           Int?                  @db.UnsignedInt
+  ultima_actividad_en DateTime?             @db.DateTime(0)
+  creado_en           DateTime              @default(now()) @db.Timestamp(0)
+  actualizado_en      DateTime              @default(now()) @db.Timestamp(0)
+  usuarios            usuarios?             @relation(fields: [asesor_id], references: [id], onUpdate: NoAction, map: "fk_conv_asesor")
+  prospectos          prospectos            @relation(fields: [prospecto_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_conv_prospecto")
+  mensajes            mensajes[]
+
+  @@unique([prospecto_id, canal], map: "uq_conv_prospecto_canal")
+  @@index([asesor_id], map: "fk_conv_asesor")
+}
+
+model cursos {
+  id               Int          @id @default(autoincrement()) @db.UnsignedInt
+  nombre           String       @db.VarChar(190)
+  descripcion      String?      @db.Text
+  precio_centavos  Int          @db.UnsignedInt
+  moneda           String       @default("MXN") @db.Char(3)
+  duracion_semanas Int?         @db.UnsignedSmallInt
+  activo           Boolean      @default(true)
+  creado_en        DateTime     @default(now()) @db.Timestamp(0)
+  actualizado_en   DateTime     @default(now()) @db.Timestamp(0)
+  alumnos          alumnos[]
+  pagos            pagos[]
+  prospectos       prospectos[]
+}
+
+model mensajes {
+  id              BigInt                   @id @default(autoincrement()) @db.UnsignedBigInt
+  conversacion_id Int                      @db.UnsignedInt
+  direccion       mensajes_direccion
+  emisor          mensajes_emisor
+  tipo            mensajes_tipo            @default(texto)
+  contenido       String                   @db.Text
+  wa_message_id   String?                  @unique(map: "wa_message_id") @db.VarChar(128)
+  estado_entrega  mensajes_estado_entrega?
+  metadatos       Json?
+  creado_en       DateTime                 @default(now()) @db.Timestamp(0)
+  conversaciones  conversaciones           @relation(fields: [conversacion_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_mensajes_conversacion")
+
+  @@index([conversacion_id, creado_en], map: "idx_mensajes_conv_fecha")
+}
+
+model migraciones {
+  archivo     String   @id @db.VarChar(190)
+  aplicado_en DateTime @default(now()) @db.Timestamp(0)
+}
+
+model pagos {
+  id                      Int          @id @default(autoincrement()) @db.UnsignedInt
+  prospecto_id            Int          @db.UnsignedInt
+  alumno_id               Int?         @db.UnsignedInt
+  curso_id                Int          @db.UnsignedInt
+  procesador              String?      @db.VarChar(30)
+  monto_centavos          Int          @db.UnsignedInt
+  moneda                  String       @default("MXN") @db.Char(3)
+  link_pago               String?      @db.VarChar(500)
+  comprobante             String?      @db.VarChar(255)
+  comprobante_subido_en   DateTime?    @db.DateTime(0)
+  referencia_externa      String?      @unique(map: "referencia_externa") @db.VarChar(190)
+  estado                  pagos_estado @default(pendiente)
+  link_generado_en        DateTime?    @db.DateTime(0)
+  expira_en               DateTime?    @db.DateTime(0)
+  pagado_en               DateTime?    @db.DateTime(0)
+  recordatorio_enviado_en DateTime?    @db.DateTime(0)
+  metadatos               Json?
+  creado_en               DateTime     @default(now()) @db.Timestamp(0)
+  actualizado_en          DateTime     @default(now()) @db.Timestamp(0)
+  alumnos                 alumnos?     @relation(fields: [alumno_id], references: [id], onUpdate: NoAction, map: "fk_pagos_alumno")
+  cursos                  cursos       @relation(fields: [curso_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_pagos_curso")
+  prospectos              prospectos   @relation(fields: [prospecto_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_pagos_prospecto")
+
+  @@index([alumno_id], map: "fk_pagos_alumno")
+  @@index([curso_id], map: "fk_pagos_curso")
+  @@index([prospecto_id], map: "fk_pagos_prospecto")
+  @@index([estado, link_generado_en, recordatorio_enviado_en], map: "idx_pagos_recuperacion")
+}
+
+model prompts {
+  id              Int       @id @default(autoincrement()) @db.UnsignedInt
+  clave           String    @db.VarChar(80)
+  contenido       String    @db.MediumText
+  version         Int       @default(1) @db.UnsignedInt
+  activo          Boolean   @default(true)
+  notas           String?   @db.VarChar(255)
+  actualizado_por Int?      @db.UnsignedInt
+  creado_en       DateTime  @default(now()) @db.Timestamp(0)
+  usuarios        usuarios? @relation(fields: [actualizado_por], references: [id], onUpdate: NoAction, map: "fk_prompts_usuario")
+
+  @@unique([clave, version], map: "uq_prompts_clave_version")
+  @@index([actualizado_por], map: "fk_prompts_usuario")
+  @@index([clave, activo], map: "idx_prompts_activos")
+}
+
+model prospectos {
+  id                   Int                 @id @default(autoincrement()) @db.UnsignedInt
+  telefono_whatsapp    String              @unique(map: "telefono_whatsapp") @db.VarChar(20)
+  nombre               String?             @db.VarChar(120)
+  fuente               prospectos_fuente   @default(facebook)
+  etapa                prospectos_etapa    @default(prospecto)
+  puntaje_calificacion Int?                @db.UnsignedTinyInt
+  datos_calificacion   Json?
+  curso_interes_id     Int?                @db.UnsignedInt
+  asesor_id            Int?                @db.UnsignedInt
+  asignado_en          DateTime?           @db.DateTime(0)
+  motivo_descarte      String?             @db.VarChar(255)
+  creado_en            DateTime            @default(now()) @db.Timestamp(0)
+  actualizado_en       DateTime            @default(now()) @db.Timestamp(0)
+  alumnos              alumnos?
+  bitacora_pipeline    bitacora_pipeline[]
+  citas                citas[]
+  conversaciones       conversaciones[]
+  pagos                pagos[]
+  usuarios             usuarios?           @relation(fields: [asesor_id], references: [id], onUpdate: NoAction, map: "fk_prospectos_asesor")
+  cursos               cursos?             @relation(fields: [curso_interes_id], references: [id], onUpdate: NoAction, map: "fk_prospectos_curso")
+
+  @@index([curso_interes_id], map: "fk_prospectos_curso")
+  @@index([asesor_id, etapa], map: "idx_prospectos_asesor")
+  @@index([etapa], map: "idx_prospectos_etapa")
+}
+
+model reportes_generados {
+  id             Int                      @id @default(autoincrement()) @db.UnsignedInt
+  alumno_id      Int                      @db.UnsignedInt
+  periodo_inicio DateTime                 @db.Date
+  periodo_fin    DateTime                 @db.Date
+  archivo        String                   @db.VarChar(255)
+  canal          reportes_generados_canal
+  enviado_en     DateTime?                @db.DateTime(0)
+  creado_en      DateTime                 @default(now()) @db.Timestamp(0)
+  alumnos        alumnos                  @relation(fields: [alumno_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_reportes_alumno")
+
+  @@unique([alumno_id, periodo_inicio], map: "uq_reporte_alumno_periodo")
+  @@index([enviado_en], map: "idx_reportes_envio")
+}
+
+model usuarios {
+  id                 Int               @id @default(autoincrement()) @db.UnsignedInt
+  nombre             String            @db.VarChar(120)
+  email              String            @unique(map: "email") @db.VarChar(190)
+  password_hash      String            @db.VarChar(255)
+  rol                usuarios_rol      @default(asesor)
+  es_asesor          Boolean           @default(false)
+  modulos            Json?
+  telefono           String?           @db.VarChar(20)
+  google_calendar_id String?           @db.VarChar(190)
+  activo             Boolean           @default(true)
+  creado_en          DateTime          @default(now()) @db.Timestamp(0)
+  actualizado_en     DateTime          @default(now()) @db.Timestamp(0)
+  citas              citas[]
+  configuraciones    configuraciones[]
+  conversaciones     conversaciones[]
+  prompts            prompts[]
+  prospectos         prospectos[]
+}
+
+enum configuraciones_tipo {
+  texto
+  numero
+  json
+  booleano
+}
+
+enum conversaciones_canal {
+  whatsapp
+}
+
+enum mensajes_direccion {
+  entrante
+  saliente
+}
+
+enum conversaciones_estado {
+  bot
+  asesor
+  cerrada
+}
+
+enum mensajes_emisor {
+  prospecto
+  bot
+  asesor
+  sistema
+}
+
+enum prospectos_fuente {
+  facebook
+  instagram
+  organico
+  otro
+}
+
+enum bitacora_pipeline_origen {
+  bot
+  asesor
+  sistema
+}
+
+enum mensajes_tipo {
+  texto
+  imagen
+  audio
+  video
+  documento
+  plantilla
+  interactivo
+}
+
+enum prospectos_etapa {
+  prospecto
+  calificado
+  cita_agendada
+  pago_pendiente
+  inscrito
+  descartado
+}
+
+enum usuarios_rol {
+  admin
+  asesor
+}
+
+enum reportes_generados_canal {
+  whatsapp
+  email
+}
+
+enum citas_estado {
+  agendada
+  confirmada
+  completada
+  cancelada
+  no_asistio
+}
+
+enum mensajes_estado_entrega {
+  enviado
+  entregado
+  leido
+  fallido
+}
+
+enum alumnos_canal_reporte {
+  whatsapp
+  email
+}
+
+enum alumnos_estado {
+  activo
+  pausado
+  completado
+  baja
+}
+
+enum pagos_estado {
+  pendiente
+  pagado
+  expirado
+  fallido
+  reembolsado
+}
