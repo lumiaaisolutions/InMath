@@ -147,5 +147,14 @@ smoke test lee usuarios/cursos reales).
   em-dash) + generador semanal idempotente; escribe en backend/storage
   (mismo dir que el PHP; en VPS se apunta con STORAGE_DIR). PDF verificado
   visualmente (banda de marca, barras, módulos).
-- Pendiente: F4 deploy VPS (ver notas: VPS srv1698236 expira 23-ago,
-  renovarlo; decidir remote-MySQL vs migrar BD) y retiro del PHP.
+### F4 (13-ago) — Preparada; ejecución bloqueada por acceso al VPS
+- Mapa real de producción verificado (hPanel + repo de infraestructura +
+  pruebas HTTP): el PHP YA vive en el VPS con nginx y BD MySQL local `inmath`;
+  el DNS (Cloudflare proxied) ya apunta al VPS; el hosting compartido está
+  decommissionado; y n8n nunca se conectó (nada consume la API PHP hoy).
+  El corte es solo un cambio de nginx dentro del VPS — sin DNS ni n8n.
+- Paquete listo: Dockerfile + compose + .env.production.example + standalone
+  verificado. Procedimiento completo: docs/despliegue-vps.md.
+- Bloqueado: SSH/consola del VPS requiere aprobación explícita del host en
+  Claude Code. Pendientes del dueño: renovar VPS (vence 23-ago), credenciales
+  MercadoPago, texto datos_pago.

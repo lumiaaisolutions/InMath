@@ -27,7 +27,8 @@ satura un solo `.md`). Punto de entrada: **[`docs/README.md`](docs/README.md)**.
 
 | Carpeta | Módulo | Fase |
 |---|---|---|
-| `backend/` | API PHP/MySQL — núcleo que consumen n8n y el panel | 1 |
+| `inmath-next/` | **Migración Next.js + Prisma (sustituye a todo el PHP)** — sitio, panel, bot, pagos, reportes | Migración |
+| `backend/` | API PHP/MySQL — núcleo que consumen n8n y el panel *(en retiro)* | 1 |
 | `database/` | Migraciones y seeds de MySQL | 1 |
 | `automatizaciones-n8n/` | Workflows de n8n (mensajería, agenda, reportes) | 1–6 |
 | `chatbot/` | Chatbot de WhatsApp con IA (Gemini) | 2 |
@@ -36,7 +37,17 @@ satura un solo `.md`). Punto de entrada: **[`docs/README.md`](docs/README.md)**.
 | `sitio/` | Sitio web del curso (rediseño) | 7 |
 | `docs/` | Documentación por contexto (ver arriba) | — |
 
-## Estado de fases
+## Migración a Next.js (ago-2026)
+
+Por decisión del cliente, todo el PHP se está sustituyendo por **`inmath-next/`**
+(Next.js + Prisma sobre la MISMA MySQL, patrón strangler). Estado: F0–F3
+completas y verificadas E2E (sitio, panel CRM, bot, pagos, reportes); F4
+(deploy en el VPS y retiro del PHP) preparada — ver
+[`docs/despliegue-vps.md`](docs/despliegue-vps.md) para el mapa real de
+producción y el procedimiento, y [`docs/arquitectura.md`](docs/arquitectura.md)
+para la bitácora de fases.
+
+## Estado de fases (sistema PHP original)
 
 - [x] **Fase 1** — Fundamentos: esquema de BD, backend PHP, contrato de API para n8n
 - [x] **Fase 2** — Chatbot de WhatsApp con IA *(conectado a Gemini; falta: app de WhatsApp Business Cloud API del cliente, pendiente explícitamente)*

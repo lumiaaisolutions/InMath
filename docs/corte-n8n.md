@@ -1,5 +1,12 @@
 # Corte de n8n al backend Next.js — sin perder mensajes
 
+> **Nota (13-ago-2026):** verificado contra el repo de infraestructura que los
+> workflows de n8n **nunca se importaron a una instancia real** — nada en
+> producción consume hoy la API PHP (ver `migracion-vps-exposicion-api.md` y
+> `despliegue-vps.md`). Este documento aplica únicamente **si algún día se
+> activa n8n**: las rutas Next ya están listas con el contrato idéntico, así
+> que n8n puede nacer apuntando directo al Next sin tocar el PHP.
+
 Las rutas que n8n consume ya existen idénticas en `inmath-next` (mismos paths,
 mismo `X-API-Key`, mismos cuerpos JSON): `/api/bot/procesar`,
 `/api/citas/por-recordar`, `PATCH /api/citas/{id}`, `/api/pagos/abandonados`,

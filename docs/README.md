@@ -23,12 +23,15 @@ archivo: cada tema vive en su propio `.md`.
 | [`sistema-de-diseno.md`](sistema-de-diseno.md) | Identidad visual, tokens, regla 60-30-10, animaciones, skills |
 | [`fases-y-pendientes.md`](fases-y-pendientes.md) | Estado de las 7 fases y lo que falta por decidir/credenciales |
 | [`migracion-vps-exposicion-api.md`](migracion-vps-exposicion-api.md) | Migración al VPS: por qué `backend/public/index.php` no quedó expuesto por HTTP y si hace falta |
+| [`despliegue-vps.md`](despliegue-vps.md) | **F4 de la migración Next.js**: mapa real de producción (VPS/Cloudflare/BD) y procedimiento de deploy/corte/retiro del PHP |
+| [`corte-n8n.md`](corte-n8n.md) | Corte de n8n al backend Next (aplica solo si n8n se activa; hoy nada lo consume) |
 
 ## Documentación por módulo (en cada carpeta)
 
 | README | Módulo |
 |---|---|
-| [`../backend`](../backend) | API PHP/MySQL (ver `arquitectura.md` y `api.md`) |
+| [`../inmath-next`](../inmath-next) | **Migración Next.js + Prisma** (sitio + panel + API n8n; sustituye al PHP) |
+| [`../backend`](../backend) | API PHP/MySQL (ver `arquitectura.md` y `api.md`) — en retiro |
 | [`../chatbot/README.md`](../chatbot/README.md) | Chatbot de WhatsApp con IA (Claude) |
 | [`../panel/README.md`](../panel/README.md) | Panel de control CRM |
 | [`../reportes/README.md`](../reportes/README.md) | Reportes automáticos en PDF |

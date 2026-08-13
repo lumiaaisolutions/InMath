@@ -12,8 +12,22 @@
 | Panel CRM | http://127.0.0.1:8124 | `panel/public` |
 | API backend | http://127.0.0.1:8123 | `backend/public` |
 | Salud de la API | http://127.0.0.1:8123/api/health | — |
+| **inmath-next (sitio + panel + API)** | http://localhost:3005 (`npm run dev -- -p 3005`) | `inmath-next/` |
 
 Cómo levantarlos: ver [`instalacion-y-despliegue.md`](instalacion-y-despliegue.md).
+
+## inmath-next (migración)
+
+- Panel: http://localhost:3005/panel — usuario de prueba local
+  `prueba@lumia.local` / `lumia-prueba-2026` (además funcionan los usuarios
+  seed de abajo: mismos hashes bcrypt de la BD).
+- `.env` local: `DATABASE_URL` (socket de la MySQL de prueba), `APP_SECRET`,
+  `API_KEY` (la misma del backend PHP), `PAGO_WEBHOOK_SECRET`, `GEMINI_API_KEY`,
+  `BOT_SIMULADO=1`. Plantilla de producción: `inmath-next/.env.production.example`.
+- Producción real (verificado 13-ago-2026): VPS `srv1698236.hstgr.cloud`
+  (`ssh root@2.24.123.93`), nginx → `/var/www/inmath/`, BD MySQL local `inmath`
+  (credenciales en `/var/www/inmath/backend/.env` del VPS), DNS por Cloudflare
+  proxied. Detalle: [`despliegue-vps.md`](despliegue-vps.md).
 
 ## Panel CRM — usuarios seed
 
