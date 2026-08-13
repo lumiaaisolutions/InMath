@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 const P: Record<string, string> = {
   arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
@@ -14,10 +16,10 @@ const P: Record<string, string> = {
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
 };
-let uid = 0;
 /** Ícono frosted de dos capas — mismo output que icono() en PHP. */
 export function Icono({ n, cls = "" }: { n: string; cls?: string }) {
-  const fid = `icf${++uid}`;
+  // useId sobrevive a la hidratación; un contador de módulo divergía entre SSR y cliente.
+  const fid = `icf${useId().replace(/\W/g, "")}`;
   const inner = P[n] ?? "";
   return (
     <svg className={cls} viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"

@@ -105,5 +105,16 @@ smoke test lee usuarios/cursos reales).
 - **Convención de fechas crítica** (`lib/fechas.ts`): la BD guarda hora local
   de México; Prisma asume UTC → toda la agenda usa "hora de pared etiquetada
   UTC" (Date.UTC + getUTC*). Sin esto las citas se corrían 6 horas.
-- Pendiente F1b: páginas /agenda (calendario aurora) y /pago (transferencia +
-  comprobante). Luego F2 panel, F3 webhooks/PDF, F4 deploy y borrado del PHP.
+### F1b ✅ (13-ago) — /agenda y /pago portadas; F1 completa
+- `/agenda`: calendario aurora 1:1 (tira de días, cabecera animada, slots por
+  día) como server component + form cliente con server action; E2E verificado:
+  cita real a las 15:30 exactas, round-robin, etapa y bitácora correctas.
+- `/pago`: datos → pago `transferencia` (reutiliza pendiente con link vigente;
+  drivers de procesador quedan para F3 — hoy `procesador_pago_activo` está
+  vacío y el PHP cae a la misma rama) → subida de comprobante validada por
+  magic bytes, guardada en `backend/storage/comprobantes` (mismo dir que lee
+  el panel PHP). El `$_SESSION['pagos_propios']` se sustituyó por un token
+  HMAC (`APP_SECRET` en .env); `bodySizeLimit` de server actions subido a 9 MB.
+- Fix de hidratación: `Icono` ahora usa `useId` (el contador de módulo
+  divergía entre SSR y cliente).
+- Pendiente: F2 panel, F3 webhooks/PDF/bot, F4 deploy y borrado del PHP.

@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    serverActions: {
+      // El comprobante de /pago acepta hasta 8 MB + sobrecarga multipart.
+      bodySizeLimit: "9mb",
+    },
+  },
 };
 
 export default nextConfig;
