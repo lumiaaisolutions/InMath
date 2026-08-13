@@ -23,3 +23,27 @@ de dónde se aplica cada respuesta en los demás documentos de esta carpeta.
    archivo.)
 8. **Su equipo.** ¿Quiénes usarán el panel? Nombre y correo de cada asesor y
    del administrador, para crear sus accesos definitivos.
+
+## Respuestas del cliente (13-ago-2026) — APLICADAS
+
+1. **Precio:** $4,500 de lista con $500 de descuento por inscripción inmediata
+   → $4,000. Curso oficial: **Curso Propedéutico InMath**. Dos modalidades al
+   mismo precio: **Premium 8 meses** e **Intensivo 3 meses** (para examen en
+   noviembre). Aplicado en tabla `cursos` (2 filas), landing (tachado $4,500)
+   y prompt de Mathy.
+2. **Pagos:** Mercado Pago + depósito OXXO. PENDIENTE del cliente: credenciales
+   de Mercado Pago y referencia OXXO (texto provisional en `datos_pago`).
+3. **WhatsApp:** 7224709235 → `WHATSAPP_NUMERO=5217224709235` en backend/.env.
+4. **Bot:** FAQs oficiales integradas al prompt (costo, duración, virtual,
+   material incluido, asesorías 1h); lo que no está confirmado (fecha de
+   inicio, escuelas/carreras, costo de asesorías extra) el bot NO lo inventa —
+   invita a la asesoría o a WhatsApp. Tono: cálido, algo formal, de tú.
+5. **Horario de citas:** todos los días 8:00–21:00, citas de 30 min (aplicado
+   en `horario_atencion`). Asesoría personalizada de alumnos: 1 hora (nota
+   para Fase 5).
+6. **Fotos:** harán sesión y las compartirán (placeholders siguen).
+7. **Usuarios reales creados** (seeds asesor1-3 desactivados):
+   - Magnolia Nayeli Galindo — magnayeli1234@gmail.com — admin + asesor — `InMath.Mag2026`
+   - Jorge Emanuel Capula — jorcap25@gmail.com — admin + asesor — `InMath.Jor2026`
+   - José Domingo Carbajal — domingoanaya1112@gmail.com — admin — `InMath.Dom2026`
+   ⚠️ Contraseñas temporales: pedirles cambiarlas en Mi perfil al primer acceso.

@@ -1714,3 +1714,7 @@ input[type="file"] { font: 500 .88rem var(--cuerpo); color: var(--tinta-2); }
 .cal-grupo .slot input:checked + span { background: #fff; color: #C0392B; box-shadow: 0 10px 24px rgba(120,30,60,.35); }
 .cal-mes, .cal-num { text-shadow: 0 2px 14px rgba(60,30,80,.35); }
 .cal-horas { border-top-color: rgba(255,255,255,.35); }
+
+/* v29 — Oferta del plan destacado */
+.plan-oferta { font: 600 .8rem/1.3 var(--cuerpo); color: #C0392B; }
+.plan-oferta s { color: var(--tinta-3); font-weight: 500; margin-right: 4px; }

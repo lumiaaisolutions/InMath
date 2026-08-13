@@ -69,3 +69,10 @@ versión de n8n instalada.
 - **Faltante del MVP:** Fase 5 (módulo de práctica/reactivos del alumno).
   Fases 4 y 6 ya están cubiertas por el panel y la agenda actuales.
 - **Preguntas abiertas al cliente:** ver `preguntas-cliente.md`.
+
+### Pendientes tras respuestas del cliente (13-ago-2026)
+- Credenciales de Mercado Pago + referencia OXXO (activar pago en línea).
+- Fotos reales de la sesión (landing + carrusel del login).
+- Confirmar con cliente: fecha de inicio del curso y política de asesorías
+  extra (el bot hoy los deriva a la asesoría gratuita).
+- UI de es_asesor en Panel→Usuarios (hoy se ajusta por soporte en BD).

@@ -24,7 +24,7 @@ final class AgendaServicio
         $horario = json_decode(self::config('horario_atencion', '{"dias":[1,2,3,4,5],"inicio":"09:00","fin":"19:00"}'), true);
         $duracion = (int) self::config('duracion_cita_minutos', '30');
 
-        $sqlAsesores = "SELECT id FROM usuarios WHERE rol = 'asesor' AND activo = 1";
+        $sqlAsesores = "SELECT id FROM usuarios WHERE es_asesor = 1 AND activo = 1";
         $paramsAsesores = [];
         if ($asesorId !== null) {
             $sqlAsesores .= ' AND id = ?';
@@ -150,7 +150,7 @@ final class AgendaServicio
             "SELECT u.id
              FROM usuarios u
              LEFT JOIN citas c ON c.asesor_id = u.id AND c.estado IN ('agendada', 'confirmada') AND c.inicio >= NOW()
-             WHERE u.rol = 'asesor' AND u.activo = 1
+             WHERE u.es_asesor = 1 AND u.activo = 1
              GROUP BY u.id
              ORDER BY COUNT(c.id) ASC, u.id ASC"
         );

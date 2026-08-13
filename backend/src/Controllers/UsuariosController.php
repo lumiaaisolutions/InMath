@@ -15,7 +15,7 @@ final class UsuariosController
                     COUNT(p.id) AS prospectos_activos
              FROM usuarios u
              LEFT JOIN prospectos p ON p.asesor_id = u.id AND p.etapa NOT IN ('inscrito', 'descartado')
-             WHERE u.rol = 'asesor' AND u.activo = 1
+             WHERE u.es_asesor = 1 AND u.activo = 1
              GROUP BY u.id
              ORDER BY u.id"
         ));

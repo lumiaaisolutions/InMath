@@ -22,6 +22,7 @@ archivo: cada tema vive en su propio `.md`.
 | [`pagos.md`](pagos.md) | Capa de procesadores de pago (Stripe/Conekta/MercadoPago/simulado) |
 | [`sistema-de-diseno.md`](sistema-de-diseno.md) | Identidad visual, tokens, regla 60-30-10, animaciones, skills |
 | [`fases-y-pendientes.md`](fases-y-pendientes.md) | Estado de las 7 fases y lo que falta por decidir/credenciales |
+| [`migracion-vps-exposicion-api.md`](migracion-vps-exposicion-api.md) | Migración al VPS: por qué `backend/public/index.php` no quedó expuesto por HTTP y si hace falta |
 
 ## Documentación por módulo (en cada carpeta)
 

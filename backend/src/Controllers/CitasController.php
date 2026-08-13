@@ -62,7 +62,7 @@ final class CitasController
         if ($prospecto === null) {
             Respuesta::error('Prospecto no encontrado', 404);
         }
-        if (Database::uno("SELECT id FROM usuarios WHERE id = ? AND rol = 'asesor' AND activo = 1", [$asesorId]) === null) {
+        if (Database::uno("SELECT id FROM usuarios WHERE id = ? AND es_asesor = 1 AND activo = 1", [$asesorId]) === null) {
             Respuesta::error('Asesor inexistente o inactivo', 422);
         }
 

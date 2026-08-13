@@ -30,7 +30,7 @@ function datosPipeline(?string $asesorId): array
 function listaAsesores(): array
 {
     return Database::todos(
-        "SELECT id, nombre FROM usuarios WHERE rol = 'asesor' AND activo = 1 ORDER BY id"
+        "SELECT id, nombre FROM usuarios WHERE es_asesor = 1 AND activo = 1 ORDER BY id"
     );
 }
 

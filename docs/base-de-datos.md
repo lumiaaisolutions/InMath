@@ -70,3 +70,8 @@ el rate limit de WhatsApp y la latencia de Claude, no la base de datos.
   `alumnos.usuario` + `password_hash`; config `datos_pago`. También existen
   por upsert las claves `login_titulo`/`login_texto` (texto sobre el carrusel
   del login).
+
+- **005_datos_cliente.sql:** `usuarios.es_asesor` (roles duales: un admin con
+  es_asesor=1 también recibe prospectos/citas). Las queries de asignación
+  (`ProspectoServicio`, `AgendaServicio`, controllers, panel/datos) filtran
+  ahora por `es_asesor = 1` en vez de `rol='asesor'`.

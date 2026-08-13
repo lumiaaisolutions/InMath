@@ -41,11 +41,11 @@ final class ProspectoServicio
     public static function asignar(int $prospectoId, ?int $asesorId = null): array
     {
         return Database::transaccion(function () use ($prospectoId, $asesorId) {
-            Database::todos("SELECT id FROM usuarios WHERE rol = 'asesor' AND activo = 1 FOR UPDATE");
+            Database::todos("SELECT id FROM usuarios WHERE es_asesor = 1 AND activo = 1 FOR UPDATE");
 
             if ($asesorId !== null) {
                 $asesor = Database::uno(
-                    "SELECT id FROM usuarios WHERE id = ? AND rol = 'asesor' AND activo = 1",
+                    "SELECT id FROM usuarios WHERE id = ? AND es_asesor = 1 AND activo = 1",
                     [$asesorId]
                 );
                 if ($asesor === null) {
@@ -56,7 +56,7 @@ final class ProspectoServicio
                     "SELECT u.id
                      FROM usuarios u
                      LEFT JOIN prospectos p ON p.asesor_id = u.id AND p.etapa NOT IN ('inscrito', 'descartado')
-                     WHERE u.rol = 'asesor' AND u.activo = 1
+                     WHERE u.es_asesor = 1 AND u.activo = 1
                      GROUP BY u.id
                      ORDER BY COUNT(p.id) ASC, u.id ASC
                      LIMIT 1"

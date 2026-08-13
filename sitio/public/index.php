@@ -234,6 +234,7 @@ cabeceraSitio('Cursos Inmath — Aprende en línea a tu ritmo');
       <div class="plan-cab">
         <span class="plan-tag">Recomendado</span>
         <div class="plan-precio"><?= e($precio) ?> <small>MXN</small></div>
+        <span class="plan-oferta"><s>$4,500</s> · $500 de descuento al inscribirte hoy</span>
       </div>
       <p class="plan-sub"><?= e($curso['nombre'] ?? 'Curso completo') ?> · pago único</p>
       <a class="boton grande plan-cta" href="/pago">Inscribirme ahora</a>
