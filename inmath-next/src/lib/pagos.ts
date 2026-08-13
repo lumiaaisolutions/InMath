@@ -1,24 +1,20 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { prisma } from "./db";
+import { prisma, config } from "./db";
 import { ahoraPared } from "./fechas";
+import { procesadorActivo } from "./pagos-drivers";
 
 /**
- * Port de PagoServicio::linkParaProspecto para el sitio: reutiliza un pago
- * pendiente con link vigente si existe; si no, registra el pago como
- * transferencia (los drivers de procesador en línea se portan en F3 — hoy
- * `procesador_pago_activo` está vacío y el PHP cae a esta misma rama).
+ * Flujo de /pago del sitio (port de pago.php): intenta el link con el
+ * procesador activo (o reutiliza uno pendiente vigente); sin procesador
+ * configurado cae a registrar el pago como transferencia, para que el
+ * alumno suba su comprobante.
  */
-export async function pagoParaProspecto(prospectoId: number, curso: { id: number; precio_centavos: number; moneda: string }) {
-  const existente = await prisma.pagos.findFirst({
-    where: {
-      prospecto_id: prospectoId, curso_id: curso.id, estado: "pendiente", link_pago: { not: null },
-      OR: [{ expira_en: null }, { expira_en: { gt: ahoraPared() } }],
-    },
-    orderBy: { id: "desc" },
-  });
-  if (existente) return existente;
+export async function pagoParaProspecto(prospectoId: number, curso: { id: number; nombre: string; precio_centavos: number; moneda: string }) {
+  const prospecto = await prisma.prospectos.findUnique({ where: { id: prospectoId } });
+  const r = await linkParaProspecto(prospecto!, curso.id);
+  if (r.ok) return r.pago;
 
   return prisma.pagos.create({
     data: {
@@ -27,6 +23,62 @@ export async function pagoParaProspecto(prospectoId: number, curso: { id: number
       estado: "pendiente", link_generado_en: ahoraPared(),
     },
   });
+}
+
+type ProspectoLink = { id: number; nombre: string | null; curso_interes_id: number | null };
+
+/**
+ * Port de PagoServicio::linkParaProspecto + crearConLink: reutiliza un pago
+ * pendiente con link vigente o crea uno nuevo con el procesador activo.
+ * Devuelve ok=false si no hay curso o no hay procesador configurado.
+ */
+export async function linkParaProspecto(prospecto: ProspectoLink, cursoId: number | null = null) {
+  const curso = cursoId !== null
+    ? await prisma.cursos.findFirst({ where: { id: cursoId, activo: true } })
+    : prospecto.curso_interes_id !== null
+      ? await prisma.cursos.findFirst({ where: { id: prospecto.curso_interes_id, activo: true } })
+      : await prisma.cursos.findFirst({ where: { activo: true }, orderBy: { id: "asc" } });
+  if (!curso) return { ok: false as const, mensaje: "No hay curso activo para cobrar" };
+
+  const existente = await prisma.pagos.findFirst({
+    where: {
+      prospecto_id: prospecto.id, curso_id: curso.id, estado: "pendiente", link_pago: { not: null },
+      OR: [{ expira_en: null }, { expira_en: { gt: ahoraPared() } }],
+    },
+    orderBy: { id: "desc" },
+  });
+  if (existente) return { ok: true as const, pago: existente };
+
+  let procesador;
+  try { procesador = await procesadorActivo(); } catch (e) {
+    return { ok: false as const, mensaje: (e as Error).message };
+  }
+  const pago = await prisma.pagos.create({
+    data: { prospecto_id: prospecto.id, curso_id: curso.id, monto_centavos: curso.precio_centavos, moneda: curso.moneda },
+  });
+  let link;
+  try {
+    link = await procesador.crearLink(pago, prospecto, curso);
+  } catch (e) {
+    await prisma.pagos.update({
+      where: { id: pago.id },
+      data: { estado: "fallido", metadatos: { error_link: (e as Error).message } as never },
+    });
+    return { ok: false as const, mensaje: (e as Error).message };
+  }
+  const nombreProcesador = (await config("procesador_pago_activo", "")).trim() || null;
+  const actualizado = await prisma.pagos.update({
+    where: { id: pago.id },
+    data: { procesador: nombreProcesador, link_pago: link.link, referencia_externa: link.referencia_externa, link_generado_en: ahoraPared() },
+  });
+  const p = await prisma.prospectos.findUnique({ where: { id: prospecto.id }, select: { etapa: true } });
+  if (p && p.etapa !== "pago_pendiente") {
+    await prisma.prospectos.update({ where: { id: prospecto.id }, data: { etapa: "pago_pendiente" } });
+    await prisma.bitacora_pipeline.create({
+      data: { prospecto_id: prospecto.id, etapa_anterior: p.etapa, etapa_nueva: "pago_pendiente", origen: "sistema", nota: `Link de pago #${pago.id} generado` },
+    });
+  }
+  return { ok: true as const, pago: actualizado };
 }
 
 /** Reemplazo del $_SESSION['pagos_propios'] del PHP: token HMAC por pago. */

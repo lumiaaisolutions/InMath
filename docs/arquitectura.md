@@ -118,3 +118,34 @@ smoke test lee usuarios/cursos reales).
 - Fix de hidratación: `Icono` ahora usa `useId` (el contador de módulo
   divergía entre SSR y cliente).
 - Pendiente: F2 panel, F3 webhooks/PDF/bot, F4 deploy y borrado del PHP.
+
+### F2 ✅ (13-ago) — Panel CRM completo en Next.js
+- Route groups con root layouts separados (`(sitio)` / `(panel)`) porque cada
+  app tiene su propio inmath.css con las mismas clases. Sesión: cookie HMAC
+  firmada con APP_SECRET; login contra los hashes bcrypt `$2y$` existentes
+  (compatibilidad Node↔PHP probada en ambos sentidos). Todos los módulos
+  portados 1:1 y verificados E2E contra la BD real (drag&drop persiste con
+  bitácora; aprobar pago inscribe alumno con credenciales). Uploads en
+  panel/public/img (mismo dir que el PHP durante el strangler; en VPS se
+  apunta con PANEL_IMG_DIR) servidos por route handler.
+
+### F3 ✅ (13-ago) — Bot WhatsApp, drivers de pago, webhook y reportes PDF
+- `lib/bot.ts`: port fiel de MotorBot (prompt de BD con reemplazos, historial
+  fusionado, JSON {respuesta, accion, calificacion, cita}, calificación con
+  pesos/umbral, BOT_SIMULADO=1 para pruebas). E2E verificado con el flujo
+  completo: saludo → ofrecer_cita (slots reales) → "opción 2" agenda cita →
+  listo_para_pago genera link (driver simulado) → webhook firmado inscribe.
+- Drivers: simulado + MercadoPago (Checkout Pro: preferencia → init_point;
+  webhook x-signature ts/v1 verificado + re-consulta del pago). **Pendiente
+  del cliente: credenciales reales de MercadoPago** — solo falta poner
+  MERCADOPAGO_ACCESS_TOKEN/WEBHOOK_SECRET y `procesador_pago_activo`.
+- Rutas n8n idénticas en path/contrato (X-API-Key igual): bot/procesar,
+  citas/por-recordar+PATCH, pagos/abandonados+PATCH (confirmar inscribe),
+  asesores, reportes generar/pendientes/archivo/PATCH, webhooks/pago/{p}.
+  Plan de corte sin perder mensajes: docs/corte-n8n.md.
+- Reportes PDF: port del lienzo PDF puro (Helvetica WinAnsi con CP1252 para
+  em-dash) + generador semanal idempotente; escribe en backend/storage
+  (mismo dir que el PHP; en VPS se apunta con STORAGE_DIR). PDF verificado
+  visualmente (banda de marca, barras, módulos).
+- Pendiente: F4 deploy VPS (ver notas: VPS srv1698236 expira 23-ago,
+  renovarlo; decidir remote-MySQL vs migrar BD) y retiro del PHP.
