@@ -1,0 +1,18 @@
+# Deploy en el VPS de Hostinger (junto al n8n-stack ya existente en Docker).
+# Uso: docker compose up -d --build   (con .env de producción junto a este archivo)
+services:
+  inmath-next:
+    build: .
+    container_name: inmath-next
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "127.0.0.1:3005:3000"
+    volumes:
+      # Storage compartido (comprobantes, reportes PDF) y uploads del panel
+      - /srv/inmath/storage:/srv/inmath/storage
+      - /srv/inmath/panel-img:/srv/inmath/panel-img
+    environment:
+      STORAGE_DIR: /srv/inmath/storage
+      COMPROBANTES_DIR: /srv/inmath/storage/comprobantes
+      PANEL_IMG_DIR: /srv/inmath/panel-img
