@@ -1,0 +1,206 @@
+"use client";
+import { useEffect, useRef, useState, createContext, useContext } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { IconoPanel } from "@/components/IconoPanel";
+import { logoutAccion, agentePanelAccion } from "./acciones";
+
+/** Nav del sidebar con estado activo por ruta (como _layout-inicio.php). */
+export function NavPanel({ items }: { items: { href: string; texto: string; ic: string }[] }) {
+  const ruta = usePathname();
+  return (
+    <nav className="nav">
+      {items.map((it) => {
+        const activo = it.href === "/panel"
+          ? ruta === "/panel" || ruta.startsWith("/panel/prospectos")
+          : ruta.startsWith(it.href);
+        return (
+          <Link key={it.href} href={it.href} className={activo ? "activo" : ""}>
+            <IconoPanel n={it.ic} />{it.texto}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+export function SalirBoton({ children }: { children: React.ReactNode }) {
+  return (
+    <form action={logoutAccion} className="pw-salir-form">
+      <button type="submit" className="pw-salir" title="Cerrar sesión" aria-label="Cerrar sesión">{children}</button>
+    </form>
+  );
+}
+
+/* ── Toast (port del flash + toast del layout PHP) ─────────────────────── */
+
+type ToastMsg = { texto: string; tipo: "ok" | "error" } | null;
+const ToastCtx = createContext<(t: ToastMsg) => void>(() => {});
+export const useToast = () => useContext(ToastCtx);
+
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toast, setToastCrudo] = useState<ToastMsg>(null);
+  const [saliendo, setSaliendo] = useState(false);
+  const setToast = (t: ToastMsg) => { setSaliendo(false); setToastCrudo(t); };
+  useEffect(() => {
+    if (!toast) return;
+    const t1 = setTimeout(() => setSaliendo(true), 5200);
+    const t2 = setTimeout(() => setToastCrudo(null), 5550);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [toast]);
+  return (
+    <ToastCtx.Provider value={setToast}>
+      {children}
+      {toast && (
+        <div className={`toast ${toast.tipo}${saliendo ? " saliendo" : ""}`} role="status">
+          <span className="toast-ic"><IconoPanel n={toast.tipo === "error" ? "alerta" : "check"} /></span>
+          <span className="toast-cuerpo">
+            <b>{toast.tipo === "error" ? "Atención" : "Listo"}</b>
+            <p>{toast.texto}</p>
+          </span>
+          <button type="button" className="toast-x" aria-label="Cerrar aviso" onClick={() => setToast(null)}><IconoPanel n="x" /></button>
+          <i className="toast-barra" />
+        </div>
+      )}
+    </ToastCtx.Provider>
+  );
+}
+
+/** Muestra el resultado {ok|error} de una acción como toast. */
+export function useToastResultado() {
+  const setToast = useToast();
+  return (r: { ok?: string; error?: string } | undefined) => {
+    if (!r) return;
+    if (r.error) setToast({ texto: r.error, tipo: "error" });
+    else if (r.ok) setToast({ texto: r.ok, tipo: "ok" });
+  };
+}
+
+/* ── Confirmación con diseño propio (port del confirmar-velo) ──────────── */
+
+export function ConfirmarDialogo({ abierto, texto, onSi, onNo }: {
+  abierto: boolean; texto: string; onSi: () => void; onNo: () => void;
+}) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (!abierto) return;
+    const id = requestAnimationFrame(() => setVisible(true));
+    return () => { cancelAnimationFrame(id); setVisible(false); };
+  }, [abierto]);
+  useEffect(() => {
+    if (!abierto) return;
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") onNo(); };
+    document.addEventListener("keydown", esc);
+    return () => document.removeEventListener("keydown", esc);
+  }, [abierto, onNo]);
+  if (!abierto) return null;
+  return (
+    <div className={`confirmar-velo${visible ? " visible" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) onNo(); }}>
+      <div className="confirmar-caja" role="alertdialog" aria-modal="true">
+        <span className="toast-ic error"><IconoPanel n="alerta" /></span>
+        <b>¿Confirmar esta acción?</b>
+        <p>{texto}</p>
+        <div className="confirmar-botones">
+          <button type="button" className="boton fantasma" onClick={onNo}>Cancelar</button>
+          <button type="button" className="boton peligro" onClick={onSi} autoFocus>Sí, continuar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Modal genérico (port de .us-velo/.us-frame) ───────────────────────── */
+
+export function Velo({ abierto, onCerrar, children }: {
+  abierto: boolean; onCerrar: () => void; children: React.ReactNode;
+}) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (!abierto) return;
+    const id = requestAnimationFrame(() => setVisible(true));
+    return () => { cancelAnimationFrame(id); setVisible(false); };
+  }, [abierto]);
+  useEffect(() => {
+    if (!abierto) return;
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") onCerrar(); };
+    document.addEventListener("keydown", esc);
+    return () => document.removeEventListener("keydown", esc);
+  }, [abierto, onCerrar]);
+  if (!abierto) return null;
+  return (
+    <div className={`us-velo${visible ? " visible" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) onCerrar(); }}>
+      {children}
+    </div>
+  );
+}
+
+/* ── Mathy del panel (port de agenteIAPanel) ───────────────────────────── */
+
+export function AgentePanelIA() {
+  const [abierto, setAbierto] = useState(false);
+  const [mensajes, setMensajes] = useState<{ rol: "usuario" | "asistente"; texto: string }[]>([
+    { rol: "asistente", texto: "¡Hola! Soy Mathy. ¿En qué te ayudo: mover un prospecto de etapa, agendar una cita o revisar pagos?" },
+  ]);
+  const [texto, setTexto] = useState("");
+  const [cargando, setCargando] = useState(false);
+  const lista = useRef<HTMLDivElement>(null);
+  useEffect(() => { lista.current?.scrollTo(0, 1e6); }, [mensajes, abierto]);
+
+  async function enviar() {
+    const m = texto.trim();
+    if (!m || cargando) return;
+    setTexto(""); setMensajes((x) => [...x, { rol: "usuario", texto: m }]); setCargando(true);
+    try {
+      const d = await agentePanelAccion(m, mensajes.slice(-12));
+      setMensajes((x) => [...x, { rol: "asistente", texto: d.respuesta ?? d.error ?? "No pude responder, intenta de nuevo." }]);
+    } catch {
+      setMensajes((x) => [...x, { rol: "asistente", texto: "No pude conectarme. Intenta de nuevo en un momento." }]);
+    } finally { setCargando(false); }
+  }
+
+  const libro = (
+    <svg className="agente-libro" viewBox="0 0 48 48" aria-hidden="true">
+      <defs><linearGradient id="agp-t" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stopColor="#6B9FFF" /><stop offset="1" stopColor="#AFCFFF" /></linearGradient></defs>
+      <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="url(#agp-t)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M24 15 C 31 10.5 38 10 42 13.5 V 33 C 38 29.5 31 30 24 34.5" fill="none" stroke="url(#agp-t)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="24" y1="15" x2="24" y2="34.5" stroke="url(#agp-t)" strokeWidth="1.6" strokeLinecap="round" opacity=".5" />
+      <rect className="agente-ojo i" x="18.6" y="18.4" width="3.8" height="3.8" />
+      <rect className="agente-ojo d" x="25.6" y="18.4" width="3.8" height="3.8" />
+    </svg>
+  );
+
+  return (
+    <div className="agente-ia">
+      <button type="button" className="agente-btn" aria-expanded={abierto} aria-label="Abrir a Mathy, el asistente del panel"
+        onClick={() => setAbierto(!abierto)}>
+        {libro}
+      </button>
+      {abierto && (
+        <div className="agente-panel" role="dialog" aria-label="Mathy, el asistente del panel">
+          <div className="ap-cab">
+            <div className="ap-quien">
+              {libro}
+              <div><b>Mathy</b><span>La IA del panel</span></div>
+            </div>
+            <button type="button" className="ap-cerrar" aria-label="Cerrar asistente" onClick={() => setAbierto(false)}>✕</button>
+          </div>
+          <div className="ap-mensajes" ref={lista}>
+            {mensajes.map((m, i) => (
+              <div key={i} className={`ap-msg ${m.rol === "usuario" ? "usuario" : "bot"}`}>{m.texto}</div>
+            ))}
+            {cargando && <div className="ap-msg bot cargando">Escribiendo…</div>}
+          </div>
+          <div className="ap-entrada">
+            <input type="text" value={texto} maxLength={500} autoComplete="off" placeholder="Escribe tu pregunta…"
+              onChange={(e) => setTexto(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); enviar(); } }} />
+            <button type="button" aria-label="Enviar mensaje" disabled={cargando} onClick={enviar}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
