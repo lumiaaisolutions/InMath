@@ -76,3 +76,14 @@ versión de n8n instalada.
 - Confirmar con cliente: fecha de inicio del curso y política de asesorías
   extra (el bot hoy los deriva a la asesoría gratuita).
 - UI de es_asesor en Panel→Usuarios (hoy se ajusta por soporte en BD).
+
+### Lote de mejoras del panel solicitado el 13-ago (EN CURSO)
+1. ✅ Logo protagonista en sitio, panel, login, carga y agente (v30 CSS).
+2. ⬜ Alumnos: alta manual (form nombre/tel/curso → crea prospecto+alumno).
+3. ⬜ Citas: alta manual (prospecto + asesor + fecha/hora, valida traslape).
+4. ⬜ Usuarios: filtros por rol, tarjetas compactas (foto/nombre/correo/rol),
+   clic abre frame con datos completos + Editar/Eliminar/Cerrar; "Agregar
+   usuario" abre frame de creación (no tarjeta inline).
+5. ⬜ Personalizar login: texto y ORDEN por imagen (requiere tabla o JSON
+   `login_media` con archivo/titulo/texto/orden), galería clicable con frame
+   de edición y preview como en el login; el login lee texto por slide.
