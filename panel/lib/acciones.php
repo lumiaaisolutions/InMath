@@ -298,6 +298,7 @@ function ejecutarAccion(string $ruta): void
                 flash('No puedes quitarte el acceso a ti mismo', 'error');
                 redirigir('/usuarios');
             }
+            Database::ejecutar('UPDATE usuarios SET es_asesor = ? WHERE id = ?', [isset($_POST['es_asesor']) ? 1 : 0, $uid]);
             $modulosValidos = ['pipeline', 'citas', 'alumnos', 'pagos'];
             $modulosU = array_values(array_intersect($modulosValidos, (array) ($_POST['modulos'] ?? [])));
             $modulosJson = count($modulosU) === count($modulosValidos) ? null : json_encode($modulosU);
@@ -313,6 +314,18 @@ function ejecutarAccion(string $ruta): void
                 Database::ejecutar('UPDATE usuarios SET password_hash = ? WHERE id = ?', [password_hash($_POST['password'], PASSWORD_BCRYPT), $uid]);
             }
             flash('Usuario actualizado');
+            redirigir('/usuarios');
+
+        case '/accion/usuario-eliminar':
+            requiereAdmin();
+            $uidDel = (int) $_POST['usuario_id'];
+            if ($uidDel === (int) $usuario['id']) {
+                flash('No puedes eliminarte a ti mismo', 'error');
+                redirigir('/usuarios');
+            }
+            // Baja lógica: conserva prospectos/citas históricas del usuario.
+            Database::ejecutar('UPDATE usuarios SET activo = 0, es_asesor = 0 WHERE id = ?', [$uidDel]);
+            flash('Usuario eliminado (acceso revocado)');
             redirigir('/usuarios');
 
         case '/accion/usuario-crear':
