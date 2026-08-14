@@ -147,14 +147,25 @@ smoke test lee usuarios/cursos reales).
   em-dash) + generador semanal idempotente; escribe en backend/storage
   (mismo dir que el PHP; en VPS se apunta con STORAGE_DIR). PDF verificado
   visualmente (banda de marca, barras, módulos).
-### F4 (13-ago) — Preparada; ejecución bloqueada por acceso al VPS
-- Mapa real de producción verificado (hPanel + repo de infraestructura +
-  pruebas HTTP): el PHP YA vive en el VPS con nginx y BD MySQL local `inmath`;
-  el DNS (Cloudflare proxied) ya apunta al VPS; el hosting compartido está
-  decommissionado; y n8n nunca se conectó (nada consume la API PHP hoy).
-  El corte es solo un cambio de nginx dentro del VPS — sin DNS ni n8n.
-- Paquete listo: Dockerfile + compose + .env.production.example + standalone
-  verificado. Procedimiento completo: docs/despliegue-vps.md.
-- Bloqueado: SSH/consola del VPS requiere aprobación explícita del host en
-  Claude Code. Pendientes del dueño: renovar VPS (vence 23-ago), credenciales
-  MercadoPago, texto datos_pago.
+### F4 ✅ (13-ago) — Desplegado en el VPS y dominio cortado al Next.js
+- **En vivo**: `https://inmath.lumiaaisolutions.com` ya sirve el Next.js (no el
+  PHP). Verificado público vía Cloudflare: home, /agenda (calendario aurora con
+  slots reales), /pago, /panel/login, /api/asesores con X-API-Key; sin la
+  cookie `inmath_sitio` del PHP.
+- **Cómo se montó** (patrón de la casa, NO Docker — las otras apps Next del VPS
+  corren con pm2): standalone en `/var/www/inmath/web`, build en el VPS (Node
+  20, `prisma generate` regeneró el motor Linux), pm2 `inmath-web` en el puerto
+  3010 (`pm2 save` + startup systemd ya persistente). SSH al VPS es por el
+  **puerto 8080** y usuario **`deploy`** (root login deshabilitado por
+  hardening). Los Dockerfile/compose del repo quedan como alternativa no usada.
+- **Drift de esquema resuelto**: la BD de producción estaba en la migración 002
+  (le faltaban `usuarios.modulos/es_asesor`, `pagos.comprobante(_subido_en)`,
+  `alumnos.usuario/password_hash` y el config `datos_pago`). Respaldo previo en
+  `/var/www/inmath/backup-inmath-*.sql` y se aplicaron 003/004/005.
+- **nginx**: el vhost cambió de root PHP a `proxy_pass 127.0.0.1:3010`; el
+  original quedó en `…inmath.lumiaaisolutions.com.php-backup` (rollback:
+  restaurar + `systemctl reload nginx`, segundos).
+- **PHP intacto en disco** (`/var/www/inmath/{public_html,backend}`) como red de
+  seguridad; su retiro definitivo queda para después de unos días estables.
+- Pendientes del dueño: credenciales MercadoPago + texto `datos_pago` (sigue en
+  "PENDIENTE"); el VPS tiene auto-renovación activa (no vence solo el 23-ago).
