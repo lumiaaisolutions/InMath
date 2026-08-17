@@ -950,7 +950,7 @@ body::before {
 .agente-libro { width: 32px; height: 32px; }
 .agente-ojo { transform-box: fill-box; transform-origin: center; fill: #1B2140; shape-rendering: crispEdges; }
 @media (prefers-reduced-motion: no-preference) {
-  .agente-ojo { animation: agParpadeo 4.4s steps(1, end) infinite; }
+  .agente-ojo { animation: agParpadeo 2.4s steps(1, end) infinite; }
   .agente-ojo.d { animation-delay: .06s; }
 }
 @keyframes agParpadeo {
@@ -1946,3 +1946,22 @@ body::before { animation: none !important; }
   .pk.activo { box-shadow: 0 24px 50px -20px rgba(18,31,55,.42); }
 }
 @media (prefers-reduced-motion: reduce) { .pk, .pk-foto { transition: none; } }
+
+/* =========================================================================
+   v33 — Texto del eyebrow a juego con el splash: fuente display expresiva
+   + degradado por sección (ya no un mono plano). El icono sigue blanco.
+   ========================================================================= */
+.eyebrow {
+  font-family: var(--display); font-weight: 800; font-size: .82rem;
+  letter-spacing: .1em; text-transform: uppercase;
+  background-image: linear-gradient(100deg, #2f6fe0, #7c3df0) !important;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.proceso .eyebrow  { background-image: linear-gradient(100deg, #2f6fe0, #7c3df0) !important; }
+.acompana .eyebrow { background-image: linear-gradient(100deg, #0f9e84, #2f6fe0) !important; }
+.incluye .eyebrow  { background-image: linear-gradient(100deg, #7c3df0, #d64b86) !important; }
+.precio .eyebrow   { background-image: linear-gradient(100deg, #e0770f, #d64b86) !important; }
+/* el icono y la mini-flecha no se degradan (mantienen su color propio) */
+.eyebrow .ic-ey { -webkit-text-fill-color: initial; }
+.eyebrow .mini-arrow { -webkit-text-fill-color: initial; color: var(--azul); }

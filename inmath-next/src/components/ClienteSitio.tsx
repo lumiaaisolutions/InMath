@@ -126,7 +126,17 @@ export function AgenteIA() {
       {abierto && (
         <div className="agente-panel" role="dialog" aria-label="Mathy">
           <div className="ap-cab">
-            <div className="ap-quien"><b>Mathy</b><span>La IA de Cursos InMath</span></div>
+            <div className="ap-quien">
+              <svg className="ap-avatar" viewBox="0 0 48 48" aria-hidden="true">
+                <defs><linearGradient id="ag-t2" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stopColor="#6B9FFF" /><stop offset="1" stopColor="#AFCFFF" /></linearGradient></defs>
+                <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="url(#ag-t2)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M24 15 C 31 10.5 38 10 42 13.5 V 33 C 38 29.5 31 30 24 34.5" fill="none" stroke="url(#ag-t2)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                <rect className="agente-ojo i" x="18.6" y="18.4" width="3.8" height="3.8" />
+                <rect className="agente-ojo d" x="25.6" y="18.4" width="3.8" height="3.8" />
+              </svg>
+              <div><b>Mathy</b><span>La IA de Cursos InMath</span></div>
+            </div>
             <button type="button" className="ap-cerrar" aria-label="Cerrar" onClick={() => setAbierto(false)}><Icono n="x" /></button>
           </div>
           <div className="ap-mensajes" ref={lista}>

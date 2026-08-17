@@ -413,7 +413,7 @@ body::before {
 .agente-libro { width: 30px; height: 30px; }
 .agente-ojo { transform-box: fill-box; transform-origin: center; fill: #1B2140; shape-rendering: crispEdges; }
 @media (prefers-reduced-motion: no-preference) {
-  .agente-ojo { animation: agParpadeo 4.4s steps(1, end) infinite; }
+  .agente-ojo { animation: agParpadeo 2.4s steps(1, end) infinite; }
   .agente-ojo.d { animation-delay: .06s; }
 }
 @keyframes agParpadeo {
@@ -1683,3 +1683,48 @@ body::before { animation: none !important; }
 /* 5) Filtros y navegación con reacción más viva al puntero */
 .us-filtro { transition: transform var(--transicion), background var(--transicion), color var(--transicion); }
 .us-filtro:hover:not(.activo) { background: var(--crema-2); transform: translateY(-1px); }
+
+/* =========================================================================
+   v34 — Disponibilidad por semana + banner de aviso
+   ========================================================================= */
+.banner-disp {
+  display: flex; align-items: center; gap: 12px; text-decoration: none; margin-bottom: 22px;
+  padding: 13px 18px; border-radius: 15px; font: 600 .9rem/1.35 var(--cuerpo); color: #8a5a12;
+  background: linear-gradient(120deg, #FDF0D3, #FBE7C4); border: 1px solid #F0D08A;
+  box-shadow: 0 8px 22px -10px rgba(244,166,42,.55);
+}
+.banner-disp b { color: #6b4409; }
+.banner-disp .ic-sm { width: 20px; height: 20px; color: #C4801E; flex-shrink: 0; }
+.banner-disp .banner-cta {
+  margin-left: auto; background: #F4A62A; color: #fff; padding: 8px 15px; border-radius: 999px;
+  font: 700 .82rem var(--cuerpo); white-space: nowrap; transition: transform var(--transicion), box-shadow var(--transicion);
+}
+.banner-disp:hover .banner-cta { transform: translateY(-1px); box-shadow: 0 8px 18px -6px rgba(244,166,42,.6); }
+
+.disp-caja { padding: 22px 24px; max-width: 660px; }
+.disp-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.disp-off { opacity: .4; pointer-events: none; }
+.disp-semana { text-align: center; display: flex; flex-direction: column; gap: 5px; }
+.disp-semana b { font: 700 1rem var(--display); color: var(--tinta); }
+.disp-estado { font: 700 .64rem/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; width: max-content; margin: 0 auto; }
+.disp-estado.ok { color: var(--ok); background: var(--ok-suave); }
+.disp-estado.base { color: var(--alerta); background: var(--alerta-suave); }
+.disp-form { display: grid; gap: 10px; }
+.disp-dia { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 14px; background: var(--crema-2); border: 1px solid var(--linea); flex-wrap: wrap; transition: background var(--transicion), border-color var(--transicion), box-shadow var(--transicion); }
+.disp-dia.on { background: #fff; border-color: color-mix(in srgb, var(--pino) 32%, var(--linea)); box-shadow: 0 5px 16px -9px rgba(27,47,82,.28); }
+.disp-toggle { display: flex; align-items: center; gap: 11px; cursor: pointer; min-width: 150px; }
+.disp-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+.disp-sw { width: 42px; height: 24px; border-radius: 999px; background: #CBD3E6; position: relative; transition: background var(--transicion); flex-shrink: 0; }
+.disp-sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform var(--transicion); }
+.disp-toggle input:checked + .disp-sw { background: var(--pino); }
+.disp-toggle input:checked + .disp-sw::after { transform: translateX(18px); }
+.disp-toggle input:focus-visible + .disp-sw { outline: 2px solid var(--pino); outline-offset: 2px; }
+.disp-toggle b { font: 600 .94rem var(--cuerpo); color: var(--tinta); }
+.disp-horas { display: flex; align-items: center; gap: 8px; font: 500 .86rem var(--cuerpo); color: var(--tinta-2); margin-left: auto; }
+.disp-horas select { font: 600 .9rem var(--mono); padding: 7px 11px; border-radius: 10px; border: 1px solid var(--linea-fuerte); background: #fff; color: var(--tinta); cursor: pointer; }
+.disp-horas select:focus-visible { outline: 2px solid var(--pino); outline-offset: 1px; }
+.disp-cerrado { margin-left: auto; font: 600 .78rem var(--mono); color: var(--tinta-3); letter-spacing: .03em; }
+.disp-pie { margin-top: 10px; display: flex; justify-content: flex-end; }
+@media (max-width: 560px) {
+  .disp-horas, .disp-cerrado { margin-left: 0; width: 100%; }
+}

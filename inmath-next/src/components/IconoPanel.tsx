@@ -13,6 +13,7 @@ const P: Record<string, string> = {
   check: '<path d="M20 6L9 17l-5-5"/>',
   alerta: '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h.01"/>',
   x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  reloj: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
 };
 
 /** Ícono frosted del panel — mismo output que icono() en panel/lib/ayuda.php. */

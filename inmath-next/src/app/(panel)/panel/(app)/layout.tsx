@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { requiereSesion, moduloPermitido } from "@/lib/panel/sesion";
 import { avatarUrl } from "@/lib/panel/media";
+import { leerSemana, lunesDe } from "@/lib/disponibilidad";
+import { ahoraPared, isoDia } from "@/lib/fechas";
 import { IconoPanel } from "@/components/IconoPanel";
 import { OverlayCarga } from "@/components/OverlayCarga";
 import { NavPanel, SalirBoton, AgentePanelIA, ToastProvider, ScriptsPanel } from "./ClientePanel";
@@ -22,11 +24,16 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
   }
   if (u.rol === "admin") {
     items.push(
+      { href: "/panel/disponibilidad", texto: "Disponibilidad", ic: "reloj" },
       { href: "/panel/usuarios", texto: "Usuarios", ic: "user" },
       { href: "/panel/personalizar-login", texto: "Personalizar login", ic: "imagen" },
       { href: "/panel/configuracion", texto: "Configuración", ic: "config" },
     );
   }
+
+  // Aviso: ¿ya se ajustó la disponibilidad de la próxima semana? (solo admin)
+  const proxLunes = isoDia(new Date(lunesDe(ahoraPared()).getTime() + 7 * 86400_000));
+  const faltaDisp = u.rol === "admin" ? !(await leerSemana(proxLunes)) : false;
 
   return (
     <div className="app">
@@ -48,6 +55,13 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
         </div>
       </aside>
       <main className="contenido">
+        {faltaDisp && (
+          <Link className="banner-disp" href={`/panel/disponibilidad?semana=${proxLunes}`}>
+            <IconoPanel n="reloj" cls="ic-sm" />
+            <span>Aún no defines la disponibilidad de la <b>próxima semana</b>. Mientras tanto se usa el horario base.</span>
+            <span className="banner-cta">Definir horarios</span>
+          </Link>
+        )}
         <ToastProvider>{children}</ToastProvider>
       </main>
       <AgentePanelIA />
