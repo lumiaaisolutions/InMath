@@ -2,6 +2,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { iniciarPago, subirComprobante, type EstadoPago, type EstadoComprobante } from "./actions";
+import { Icono } from "@/components/Icono";
 
 const formateaMonto = (centavos: number) =>
   (centavos / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -73,7 +74,7 @@ export function PagoForm({ curso, datosPago }: { curso: { nombre: string; precio
                 </div>
               </div>
             )}
-            {curso && <div className="oferta-urgencia">⏳ Precio de oferta: ahorras $500 · <b>por tiempo limitado</b></div>}
+            {curso && <div className="oferta-urgencia"><Icono n="clock" /> Precio de oferta: ahorras $500 · <b>por tiempo limitado</b></div>}
             <button type="submit" className="boton glow glow-halo bloque grande" disabled={iniPendiente}>
               {iniPendiente ? "Preparando…" : "Continuar al pago"} <span className="flecha">→</span>
             </button>

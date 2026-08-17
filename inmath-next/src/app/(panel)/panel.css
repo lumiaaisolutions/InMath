@@ -438,6 +438,7 @@ body::before {
 .ap-quien b { display: block; font: 600 .9rem var(--display); color: var(--tinta); }
 .ap-quien span { display: block; font-size: .72rem; color: var(--tinta-3); }
 .ap-cerrar { width: 28px; height: 28px; border-radius: 50%; border: 0; background: var(--crema-2); color: var(--tinta-2); cursor: pointer; display: grid; place-items: center; }
+.ap-cerrar svg { width: 16px; height: 16px; }
 .ap-mensajes { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
 .ap-msg { max-width: 86%; padding: 9px 13px; border-radius: 14px; font-size: .86rem; line-height: 1.42; }
 .ap-msg.bot { align-self: flex-start; background: var(--crema-2); color: var(--tinta); border-bottom-left-radius: 4px; }

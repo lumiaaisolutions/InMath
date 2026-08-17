@@ -57,10 +57,10 @@ export async function POST(req: NextRequest) {
       if (!prospecto.nombre) await prisma.prospectos.update({ where: { id: prospecto.id }, data: { nombre } });
       const r = await agendar(prospecto.id, inicio);
       if ("error" in r) {
-        return NextResponse.json({ respuesta: `Ese horario se acaba de ocupar 😔. ¿Te late alguno de estos? ${[...lista.values()].slice(0, 3).join(" · ")}` });
+        return NextResponse.json({ respuesta: `Ese horario se acaba de ocupar. ¿Te late alguno de estos? ${[...lista.values()].slice(0, 3).join(" · ")}` });
       }
       return NextResponse.json({
-        respuesta: `¡Listo, ${nombre}! 🎉 Tu asesoría gratuita quedó agendada para el ${lista.get(inicio)}. Te llegará la confirmación por WhatsApp. ¡Nos vemos!`,
+        respuesta: `¡Listo, ${nombre}! Tu asesoría gratuita quedó agendada para el ${lista.get(inicio)}. Te llegará la confirmación por WhatsApp. ¡Nos vemos!`,
         agendado: true,
       });
     }

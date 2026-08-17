@@ -58,7 +58,7 @@ export async function procesarMensajeBot(telefono: string, contenido: string, ex
     const max = parseInt(await config("max_slots_ofrecidos", "6"), 10);
     const slots = await slotsDisponibles(null, 7, null, max);
     if (slots.length === 0) {
-      respuestas.push("Por el momento no tengo horarios disponibles esta semana; un asesor te contactará para coordinar. 🙂");
+      respuestas.push("Por el momento no tengo horarios disponibles esta semana; un asesor te contactará para coordinar.");
       accion = "pasar_asesor";
     } else {
       respuestas.push(listarSlots(slots));
@@ -72,7 +72,7 @@ export async function procesarMensajeBot(telefono: string, contenido: string, ex
       const slots = await slotsDisponibles(null, 7, null, parseInt(await config("max_slots_ofrecidos", "6"), 10));
       if (slots.length) { respuestas.push(listarSlots(slots)); extraSalida.slots = slots; }
     } else {
-      respuestas.push(`¡Listo! Tu cita quedó agendada para el ${etiqueta(r.cita.inicio)}. Te llegará la confirmación con el enlace de la videollamada por aquí. 🙂`);
+      respuestas.push(`¡Listo! Tu cita quedó agendada para el ${etiqueta(r.cita.inicio)}. Te llegará la confirmación con el enlace de la videollamada por aquí.`);
       extraSalida.cita = r.cita;
       prospecto = (await prisma.prospectos.findUnique({ where: { id: prospecto.id } }))!;
     }
@@ -80,7 +80,7 @@ export async function procesarMensajeBot(telefono: string, contenido: string, ex
     const resultado = await linkParaProspecto(prospecto);
     if (resultado.ok) {
       const monto = `$${(resultado.pago.monto_centavos / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })} ${resultado.pago.moneda}`;
-      respuestas.push(`Aquí tienes tu enlace de pago seguro por ${monto}:\n${resultado.pago.link_pago}\nEn cuanto se acredite, tu acceso al curso se activa automáticamente. 🙂`);
+      respuestas.push(`Aquí tienes tu enlace de pago seguro por ${monto}:\n${resultado.pago.link_pago}\nEn cuanto se acredite, tu acceso al curso se activa automáticamente.`);
       extraSalida.pago = resultado.pago;
       prospecto = (await prisma.prospectos.findUnique({ where: { id: prospecto.id } }))!;
     } else {

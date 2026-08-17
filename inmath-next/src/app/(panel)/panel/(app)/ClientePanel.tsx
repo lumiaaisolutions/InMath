@@ -237,7 +237,7 @@ export function AgentePanelIA() {
               {libro}
               <div><b>Mathy</b><span>La IA del panel</span></div>
             </div>
-            <button type="button" className="ap-cerrar" aria-label="Cerrar asistente" onClick={() => setAbierto(false)}>✕</button>
+            <button type="button" className="ap-cerrar" aria-label="Cerrar asistente" onClick={() => setAbierto(false)}><IconoPanel n="x" /></button>
           </div>
           <div className="ap-mensajes" ref={lista}>
             {mensajes.map((m, i) => (

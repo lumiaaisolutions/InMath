@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { Icono } from "./Icono";
 
 /** Overlay de carga + nav móvil + motor de scrubbing — port del JS de _comun.php. */
 export function ScriptsSitio() {
@@ -88,7 +89,7 @@ export function ScriptsSitio() {
 export function AgenteIA() {
   const [abierto, setAbierto] = useState(false);
   const [mensajes, setMensajes] = useState<{ rol: "usuario" | "asistente"; texto: string }[]>([
-    { rol: "asistente", texto: "¡Hola! Soy Mathy 👋 ¿Tienes dudas del curso o quieres agendar tu asesoría gratis?" },
+    { rol: "asistente", texto: "¡Hola! Soy Mathy. ¿Tienes dudas del curso o quieres agendar tu asesoría gratis?" },
   ]);
   const [texto, setTexto] = useState(""); const [cargando, setCargando] = useState(false);
   const lista = useRef<HTMLDivElement>(null);
@@ -126,7 +127,7 @@ export function AgenteIA() {
         <div className="agente-panel" role="dialog" aria-label="Mathy">
           <div className="ap-cab">
             <div className="ap-quien"><b>Mathy</b><span>La IA de Cursos InMath</span></div>
-            <button type="button" className="ap-cerrar" aria-label="Cerrar" onClick={() => setAbierto(false)}>✕</button>
+            <button type="button" className="ap-cerrar" aria-label="Cerrar" onClick={() => setAbierto(false)}><Icono n="x" /></button>
           </div>
           <div className="ap-mensajes" ref={lista}>
             {mensajes.map((m, i) => (
@@ -156,7 +157,7 @@ export function CtaForm() {
     setEstado(r.ok ? { ok: d.nombre } : { error: d.error });
   }
   if (estado.ok) return (
-    <div className="form-cta"><div className="aviso-cta">✓ ¡Gracias, {estado.ok}! Te escribimos por WhatsApp en breve.</div></div>
+    <div className="form-cta"><div className="aviso-cta"><Icono n="check" /> ¡Gracias, {estado.ok}! Te escribimos por WhatsApp en breve.</div></div>
   );
   return (
     <form className="form-cta" onSubmit={enviar}>

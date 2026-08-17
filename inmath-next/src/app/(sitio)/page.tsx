@@ -140,7 +140,7 @@ export default async function Landing() {
             </ul>
           </article>
           <article className="plan destacado reveal d1">
-            <span className="plan-badge-oferta">⏳ Oferta por tiempo limitado</span>
+            <span className="plan-badge-oferta"><Icono n="clock" /> Oferta por tiempo limitado</span>
             <div className="plan-cab">
               <span className="plan-tag">Recomendado</span>
               <div className="plan-precio">{precio} <small>MXN</small></div>
