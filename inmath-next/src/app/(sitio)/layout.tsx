@@ -16,14 +16,14 @@ export const metadata: Metadata = {
     siteName: "Cursos InMath",
     title: "Cursos InMath — Aprende en línea a tu ritmo",
     description: "Curso Propedéutico InMath: 100% en línea con asesorías 1 a 1, material incluido y seguimiento de tu avance. Oferta de inscripción por tiempo limitado.",
-    images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "Cursos InMath" }],
+    images: [{ url: "/og-v2.jpg", width: 1200, height: 630, alt: "Cursos InMath" }],
     locale: "es_MX",
   },
   twitter: {
     card: "summary_large_image",
     title: "Cursos InMath — Aprende en línea a tu ritmo",
     description: "Curso Propedéutico InMath 100% en línea con asesorías 1 a 1. Oferta por tiempo limitado.",
-    images: ["/og.jpg"],
+    images: ["/og-v2.jpg"],
   },
 };
 
