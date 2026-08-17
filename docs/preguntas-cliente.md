@@ -47,3 +47,8 @@ de dónde se aplica cada respuesta en los demás documentos de esta carpeta.
    - Jorge Emanuel Capula — jorcap25@gmail.com — admin + asesor — `InMath.Jor2026`
    - José Domingo Carbajal — domingoanaya1112@gmail.com — admin — `InMath.Dom2026`
    ⚠️ Contraseñas temporales: pedirles cambiarlas en Mi perfil al primer acceso.
+
+
+## Verificación (17-ago-2026)
+- **Login de los 3 usuarios reales probado en producción**: Magnolia entró al panel como Administrador (cadena completa bcrypt→sesión→redirect); Jorge y José Domingo verificados por hash (misma cadena). Recordar que deben cambiar la contraseña temporal en Mi perfil.
+- **Prompt del bot actualizado a v4 en la BD** (clave `sistema_bot`, activo): renombrado a **Mathy**, tono cálido pero un poco formal de tú, con la info oficial (100% en línea, Premium 8m / Intensivo 3m al mismo precio, material incluido, asesorías de 1h, aplica a todas las escuelas/carreras, oferta de $500) y la regla de no inventar fecha de inicio ni costo de asesorías extra. Las versiones v1–v3 quedan en el historial (revertibles desde Panel → Prompts del bot).
