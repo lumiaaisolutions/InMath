@@ -15,7 +15,7 @@ const HORAS: string[] = (() => {
   return a;
 })();
 
-type Dias = Record<string, { on: boolean; inicio: string; fin: string }>;
+type Dias = Record<string, { on: boolean; horas: string[] }>;
 
 function sumaDias(iso: string, n: number): string {
   const [y, mo, d] = iso.split("-").map(Number);
@@ -42,15 +42,19 @@ export function ClienteDisponibilidad({ lunes, lunesActual, dias: diasIni, defin
   const next = sumaDias(lunes, 7);
   const hayPrev = prev >= lunesActual;
 
-  const set = (k: string, campo: "on" | "inicio" | "fin", v: boolean | string) =>
-    setDias((d) => ({ ...d, [k]: { ...d[k], [campo]: v } }));
+  const setOn = (k: string, on: boolean) =>
+    setDias((d) => ({ ...d, [k]: { ...d[k], on } }));
+  const agregaHora = (k: string, h: string) =>
+    setDias((d) => ({ ...d, [k]: { ...d[k], horas: [...new Set([...d[k].horas, h])].sort() } }));
+  const quitaHora = (k: string, h: string) =>
+    setDias((d) => ({ ...d, [k]: { ...d[k], horas: d[k].horas.filter((x) => x !== h) } }));
 
   return (
     <>
       <div className="cabecera">
         <div>
           <h1>Disponibilidad</h1>
-          <div className="sub">Define qué días y horas hay citas cada semana. Alimenta el agendado del sitio y a Mathy (la IA), que ofrecerá exactamente estos horarios.</div>
+          <div className="sub">Elige las horas exactas en que das asesorías cada día (no un rango: hora por hora). Alimenta el agendado del sitio y a Mathy (la IA), que ofrecerá exactamente estos horarios.</div>
         </div>
       </div>
 
@@ -72,19 +76,25 @@ export function ClienteDisponibilidad({ lunes, lunesActual, dias: diasIni, defin
             <div key={k} className={`disp-dia${dias[k].on ? " on" : ""}`}>
               <label className="disp-toggle">
                 <input type="checkbox" name={`on_${k}`} value="1" checked={dias[k].on}
-                  onChange={(e) => set(k, "on", e.target.checked)} />
+                  onChange={(e) => setOn(k, e.target.checked)} />
                 <span className="disp-sw" aria-hidden="true" />
                 <b>{nombre}</b>
               </label>
               {dias[k].on ? (
                 <div className="disp-horas">
-                  <span>De</span>
-                  <select name={`inicio_${k}`} value={dias[k].inicio} onChange={(e) => set(k, "inicio", e.target.value)}>
-                    {HORAS.map((h) => <option key={h} value={h}>{h}</option>)}
-                  </select>
-                  <span>a</span>
-                  <select name={`fin_${k}`} value={dias[k].fin} onChange={(e) => set(k, "fin", e.target.value)}>
-                    {HORAS.map((h) => <option key={h} value={h}>{h}</option>)}
+                  <input type="hidden" name={`horas_${k}`} value={dias[k].horas.join(",")} />
+                  <div className="disp-chips">
+                    {dias[k].horas.map((h) => (
+                      <span key={h} className="disp-chip">
+                        {h}
+                        <button type="button" aria-label={`Quitar ${h}`} onClick={() => quitaHora(k, h)}>×</button>
+                      </span>
+                    ))}
+                    {!dias[k].horas.length && <span className="disp-cerrado">Agrega al menos una hora</span>}
+                  </div>
+                  <select value="" onChange={(e) => { if (e.target.value) agregaHora(k, e.target.value); }}>
+                    <option value="">+ Agregar hora</option>
+                    {HORAS.filter((h) => !dias[k].horas.includes(h)).map((h) => <option key={h} value={h}>{h}</option>)}
                   </select>
                 </div>
               ) : (

@@ -193,6 +193,7 @@ model prospectos {
   id                   Int                 @id @default(autoincrement()) @db.UnsignedInt
   telefono_whatsapp    String              @unique(map: "telefono_whatsapp") @db.VarChar(20)
   nombre               String?             @db.VarChar(120)
+  correo               String?             @db.VarChar(190)
   fuente               prospectos_fuente   @default(facebook)
   etapa                prospectos_etapa    @default(prospecto)
   puntaje_calificacion Int?                @db.UnsignedTinyInt

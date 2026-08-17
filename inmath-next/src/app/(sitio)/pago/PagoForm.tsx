@@ -19,17 +19,17 @@ export function PagoForm({ curso, datosPago }: { curso: { nombre: string; precio
       <div className="tarjeta-form">
         {comp.ok ? (
           <>
-            <div className="aviso ok">¡Recibimos tu comprobante! Lo revisamos y en cuanto se confirme te llegan tus datos de acceso por WhatsApp.</div>
+            <div className="aviso ok">¡Recibimos tu comprobante! Lo revisamos y en cuanto se confirme te llegan tus datos de acceso por correo.</div>
             <Link className="boton ghost grande" href="/" style={{ marginTop: 16 }}>← Volver al inicio</Link>
           </>
         ) : ini.pago ? (
           <>
-            <div className="aviso ok">¡Listo, {ini.pago.nombre}! Tu enlace de pago está preparado.</div>
+            <div className="aviso ok">{ini.pago.yaPague ? `¡Gracias, ${ini.pago.nombre}! Sube tu comprobante y validamos tu inscripción.` : `¡Listo, ${ini.pago.nombre}! Tu enlace de pago está preparado.`}</div>
             <div className="resumen-pago" style={{ marginBottom: 18 }}>
               <span>{curso?.nombre}</span>
               <b>${formateaMonto(ini.pago.montoCentavos)} {ini.pago.moneda}</b>
             </div>
-            {ini.pago.link && (
+            {ini.pago.link && !ini.pago.yaPague && (
               <>
                 <a className="boton glow glow-halo bloque grande" href={ini.pago.link}>Pagar de forma segura <span className="flecha">→</span></a>
                 <div className="pago-sep">o paga por transferencia</div>
@@ -51,7 +51,7 @@ export function PagoForm({ curso, datosPago }: { curso: { nombre: string; precio
               </form>
             </div>
             <p className="sub" style={{ fontSize: ".86rem", margin: "16px 0 0" }}>
-              También te enviaremos este enlace por WhatsApp. Si no completas el pago, te lo recordamos — tu lugar queda apartado unas horas.
+              Te enviamos este enlace y todo el seguimiento de tu pago por correo. Si no completas el pago, te lo recordamos — tu lugar queda apartado unas horas.
             </p>
           </>
         ) : (
@@ -63,7 +63,14 @@ export function PagoForm({ curso, datosPago }: { curso: { nombre: string; precio
             </div>
             <div className="campo">
               <label htmlFor="telefono">WhatsApp (10 dígitos)</label>
-              <input type="tel" id="telefono" name="telefono" required inputMode="numeric" placeholder="55 1234 5678" />
+              <input type="tel" id="telefono" name="telefono" required inputMode="numeric" placeholder="55 1234 5678"
+                maxLength={10} pattern="[0-9]{10}" title="Exactamente 10 dígitos, sin espacios"
+                onInput={(e) => { const t = e.currentTarget; t.value = t.value.replace(/\D+/g, "").slice(0, 10); }} />
+            </div>
+            <div className="campo">
+              <label htmlFor="correo">Correo electrónico</label>
+              <input type="email" id="correo" name="correo" required autoComplete="email" placeholder="tu@correo.com" />
+              <small className="ayuda-campo">Ahí te damos el seguimiento de tu pago y tus datos de acceso.</small>
             </div>
             {curso && (
               <div className="resumen-pago resumen-oferta">
@@ -77,6 +84,9 @@ export function PagoForm({ curso, datosPago }: { curso: { nombre: string; precio
             {curso && <div className="oferta-urgencia"><Icono n="clock" /> Precio de oferta: ahorras $500 · <b>por tiempo limitado</b></div>}
             <button type="submit" className="boton glow glow-halo bloque grande" disabled={iniPendiente}>
               {iniPendiente ? "Preparando…" : "Continuar al pago"} <span className="flecha">→</span>
+            </button>
+            <button type="submit" name="ya_pague" value="1" className="boton ghost bloque grande" disabled={iniPendiente} style={{ marginTop: 10 }}>
+              Ya realicé mi pago — subir comprobante
             </button>
           </form>
         )}

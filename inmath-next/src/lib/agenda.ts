@@ -30,20 +30,31 @@ export async function slotsDisponibles(desde: Date | null = null, dias = 7, ases
   for (let dia = new Date(dia0); dia < finRango && slots.length < max; dia = new Date(dia.getTime() + 86400_000)) {
     const dow = diaSemanaN(dia);
     const ov = overrides[isoDia(lunesDe(dia))];
-    let iniStr: string, finStr: string;
+    // Horas puntuales del día: las del override si existe; si no, el rango
+    // base expandido cada duracionMin (comportamiento histórico).
+    let horasDia: Date[];
     if (ov) {
       const dd = ov.dias[String(dow)];
-      if (!dd || !dd.on) continue;
-      iniStr = dd.inicio; finStr = dd.fin;
+      if (!dd || !dd.on || !dd.horas.length) continue;
+      horasDia = dd.horas.map((hhmm) => {
+        const [h, m] = hhmm.split(":").map(Number);
+        const t = new Date(dia); t.setUTCHours(h, m, 0, 0);
+        return t;
+      });
     } else {
       if (!(horario.dias ?? [1, 2, 3, 4, 5]).includes(dow)) continue;
-      iniStr = String(horario.inicio ?? "09:00"); finStr = String(horario.fin ?? "19:00");
+      const [hi, mi] = String(horario.inicio ?? "09:00").split(":").map(Number);
+      const [hf, mf] = String(horario.fin ?? "19:00").split(":").map(Number);
+      const cierre = new Date(dia); cierre.setUTCHours(hf, mf, 0, 0);
+      horasDia = [];
+      for (let t = new Date(dia), _ = t.setUTCHours(hi, mi, 0, 0);
+           t.getTime() + duracionMin * 60_000 <= cierre.getTime();
+           t = new Date(t.getTime() + duracionMin * 60_000)) {
+        horasDia.push(new Date(t));
+      }
     }
-    const [hi, mi] = iniStr.split(":").map(Number);
-    const [hf, mf] = finStr.split(":").map(Number);
-    let t = new Date(dia); t.setUTCHours(hi, mi, 0, 0);
-    const cierre = new Date(dia); cierre.setUTCHours(hf, mf, 0, 0);
-    for (; t.getTime() + duracionMin * 60_000 <= cierre.getTime() && slots.length < max; t = new Date(t.getTime() + duracionMin * 60_000)) {
+    for (const t of horasDia) {
+      if (slots.length >= max) break;
       if (t.getTime() < minimo) continue;
       const fin = new Date(t.getTime() + duracionMin * 60_000);
       const libres = asesores.filter((a) =>

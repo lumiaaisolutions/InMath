@@ -2,7 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requiereAdmin } from "@/lib/panel/sesion";
-import { claveSemana, DOW, type DiaFranja } from "@/lib/disponibilidad";
+import { claveSemana, DOW, type DiaDisp } from "@/lib/disponibilidad";
 import type { Resultado } from "../acciones";
 
 /** Guarda (o crea) la disponibilidad de una semana concreta. */
@@ -11,16 +11,17 @@ export async function guardarDisponibilidadAccion(_prev: Resultado, fd: FormData
   const lunes = String(fd.get("lunes") ?? "");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(lunes)) return { error: "Semana inválida" };
 
-  const dias: Record<string, DiaFranja> = {};
+  const HORA_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+  const dias: Record<string, DiaDisp> = {};
   for (const k of DOW) {
-    dias[k] = {
-      on: fd.get(`on_${k}`) === "1",
-      inicio: String(fd.get(`inicio_${k}`) ?? "09:00"),
-      fin: String(fd.get(`fin_${k}`) ?? "19:00"),
-    };
-    if (dias[k].on && dias[k].inicio >= dias[k].fin) {
-      return { error: "En cada día activo, la hora de inicio debe ser menor que la de fin." };
+    const on = fd.get(`on_${k}`) === "1";
+    const horas = [...new Set(
+      String(fd.get(`horas_${k}`) ?? "").split(",").map((h) => h.trim()).filter((h) => HORA_RE.test(h))
+    )].sort();
+    if (on && !horas.length) {
+      return { error: "En cada día activo elige al menos una hora (o desactiva el día)." };
     }
+    dias[k] = { on, horas };
   }
 
   const clave = claveSemana(lunes);
