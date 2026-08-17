@@ -1965,3 +1965,27 @@ body::before { animation: none !important; }
 /* el icono y la mini-flecha no se degradan (mantienen su color propio) */
 .eyebrow .ic-ey { -webkit-text-fill-color: initial; }
 .eyebrow .mini-arrow { -webkit-text-fill-color: initial; color: var(--azul); }
+
+/* =========================================================================
+   v35 — Más efectos de scroll/parallax (CSS scroll-driven, en el mismo estilo
+   que los reveals existentes). Envuelto en @supports: navegadores sin soporte
+   (iOS Safari) muestran el layout estático y correcto, sin desfases.
+   ========================================================================= */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Parallax suave en las imágenes de sección (viajan al hacer scroll) */
+    .grafica-wrap {
+      animation: parSeccion linear both;
+      animation-timeline: view(); animation-range: entry 0% exit 100%;
+      will-change: transform;
+    }
+    @keyframes parSeccion { from { transform: translateY(38px); } to { transform: translateY(-38px); } }
+
+    /* El carrusel de paquetes sube y aparece al entrar */
+    .pk-carrusel {
+      animation: subeEntra linear both;
+      animation-timeline: view(); animation-range: entry 6% cover 32%;
+    }
+    @keyframes subeEntra { from { transform: translateY(52px); opacity: .3; } to { transform: none; opacity: 1; } }
+  }
+}
