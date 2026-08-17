@@ -1,20 +1,24 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 
 /** Overlay de carga + nav móvil + motor de scrubbing — port del JS de _comun.php. */
 export function ScriptsSitio() {
+  const pathname = usePathname();
+  // Depende de pathname: en la navegación cliente de Next NO dispara `window load`,
+  // así que el overlay se oculta cuando la nueva ruta ya montó (aquí), y el
+  // scrubbing se reinicializa con los .scrub de la página actual.
   useEffect(() => {
     const overlay = document.getElementById("cargaOverlay");
-    const MINIMO = 60; let inicio = Date.now();
-    const ocultar = () => setTimeout(() => overlay?.classList.add("oculta"), Math.max(0, MINIMO - (Date.now() - inicio)));
-    if (document.readyState === "complete") ocultar(); else window.addEventListener("load", ocultar);
+    const MINIMO = 60;
+    const hideTimer = setTimeout(() => overlay?.classList.add("oculta"), MINIMO);
     const clickNav = (e: MouseEvent) => {
       const a = (e.target as HTMLElement).closest("a[href]") as HTMLAnchorElement | null;
       if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
       try {
         const d = new URL(a.href, location.href);
         if (d.origin !== location.origin || (d.pathname === location.pathname && d.search === location.search)) return;
-        overlay?.classList.remove("oculta"); inicio = Date.now();
+        overlay?.classList.remove("oculta");
       } catch { /* no-op */ }
     };
     document.addEventListener("click", clickNav);
@@ -24,6 +28,7 @@ export function ScriptsSitio() {
     const toggle = () => { const ab = nav?.classList.toggle("abierto"); btn?.setAttribute("aria-expanded", ab ? "true" : "false"); };
     btn?.addEventListener("click", toggle);
 
+    let quitarScrub: (() => void) | undefined;
     // Scrubbing (crossfade + Ken Burns anclado al scroll desde la carga)
     if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
       const cajas = Array.from(document.querySelectorAll<HTMLElement>(".scrub"));
@@ -52,12 +57,22 @@ export function ScriptsSitio() {
         marcado = false;
       };
       const alScroll = () => { if (!marcado) { marcado = true; requestAnimationFrame(pintar); } };
+      const alResize = () => { medir(); pintar(); };
       medir(); pintar();
       window.addEventListener("scroll", alScroll, { passive: true });
-      window.addEventListener("resize", () => { medir(); pintar(); });
+      window.addEventListener("resize", alResize);
+      quitarScrub = () => {
+        window.removeEventListener("scroll", alScroll);
+        window.removeEventListener("resize", alResize);
+      };
     }
-    return () => document.removeEventListener("click", clickNav);
-  }, []);
+    return () => {
+      clearTimeout(hideTimer);
+      document.removeEventListener("click", clickNav);
+      btn?.removeEventListener("click", toggle);
+      quitarScrub?.();
+    };
+  }, [pathname]);
   return null;
 }
 

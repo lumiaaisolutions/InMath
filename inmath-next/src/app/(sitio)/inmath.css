@@ -919,6 +919,20 @@ body::before {
    Agente de IA: burbuja flotante (libro-logo con ojos que parpadean en
    estilo 8-bit; el libro en sí NO se mueve) + panel de chat de vidrio.
    ========================================================================= */
+/* Botón flotante de WhatsApp (contacto directo wa.me) — abajo-izquierda para
+   no encimar con la burbuja de Mathy (abajo-derecha). */
+.wa-fab {
+  position: fixed; left: 22px; bottom: 22px; z-index: 60;
+  width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center;
+  background: #25D366; color: #fff; text-decoration: none;
+  box-shadow: 0 14px 32px rgba(37,211,102,.42), inset 0 1px 0 rgba(255,255,255,.4);
+  transition: transform .18s cubic-bezier(.23,1,.32,1), box-shadow .18s ease;
+}
+.wa-fab:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 20px 44px rgba(37,211,102,.5); }
+.wa-fab:active { transform: scale(.96); }
+@media (max-width: 720px) { .wa-fab { left: 14px; bottom: 14px; width: 52px; height: 52px; } }
+@media (prefers-reduced-motion: reduce) { .wa-fab { transition: none; } }
+
 .agente-ia { position: fixed; right: 22px; bottom: 22px; z-index: 60; }
 .agente-btn {
   width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center;
