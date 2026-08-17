@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Icono, Malla } from "@/components/Icono";
 import { CtaForm } from "@/components/ClienteSitio";
+import { Planes } from "@/components/Planes";
 
 export const dynamic = "force-dynamic";
 
@@ -125,50 +126,7 @@ export default async function Landing() {
           <span className="eyebrow"><Icono n="card" cls="ic-ey" /> Planes</span>
           <h2 style={{ font: "700 clamp(1.7rem,3.6vw,2.6rem)/1.08 var(--display)", letterSpacing: "-.025em", marginTop: 14 }}>Elige cómo quieres empezar.</h2>
         </div>
-        <div className="precios-grid">
-          <article className="plan gratis reveal">
-            <div className="plan-cab">
-              <span className="plan-tag">Gratis</span>
-              <div className="plan-precio">$0 <small>/ sin costo</small></div>
-            </div>
-            <p className="plan-sub">Conoce el método antes de decidir.</p>
-            <Link className="boton grande plan-cta" href="/agenda">Empezar gratis</Link>
-            <ul>
-              <li><Icono n="check" /> Asesoría de diagnóstico por videollamada</li>
-              <li><Icono n="check" /> Acceso a la primera clase de cada módulo</li>
-              <li><Icono n="check" /> Plan de estudio personalizado</li>
-            </ul>
-          </article>
-          <article className="plan destacado reveal d1">
-            <span className="plan-badge-oferta"><Icono n="clock" /> Oferta por tiempo limitado</span>
-            <div className="plan-cab">
-              <span className="plan-tag">Recomendado</span>
-              <div className="plan-precio">{precio} <small>MXN</small></div>
-              <span className="plan-oferta"><s>$4,500</s> · ahorras $500 si te inscribes hoy</span>
-            </div>
-            <p className="plan-sub">{curso?.nombre ?? "Curso completo"} · pago único</p>
-            <Link className="boton grande plan-cta" href="/pago">Inscribirme ahora</Link>
-            <ul>
-              <li><Icono n="check" /> Acceso completo por {semanas} semanas</li>
-              <li><Icono n="check" /> Todas las clases y materiales descargables</li>
-              <li><Icono n="check" /> Asesorías por videollamada incluidas</li>
-              <li><Icono n="check" /> Reporte de avance cada semana por WhatsApp</li>
-            </ul>
-          </article>
-          <article className="plan custom reveal d2">
-            <div className="plan-cab">
-              <span className="plan-tag">Personalizado</span>
-              <div className="plan-precio" style={{ fontSize: "2rem" }}>Cotización</div>
-            </div>
-            <p className="plan-sub">Para equipos, grupos o un plan hecho a tu medida.</p>
-            <Link className="boton grande plan-cta" href="/agenda">Solicitar cotización</Link>
-            <ul>
-              <li><Icono n="check" /> Contenido y ritmo ajustados a tu caso</li>
-              <li><Icono n="check" /> Más sesiones de asesoría incluidas</li>
-              <li><Icono n="check" /> Un asesor te cotiza por WhatsApp</li>
-            </ul>
-          </article>
-        </div>
+        <Planes precio={precio} semanas={semanas} nombre={curso?.nombre ?? ""} />
       </section>
 
       <section style={{ paddingTop: 0 }}>

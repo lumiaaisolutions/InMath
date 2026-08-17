@@ -1862,3 +1862,87 @@ body::before { animation: none !important; }
 .aviso-cta svg { width: 17px; height: 17px; vertical-align: -3px; margin-right: 4px; color: var(--menta, #22C1A6); }
 .oferta-urgencia svg { width: 15px; height: 15px; vertical-align: -2px; margin-right: 5px; }
 .plan-badge-oferta svg { width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px; }
+
+/* =========================================================================
+   v33 — PAQUETES estilo carrusel: cabecera con foto + velo de color + ola,
+   precio arriba, y al seleccionar una tarjeta pasa al frente sobre las demás.
+   Indicador de descuento estático (sin pulso).
+   ========================================================================= */
+.pk-carrusel {
+  display: flex; justify-content: center; align-items: center;
+  padding: 40px 0 24px; perspective: 1500px; max-width: 1040px; margin: 0 auto;
+}
+.pk {
+  --c1: #6B9FFF; --c2: #7C5CFF;
+  width: 300px; flex: 0 0 auto; margin: 0 -12px;
+  background: #fff; border-radius: 22px; overflow: hidden;
+  box-shadow: 0 18px 40px -18px rgba(18,31,55,.35);
+  cursor: pointer; transform: scale(.9); z-index: 1;
+  transition: transform .5s cubic-bezier(.22,1,.31,1), box-shadow .5s ease, filter .5s ease;
+  display: flex; flex-direction: column;
+}
+.pk:not(.activo) { filter: saturate(.9) brightness(.99); }
+.pk:not(.activo):hover { transform: scale(.93); }
+.pk.activo {
+  transform: scale(1.06) translateY(-8px); z-index: 5;
+  box-shadow: 0 40px 72px -22px rgba(18,31,55,.5);
+}
+.pk-gratis    { --c1: #3ED9B0; --c2: #17A2B8; }
+.pk-destacado { --c1: #6B9FFF; --c2: #7C5CFF; }
+.pk-custom    { --c1: #FF8FB0; --c2: #E5568A; }
+
+.pk-top { position: relative; height: 178px; overflow: hidden; }
+.pk-foto { position: absolute; inset: 0; background-size: cover; background-position: center; transform: scale(1.05); transition: transform .6s ease; }
+.pk.activo .pk-foto { transform: scale(1.12); }
+.pk-top::before {
+  content: ""; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(150deg, color-mix(in srgb, var(--c1) 90%, transparent), color-mix(in srgb, var(--c2) 94%, transparent));
+  mix-blend-mode: multiply;
+}
+.pk-top::after {
+  content: ""; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(180deg, rgba(15,15,35,.06), rgba(15,15,35,.34));
+}
+.pk-top-in { position: relative; z-index: 2; padding: 18px 22px 34px; color: #fff; height: 100%; display: flex; flex-direction: column; }
+.pk-etiqueta {
+  align-self: flex-start; font: 700 .64rem/1 var(--mono); letter-spacing: .13em; text-transform: uppercase;
+  background: rgba(255,255,255,.22); border: 1px solid rgba(255,255,255,.42);
+  padding: 5px 10px; border-radius: 999px; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+}
+.pk-descuento {
+  align-self: flex-start; margin-top: 9px; display: inline-flex; align-items: center; gap: 5px;
+  font: 700 .72rem/1 var(--cuerpo); color: #3a1d00;
+  background: linear-gradient(120deg, #FFD86B, #F4A62A); padding: 5px 11px; border-radius: 999px;
+  box-shadow: 0 5px 14px rgba(244,166,42,.5);
+}
+.pk-descuento svg { width: 13px; height: 13px; }
+.pk-precio { margin-top: auto; display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; }
+.pk-precio b { font: 800 2.5rem/1 var(--display); letter-spacing: -.03em; text-shadow: 0 2px 12px rgba(0,0,0,.22); }
+.pk-precio small { font: 600 .82rem/1 var(--cuerpo); opacity: .92; }
+.pk-precio s { flex-basis: 100%; font: 600 .82rem/1 var(--cuerpo); opacity: .72; margin-bottom: -3px; }
+.pk-ola { position: absolute; left: 0; right: 0; bottom: -1px; z-index: 3; width: 100%; height: 40px; display: block; }
+
+.pk-body { padding: 20px 22px 24px; display: flex; flex-direction: column; flex: 1; }
+.pk-nombre { font: 800 1.15rem/1.1 var(--display); letter-spacing: -.02em; color: color-mix(in srgb, var(--c2) 78%, #10131c); }
+.pk-sub { color: #565D72; font-size: .86rem; margin: 5px 0 16px; }
+.pk-body ul { list-style: none; display: grid; gap: 10px; margin: 0 0 20px; padding: 0; flex: 1; }
+.pk-body li { position: relative; padding-left: 26px; font-size: .86rem; color: #2a3350; }
+.pk-body li svg { position: absolute; left: 0; top: 1px; width: 16px; height: 16px; color: var(--c2); }
+.pk-cta {
+  display: block; text-align: center; text-decoration: none; padding: 13px 18px; border-radius: 13px;
+  font: 700 .92rem var(--cuerpo); color: #fff;
+  background: linear-gradient(120deg, var(--c1), var(--c2));
+  box-shadow: 0 12px 26px -8px color-mix(in srgb, var(--c2) 70%, transparent);
+  transition: transform .18s ease, box-shadow .2s ease, filter .2s ease;
+}
+.pk-cta:hover { transform: translateY(-2px); filter: brightness(1.05); }
+.pk:not(.activo) .pk-cta { background: #EEF1F9; color: #4a5675; box-shadow: none; }
+.pk:not(.activo) .pk-cta:hover { background: #E6EBF6; }
+.pk:focus-visible { outline: 3px solid color-mix(in srgb, var(--c2) 55%, transparent); outline-offset: 3px; }
+
+@media (max-width: 900px) {
+  .pk-carrusel { flex-direction: column; align-items: center; gap: 20px; perspective: none; padding: 20px 0; }
+  .pk { width: 100%; max-width: 360px; margin: 0; transform: none !important; filter: none !important; }
+  .pk.activo { box-shadow: 0 24px 50px -20px rgba(18,31,55,.42); }
+}
+@media (prefers-reduced-motion: reduce) { .pk, .pk-foto { transition: none; } }
