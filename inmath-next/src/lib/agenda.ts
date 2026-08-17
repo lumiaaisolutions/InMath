@@ -47,9 +47,10 @@ export async function slotsDisponibles(desde: Date | null = null, dias = 7, ases
       const [hf, mf] = String(horario.fin ?? "19:00").split(":").map(Number);
       const cierre = new Date(dia); cierre.setUTCHours(hf, mf, 0, 0);
       horasDia = [];
-      for (let t = new Date(dia), _ = t.setUTCHours(hi, mi, 0, 0);
-           t.getTime() + duracionMin * 60_000 <= cierre.getTime();
-           t = new Date(t.getTime() + duracionMin * 60_000)) {
+      // OJO: no usar `for (let t = new Date(dia), _ = t.setUTCHours(...))` — el
+      // minificador de Turbopack lo compila mal (llama setUTCHours sobre otra var).
+      const apertura = new Date(dia); apertura.setUTCHours(hi, mi, 0, 0);
+      for (let t = apertura; t.getTime() + duracionMin * 60_000 <= cierre.getTime(); t = new Date(t.getTime() + duracionMin * 60_000)) {
         horasDia.push(new Date(t));
       }
     }
