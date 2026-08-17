@@ -111,7 +111,7 @@ export function PipelineTablero({ columnas: inicial, asesores, filtroAsesor }: {
                     <b>{p.nombre ?? "Sin nombre"}</b>
                     <span className="tel">{p.telefono}</span>
                     <span className="meta">
-                      {p.puntaje !== null && <span className="gaje grad">◆ {p.puntaje}</span>}
+                      {p.puntaje !== null && <span className="gaje grad">{p.puntaje}</span>}
                       {p.asesor ? <span className="gaje neutro">{p.asesor}</span> : <span className="gaje alerta">Sin asesor</span>}
                       {p.ultimoMensaje && <span className="gaje neutro" title="Último mensaje">{p.ultimoMensaje}</span>}
                     </span>

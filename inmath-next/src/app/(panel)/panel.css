@@ -1623,3 +1623,63 @@ body::before { animation: none !important; }
 
 /* Tarjetas del panel: un poco más de vida (sombra suave, borde) */
 .cabecera-hero, .tarjeta { border-radius: 20px; }
+
+/* =========================================================================
+   v34 — PANEL "elevado": ambiente de marca, profundidad y estados vivos.
+   Capa aditiva; no reescribe las superficies existentes. Sin emojis/glyphs.
+   ========================================================================= */
+
+/* 1) Ambiente del canvas: manchas de marca muy suaves detrás del contenido,
+      para que las tarjetas floten y no se vea plano. */
+.contenido { isolation: isolate; }
+.contenido::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(44% 40% at 94% -3%, rgba(107,159,255,.16), transparent 72%),
+    radial-gradient(40% 40% at 1% 103%, rgba(62,201,166,.13), transparent 72%),
+    radial-gradient(32% 34% at 74% 108%, rgba(255,122,156,.09), transparent 74%);
+}
+.contenido::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* 2) Profundidad + reacción al puntero en tarjetas interactivas */
+.tarjeta, .pipeline .columna {
+  box-shadow: 0 2px 5px rgba(27,47,82,.05), 0 20px 44px -20px rgba(27,47,82,.24);
+}
+.tarjeta.us-mini { cursor: pointer; transition: transform var(--transicion), box-shadow var(--transicion); }
+.tarjeta.us-mini:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 9px rgba(27,47,82,.07), 0 26px 50px -18px rgba(27,47,82,.3);
+}
+.tarjeta-prospecto:hover {
+  transform: translateY(-2px); box-shadow: 0 12px 26px rgba(27,47,82,.15);
+}
+@media (hover: none) { .tarjeta.us-mini:hover, .tarjeta-prospecto:hover { transform: none; } }
+
+/* 3) Kanban con presencia aunque esté vacío + estado vacío invitador */
+.pipeline .columna { min-height: 360px; display: flex; flex-direction: column; }
+.pipeline .columna > *:not(.columna-cab) { flex: 1 0 auto; }
+.pipeline .vacio {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; min-height: 220px; padding: 22px 12px;
+  background: color-mix(in srgb, var(--col) 7%, #fff);
+  border-color: color-mix(in srgb, var(--col) 38%, transparent);
+}
+.pipeline .vacio::before {
+  content: ""; width: 34px; height: 34px; display: block; opacity: .55;
+  background: no-repeat center/contain
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 24 24' fill='none' stroke='%236E7488' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M19 8v6M22 11h-6'/%3E%3C/svg%3E");
+}
+
+/* 4) Badge de puntaje del prospecto: punto de color en vez del glyph ◆ */
+.gaje.grad { gap: 6px; }
+.gaje.grad::before {
+  content: ""; width: 7px; height: 7px; border-radius: 2px; transform: rotate(45deg);
+  background: var(--pino); display: inline-block;
+}
+
+/* 5) Filtros y navegación con reacción más viva al puntero */
+.us-filtro { transition: transform var(--transicion), background var(--transicion), color var(--transicion); }
+.us-filtro:hover:not(.activo) { background: var(--crema-2); transform: translateY(-1px); }
