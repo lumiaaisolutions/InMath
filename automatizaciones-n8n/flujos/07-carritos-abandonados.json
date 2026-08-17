@@ -12,9 +12,9 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.BACKEND_URL }}/api/pagos/abandonados",
+        "url": "={{ $env.INMATH_BACKEND_URL }}/api/pagos/abandonados",
         "sendHeaders": true,
-        "headerParameters": { "parameters": [{ "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" }] }
+        "headerParameters": { "parameters": [{ "name": "X-API-Key", "value": "={{ $env.INMATH_BACKEND_API_KEY }}" }] }
       },
       "id": "abandonados",
       "name": "Pagos abandonados",
@@ -25,10 +25,10 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://graph.facebook.com/v21.0/{{ $env.WHATSAPP_PHONE_ID }}/messages",
+        "url": "=https://graph.facebook.com/v21.0/{{ $env.INMATH_WHATSAPP_PHONE_ID }}/messages",
         "sendHeaders": true,
         "headerParameters": { "parameters": [
-          { "name": "Authorization", "value": "=Bearer {{ $env.WHATSAPP_TOKEN }}" },
+          { "name": "Authorization", "value": "=Bearer {{ $env.INMATH_WHATSAPP_TOKEN }}" },
           { "name": "Content-Type", "value": "application/json" }
         ]},
         "sendBody": true,
@@ -45,10 +45,10 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{ $env.BACKEND_URL }}/api/pagos/{{ $json.id }}",
+        "url": "={{ $env.INMATH_BACKEND_URL }}/api/pagos/{{ $json.id }}",
         "sendHeaders": true,
         "headerParameters": { "parameters": [
-          { "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" },
+          { "name": "X-API-Key", "value": "={{ $env.INMATH_BACKEND_API_KEY }}" },
           { "name": "Content-Type", "value": "application/json" }
         ]},
         "sendBody": true,

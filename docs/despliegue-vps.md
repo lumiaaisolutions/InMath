@@ -74,6 +74,42 @@ curl -s -H "X-API-Key: $(grep ^API_KEY /var/www/inmath/backend/.env | cut -d= -f
 #    borrar /var/www/inmath/{public_html,backend}. El repo conserva la historia.
 ```
 
+## ⚠️ MySQL + Prisma: conectar por SOCKET (aprendido en el deploy 17-ago)
+
+El motor Rust de Prisma **no completa la autenticación `caching_sha2_password`
+de MySQL 8 sobre TCP sin SSL** (falla con `Unknown authentication plugin
+'sha256_password'`; el PHP con mysqlnd sí la hace). Solución aplicada en prod:
+- `DATABASE_URL` conecta por socket:
+  `mysql://inmath:PASS@localhost/inmath?socket=/var/run/mysqld/mysqld.sock`
+- y el usuario `inmath` se cambió a `mysql_native_password`
+  (`ALTER USER 'inmath'@'localhost' IDENTIFIED WITH mysql_native_password BY '…'`).
+  El PHP (PDO) sigue conectando igual.
+
+## ⚠️ pm2: usar delete + start al cambiar env, no restart
+
+`pm2 restart --update-env` no siempre recarga el `.env`; para que un cambio de
+`.env` tome efecto de forma fiable:
+```bash
+pm2 delete inmath-web
+cd /var/www/inmath/web/.next/standalone && PORT=3010 pm2 start server.js --name inmath-web --update-env && pm2 save
+```
+
+## ⚠️ rsync incremental: NO pisar src/generated (motor Prisma Linux)
+
+Al re-desplegar con `rsync src/ …:/…/web/src/`, el patrón de exclusión relativo
+al root de transferencia es `generated`, **no** `src/generated` — si no, se pisa
+el cliente Prisma Linux del VPS con el de Mac (darwin) y el build queda roto
+(`could not locate the Query Engine for runtime debian-openssl-3.0.x`). Tras
+cualquier rsync que toque `src/`, correr `npx prisma generate` en el VPS antes
+del build. Comando correcto:
+```bash
+rsync -az -e "ssh -p 8080" --exclude generated src/ deploy@2.24.123.93:/var/www/inmath/web/src/
+ssh -p 8080 deploy@2.24.123.93 "cd /var/www/inmath/web && npx prisma generate && npm run build && \
+  rm -rf .next/standalone/.next/static .next/standalone/public && \
+  cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public && cp .env .next/standalone/.env"
+# luego el delete+start de pm2 de arriba
+```
+
 ## Nota sobre MySQL desde el contenedor
 
 Si MySQL del VPS solo escucha en localhost, la opción simple es correr el

@@ -25,6 +25,7 @@ archivo: cada tema vive en su propio `.md`.
 | [`migracion-vps-exposicion-api.md`](migracion-vps-exposicion-api.md) | Migración al VPS: por qué `backend/public/index.php` no quedó expuesto por HTTP y si hace falta |
 | [`despliegue-vps.md`](despliegue-vps.md) | **F4 de la migración Next.js**: mapa real de producción (VPS/Cloudflare/BD) y procedimiento de deploy/corte/retiro del PHP |
 | [`corte-n8n.md`](corte-n8n.md) | Corte de n8n al backend Next (aplica solo si n8n se activa; hoy nada lo consume) |
+| [`n8n-conexion.md`](n8n-conexion.md) | **n8n conectado a la API del Next** (17-ago): env `INMATH_*`, 5 workflows importados y qué falta para activar cada uno |
 
 ## Documentación por módulo (en cada carpeta)
 

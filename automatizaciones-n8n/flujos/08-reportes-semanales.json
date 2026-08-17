@@ -12,9 +12,9 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.BACKEND_URL }}/api/reportes/generar",
+        "url": "={{ $env.INMATH_BACKEND_URL }}/api/reportes/generar",
         "sendHeaders": true,
-        "headerParameters": { "parameters": [{ "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" }] }
+        "headerParameters": { "parameters": [{ "name": "X-API-Key", "value": "={{ $env.INMATH_BACKEND_API_KEY }}" }] }
       },
       "id": "generar",
       "name": "Generar PDFs de la semana",
@@ -25,9 +25,9 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.BACKEND_URL }}/api/reportes/pendientes-envio",
+        "url": "={{ $env.INMATH_BACKEND_URL }}/api/reportes/pendientes-envio",
         "sendHeaders": true,
-        "headerParameters": { "parameters": [{ "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" }] }
+        "headerParameters": { "parameters": [{ "name": "X-API-Key", "value": "={{ $env.INMATH_BACKEND_API_KEY }}" }] }
       },
       "id": "pendientes",
       "name": "Reportes pendientes de envío",
@@ -38,9 +38,9 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.BACKEND_URL }}/api/reportes/{{ $json.id }}/archivo",
+        "url": "={{ $env.INMATH_BACKEND_URL }}/api/reportes/{{ $json.id }}/archivo",
         "sendHeaders": true,
-        "headerParameters": { "parameters": [{ "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" }] },
+        "headerParameters": { "parameters": [{ "name": "X-API-Key", "value": "={{ $env.INMATH_BACKEND_API_KEY }}" }] },
         "options": { "response": { "response": { "responseFormat": "file" } } }
       },
       "id": "descargar",
@@ -64,15 +64,15 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://graph.facebook.com/v21.0/{{ $env.WHATSAPP_PHONE_ID }}/messages",
+        "url": "=https://graph.facebook.com/v21.0/{{ $env.INMATH_WHATSAPP_PHONE_ID }}/messages",
         "sendHeaders": true,
         "headerParameters": { "parameters": [
-          { "name": "Authorization", "value": "=Bearer {{ $env.WHATSAPP_TOKEN }}" },
+          { "name": "Authorization", "value": "=Bearer {{ $env.INMATH_WHATSAPP_TOKEN }}" },
           { "name": "Content-Type", "value": "application/json" }
         ]},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.telefono, type: 'template', template: { name: 'reporte_semanal', language: { code: 'es_MX' }, components: [{ type: 'header', parameters: [{ type: 'document', document: { link: $env.BACKEND_URL + '/api/reportes/' + $json.id + '/archivo', filename: 'reporte-avance.pdf' } }] }, { type: 'body', parameters: [{ type: 'text', text: $json.alumno_nombre }] }] } }) }}"
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.telefono, type: 'template', template: { name: 'reporte_semanal', language: { code: 'es_MX' }, components: [{ type: 'header', parameters: [{ type: 'document', document: { link: $env.INMATH_BACKEND_URL + '/api/reportes/' + $json.id + '/archivo', filename: 'reporte-avance.pdf' } }] }, { type: 'body', parameters: [{ type: 'text', text: $json.alumno_nombre }] }] } }) }}"
       },
       "id": "enviar-wa",
       "name": "Enviar por WhatsApp (plantilla reporte_semanal)",
@@ -98,10 +98,10 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{ $env.BACKEND_URL }}/api/reportes/{{ $json.id }}",
+        "url": "={{ $env.INMATH_BACKEND_URL }}/api/reportes/{{ $json.id }}",
         "sendHeaders": true,
         "headerParameters": { "parameters": [
-          { "name": "X-API-Key", "value": "={{ $env.BACKEND_API_KEY }}" },
+          { "name": "X-API-Key", "value": "={{ $env.INMATH_BACKEND_API_KEY }}" },
           { "name": "Content-Type", "value": "application/json" }
         ]},
         "sendBody": true,

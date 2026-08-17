@@ -169,3 +169,22 @@ smoke test lee usuarios/cursos reales).
   seguridad; su retiro definitivo queda para después de unos días estables.
 - Pendientes del dueño: credenciales MercadoPago + texto `datos_pago` (sigue en
   "PENDIENTE"); el VPS tiene auto-renovación activa (no vence solo el 23-ago).
+
+### Post-lanzamiento (17-ago) — fixes, config del cliente en PROD y n8n
+- **Bug de navegación (blur pegado)** corregido: el overlay de carga se mostraba
+  al hacer clic en un enlace interno pero solo se ocultaba en `window load`, que
+  no dispara en la navegación cliente de Next → quedaba el blur hasta recargar.
+  `ScriptsSitio` ahora oculta el overlay al cambiar `usePathname`.
+- **Botón flotante de WhatsApp** (wa.me con `WHATSAPP_NUMERO=5217224709235`).
+- **Config del cliente aplicada a PRODUCCIÓN** (estaba solo en el dev local): 2
+  cursos ($4,000, Premium 8m / Intensivo 3m), horario 8–21h todos los días,
+  `datos_pago` con OXXO/Mercado Pago, y 3 usuarios reales (Magnolia y Jorge
+  admin+asesor, José Domingo admin; seeds admin@/asesor1-3 desactivados). Ver
+  `preguntas-cliente.md` y `credenciales.md`.
+- **Fix de conexión MySQL** (crítico): Prisma sobre TCP no negocia
+  `caching_sha2_password`; se cambió a socket + `mysql_native_password`. Detalle
+  y otras trampas del redeploy (pm2 delete+start, rsync src/generated) en
+  `despliegue-vps.md`.
+- **n8n conectado** a la API del Next (env `INMATH_*`, reachability probada, 5
+  workflows importados inactivos). Activación por flujo bloqueada por WhatsApp
+  Meta / Google OAuth / SMTP. Ver `n8n-conexion.md`.
