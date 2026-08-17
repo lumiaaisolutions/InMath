@@ -10,18 +10,24 @@ export function ScriptsSitio() {
   // scrubbing se reinicializa con los .scrub de la página actual.
   useEffect(() => {
     const overlay = document.getElementById("cargaOverlay");
-    const MINIMO = 60;
-    const hideTimer = setTimeout(() => overlay?.classList.add("oculta"), MINIMO);
+    const MINIMO = 600, SAFETY = 1500;
+    let safety: ReturnType<typeof setTimeout> | undefined;
+    const ocultar = () => overlay?.classList.add("oculta");
+    const mostrar = () => { overlay?.classList.remove("oculta"); if (safety) clearTimeout(safety); safety = setTimeout(ocultar, SAFETY); };
+    // Al montar/cambiar de ruta (incluye reload): ocultar tras un mínimo perceptible.
+    const hideTimer = setTimeout(ocultar, MINIMO);
     const clickNav = (e: MouseEvent) => {
       const a = (e.target as HTMLElement).closest("a[href]") as HTMLAnchorElement | null;
       if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
       try {
         const d = new URL(a.href, location.href);
         if (d.origin !== location.origin || (d.pathname === location.pathname && d.search === location.search)) return;
-        overlay?.classList.remove("oculta");
+        mostrar();
       } catch { /* no-op */ }
     };
+    const onSubmit = (e: Event) => { if ((e.target as HTMLElement)?.tagName === "FORM") mostrar(); };
     document.addEventListener("click", clickNav);
+    document.addEventListener("submit", onSubmit);
 
     // Nav móvil
     const btn = document.getElementById("navToggle"), nav = document.getElementById("navPrincipal");
@@ -68,7 +74,9 @@ export function ScriptsSitio() {
     }
     return () => {
       clearTimeout(hideTimer);
+      if (safety) clearTimeout(safety);
       document.removeEventListener("click", clickNav);
+      document.removeEventListener("submit", onSubmit);
       btn?.removeEventListener("click", toggle);
       quitarScrub?.();
     };

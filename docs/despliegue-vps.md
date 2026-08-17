@@ -74,16 +74,30 @@ curl -s -H "X-API-Key: $(grep ^API_KEY /var/www/inmath/backend/.env | cut -d= -f
 #    borrar /var/www/inmath/{public_html,backend}. El repo conserva la historia.
 ```
 
-## ⚠️ MySQL + Prisma: conectar por SOCKET (aprendido en el deploy 17-ago)
+## ⚠️ MySQL + Prisma: cuenta mysql_native_password por TCP (deploy 17-ago)
 
-El motor Rust de Prisma **no completa la autenticación `caching_sha2_password`
-de MySQL 8 sobre TCP sin SSL** (falla con `Unknown authentication plugin
-'sha256_password'`; el PHP con mysqlnd sí la hace). Solución aplicada en prod:
-- `DATABASE_URL` conecta por socket:
-  `mysql://inmath:PASS@localhost/inmath?socket=/var/run/mysqld/mysqld.sock`
-- y el usuario `inmath` se cambió a `mysql_native_password`
-  (`ALTER USER 'inmath'@'localhost' IDENTIFIED WITH mysql_native_password BY '…'`).
-  El PHP (PDO) sigue conectando igual.
+El motor Rust de Prisma **no negocia de forma fiable `caching_sha2_password` de
+MySQL 8** — falla intermitentemente con `Unknown authentication plugin
+'sha256_password'` cuando el caché de contraseña del server está frío (funciona
+mientras el PHP lo mantiene caliente, y se cae después). El socket NO lo
+resuelve. Solución robusta y definitiva:
+- Crear una cuenta dedicada con native_password que el TCP alcance directo:
+  `CREATE USER 'inmath'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY '…';`
+  `GRANT ALL ON inmath.* TO 'inmath'@'127.0.0.1'; FLUSH PRIVILEGES;`
+  (y el `@localhost` también se pasó a native, para el PHP y el socket).
+- `DATABASE_URL` por TCP: `mysql://inmath:PASS@127.0.0.1:3306/inmath`.
+El PHP (PDO/mysqlnd) sigue conectando igual con cualquiera de los dos plugins.
+
+## ⚠️ Modales/overlays con position:fixed → usar PORTAL a <body>
+
+Los modales del panel (Agregar usuario/alumno/cita) salían como una **tira
+arriba** en vez de centrados: un ancestro con `transform`/`filter`/
+`backdrop-filter` (las tarjetas `.cabecera` del panel lo tienen) crea un
+containing block y el `position:fixed` se ancla a ESE ancestro, no al viewport.
+Regla: **todo overlay full-screen (`.us-velo`, `.confirmar-velo`, toasts) se
+renderiza con `createPortal(node, document.body)`** (helper `EnBody` en
+ClientePanel.tsx) para que el fixed sea relativo al viewport. Nunca dejar un
+modal fixed anidado dentro de una tarjeta con glass/transform.
 
 ## ⚠️ pm2: usar delete + start al cambiar env, no restart
 

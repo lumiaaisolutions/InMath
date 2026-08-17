@@ -90,18 +90,20 @@ function EditarUsuarioModal({ u, yoId, abierto, onCerrar }: {
               </select>
               {esYo && <input type="hidden" name="rol" value="admin" />}
             </label>
-            <label className="pl-campo">Contraseña nueva <small>(opcional)</small>
-              <input type="password" name="password" minLength={8} autoComplete="new-password" placeholder="Sin cambio" />
+            <label className="pl-campo" style={{ gridColumn: "1 / -1" }}>Contraseña nueva <small>(opcional)</small>
+              <input type="password" name="password" minLength={8} autoComplete="new-password" placeholder="Déjalo vacío para no cambiarla" />
             </label>
-            <label className="pl-campo" style={{ alignContent: "end" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <input type="checkbox" name="es_asesor" defaultChecked={u.esAsesor} /> Atiende citas y prospectos
-              </span>
-              <span style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-                <input type="checkbox" name="activo" defaultChecked={u.activo} disabled={esYo} /> Acceso activo
-              </span>
-              {esYo && <input type="hidden" name="activo" value="1" />}
+          </div>
+          <div className="us-toggles">
+            <label className="us-toggle">
+              <input type="checkbox" name="es_asesor" defaultChecked={u.esAsesor} />
+              <span className="us-toggle-tx"><b>Atiende citas y prospectos</b><i>Entra al reparto de prospectos y al calendario de asesores</i></span>
             </label>
+            <label className="us-toggle">
+              <input type="checkbox" name="activo" defaultChecked={u.activo} disabled={esYo} />
+              <span className="us-toggle-tx"><b>Acceso activo</b><i>{esYo ? "No puedes desactivar tu propia cuenta" : "Puede iniciar sesión en el panel"}</i></span>
+            </label>
+            {esYo && <input type="hidden" name="activo" value="1" />}
           </div>
           <div className="us-modulos">
             <span className="us-etiqueta">Módulos permitidos{u.rol === "admin" ? " (los administradores ven todo)" : ""}</span>
@@ -115,24 +117,22 @@ function EditarUsuarioModal({ u, yoId, abierto, onCerrar }: {
             </div>
           </div>
           <div className="us-pie">
-            <button className="boton primario" disabled={pendiente}>{pendiente ? "Guardando…" : "Guardar cambios"}</button>
+            {!esYo && (
+              <button type="button" className="boton peligro" disabled={borrando} onClick={() => setConfirmar(true)}>Eliminar</button>
+            )}
+            <button className="boton primario" style={{ marginLeft: "auto" }} disabled={pendiente}>{pendiente ? "Guardando…" : "Guardar cambios"}</button>
           </div>
         </form>
         {!esYo && (
-          <>
-            <div className="us-eliminar-form">
-              <button className="boton peligro" disabled={borrando} onClick={() => setConfirmar(true)}>Eliminar usuario</button>
-            </div>
-            <ConfirmarDialogo
-              abierto={confirmar}
-              texto="El usuario perderá el acceso al panel. Sus registros históricos se conservan."
-              onNo={() => setConfirmar(false)}
-              onSi={() => {
-                setConfirmar(false);
-                startBorrar(async () => { toast(await usuarioEliminarAccion(u.id)); onCerrar(); });
-              }}
-            />
-          </>
+          <ConfirmarDialogo
+            abierto={confirmar}
+            texto="El usuario perderá el acceso al panel. Sus registros históricos se conservan."
+            onNo={() => setConfirmar(false)}
+            onSi={() => {
+              setConfirmar(false);
+              startBorrar(async () => { toast(await usuarioEliminarAccion(u.id)); onCerrar(); });
+            }}
+          />
         )}
       </div>
     </Velo>

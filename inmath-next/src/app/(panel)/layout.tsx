@@ -3,7 +3,6 @@ import "./panel.css";
 
 export const metadata: Metadata = {
   title: "Panel — Inmath CRM",
-  icons: { icon: "/img/inmath.svg" },
 };
 
 export default function PanelRootLayout({ children }: { children: React.ReactNode }) {

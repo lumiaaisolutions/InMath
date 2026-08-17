@@ -1,9 +1,24 @@
 "use client";
 import { useEffect, useRef, useState, createContext, useContext } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { IconoPanel } from "@/components/IconoPanel";
 import { logoutAccion, agentePanelAccion } from "./acciones";
+
+/**
+ * Renderiza en <body> con portal. CRÍTICO para modales/overlays con
+ * position:fixed: si un ancestro tiene transform/filter/backdrop-filter (las
+ * tarjetas .cabecera del panel lo tienen), el fixed se ancla a ESE ancestro y
+ * el modal sale como tira arriba en vez de centrado en el viewport. El portal
+ * lo saca a <body> y el fixed vuelve a ser relativo al viewport.
+ */
+function EnBody({ children }: { children: React.ReactNode }) {
+  const [montado, setMontado] = useState(false);
+  useEffect(() => { setMontado(true); }, []);
+  if (!montado) return null;
+  return createPortal(children, document.body);
+}
 
 /** Nav del sidebar con estado activo por ruta (como _layout-inicio.php). */
 export function NavPanel({ items }: { items: { href: string; texto: string; ic: string }[] }) {
@@ -52,15 +67,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastCtx.Provider value={setToast}>
       {children}
       {toast && (
-        <div className={`toast ${toast.tipo}${saliendo ? " saliendo" : ""}`} role="status">
-          <span className="toast-ic"><IconoPanel n={toast.tipo === "error" ? "alerta" : "check"} /></span>
-          <span className="toast-cuerpo">
-            <b>{toast.tipo === "error" ? "Atención" : "Listo"}</b>
-            <p>{toast.texto}</p>
-          </span>
-          <button type="button" className="toast-x" aria-label="Cerrar aviso" onClick={() => setToast(null)}><IconoPanel n="x" /></button>
-          <i className="toast-barra" />
-        </div>
+        <EnBody>
+          <div className={`toast ${toast.tipo}${saliendo ? " saliendo" : ""}`} role="status">
+            <span className="toast-ic"><IconoPanel n={toast.tipo === "error" ? "alerta" : "check"} /></span>
+            <span className="toast-cuerpo">
+              <b>{toast.tipo === "error" ? "Atención" : "Listo"}</b>
+              <p>{toast.texto}</p>
+            </span>
+            <button type="button" className="toast-x" aria-label="Cerrar aviso" onClick={() => setToast(null)}><IconoPanel n="x" /></button>
+            <i className="toast-barra" />
+          </div>
+        </EnBody>
       )}
     </ToastCtx.Provider>
   );
@@ -95,17 +112,19 @@ export function ConfirmarDialogo({ abierto, texto, onSi, onNo }: {
   }, [abierto, onNo]);
   if (!abierto) return null;
   return (
-    <div className={`confirmar-velo${visible ? " visible" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) onNo(); }}>
-      <div className="confirmar-caja" role="alertdialog" aria-modal="true">
-        <span className="toast-ic error"><IconoPanel n="alerta" /></span>
-        <b>¿Confirmar esta acción?</b>
-        <p>{texto}</p>
-        <div className="confirmar-botones">
-          <button type="button" className="boton fantasma" onClick={onNo}>Cancelar</button>
-          <button type="button" className="boton peligro" onClick={onSi} autoFocus>Sí, continuar</button>
+    <EnBody>
+      <div className={`confirmar-velo${visible ? " visible" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) onNo(); }}>
+        <div className="confirmar-caja" role="alertdialog" aria-modal="true">
+          <span className="toast-ic error"><IconoPanel n="alerta" /></span>
+          <b>¿Confirmar esta acción?</b>
+          <p>{texto}</p>
+          <div className="confirmar-botones">
+            <button type="button" className="boton fantasma" onClick={onNo}>Cancelar</button>
+            <button type="button" className="boton peligro" onClick={onSi} autoFocus>Sí, continuar</button>
+          </div>
         </div>
       </div>
-    </div>
+    </EnBody>
   );
 }
 
@@ -128,10 +147,45 @@ export function Velo({ abierto, onCerrar, children }: {
   }, [abierto, onCerrar]);
   if (!abierto) return null;
   return (
-    <div className={`us-velo${visible ? " visible" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) onCerrar(); }}>
-      {children}
-    </div>
+    <EnBody>
+      <div className={`us-velo${visible ? " visible" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) onCerrar(); }}>
+        {children}
+      </div>
+    </EnBody>
   );
+}
+
+/* ── Pantalla de carga del panel (show/hide en nav y envío) ────────────── */
+
+export function ScriptsPanel() {
+  const pathname = usePathname();
+  useEffect(() => {
+    const overlay = document.getElementById("cargaOverlay");
+    const MINIMO = 600, SAFETY = 1500;
+    let safety: ReturnType<typeof setTimeout> | undefined;
+    const ocultar = () => overlay?.classList.add("oculta");
+    const mostrar = () => { overlay?.classList.remove("oculta"); if (safety) clearTimeout(safety); safety = setTimeout(ocultar, SAFETY); };
+    // Al montar/cambiar de apartado: ocultar tras un mínimo perceptible.
+    const hide = setTimeout(ocultar, MINIMO);
+    const clickNav = (e: MouseEvent) => {
+      const a = (e.target as HTMLElement).closest("a[href]") as HTMLAnchorElement | null;
+      if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
+      try {
+        const d = new URL(a.href, location.href);
+        if (d.origin !== location.origin || (d.pathname === location.pathname && d.search === location.search)) return;
+        mostrar();
+      } catch { /* no-op */ }
+    };
+    const onSubmit = (e: Event) => { if ((e.target as HTMLElement)?.tagName === "FORM") mostrar(); };
+    document.addEventListener("click", clickNav);
+    document.addEventListener("submit", onSubmit);
+    return () => {
+      clearTimeout(hide); if (safety) clearTimeout(safety);
+      document.removeEventListener("click", clickNav);
+      document.removeEventListener("submit", onSubmit);
+    };
+  }, [pathname]);
+  return null;
 }
 
 /* ── Mathy del panel (port de agenteIAPanel) ───────────────────────────── */

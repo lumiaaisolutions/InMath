@@ -140,10 +140,11 @@ export default async function Landing() {
             </ul>
           </article>
           <article className="plan destacado reveal d1">
+            <span className="plan-badge-oferta">⏳ Oferta por tiempo limitado</span>
             <div className="plan-cab">
               <span className="plan-tag">Recomendado</span>
               <div className="plan-precio">{precio} <small>MXN</small></div>
-              <span className="plan-oferta"><s>$4,500</s> · $500 de descuento al inscribirte hoy</span>
+              <span className="plan-oferta"><s>$4,500</s> · ahorras $500 si te inscribes hoy</span>
             </div>
             <p className="plan-sub">{curso?.nombre ?? "Curso completo"} · pago único</p>
             <Link className="boton grande plan-cta" href="/pago">Inscribirme ahora</Link>

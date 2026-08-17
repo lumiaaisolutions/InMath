@@ -65,11 +65,15 @@ export function PagoForm({ curso, datosPago }: { curso: { nombre: string; precio
               <input type="tel" id="telefono" name="telefono" required inputMode="numeric" placeholder="55 1234 5678" />
             </div>
             {curso && (
-              <div className="resumen-pago">
+              <div className="resumen-pago resumen-oferta">
                 <span>{curso.nombre}</span>
-                <b>${formateaMonto(curso.precioCentavos)} {curso.moneda}</b>
+                <div className="ro-precio">
+                  <s>$4,500</s>
+                  <b>${formateaMonto(curso.precioCentavos)} {curso.moneda}</b>
+                </div>
               </div>
             )}
+            {curso && <div className="oferta-urgencia">⏳ Precio de oferta: ahorras $500 · <b>por tiempo limitado</b></div>}
             <button type="submit" className="boton glow glow-halo bloque grande" disabled={iniPendiente}>
               {iniPendiente ? "Preparando…" : "Continuar al pago"} <span className="flecha">→</span>
             </button>

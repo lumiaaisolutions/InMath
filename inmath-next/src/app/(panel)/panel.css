@@ -1225,9 +1225,23 @@ input[type="range"].aj-zoom::-webkit-slider-thumb:hover { transform: scale(1.15)
 .us-quien { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .us-quien b { font: 600 .95rem/1.2 var(--display); color: var(--tinta); }
 .us-quien span { font: 400 .8rem/1.2 var(--cuerpo); color: var(--tinta-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.us-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.us-campos .pl-campo input, .us-campos .pl-campo select { width: 100%; }
+.us-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.us-campos .pl-campo input:not([type="checkbox"]), .us-campos .pl-campo select { width: 100%; }
 .us-campos .pl-campo small { font-weight: 400; color: var(--tinta-3); }
+
+/* Toggles de usuario (es_asesor / activo) — filas claras, no checkbox estirado */
+.us-toggles { display: grid; gap: 10px; margin: 14px 0 4px; }
+.us-toggle {
+  display: flex; align-items: flex-start; gap: 12px; cursor: pointer;
+  padding: 12px 14px; border-radius: 14px; border: 1px solid var(--linea-2);
+  background: rgba(255,255,255,.55); transition: border-color .15s ease, background .15s ease;
+}
+.us-toggle:hover { border-color: var(--azul, #6B9FFF); background: rgba(107,159,255,.08); }
+.us-toggle input[type="checkbox"] { width: 20px; height: 20px; flex: none; margin-top: 1px; accent-color: #3B6FF5; cursor: pointer; }
+.us-toggle-tx { display: grid; gap: 2px; }
+.us-toggle-tx b { font: 600 .9rem var(--cuerpo); color: var(--tinta); }
+.us-toggle-tx i { font: 400 .78rem var(--cuerpo); color: var(--tinta-3); font-style: normal; }
+.us-toggle input:disabled { opacity: .5; cursor: not-allowed; }
 .us-etiqueta { font: 600 .76rem/1 var(--cuerpo); color: var(--tinta-2); display: block; margin-bottom: 8px; }
 .us-chips { display: flex; gap: 7px; flex-wrap: wrap; }
 .chip-modulo { position: relative; cursor: pointer; }
@@ -1525,3 +1539,86 @@ body::before {
 }
 body::after { mix-blend-mode: normal; opacity: .1; }
 body::before { animation: none !important; }
+
+/* ============================================================================
+   v32 — Panel más llamativo e intuitivo: sidebar centrado, widget de perfil
+   vertical, agente Mathy protagonista, calendario colorido. (17-ago)
+   ============================================================================ */
+
+/* Marca del sidebar: logo grande y centrado, texto debajo */
+.sidebar .marca {
+  flex-direction: column; align-items: center; text-align: center; gap: 8px;
+  padding-bottom: 18px; margin-bottom: 6px; border-bottom: 1px solid var(--linea-2, rgba(20,26,44,.08));
+}
+.sidebar .marca img { width: 64px !important; height: 64px !important; filter: drop-shadow(0 8px 18px rgba(107,159,255,.5)); }
+.sidebar .marca strong { font-size: 1.22rem; letter-spacing: -.01em; }
+.sidebar .marca span { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--tinta-3); }
+
+/* Widget de perfil: avatar arriba-centro, nombre/rol, botón config, salir */
+.perfil-widget {
+  display: flex !important; flex-direction: column; align-items: center; text-align: center;
+  gap: 8px; padding: 16px 14px; border-radius: 18px;
+  background: linear-gradient(160deg, rgba(107,159,255,.10), rgba(255,255,255,.5));
+  border: 1px solid var(--linea-2, rgba(20,26,44,.08));
+}
+.perfil-widget:hover { transform: none; box-shadow: none; }
+.pw-avatar-lg {
+  width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center; overflow: hidden;
+  font: 700 1.5rem var(--display, var(--cuerpo)); color: #fff;
+  background: linear-gradient(158deg, #6B9FFF, #3B6FF5);
+  box-shadow: 0 10px 24px rgba(59,111,245,.35), inset 0 1px 0 rgba(255,255,255,.5);
+}
+.pw-avatar-lg img { width: 100%; height: 100%; object-fit: cover; }
+.pw-nombre { font: 700 .95rem/1.2 var(--cuerpo); color: var(--tinta); }
+.perfil-widget .pw-chip { margin: 0; }
+.pw-config {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; width: 100%;
+  margin-top: 4px; padding: 9px 12px; border-radius: 11px; text-decoration: none;
+  font: 600 .82rem var(--cuerpo); color: #fff;
+  background: linear-gradient(158deg, #6B9FFF, #3B6FF5);
+  box-shadow: 0 8px 18px rgba(59,111,245,.32); transition: transform .16s ease, box-shadow .16s ease;
+}
+.pw-config:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(59,111,245,.42); }
+.pw-config:active { transform: scale(.97); }
+.pw-salir-form { width: 100%; }
+.pw-salir {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; width: 100%;
+  padding: 8px 12px; border-radius: 11px; border: 1px solid var(--linea-2, rgba(20,26,44,.1));
+  background: rgba(255,255,255,.6); color: var(--tinta-2); cursor: pointer;
+  font: 600 .8rem var(--cuerpo); transition: background .16s ease, color .16s ease;
+}
+.pw-salir:hover { background: #FBE9E7; color: #C0392B; }
+.ic-sm { width: 16px; height: 16px; }
+
+/* Agente Mathy del panel: más grande y con anillo pulsante */
+.agente-ia { right: 26px; bottom: 26px; }
+.agente-btn { width: 86px !important; height: 86px !important; box-shadow: 0 22px 48px rgba(18,31,55,.28), 0 0 0 6px rgba(107,159,255,.14), inset 0 1px 0 rgba(255,255,255,.85); }
+.agente-libro { width: 54px !important; height: 54px !important; }
+.agente-btn::before {
+  content: ""; position: absolute; inset: -6px; border-radius: 50%;
+  border: 2px solid rgba(107,159,255,.55); animation: agentePulsoP 2.4s ease-out infinite; pointer-events: none;
+}
+@keyframes agentePulsoP { 0% { transform: scale(1); opacity: .7; } 70% { transform: scale(1.28); opacity: 0; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .agente-btn::before { animation: none; opacity: 0; } }
+
+/* Calendario de citas: colorido, bordes suaves, efectos */
+.tarjeta:has(.calendario) { background: linear-gradient(160deg, rgba(255,255,255,.9), rgba(240,245,255,.7)); }
+.calendario { border-top: none; border-radius: 16px; overflow: hidden; }
+.calendario .dia-cab {
+  background: linear-gradient(160deg, rgba(107,159,255,.14), rgba(107,159,255,.05));
+  color: var(--navy, #16305c); font-weight: 700; border-bottom: 2px solid rgba(107,159,255,.25);
+  border-radius: 10px 10px 0 0; margin: 2px 2px 0;
+}
+.calendario .hora { border-right: 1px dashed rgba(20,26,44,.1); color: var(--tinta-3); }
+.calendario .celda { border-bottom: 1px solid rgba(20,26,44,.06); border-right: 1px solid rgba(20,26,44,.06); transition: background .16s ease; }
+.calendario .celda:hover { background: rgba(107,159,255,.06); }
+.cita-bloque {
+  border-radius: 10px; padding: 6px 9px; font-weight: 700;
+  background: linear-gradient(158deg, var(--asesor-color, #3B6FF5), color-mix(in srgb, var(--asesor-color, #3B6FF5) 78%, #000));
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--asesor-color, #3B6FF5) 45%, transparent);
+  transition: transform .16s cubic-bezier(.23,1,.32,1), box-shadow .16s ease;
+}
+.cita-bloque:hover { transform: translateY(-2px) scale(1.02); opacity: 1; box-shadow: 0 12px 24px color-mix(in srgb, var(--asesor-color, #3B6FF5) 55%, transparent); }
+
+/* Tarjetas del panel: un poco más de vida (sombra suave, borde) */
+.cabecera-hero, .tarjeta { border-radius: 20px; }

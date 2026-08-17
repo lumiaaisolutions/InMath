@@ -2,12 +2,29 @@ import type { Metadata } from "next";
 import "./inmath.css";
 import Link from "next/link";
 import { Icono } from "@/components/Icono";
+import { OverlayCarga } from "@/components/OverlayCarga";
 import { ScriptsSitio, AgenteIA } from "@/components/ClienteSitio";
 
+const SITE = "https://inmath.lumiaaisolutions.com";
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE),
   title: "Cursos InMath — Aprende en línea a tu ritmo",
-  description: "Cursos InMath: cursos en línea con asesoría 1 a 1 por WhatsApp y reporte de tu avance cada semana.",
-  icons: { icon: "/img/inmath.svg" },
+  description: "Curso Propedéutico InMath: 100% en línea con asesorías 1 a 1 por videollamada, material incluido y reporte de tu avance cada semana. Oferta de inscripción por tiempo limitado.",
+  openGraph: {
+    type: "website",
+    url: SITE,
+    siteName: "Cursos InMath",
+    title: "Cursos InMath — Aprende en línea a tu ritmo",
+    description: "Curso Propedéutico InMath: 100% en línea con asesorías 1 a 1, material incluido y seguimiento de tu avance. Oferta de inscripción por tiempo limitado.",
+    images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "Cursos InMath" }],
+    locale: "es_MX",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Cursos InMath — Aprende en línea a tu ritmo",
+    description: "Curso Propedéutico InMath 100% en línea con asesorías 1 a 1. Oferta por tiempo limitado.",
+    images: ["/og.jpg"],
+  },
 };
 
 const PANEL_URL = process.env.PANEL_URL ?? "";
@@ -25,9 +42,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
       </head>
       <body>
-        <div id="cargaOverlay" className="carga-overlay oculta" aria-hidden="true" />
+        <OverlayCarga marca="sitio" />
         <header className="barra">
-          <Link className="logo" href="/"><img src="/img/inmath.svg" alt="" width={46} height={46} /><b>Cursos <span>Inmath</span></b></Link>
+          <Link className="logo" href="/"><img src="/img/inmath.svg" alt="" width={58} height={58} /><b>Cursos <span>Inmath</span></b></Link>
           <button type="button" className="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navPrincipal" aria-label="Abrir menú">
             <Icono n="list" />
           </button>
