@@ -2975,3 +2975,38 @@ body::before { animation: none !important; }
   .am-contenido .am-plan { padding: 13px 15px; }
   .pk2-confianza, .pk3-confianza { gap: 10px 16px; }
 }
+
+/* =========================================================================
+   v57 — FAQ: acordeón con animación real de apertura Y cierre (grid-rows).
+   Reemplaza <details> nativo (los navegadores no animan su cierre).
+   ========================================================================= */
+.faq { display: grid; gap: 12px; max-width: 46rem; }
+.faq-item {
+  background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--r-m);
+  padding: 4px 20px; transition: border-color var(--t), box-shadow var(--t);
+}
+.faq-item.open { border-color: var(--linea-2); box-shadow: var(--sombra-s); }
+.faq-summary {
+  width: 100%; background: none; border: 0; cursor: pointer; text-align: left;
+  padding: 16px 0; font: 600 1.02rem/1.4 var(--cuerpo); color: var(--tinta);
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+}
+.faq-summary .mas {
+  width: 26px; height: 26px; flex: 0 0 auto; border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--azul); color: var(--azul);
+  display: grid; place-items: center;
+  transition: transform 320ms cubic-bezier(.23,1,.32,1), background var(--t), color var(--t);
+}
+.faq-summary .mas svg { width: 14px; height: 14px; }
+.faq-item.open .faq-summary .mas { transform: rotate(45deg); background: var(--azul); color: #fff; }
+/* el truco: grid-template-rows 0fr↔1fr anima alto sin medir con JS */
+.faq-cuerpo {
+  display: grid; grid-template-rows: 0fr; opacity: 0;
+  transition: grid-template-rows 380ms cubic-bezier(.23,1,.32,1), opacity 260ms ease;
+}
+.faq-item.open .faq-cuerpo { grid-template-rows: 1fr; opacity: 1; }
+.faq-cuerpo-in { overflow: hidden; min-height: 0; }
+.faq-cuerpo-in p { padding: 0 0 18px; margin: 0; color: var(--tinta-2); font-size: .98rem; }
+@media (prefers-reduced-motion: reduce) {
+  .faq-cuerpo, .faq-summary .mas { transition: none; }
+}
