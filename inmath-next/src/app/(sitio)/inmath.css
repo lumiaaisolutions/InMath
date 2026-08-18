@@ -44,7 +44,7 @@
 
   --display: "Bricolage Grotesque", "Hanken Grotesk", system-ui, sans-serif;
   --cuerpo:  "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --mono:    "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif; /* unificada: ya no se usa mono */
 
   --r-s:10px; --r-m:16px; --r-l:24px; --r-xl:32px;
   --sombra-s: 0 1px 2px rgba(20,26,44,.05), 0 6px 18px rgba(20,26,44,.05);
@@ -2404,3 +2404,204 @@ body::before { animation: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .agente-panel.genio, .agente-panel.genio-cierra { animation: none; }
 }
+
+/* =========================================================================
+   v40 — KICKERS sin píldora (regla: nada "encerrado en color"). Lenguaje del
+   splash del eyebrow: mancha orgánica tras el icono + texto en gradiente +
+   trazo de marcador que se dibuja. Aplica a interludio-kicker y am-kicker.
+   ========================================================================= */
+.interludio-kicker, .am-kicker {
+  background: none; border: 0; box-shadow: none; padding: 4px 2px 10px; border-radius: 0;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  position: relative; display: inline-flex; align-items: center; gap: 14px;
+  font: 800 .9rem/1 var(--display); letter-spacing: .14em; text-transform: uppercase;
+  background-image: linear-gradient(100deg, #FFD86B, #FF9D5C 55%, #FF7A9C);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+}
+.interludio-kicker svg, .am-kicker svg {
+  width: 17px; height: 17px; position: relative; z-index: 1;
+  -webkit-text-fill-color: initial; color: #fff;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.4));
+}
+/* mancha splash tras el icono (misma firma que el eyebrow) */
+.interludio-kicker::before, .am-kicker::before {
+  content: ""; position: absolute; left: -8px; top: calc(50% - 5px); z-index: 0;
+  width: 36px; height: 36px; transform: translateY(-50%);
+  background: conic-gradient(from 30deg, #F6A62A, #FF7A9C, #E8590C, #F6A62A);
+  border-radius: 42% 58% 63% 37% / 43% 38% 62% 57%;
+  animation: splashMorph 9s ease-in-out infinite;
+  box-shadow: 0 6px 16px -4px rgba(232,89,12,.55);
+}
+/* trazo de marcador que se dibuja debajo del texto */
+.interludio-kicker::after, .am-kicker::after {
+  content: ""; position: absolute; left: 36px; right: 4px; bottom: 0; height: 4px;
+  background: linear-gradient(90deg, #F6A62A, #FF7A9C 60%, transparent);
+  border-radius: 999px; transform-origin: left center;
+  animation: kickerTrazo 1s cubic-bezier(.22,1,.31,1) both .35s;
+}
+@keyframes kickerTrazo { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .interludio-kicker::before, .am-kicker::before, .interludio-kicker::after, .am-kicker::after { animation: none; }
+}
+
+/* =========================================================================
+   v40 — BANNER de alertas SATURADO: gradiente pleno por estilo, texto blanco,
+   media opcional y brillo. Ya no glass lavado.
+   ========================================================================= */
+.alerta-frame {
+  background: linear-gradient(120deg, var(--al-a), var(--al-b) 55%, var(--al-c));
+  padding: 22px 28px; border-radius: 24px; gap: 20px;
+  box-shadow: 0 6px 14px rgba(18,31,55,.12), 0 26px 54px -18px var(--al-sombra);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.alerta-azul  { --al-a: #4D7FF0; --al-b: #6B9FFF; --al-c: #7C5CFF; --al-sombra: rgba(107,159,255,.65); }
+.alerta-menta { --al-a: #17A2B8; --al-b: #22C1A6; --al-c: #3ED9B0; --al-sombra: rgba(34,193,166,.6); }
+.alerta-ambar { --al-a: #E8590C; --al-b: #F6A62A; --al-c: #FFB84D; --al-sombra: rgba(232,89,12,.6); }
+.alerta-coral { --al-a: #E5568A; --al-b: #FF7A9C; --al-c: #9D6BFF; --al-sombra: rgba(229,86,138,.6); }
+.alerta-frame::before, .alerta-frame::after { background: rgba(255,255,255,.4) !important; opacity: .5; width: 240px; height: 240px; }
+.alerta-cuerpo::before { display: none; }
+.alerta-cuerpo b { color: #fff; font-size: 1.24rem; text-shadow: 0 2px 10px rgba(0,0,0,.18); }
+.alerta-cuerpo p { color: rgba(255,255,255,.93); font-size: .95rem; }
+.alerta-media {
+  flex: 0 0 auto; width: 106px; height: 74px; object-fit: cover; border-radius: 14px;
+  box-shadow: 0 8px 18px rgba(0,0,0,.28), 0 0 0 3px rgba(255,255,255,.6);
+}
+.alerta-cta {
+  background: #fff !important; color: var(--tinta) !important;
+  font-weight: 800; padding: 13px 24px;
+  box-shadow: 0 12px 26px -8px rgba(0,0,0,.4) !important;
+}
+
+/* =========================================================================
+   v40 — EMERGENTE a PANTALLA COMPLETA (+ preview a escala en el panel)
+   ========================================================================= */
+.am-velo { padding: 0; background: rgba(13,20,38,.4); }
+.am-lienzo {
+  position: relative; isolation: isolate; overflow: hidden; width: 100vw; height: 100dvh;
+  display: grid; place-items: center; padding: 24px;
+  background: linear-gradient(135deg, var(--al-a, #4D7FF0), var(--al-b, #6B9FFF) 55%, var(--al-c, #7C5CFF));
+  animation: amEntra .5s cubic-bezier(.22,1.15,.32,1) both;
+}
+.am-cierra .am-lienzo { animation: amSale .3s ease both; }
+.am-fondo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+.am-velo-int { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(13,20,38,.5), rgba(13,20,38,.3) 45%, rgba(13,20,38,.66)); }
+.am-contenido { position: relative; z-index: 2; max-width: 640px; width: 100%; text-align: center; color: #fff; display: grid; justify-items: center; }
+.am-contenido h3 { font: 800 clamp(1.8rem, 5vw, 3rem)/1.08 var(--display); letter-spacing: -.03em; color: #fff; text-shadow: 0 3px 22px rgba(0,0,0,.35); text-wrap: balance; margin-top: 18px; }
+.am-contenido .am-texto { color: rgba(255,255,255,.93); font: 500 1.02rem/1.55 var(--cuerpo); max-width: 46ch; text-shadow: 0 2px 12px rgba(0,0,0,.35); margin: 10px 0 0; }
+.am-caja { display: none; }
+.am-contenido .am-plan {
+  margin: 22px 0 14px; width: min(460px, 100%);
+  background: rgba(255,255,255,.94); box-shadow: 0 18px 44px -14px rgba(0,0,0,.5);
+}
+.am-cerrar {
+  position: fixed; top: 22px; right: 22px; z-index: 3; width: 46px; height: 46px; border-radius: 50%;
+  border: 0; cursor: pointer; display: grid; place-items: center;
+  background: rgba(255,255,255,.18); color: #fff;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.4);
+  transition: background .2s ease, transform .15s ease;
+}
+.am-cerrar:hover { background: rgba(255,255,255,.3); }
+.am-cerrar svg { width: 20px; height: 20px; }
+.am-contenido .am-cta { background: #fff !important; color: var(--tinta) !important; box-shadow: 0 16px 36px -10px rgba(0,0,0,.55) !important; }
+.am-contenido .am-luego { color: rgba(255,255,255,.85); }
+.am-contenido .am-luego:hover { color: #fff; }
+.am-contenido .am-marcador { font-size: 1rem; padding: 7px 15px; }
+/* Preview a escala dentro del panel */
+.al-em-marco { border-radius: 18px; overflow: hidden; box-shadow: 0 14px 34px -16px rgba(18,31,55,.35); }
+.al-em-marco .am-lienzo { width: 100%; height: auto; aspect-ratio: 16/10; animation: none; padding: 12px; }
+.al-em-marco .am-contenido { transform: scale(.6); transform-origin: center; }
+.al-em-marco .am-cerrar { display: none; }
+
+/* =========================================================================
+   v40 — MATHY: azul de base con DETALLES verdes en splash (saturación viva)
+   ========================================================================= */
+.agente-btn {
+  border: 2.5px solid rgba(107,159,255,.85) !important;
+  box-shadow: 0 22px 48px rgba(18,31,55,.28), 0 0 0 6px rgba(107,159,255,.14), inset 0 1px 0 rgba(255,255,255,.85) !important;
+}
+.agente-btn::before { border-color: rgba(62,217,176,.55) !important; }
+.agente-btn::after {
+  background: conic-gradient(from 210deg, #6B9FFF, #3ED9B0, #22C1A6, #6B9FFF) !important;
+  border-radius: 42% 58% 63% 37% / 43% 38% 62% 57% !important;
+  filter: blur(10px) saturate(1.25); opacity: .9 !important;
+  animation: splashMorph 9s ease-in-out infinite;
+}
+.agente-panel { border: 1.5px solid rgba(107,159,255,.5); box-shadow: 0 24px 60px rgba(18,31,55,.28), 0 0 0 5px rgba(62,217,176,.14); }
+.ap-cab { border-bottom: 1px solid rgba(62,217,176,.35); }
+
+/* =========================================================================
+   v42 — KICKER UNIFICADO (eyebrow + interludio-kicker + am-kicker): una sola
+   firma visual — mancha splash SUAVE y semitransparente que se desvanece
+   (referencia: wash de color con fade), texto en gradiente, icono en acento.
+   ========================================================================= */
+.eyebrow, .interludio-kicker, .am-kicker {
+  position: relative; display: inline-flex; align-items: center; gap: 11px;
+  padding: 10px 20px 10px 8px; border-radius: 0;
+  background: none !important; border: 0 !important; box-shadow: none !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  font: 800 .84rem/1 var(--display); letter-spacing: .12em; text-transform: uppercase;
+  overflow: visible;
+}
+/* texto en gradiente (por contexto) */
+.eyebrow, .interludio-kicker, .am-kicker {
+  background-image: linear-gradient(100deg, var(--kick-t1, #2f6fe0), var(--kick-t2, #7c3df0)) !important;
+  -webkit-background-clip: text !important; background-clip: text !important;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+/* LA MANCHA: wash radial suave, ligeramente transparente, sin bordes */
+.eyebrow::before, .interludio-kicker::before, .am-kicker::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  inset: -22px -40px -22px -26px;
+  width: auto; height: auto; left: -26px; top: -22px; transform: none;
+  background:
+    radial-gradient(62% 92% at 16% 52%, var(--kick-a, rgba(107,159,255,.42)), transparent 70%),
+    radial-gradient(56% 84% at 58% 40%, var(--kick-b, rgba(124,92,255,.28)), transparent 72%);
+  border-radius: 0; filter: blur(3px); opacity: 1;
+  animation: none; box-shadow: none;
+}
+/* fuera gotita/trazo/extras de versiones anteriores */
+.eyebrow::after, .interludio-kicker::after, .am-kicker::after { display: none !important; content: none !important; animation: none !important; }
+/* iconos en acento sólido (ya no blancos sobre blob) */
+.eyebrow .ic-ey, .interludio-kicker svg, .am-kicker svg {
+  -webkit-text-fill-color: initial; color: var(--kick-ic, #4D7FF0); filter: none;
+  width: 17px; height: 17px; position: relative; z-index: 1;
+}
+/* tonos por sección (mismos matices que el sistema) */
+.proceso .eyebrow  { --kick-a: rgba(107,159,255,.42); --kick-b: rgba(124,92,255,.3);  --kick-t1: #2f6fe0; --kick-t2: #7c3df0; --kick-ic: #4D7FF0; }
+.acompana .eyebrow { --kick-a: rgba(62,217,176,.4);   --kick-b: rgba(107,159,255,.28); --kick-t1: #0f9e84; --kick-t2: #2f6fe0; --kick-ic: #17A2B8; }
+.incluye .eyebrow  { --kick-a: rgba(124,92,255,.38);  --kick-b: rgba(255,122,156,.3);  --kick-t1: #7c3df0; --kick-t2: #d64b86; --kick-ic: #7C5CFF; }
+.precio .eyebrow   { --kick-a: rgba(246,166,42,.4);   --kick-b: rgba(255,122,156,.3);  --kick-t1: #e0770f; --kick-t2: #d64b86; --kick-ic: #F09030; }
+/* sobre foto/fondo oscuro: wash claro translúcido + texto cálido brillante */
+.interludio-kicker, .am-kicker {
+  --kick-a: rgba(255,255,255,.34); --kick-b: rgba(175,207,255,.4);
+  --kick-t1: #FFE9A8; --kick-t2: #FFB08A; --kick-ic: #fff;
+  font-size: .9rem;
+}
+.eyebrow .mini-arrow { -webkit-text-fill-color: initial; }
+
+/* =========================================================================
+   v43 — Ajustes de saturación:
+   1) Mathy: splash SUAVE con degradado transparente (ya no bola saturada).
+   2) Emergente: gradiente translúcido — la página se ve por debajo.
+   ========================================================================= */
+.agente-btn::after {
+  background: radial-gradient(closest-side,
+      rgba(62,217,176,.34), rgba(107,159,255,.22) 55%, transparent 78%) !important;
+  border-radius: 50% !important;
+  filter: blur(14px); opacity: .8 !important;
+  inset: -46% !important;
+  animation: none;
+}
+.agente-btn { border-color: rgba(107,159,255,.55) !important; }
+.agente-btn::before { border-color: rgba(62,217,176,.4) !important; }
+
+.am-lienzo {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--al-a, #4D7FF0) 62%, transparent),
+    color-mix(in srgb, var(--al-b, #6B9FFF) 52%, transparent) 55%,
+    color-mix(in srgb, var(--al-c, #7C5CFF) 62%, transparent));
+  -webkit-backdrop-filter: blur(10px) saturate(1.1); backdrop-filter: blur(10px) saturate(1.1);
+}
+.am-velo-int { background: linear-gradient(180deg, rgba(13,20,38,.34), rgba(13,20,38,.18) 45%, rgba(13,20,38,.44)); }
+.am-velo { background: rgba(13,20,38,.18); }

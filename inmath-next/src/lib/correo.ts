@@ -17,7 +17,9 @@ export async function enviarCorreo(c: Correo): Promise<{ enviado: boolean; motiv
   try {
     const transporte = nodemailer.createTransport(url);
     const from = process.env.CORREO_FROM || new URL(url).username;
-    await transporte.sendMail({ from, to: c.para.join(", "), subject: c.asunto, text: c.texto });
+    // Leyenda fija: este buzón es solo de envío; el contacto real es inmath@gmail.com
+    const texto = `${c.texto}\n\n—\nEste correo se envía desde una dirección de solo envío y no recibe respuestas.\n¿Necesitas ayuda o quieres escribirnos? Hazlo a inmath@gmail.com`;
+    await transporte.sendMail({ from, to: c.para.join(", "), subject: c.asunto, text: texto });
     return { enviado: true };
   } catch (e) {
     console.error(`[correo] fallo al enviar "${c.asunto}":`, e);

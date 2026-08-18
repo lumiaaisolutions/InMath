@@ -19,6 +19,9 @@ export async function AlertasLanding({ posicion }: { posicion: Alerta["posicion"
       <div className="centrado">
         {alertas.map((a) => (
           <div key={a.id} className={`alerta-frame alerta-${a.estilo} reveal`}>
+            {a.media && (a.media.endsWith(".mp4")
+              ? <video className="alerta-media" src={a.media} muted loop autoPlay playsInline />
+              : <img className="alerta-media" src={a.media} alt="" />)}
             <div className="alerta-cuerpo">
               {a.titulo && <b>{a.titulo}</b>}
               {a.texto && <p>{a.texto}</p>}
@@ -26,6 +29,7 @@ export async function AlertasLanding({ posicion }: { posicion: Alerta["posicion"
             {a.enlace && a.enlace_texto && (
               <Link className="alerta-cta" href={a.enlace}>{a.enlace_texto}</Link>
             )}
+            <span className="alerta-brillo" aria-hidden="true" />
           </div>
         ))}
       </div>

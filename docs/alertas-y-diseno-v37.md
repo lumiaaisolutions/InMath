@@ -92,3 +92,51 @@ diferente" y "Tu lugar te está esperando" + CTA con descuento.
 ### Mathy — genio "enredado"
 Keyframes con giro/torbellino (rotate ±26°, skew, blur y rebote) al abrir y
 cerrar; cierre 480ms (timeout 470ms en ClienteSitio).
+
+---
+
+## v40–v43 (18-ago, noche)
+
+### Alertas — módulo completo
+- **Editor por TARJETAS** en /panel/alertas: cada alerta es una tarjeta; al
+  seleccionarla se abre un frame con **preview en vivo** (del formato elegido:
+  banner o ventana) + toda la configuración.
+- **Imagen o video por alerta**: subida desde el editor (imagen re-codificada
+  1600×1000 con sharp; MP4 validado). Se guardan en PANEL_IMG_DIR/alertas y se
+  sirven por /panel/img/alertas/... (ruta pública).
+- **Enlace guiado**: select de destinos existentes con descripción (Inscripción
+  y pago, Agendar asesoría, Paquetes, Cómo funciona, Qué incluye) o "Link
+  específico…" libre.
+- **Banner v40**: gradiente saturado por estilo, texto blanco, thumb de media,
+  CTA blanco, brillo que cruza.
+- **Emergente v40/v43**: PANTALLA COMPLETA con gradiente TRANSLÚCIDO (la página
+  se ve debajo, con blur), media de fondo opcional, plan con precio/tachado/
+  marcador. Una vez por visita (sessionStorage); cierra con X/click-fuera/
+  "Quizá después".
+- Fix: el botón "Guardar cambios" quedaba debajo del botón flotante de Mathy
+  en el panel (padding-right en .al-guardar).
+
+### Kicker UNIFICADO (v42) — regla de diseño
+eyebrow + interludio-kicker + am-kicker comparten UNA firma: mancha splash
+SUAVE y semitransparente (wash radial con fade, sin bordes ni píldora) +
+texto en gradiente + icono en acento. PROHIBIDO el chip/píldora "encerrado
+en color" para kickers. Tonos por sección vía --kick-a/b/t1/t2/ic.
+
+### Mathy (v43)
+Azul de base con detalle verde: glow radial SUAVE degradado a transparente
+(nada de bola saturada). Chat abierto por defecto + genio enredado se mantienen.
+
+### Tipografía — regla
+PROHIBIDA la fuente mono (JetBrains Mono) en el sistema: --mono ahora apunta a
+Figtree (se dejó la variable por compatibilidad) y ya no se carga la fuente.
+
+### Correos (¡ACTIVOS!) + Olvidé mi contraseña
+- SMTP configurado con Hostinger: envía noreply@lumiaaisolutions.com (buzón
+  fernando@lumiaaisolutions.com), SMTP_URL en el .env del VPS. Probado: ENVIO_OK.
+- TODOS los correos llevan la leyenda: "dirección de solo envío… escríbenos a
+  inmath@gmail.com" (se agrega en lib/correo.ts).
+- **Olvidé mi contraseña** (panel): enlace en el login → /panel/login/recuperar
+  (pide correo, respuesta siempre genérica) → correo con enlace de 30 min →
+  /panel/login/restablecer (token de un solo uso hasheado en
+  configuraciones.resets_password) → nueva contraseña con bcrypt.
+- El recordatorio semanal de disponibilidad (cron del viernes) ahora SÍ envía.

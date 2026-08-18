@@ -14,6 +14,7 @@ function normaliza(x: Partial<Alerta>): Alerta {
     enlace_texto: String(x.enlace_texto ?? ""),
     posicion: ["arriba", "precios", "final"].includes(x.posicion as string) ? (x.posicion as Alerta["posicion"]) : "arriba",
     formato: x.formato === "emergente" ? "emergente" : "banner",
+    media: String(x.media ?? ""),
     activo: !!x.activo,
   };
 }
