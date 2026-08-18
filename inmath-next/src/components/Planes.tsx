@@ -64,7 +64,7 @@ export function Planes({ precio, semanas, nombre }: { precio: string; semanas: n
         </ul>
       </article>
 
-      <p className="pk3-nota">Si tienes dudas, agenda una asesoría gratis y un asesor te ayuda a elegir.</p>
+      <p className="pk3-nota">Al completar tu inscripción hoy aseguras el precio con descuento. ¿Dudas? Agenda una asesoría gratis y un asesor te ayuda a elegir.</p>
     </div>
   );
 }

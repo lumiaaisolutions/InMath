@@ -207,3 +207,32 @@ Parser en `parseaBot()` (ClienteSitio). Prompt en api/agente/route.ts.
 - **Mathy agenda con correo**: pide el correo al agendar ("tu confirmación se
   enviará por correo"; si no lo dan, agenda sin correo), lo guarda en el
   prospecto y envía la confirmación de la cita por correo (noreply).
+
+---
+
+## v49–v50 (18-ago, cierre-2)
+
+### Pulido del chat (reportes del dueño)
+- Aire entre la mascota y el texto de la cabecera (.ap-quien gap 12 + caja 42px).
+- Icono de minimizar rediseñado (flechas hacia adentro, legible).
+- Modo AMPLIO centrado bulletproof (inset:0 + margin:auto) y responsive
+  (94vw × 86dvh bajo 820px).
+- Los botones de acción del chat van en su propia línea (no pegados al texto).
+- El botón "Ver horarios y agendar yo" CIERRA el chat al navegar a /agenda
+  (verificado E2E).
+
+### Calendario de /agenda (referencia glass)
+.cal-widget v50: tarjeta esmerilada con mesh VIVO de los colores de la página
+(azul→violeta + ámbar + menta), "Agosto 18" blanco grande, día activo en
+píldora ámbar→coral, horas como píldoras de vidrio que se encienden al elegir
+(blanco sólido + texto tinta).
+
+### /pago + marketing psicológico (honesto)
+- Leyenda de oferta como MARCADOR dorado rotado ("Precio de oferta: ahorras
+  $500 · POR TIEMPO LIMITADO"), sin pulso.
+- Héroe: 4º respaldo "Hoy con $500 de descuento" (anclaje temprano, en ámbar).
+- FAQ nueva: "¿Hasta cuándo dura el descuento de $500?" (urgencia honesta:
+  hoy aseguras $4,000; al terminar la oferta vuelve a $4,500).
+- Nota de planes: "Al completar tu inscripción hoy aseguras el precio con
+  descuento."
+Regla: urgencia/escasez solo con datos verificables; nada inventado.

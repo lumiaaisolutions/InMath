@@ -17,7 +17,7 @@ const P: Record<string, string> = {
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   x: '<path d="M18 6 6 18M6 6l12 12"/>',
   amplia: '<path d="M15 3h6v6M9 21H3v-6M21 3l-8 8M3 21l8-8"/>',
-  reduce: '<path d="M9 3v6H3M15 21v-6h6M3 9l8-8M21 15l-8 8"/>',
+  reduce: '<path d="M10 4v6H4M14 20v-6h6M10 10 3 3M14 14l7 7"/>',
 };
 /** Ícono frosted de dos capas — mismo output que icono() en PHP. */
 export function Icono({ n, cls = "" }: { n: string; cls?: string }) {

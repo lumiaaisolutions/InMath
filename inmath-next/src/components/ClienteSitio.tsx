@@ -191,7 +191,7 @@ export function AgenteIA({ whatsappUrl = "" }: { whatsappUrl?: string }) {
                     </a>
                   )}
                   {irAgenda && (
-                    <Link className="ap-humano ap-agenda" href="/agenda"><Icono n="calendar" /> Ver horarios y agendar yo</Link>
+                    <Link className="ap-humano ap-agenda" href="/agenda" onClick={() => cerrar()}><Icono n="calendar" /> Ver horarios y agendar yo</Link>
                   )}
                   {esUltimo && !cargando && opciones.length > 0 && (
                     <div className="ap-chips">

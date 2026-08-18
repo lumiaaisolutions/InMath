@@ -29,6 +29,7 @@ export default async function Landing() {
               <span><Icono n="clock" /> Acceso inmediato</span>
               <span><Icono n="user" /> Asesoría 1 a 1</span>
               <span><Icono n="play" /> Estudias a tu ritmo</span>
+              <span className="respaldo-oferta"><Icono n="card" /> Hoy con $500 de descuento</span>
             </div>
           </div>
           <div className="demo-marco zoom-in">
@@ -153,6 +154,7 @@ export default async function Landing() {
             <details open><summary>¿Necesito conocimientos previos? <span className="mas"><Icono n="plus" /></span></summary><p>No. El curso arranca desde lo básico y sube poco a poco. Tu asesor ajusta el plan a tu punto de partida.</p></details>
             <details><summary>¿Cuánto tiempo le dedico al día? <span className="mas"><Icono n="plus" /></span></summary><p>Tú decides. Con 30–45 minutos diarios avanzas bien; como las clases quedan grabadas, estudias cuando puedas.</p></details>
             <details><summary>¿Y si tengo dudas mientras estudio? <span className="mas"><Icono n="plus" /></span></summary><p>Nos escribes por WhatsApp cuando quieras. Si la duda es de fondo, tu asesor agenda una videollamada contigo.</p></details>
+            <details><summary>¿Hasta cuándo dura el descuento de $500? <span className="mas"><Icono n="plus" /></span></summary><p>Es una oferta por tiempo limitado: al completar tu inscripción hoy aseguras el precio de $4,000. Cuando la oferta termine, el precio regresa a $4,500.</p></details>
             <details><summary>¿Cómo pago? <span className="mas"><Icono n="plus" /></span></summary><p>Con un enlace seguro que te llega en el mismo chat. Al confirmarse el pago, tu acceso se activa automáticamente.</p></details>
           </div>
         </div>
