@@ -23,8 +23,24 @@ function EnBody({ children }: { children: React.ReactNode }) {
 /** Nav del sidebar con estado activo por ruta (como _layout-inicio.php). */
 export function NavPanel({ items }: { items: { href: string; texto: string; ic: string }[] }) {
   const ruta = usePathname();
+  const [abierto, setAbierto] = useState(false);
+  // Cierra el menú (móvil) al cambiar de ruta.
+  useEffect(() => {
+    setAbierto(false);
+    document.querySelector(".sidebar")?.classList.remove("menu-abierto");
+  }, [ruta]);
+  const alternar = () => {
+    const sb = document.querySelector(".sidebar");
+    const nuevo = !sb?.classList.contains("menu-abierto");
+    sb?.classList.toggle("menu-abierto", nuevo);
+    setAbierto(nuevo);
+  };
   return (
-    <nav className="nav">
+    <>
+      <button type="button" className="nav-hamb" aria-label={abierto ? "Cerrar menú" : "Abrir menú"} aria-expanded={abierto} onClick={alternar}>
+        <IconoPanel n={abierto ? "x" : "menu"} />
+      </button>
+      <nav className="nav">
       {items.map((it) => {
         const activo = it.href === "/panel"
           ? ruta === "/panel" || ruta.startsWith("/panel/prospectos")
@@ -35,7 +51,8 @@ export function NavPanel({ items }: { items: { href: string; texto: string; ic: 
           </Link>
         );
       })}
-    </nav>
+      </nav>
+    </>
   );
 }
 
