@@ -13,7 +13,7 @@ import { logoutAccion, agentePanelAccion } from "./acciones";
  * el modal sale como tira arriba en vez de centrado en el viewport. El portal
  * lo saca a <body> y el fixed vuelve a ser relativo al viewport.
  */
-function EnBody({ children }: { children: React.ReactNode }) {
+export function EnBody({ children }: { children: React.ReactNode }) {
   const [montado, setMontado] = useState(false);
   useEffect(() => { setMontado(true); }, []);
   if (!montado) return null;

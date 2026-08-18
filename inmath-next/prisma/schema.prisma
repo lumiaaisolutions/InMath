@@ -356,4 +356,5 @@ enum pagos_estado {
   expirado
   fallido
   reembolsado
+  cancelado
 }

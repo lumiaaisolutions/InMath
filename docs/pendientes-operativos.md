@@ -72,3 +72,29 @@ sección `.grafica-wrap`, entrada del carrusel `.pk-carrusel`), en el mismo esti
 `animation-timeline: view()` que los reveals existentes y envueltos en
 `@supports (animation-timeline: view())` para que en iOS Safari (sin soporte) el
 layout quede **estático y correcto**, sin desfases. Desplegado y verificado.
+
+---
+
+## Vencimiento de pagos a 72h (18-ago, autorizado por el usuario)
+
+**Qué hace:** un pago pendiente se cancela solo (estado `cancelado`) si en 72h
+nadie lo confirma. Antes avisa por correo al prospecto (si dejó correo): a las
+24h y a las 3h antes del límite. Al aprobar un pago también se le manda
+confirmación por correo.
+
+**Cómo está hecho:**
+- `pagos.estado` ganó el valor `cancelado` (ALTER TABLE aditivo, aplicado en
+  producción con autorización explícita — no tocó filas existentes).
+- `src/lib/pagos-vencimiento.ts` — recorre pagos pendientes, calcula horas
+  desde `link_generado_en`; a 48h manda aviso "24h", a 69h manda aviso "3h"
+  (guardados en `pagos.metadatos.avisos` para no repetir, sin migrar el
+  esquema), a 72h cancela y avisa.
+- `POST /api/pagos/vencimiento` (protegido por x-api-key) — dispara el
+  proceso. **Cron instalado en el VPS: cada hora**
+  (`/var/www/inmath/web/scripts/vencimiento-pagos.sh`, log en
+  `~/inmath-vencimiento-pagos.log`).
+- Panel `/panel/pagos`: columna "Vence en" con la cuenta regresiva; botones
+  **Aprobar e inscribir** (ya no exige comprobante — el admin puede confirmar
+  un pago verificado por otro medio) y **Cancelar** en cada fila; **clic en
+  la fila abre una ficha completa** (portal) con todos los datos del
+  prospecto, el pago, fechas y comprobante.

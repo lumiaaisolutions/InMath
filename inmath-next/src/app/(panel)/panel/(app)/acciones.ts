@@ -14,6 +14,8 @@ import { responderGemini, type Turno } from "@/lib/gemini";
 import { Prisma } from "@/generated/prisma/client";
 import { cerrarSesion, requiereSesion, requiereAdmin, requiereModulo } from "@/lib/panel/sesion";
 import { dirImgPanel } from "@/lib/panel/media";
+import { enviarCorreo } from "@/lib/correo";
+import { dinero } from "@/lib/panel/formato";
 
 export type Resultado = { ok?: string; error?: string };
 
@@ -159,11 +161,25 @@ export async function alumnoCrearAccion(_prev: Resultado, fd: FormData): Promise
   return { ok: "Alumno registrado" };
 }
 
-/** Port de /accion/pago-aprobar: marca pagado e inscribe (idempotente). */
+/** Cancela un pago pendiente a mano (el admin verificó que no se completó). */
+export async function pagoCancelarAccion(pagoId: number): Promise<Resultado> {
+  await requiereModulo("pagos");
+  const n = await prisma.pagos.updateMany({
+    where: { id: pagoId, estado: "pendiente" },
+    data: { estado: "cancelado" },
+  });
+  if (n.count === 0) return { error: "Ese pago ya no está pendiente" };
+  revalidatePath("/panel/pagos");
+  return { ok: "Pago cancelado" };
+}
+
+/** Port de /accion/pago-aprobar: marca pagado e inscribe (idempotente).
+ *  No exige comprobante: el admin puede confirmar un pago que verificó por
+ *  otro medio (ej. estado de cuenta). */
 export async function pagoAprobarAccion(pagoId: number): Promise<Resultado> {
   await requiereModulo("pagos");
   const pago = await prisma.pagos.findUnique({ where: { id: pagoId } });
-  if (!pago || pago.estado !== "pendiente" || !pago.comprobante) return { error: "Ese pago no se puede aprobar" };
+  if (!pago || pago.estado !== "pendiente") return { error: "Ese pago no se puede aprobar" };
   const n = await prisma.pagos.updateMany({
     where: { id: pagoId, estado: "pendiente" },
     data: { estado: "pagado", pagado_en: ahoraPared() },
@@ -203,6 +219,14 @@ export async function pagoAprobarAccion(pagoId: number): Promise<Resultado> {
       data: { usuario: prospecto.telefono_whatsapp, password_hash: await bcrypt.hash(passTmp, 10) },
     });
     aviso += ` Usuario: ${prospecto.telefono_whatsapp} · Contraseña temporal: ${passTmp} — compártela por WhatsApp.`;
+  }
+  if (prospecto.correo) {
+    const curso = await prisma.cursos.findUnique({ where: { id: pago.curso_id }, select: { nombre: true } });
+    await enviarCorreo({
+      para: [prospecto.correo],
+      asunto: "¡Tu pago fue confirmado! — Cursos InMath",
+      texto: `Hola ${prospecto.nombre ?? ""},\n\nConfirmamos tu pago de ${dinero(pago.monto_centavos, pago.moneda)} por ${curso?.nombre ?? "tu curso"}. Tu inscripción ya está activa.\n\nEn breve te contactamos por WhatsApp con tus datos de acceso.`,
+    });
   }
   revalidatePath("/panel/pagos"); revalidatePath("/panel/alumnos"); revalidatePath("/panel");
   return { ok: aviso };

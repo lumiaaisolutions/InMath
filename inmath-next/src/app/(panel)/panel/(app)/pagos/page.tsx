@@ -1,59 +1,55 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requiereModulo } from "@/lib/panel/sesion";
-import { fechaCorta, dinero } from "@/lib/panel/formato";
-import { AprobarPagoBoton } from "./ClientePagos";
+import { ListaPagos } from "./ClientePagos";
 
 export const metadata: Metadata = { title: "Pagos — Inmath CRM" };
 export const dynamic = "force-dynamic";
 
 export default async function Pagos() {
   await requiereModulo("pagos");
-  const pagos = await prisma.pagos.findMany({
+  const filas = await prisma.pagos.findMany({
     orderBy: { creado_en: "desc" }, take: 200,
-    include: { prospectos: { select: { id: true, nombre: true, telefono_whatsapp: true } } },
+    include: {
+      prospectos: { select: { id: true, nombre: true, telefono_whatsapp: true, correo: true, etapa: true } },
+      cursos: { select: { nombre: true } },
+    },
   });
+
+  // Serializable: fechas a ISO para pasar al cliente.
+  const pagos = filas.map((pg) => ({
+    id: pg.id,
+    monto_centavos: pg.monto_centavos,
+    moneda: pg.moneda,
+    procesador: pg.procesador,
+    estado: pg.estado,
+    comprobante: pg.comprobante,
+    comprobante_subido_en: pg.comprobante_subido_en?.toISOString() ?? null,
+    link_pago: pg.link_pago,
+    referencia_externa: pg.referencia_externa,
+    creado_en: pg.creado_en.toISOString(),
+    link_generado_en: pg.link_generado_en?.toISOString() ?? null,
+    expira_en: pg.expira_en?.toISOString() ?? null,
+    pagado_en: pg.pagado_en?.toISOString() ?? null,
+    curso_nombre: pg.cursos.nombre,
+    prospecto: {
+      id: pg.prospectos.id,
+      nombre: pg.prospectos.nombre,
+      telefono_whatsapp: pg.prospectos.telefono_whatsapp,
+      correo: pg.prospectos.correo,
+      etapa: pg.prospectos.etapa,
+    },
+  }));
 
   return (
     <>
       <div className="cabecera">
         <div>
           <h1>Pagos</h1>
-          <div className="sub">Links generados, confirmaciones y recuperación de carritos</div>
+          <div className="sub">Links generados, confirmaciones y recuperación de carritos. Un pago pendiente se cancela solo a las 72h si nadie lo confirma (con avisos por correo a las 24h y 3h antes).</div>
         </div>
       </div>
-      <div className="tarjeta">
-        <table className="lista">
-          <thead>
-            <tr><th>Prospecto</th><th>Monto</th><th>Procesador</th><th>Comprobante</th><th>Estado</th><th></th></tr>
-          </thead>
-          <tbody>
-            {pagos.length === 0 && (
-              <tr><td colSpan={6}><div className="vacio">Sin pagos registrados</div></td></tr>
-            )}
-            {pagos.map((pg) => (
-              <tr key={pg.id}>
-                <td><Link href={`/panel/prospectos/${pg.prospectos.id}`} style={{ fontWeight: 600, color: "var(--navy)" }}>{pg.prospectos.nombre ?? pg.prospectos.telefono_whatsapp}</Link></td>
-                <td>{dinero(pg.monto_centavos, pg.moneda)}</td>
-                <td>{pg.procesador ?? "—"}</td>
-                <td>
-                  {pg.comprobante ? (
-                    <>
-                      <a href={`/panel/comprobante/${pg.id}`} target="_blank" style={{ fontWeight: 600, color: "#6B9FFF" }}>Ver comprobante</a>
-                      <div style={{ font: "var(--t-mini)", color: "var(--tinta-3)" }}>{fechaCorta(pg.comprobante_subido_en)}</div>
-                    </>
-                  ) : "—"}
-                </td>
-                <td><span className={`gaje ${pg.estado === "pagado" ? "ok" : pg.estado === "pendiente" ? "alerta" : "error"}`}>{pg.estado}</span></td>
-                <td>
-                  {pg.estado === "pendiente" && pg.comprobante && <AprobarPagoBoton pagoId={pg.id} />}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <ListaPagos pagos={pagos} />
     </>
   );
 }

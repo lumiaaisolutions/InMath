@@ -2018,3 +2018,23 @@ body::before { animation: none !important; }
   .al-frame-prev { position: static; }
   .al-guardar { right: 88px; bottom: 16px; }
 }
+
+/* =========================================================================
+   v58 — Módulo de Pagos: fila clicable + ficha de detalle (portal) + vencimiento
+   ========================================================================= */
+.pg-fila-clic { cursor: pointer; transition: background var(--transicion); }
+.pg-fila-clic:hover { background: var(--crema-2); }
+.pg-acciones { display: flex; gap: 6px; }
+.pg-vence { color: var(--error); font-weight: 700; }
+.pg-frame { width: min(640px, 92vw); max-height: 86vh; overflow-y: auto; }
+.pg-detalle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+@media (max-width: 640px) { .pg-detalle-grid { grid-template-columns: 1fr; } }
+.pg-bloque { background: var(--crema-2); border-radius: 14px; padding: 14px 16px; display: grid; gap: 7px; }
+.pg-etq { font: 700 .68rem/1 var(--cuerpo); letter-spacing: .07em; text-transform: uppercase; color: var(--tinta-3); margin-bottom: 2px; }
+.pg-fila { display: flex; align-items: center; gap: 8px; font: 500 .87rem/1.4 var(--cuerpo); color: var(--tinta); }
+.pg-fila .ic-sm { color: var(--tinta-3); flex-shrink: 0; }
+.pg-fila.pg-cuenta { color: var(--alerta); font-weight: 600; }
+.pg-fila.pg-cuenta .ic-sm { color: var(--alerta); }
+.pg-link { text-decoration: none; color: var(--pino) !important; font-weight: 700; }
+.pg-link .ic-sm { color: var(--pino); }
+.pg-link:hover { text-decoration: underline; }
