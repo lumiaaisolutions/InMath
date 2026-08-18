@@ -93,7 +93,7 @@ export function AgenteIA() {
   const [cerrando, setCerrando] = useState(false);
   const cerrar = () => {
     setCerrando(true);
-    setTimeout(() => { setAbierto(false); setCerrando(false); }, 360);
+    setTimeout(() => { setAbierto(false); setCerrando(false); }, 470);
   };
   const [mensajes, setMensajes] = useState<{ rol: "usuario" | "asistente"; texto: string }[]>([
     { rol: "asistente", texto: "¡Hola! Soy Mathy. ¿Tienes dudas del curso o quieres agendar tu asesoría gratis?" },

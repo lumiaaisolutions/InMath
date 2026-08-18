@@ -3,7 +3,7 @@ import { useActionState, useState } from "react";
 import { guardarAlertasAccion } from "./acciones";
 import { useToastResultado } from "../ClientePanel";
 import { IconoPanel } from "@/components/IconoPanel";
-import { ESTILOS, POSICIONES, type Alerta } from "@/lib/alertas-tipos";
+import { ESTILOS, POSICIONES, FORMATOS, type Alerta } from "@/lib/alertas-tipos";
 import type { Resultado } from "../acciones";
 
 const NOMBRE_ESTILO: Record<Alerta["estilo"], string> = {
@@ -13,7 +13,7 @@ const NOMBRE_ESTILO: Record<Alerta["estilo"], string> = {
 const nueva = (): Alerta => ({
   id: Math.random().toString(36).slice(2, 9),
   titulo: "", texto: "", estilo: "azul",
-  enlace: "", enlace_texto: "", posicion: "arriba", activo: true,
+  enlace: "", enlace_texto: "", posicion: "arriba", formato: "banner", activo: true,
 });
 
 /** Editor de alertas de la landing: agregar/quitar/personalizar con preview en vivo. */
@@ -61,6 +61,22 @@ export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
                   onChange={(e) => set(a.id, "texto", e.target.value)} />
               </label>
               <div className="al-fila">
+                <label className="pl-campo">Formato
+                  <select value={a.formato} onChange={(e) => set(a.id, "formato", e.target.value)}>
+                    {FORMATOS.map((f) => <option key={f.valor} value={f.valor}>{f.nombre}</option>)}
+                  </select>
+                </label>
+                {a.formato === "banner" ? (
+                  <label className="pl-campo">Posición en la página
+                    <select value={a.posicion} onChange={(e) => set(a.id, "posicion", e.target.value)}>
+                      {POSICIONES.map((p) => <option key={p.valor} value={p.valor}>{p.nombre}</option>)}
+                    </select>
+                  </label>
+                ) : (
+                  <div className="pl-campo al-nota-em">La ventana aparece al entrar a la página, muestra este aviso + el plan con su descuento, y el visitante puede cerrarla. Se enseña una vez por visita.</div>
+                )}
+              </div>
+              <div className="al-fila">
                 <div className="pl-campo al-estilos-campo">Estilo
                   <div className="al-estilos" role="radiogroup" aria-label="Estilo de color">
                     {ESTILOS.map((es) => (
@@ -70,11 +86,6 @@ export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
                     ))}
                   </div>
                 </div>
-                <label className="pl-campo">Posición en la página
-                  <select value={a.posicion} onChange={(e) => set(a.id, "posicion", e.target.value)}>
-                    {POSICIONES.map((p) => <option key={p.valor} value={p.valor}>{p.nombre}</option>)}
-                  </select>
-                </label>
               </div>
               <div className="al-fila">
                 <label className="pl-campo">Enlace (opcional)

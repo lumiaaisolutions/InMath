@@ -1863,3 +1863,4 @@ body::before { animation: none !important; }
 }
 .alerta-ambar .alerta-cta, .alerta-coral .alerta-cta { background: linear-gradient(120deg, #F6A62A, #E8590C); }
 .alerta-menta .alerta-cta { background: linear-gradient(120deg, #22C1A6, #17A2B8); }
+.al-nota-em { font: 500 .8rem/1.5 var(--cuerpo); color: var(--tinta-2); background: var(--crema-2); border-radius: 12px; padding: 12px 14px; }

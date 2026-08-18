@@ -2,7 +2,7 @@ import { config } from "./db";
 import { ESTILOS, type Alerta } from "./alertas-tipos";
 
 export type { Alerta } from "./alertas-tipos";
-export { ESTILOS, POSICIONES } from "./alertas-tipos";
+export { ESTILOS, POSICIONES, FORMATOS } from "./alertas-tipos";
 
 function normaliza(x: Partial<Alerta>): Alerta {
   return {
@@ -13,6 +13,7 @@ function normaliza(x: Partial<Alerta>): Alerta {
     enlace: String(x.enlace ?? ""),
     enlace_texto: String(x.enlace_texto ?? ""),
     posicion: ["arriba", "precios", "final"].includes(x.posicion as string) ? (x.posicion as Alerta["posicion"]) : "arriba",
+    formato: x.formato === "emergente" ? "emergente" : "banner",
     activo: !!x.activo,
   };
 }

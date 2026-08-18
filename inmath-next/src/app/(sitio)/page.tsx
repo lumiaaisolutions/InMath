@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { Icono, Malla } from "@/components/Icono";
 import { CtaForm } from "@/components/ClienteSitio";
 import { Planes } from "@/components/Planes";
-import { AlertasLanding } from "@/components/AlertasLanding";
+import { AlertasLanding, AlertaEmergenteLanding } from "@/components/AlertasLanding";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +14,7 @@ export default async function Landing() {
 
   return (
     <>
+      <AlertaEmergenteLanding precio={precio} curso={curso?.nombre ?? ""} />
       <section className="heroe">
         <Malla />
         <div className="heroe-rej">
@@ -92,6 +93,17 @@ export default async function Landing() {
         </div>
       </section>
 
+      <section className="interludio" style={{ backgroundImage: "url(/img/fotos/full-estudio.jpg)" }} aria-label="Estudiar acompañado">
+        <div className="interludio-in">
+          <span className="interludio-kicker"><Icono n="user" /> Acompañamiento real</span>
+          <h2>Estudiar acompañado <span className="resalte">se siente diferente</span>.</h2>
+          <p>No vas a estar solo frente a una plataforma: un asesor te conoce, te guía y celebra tu avance contigo.</p>
+          <div className="acciones-int">
+            <Link className="boton glow glow-halo grande" href="/agenda">Conocer a mi asesor gratis</Link>
+          </div>
+        </div>
+      </section>
+
       <section id="incluye" className="incluye">
         <div className="centrado">
           <div className="incluye-rej">
@@ -142,6 +154,18 @@ export default async function Landing() {
             <details><summary>¿Cuánto tiempo le dedico al día? <span className="mas"><Icono n="plus" /></span></summary><p>Tú decides. Con 30–45 minutos diarios avanzas bien; como las clases quedan grabadas, estudias cuando puedas.</p></details>
             <details><summary>¿Y si tengo dudas mientras estudio? <span className="mas"><Icono n="plus" /></span></summary><p>Nos escribes por WhatsApp cuando quieras. Si la duda es de fondo, tu asesor agenda una videollamada contigo.</p></details>
             <details><summary>¿Cómo pago? <span className="mas"><Icono n="plus" /></span></summary><p>Con un enlace seguro que te llega en el mismo chat. Al confirmarse el pago, tu acceso se activa automáticamente.</p></details>
+          </div>
+        </div>
+      </section>
+
+      <section className="interludio" style={{ backgroundImage: "url(/img/fotos/full-meta.jpg)" }} aria-label="Tu lugar te espera">
+        <div className="interludio-in">
+          <span className="interludio-kicker"><Icono n="clock" /> Oferta por tiempo limitado</span>
+          <h2>Tu lugar en el curso <span className="resalte">te está esperando</span>.</h2>
+          <p>Inscríbete hoy con $500 de descuento y empieza a avanzar desde tu primera semana.</p>
+          <div className="acciones-int">
+            <Link className="boton glow glow-halo grande" href="/pago">Inscribirme con descuento</Link>
+            <Link className="boton pastel grande" href="/agenda">Primero quiero una asesoría</Link>
           </div>
         </div>
       </section>

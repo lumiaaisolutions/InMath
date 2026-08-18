@@ -58,3 +58,37 @@ Se reemplazó el carrusel con fotos (v33) por tarjetas limpias estilo referencia
 - Fila de confianza sobre los paquetes (reducción de fricción).
 - CTA naranja único en la tarjeta recomendada (jerarquía de acción).
 Regla: NO inventar métricas ni testimonios; solo copy verificable.
+
+---
+
+## v38–v39 (18-ago, tarde)
+
+### Planes v39 (referencia "partnership")
+Layout final: 2 tarjetas claras arriba (Diagnóstico / Para equipos: CTA pill
+oscuro, bullets en 2 columnas) + **banda oscura de ancho completo** para el
+curso recomendado: punto verde "Oferta por tiempo limitado" (arriba-derecha),
+$4,000 con $4,500 tachado, **descuento tipo marcador ámbar** ("Ahorras $500
+inscribiéndote hoy", rotado -1.2°, sin pulso) y checks verdes en 2 columnas.
+Clases `pk3-*` en `Planes.tsx`. (Los CSS `pk-*` y `pk2-*` quedaron sin uso.)
+
+### Interludios de pantalla completa (parallax fijo)
+Dos secciones full-viewport con fotos contextuales descargadas
+(`full-estudio.jpg` tras "acompaña", `full-meta.jpg` antes del CTA):
+`background-attachment: fixed` → la imagen queda ESTÁTICA mientras el contenido
+(kicker, título, texto, CTAs) se CONSTRUYE encima con animaciones scroll-driven
+escalonadas (`view()` + rangos). En táctiles/`<760px` cae a scroll normal (el
+fixed es janky en iOS). Copys de marketing: "Estudiar acompañado se siente
+diferente" y "Tu lugar te está esperando" + CTA con descuento.
+
+### Alertas v38–v39
+- Banner más llamativo: mesh de 3 manchas, anillo, brillo que cruza cada 6s,
+  tipografía mayor, CTA más grande.
+- **Nuevo formato "emergente"**: ventana sobre toda la página al entrar
+  (elegible al configurar cada alerta en /panel/alertas). Muestra el aviso +
+  el plan con su precio/tachado/marcador de ahorro; cierra con X, clic fuera o
+  "Quizá después"; se muestra UNA vez por visita (sessionStorage).
+  Componente `AlertaEmergente.tsx`; campo `formato` en el tipo Alerta.
+
+### Mathy — genio "enredado"
+Keyframes con giro/torbellino (rotate ±26°, skew, blur y rebote) al abrir y
+cerrar; cierre 480ms (timeout 470ms en ClienteSitio).
