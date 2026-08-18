@@ -25,6 +25,7 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
   if (u.rol === "admin") {
     items.push(
       { href: "/panel/disponibilidad", texto: "Disponibilidad", ic: "reloj" },
+      { href: "/panel/alertas", texto: "Alertas de la página", ic: "alerta" },
       { href: "/panel/usuarios", texto: "Usuarios", ic: "user" },
       { href: "/panel/personalizar-login", texto: "Personalizar login", ic: "imagen" },
       { href: "/panel/configuracion", texto: "Configuración", ic: "config" },

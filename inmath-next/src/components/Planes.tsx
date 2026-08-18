@@ -5,27 +5,27 @@ import { Icono } from "./Icono";
 
 type Plan = {
   clave: string;
-  foto: string;
   etiqueta: string;
+  nombre: string;
+  sub: string;
   precio: string;
   unidad: string;
   antes?: string;
   ahorro?: string;
-  nombre: string;
-  sub: string;
   cta: string;
   href: string;
   puntos: string[];
 };
 
-/** Carrusel de paquetes: cabecera con foto + ola, precio arriba, y al
- *  seleccionar una tarjeta pasa al frente sobre las demás. */
+/** Paquetes v37: tarjetas limpias (no saturadas) con la central destacada en
+ *  tinta de marca; precio con tachado inline y chip de ahorro sutil. */
 export function Planes({ precio, semanas, nombre }: { precio: string; semanas: number; nombre: string }) {
   const planes: Plan[] = [
     {
-      clave: "gratis", foto: "/img/fotos/hero-2.jpg", etiqueta: "Gratis",
-      precio: "$0", unidad: "/ sin costo", nombre: "Diagnóstico",
-      sub: "Conoce el método antes de decidir.", cta: "Empezar gratis", href: "/agenda",
+      clave: "gratis", etiqueta: "Gratis", nombre: "Diagnóstico",
+      sub: "Conoce el método antes de decidir.",
+      precio: "$0", unidad: "sin costo",
+      cta: "Empezar gratis", href: "/agenda",
       puntos: [
         "Asesoría de diagnóstico por videollamada",
         "Acceso a la primera clase de cada módulo",
@@ -33,10 +33,10 @@ export function Planes({ precio, semanas, nombre }: { precio: string; semanas: n
       ],
     },
     {
-      clave: "destacado", foto: "/img/fotos/avance-1.jpg", etiqueta: "Recomendado",
-      precio, unidad: "MXN", antes: "$4,500", ahorro: "Ahorras $500 hoy",
-      nombre: nombre || "Curso completo",
-      sub: "Pago único · acceso completo.", cta: "Inscribirme ahora", href: "/pago",
+      clave: "destacado", etiqueta: "Recomendado", nombre: nombre || "Curso completo",
+      sub: "Pago único · acceso completo desde hoy.",
+      precio, unidad: "MXN", antes: "$4,500", ahorro: "Ahorras $500 por tiempo limitado",
+      cta: "Inscribirme ahora", href: "/pago",
       puntos: [
         `Acceso completo por ${semanas} semanas`,
         "Todas las clases y materiales descargables",
@@ -45,9 +45,10 @@ export function Planes({ precio, semanas, nombre }: { precio: string; semanas: n
       ],
     },
     {
-      clave: "custom", foto: "/img/fotos/acompana-2.jpg", etiqueta: "Personalizado",
-      precio: "Cotización", unidad: "a tu medida", nombre: "Para equipos",
-      sub: "Para equipos, grupos o un plan a tu medida.", cta: "Solicitar cotización", href: "/agenda",
+      clave: "custom", etiqueta: "Personalizado", nombre: "Para equipos",
+      sub: "Grupos o un plan hecho a tu medida.",
+      precio: "Cotización", unidad: "a tu medida",
+      cta: "Solicitar cotización", href: "/agenda",
       puntos: [
         "Contenido y ritmo ajustados a tu caso",
         "Más sesiones de asesoría incluidas",
@@ -59,45 +60,42 @@ export function Planes({ precio, semanas, nombre }: { precio: string; semanas: n
   const [activo, setActivo] = useState(1);
 
   return (
-    <div className="pk-carrusel" role="radiogroup" aria-label="Paquetes disponibles">
-      {planes.map((p, i) => (
-        <article
-          key={p.clave}
-          className={`pk pk-${p.clave}${i === activo ? " activo" : ""}`}
-          role="radio"
-          aria-checked={i === activo}
-          tabIndex={0}
-          onClick={() => setActivo(i)}
-          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActivo(i); } }}
-        >
-          <div className="pk-top">
-            <div className="pk-foto" style={{ backgroundImage: `url(${p.foto})` }} aria-hidden="true" />
-            <div className="pk-top-in">
-              <span className="pk-etiqueta">{p.etiqueta}</span>
-              {p.ahorro && (
-                <span className="pk-descuento"><Icono n="clock" /> {p.ahorro}</span>
-              )}
-              <div className="pk-precio">
-                {p.antes && <s>{p.antes}</s>}
-                <b>{p.precio}</b> <small>{p.unidad}</small>
-              </div>
+    <div className="pk2-zona">
+      <div className="pk2-confianza" aria-label="Garantías">
+        <span><Icono n="card" /> Pago único, sin mensualidades</span>
+        <span><Icono n="clock" /> Acceso inmediato al inscribirte</span>
+        <span><Icono n="user" /> Asesoría 1 a 1 incluida</span>
+      </div>
+      <div className="pk2-grid" role="radiogroup" aria-label="Paquetes disponibles">
+        {planes.map((p, i) => (
+          <article
+            key={p.clave}
+            className={`pk2 pk2-${p.clave}${i === activo ? " activo" : ""}`}
+            role="radio" aria-checked={i === activo} tabIndex={0}
+            onClick={() => setActivo(i)}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActivo(i); } }}
+          >
+            {p.clave === "destacado" && <span className="pk2-badge">{p.etiqueta}</span>}
+            <div className="pk2-cab">
+              <h3>{p.nombre}</h3>
+              <p>{p.sub}</p>
             </div>
-            <svg className="pk-ola" viewBox="0 0 500 44" preserveAspectRatio="none" aria-hidden="true">
-              <path d="M0,44 L0,22 C120,46 190,6 290,18 C370,28 440,10 500,22 L500,44 Z" fill="#fff" />
-            </svg>
-          </div>
-          <div className="pk-body">
-            <h3 className="pk-nombre">{p.nombre}</h3>
-            <p className="pk-sub">{p.sub}</p>
+            <div className="pk2-precio">
+              <b>{p.precio}</b>
+              {p.antes && <s>{p.antes}</s>}
+              <small>{p.unidad}</small>
+            </div>
+            {p.ahorro && <span className="pk2-ahorro"><Icono n="clock" /> {p.ahorro}</span>}
+            <Link className="pk2-cta" href={p.href} onClick={(e) => e.stopPropagation()}>{p.cta}</Link>
             <ul>
               {p.puntos.map((t) => (
                 <li key={t}><Icono n="check" /> {t}</li>
               ))}
             </ul>
-            <Link className="pk-cta" href={p.href} onClick={(e) => e.stopPropagation()}>{p.cta}</Link>
-          </div>
-        </article>
-      ))}
+          </article>
+        ))}
+      </div>
+      <p className="pk2-nota">Si tienes dudas, agenda una asesoría gratis y un asesor te ayuda a elegir.</p>
     </div>
   );
 }

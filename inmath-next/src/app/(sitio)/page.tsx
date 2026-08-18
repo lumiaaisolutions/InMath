@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { Icono, Malla } from "@/components/Icono";
 import { CtaForm } from "@/components/ClienteSitio";
 import { Planes } from "@/components/Planes";
+import { AlertasLanding } from "@/components/AlertasLanding";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,8 @@ export default async function Landing() {
           </div>
         </div>
       </section>
+
+      <AlertasLanding posicion="arriba" />
 
       <section className="proceso" id="como">
         <div className="centrado">
@@ -120,6 +123,8 @@ export default async function Landing() {
         </div>
       </section>
 
+      <AlertasLanding posicion="precios" />
+
       <section className="precio" id="precios">
         <Malla />
         <div className="centrado" style={{ textAlign: "center", marginBottom: 36 }}>
@@ -140,6 +145,8 @@ export default async function Landing() {
           </div>
         </div>
       </section>
+
+      <AlertasLanding posicion="final" />
 
       <section className="cta-final">
         <div className="cta-caja reveal zoom-in">

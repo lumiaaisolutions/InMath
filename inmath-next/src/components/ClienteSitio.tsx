@@ -87,7 +87,14 @@ export function ScriptsSitio() {
 
 /** Chat flotante de Mathy — port del agente del sitio. */
 export function AgenteIA() {
-  const [abierto, setAbierto] = useState(false);
+  // Abierto SIEMPRE al cargar/entrar (decisión de producto); el usuario puede
+  // cerrarlo y reabrirlo con el botón. Cierre con animación "genio".
+  const [abierto, setAbierto] = useState(true);
+  const [cerrando, setCerrando] = useState(false);
+  const cerrar = () => {
+    setCerrando(true);
+    setTimeout(() => { setAbierto(false); setCerrando(false); }, 360);
+  };
   const [mensajes, setMensajes] = useState<{ rol: "usuario" | "asistente"; texto: string }[]>([
     { rol: "asistente", texto: "¡Hola! Soy Mathy. ¿Tienes dudas del curso o quieres agendar tu asesoría gratis?" },
   ]);
@@ -113,7 +120,7 @@ export function AgenteIA() {
   return (
     <div className="agente-ia">
       <button type="button" className="agente-btn" aria-expanded={abierto} aria-label="Abrir a Mathy"
-        onClick={() => setAbierto(!abierto)}>
+        onClick={() => (abierto ? cerrar() : setAbierto(true))}>
         <svg className="agente-libro" viewBox="0 0 48 48" aria-hidden="true">
           <defs><linearGradient id="ag-t" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
             <stop offset="0" stopColor="#6B9FFF" /><stop offset="1" stopColor="#AFCFFF" /></linearGradient></defs>
@@ -124,7 +131,7 @@ export function AgenteIA() {
         </svg>
       </button>
       {abierto && (
-        <div className="agente-panel" role="dialog" aria-label="Mathy">
+        <div className={`agente-panel genio${cerrando ? " genio-cierra" : ""}`} role="dialog" aria-label="Mathy">
           <div className="ap-cab">
             <div className="ap-quien">
               <svg className="ap-avatar" viewBox="0 0 48 48" aria-hidden="true">
@@ -137,7 +144,7 @@ export function AgenteIA() {
               </svg>
               <div><b>Mathy</b><span>La IA de Cursos InMath</span></div>
             </div>
-            <button type="button" className="ap-cerrar" aria-label="Cerrar" onClick={() => setAbierto(false)}><Icono n="x" /></button>
+            <button type="button" className="ap-cerrar" aria-label="Cerrar" onClick={cerrar}><Icono n="x" /></button>
           </div>
           <div className="ap-mensajes" ref={lista}>
             {mensajes.map((m, i) => (
@@ -148,7 +155,7 @@ export function AgenteIA() {
           <div className="ap-entrada">
             <input value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Escribe tu pregunta…"
               onKeyDown={(e) => e.key === "Enter" && enviar()} />
-            <button type="button" onClick={enviar} disabled={cargando} aria-label="Enviar">→</button>
+            <button type="button" onClick={enviar} disabled={cargando} aria-label="Enviar"><Icono n="arrow" /></button>
           </div>
         </div>
       )}
