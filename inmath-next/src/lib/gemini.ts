@@ -14,7 +14,7 @@ export async function responderGemini(sistema: string, historial: Turno[], mensa
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: sistema }] },
       contents,
-      generationConfig: { temperature: 0.6, maxOutputTokens: 800, thinkingConfig: { thinkingLevel: "low" } },
+      generationConfig: { temperature: 0.6, maxOutputTokens: 400, thinkingConfig: { thinkingLevel: "minimal" } },
     }),
     signal: AbortSignal.timeout(30_000),
   });

@@ -75,6 +75,8 @@ export function normalizaDiseno(x?: Partial<DisenoAlerta>): DisenoAlerta {
 
 const TAM_TIT = { ch: "1rem", md: "1.24rem", gd: "1.55rem", xg: "1.9rem" };
 const TAM_TIT_EM = { ch: "clamp(1.4rem,3.6vw,2.1rem)", md: "clamp(1.8rem,5vw,3rem)", gd: "clamp(2.2rem,6vw,3.7rem)", xg: "clamp(2.6rem,7vw,4.4rem)" };
+/* versión en rem fijo para el preview a escala del panel (mismas proporciones) */
+const TAM_TIT_EMP = { ch: "1.5rem", md: "2.05rem", gd: "2.55rem", xg: "3.05rem" };
 const TAM_TX = { ch: ".84rem", md: ".95rem", gd: "1.1rem" };
 const RADIO = { suave: "12px", medio: "24px", redondo: "34px" };
 const CUADRO = {
@@ -91,6 +93,7 @@ export function varsDiseno(d: DisenoAlerta): Record<string, string> {
     "--a-f-tx": d.fuente_texto === "display" ? "var(--display)" : "var(--cuerpo)",
     "--a-tam-tit": TAM_TIT[d.tam_titulo],
     "--a-tam-tit-em": TAM_TIT_EM[d.tam_titulo],
+    "--a-tam-tit-emp": TAM_TIT_EMP[d.tam_titulo],
     "--a-tam-tx": TAM_TX[d.tam_texto],
     "--a-alin": d.alineacion === "izquierda" ? "left" : d.alineacion === "derecha" ? "right" : "center",
     "--a-just": d.alineacion === "izquierda" ? "flex-start" : d.alineacion === "derecha" ? "flex-end" : "center",

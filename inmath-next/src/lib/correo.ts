@@ -18,7 +18,7 @@ export async function enviarCorreo(c: Correo): Promise<{ enviado: boolean; motiv
     const transporte = nodemailer.createTransport(url);
     const from = process.env.CORREO_FROM || new URL(url).username;
     // Leyenda fija: este buzón es solo de envío; el contacto real es inmath@gmail.com
-    const texto = `${c.texto}\n\n—\nEste correo se envía desde una dirección de solo envío y no recibe respuestas.\n¿Necesitas ayuda o quieres escribirnos? Hazlo a inmath@gmail.com`;
+    const texto = `${c.texto}\n\n—\nEste correo se envía desde una dirección de solo envío y no recibe respuestas.\n¿Necesitas ayuda o quieres escribirnos? Hazlo a cursosinmath@gmail.com`;
     await transporte.sendMail({ from, to: c.para.join(", "), subject: c.asunto, text: texto });
     return { enviado: true };
   } catch (e) {
@@ -26,3 +26,6 @@ export async function enviarCorreo(c: Correo): Promise<{ enviado: boolean; motiv
     return { enviado: false, motivo: "el envío falló, revisa SMTP_URL y el log" };
   }
 }
+
+/** Buzón real de contacto del negocio (dudas de usuarios). */
+export const CORREO_CONTACTO = "cursosinmath@gmail.com";

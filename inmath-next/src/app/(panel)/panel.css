@@ -1965,3 +1965,56 @@ body::before { animation: none !important; }
 .am-plan-info b, .am-plan-precio b { color: var(--a-cuadro-fg, var(--tinta)); }
 .am-plan-info span { color: var(--a-cuadro-sub, var(--tinta-2)); }
 .am-plan-precio s { color: var(--a-cuadro-sub, var(--tinta-3)); }
+
+/* =========================================================================
+   v46 — Panel de alertas: preview fiel + botones + responsive.
+   ========================================================================= */
+/* 1) am-kicker del preview = MISMO diseño que el eyebrow/kicker real (wash
+      suave semitransparente + texto en gradiente, sin píldora ni subrayado) */
+.am-kicker {
+  background: none; border: 0; box-shadow: none; padding: 6px 12px 6px 4px; border-radius: 0;
+  background-image: linear-gradient(100deg, #FFE9A8, #FFB08A);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.am-kicker::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  inset: -34px -70px -34px -46px; left: -46px; top: -34px; width: auto; height: auto; transform: none;
+  background:
+    radial-gradient(42% 46% at 24% 52%, rgba(255,255,255,.34), transparent 68%),
+    radial-gradient(38% 42% at 55% 42%, rgba(175,207,255,.4), transparent 70%);
+  border-radius: 0; filter: blur(10px); box-shadow: none;
+}
+.am-kicker::after { display: none; content: none; }
+.am-kicker svg { -webkit-text-fill-color: initial; color: #fff; }
+/* título del preview con la MISMA proporción que el real */
+.al-em-marco .am-contenido h3 { font-size: var(--a-tam-tit-emp, 2.05rem); }
+.al-em-marco .am-contenido { transform: scale(.62); }
+
+/* 2) Guardar cambios: FIJO en pantalla y llamativo (naranja de acción) */
+.al-guardar {
+  position: fixed; right: 108px; bottom: 20px; z-index: 80;
+  padding: 0; margin: 0;
+}
+.al-guardar .boton {
+  background: linear-gradient(120deg, #F6A62A, #E8590C) !important;
+  color: #fff !important; font: 800 .95rem var(--cuerpo) !important;
+  padding: 14px 28px !important; border-radius: 999px !important;
+  box-shadow: 0 14px 32px -8px rgba(232,89,12,.6), 0 3px 8px rgba(18,31,55,.15) !important;
+  transition: transform var(--transicion), box-shadow var(--transicion);
+}
+.al-guardar .boton:hover { transform: translateY(-2px) scale(1.03); }
+/* espacio para que el botón fijo no tape el final del formulario */
+.al-frame { margin-bottom: 84px; }
+
+/* 3) Quitar alerta: sin fondo azul — blanco con rojo, visible */
+.boton.mini.al-quitar, .al-quitar {
+  background: #fff !important; color: #C0392B !important;
+  box-shadow: inset 0 0 0 1.6px #E8B0A8 !important; border-radius: 999px;
+}
+.boton.mini.al-quitar:hover, .al-quitar:hover { background: #FBEAE7 !important; box-shadow: inset 0 0 0 1.6px #C0392B !important; }
+
+/* 4) Responsive: en una columna el preview NO es sticky (se encimaba) */
+@media (max-width: 980px) {
+  .al-frame-prev { position: static; }
+  .al-guardar { right: 88px; bottom: 16px; }
+}

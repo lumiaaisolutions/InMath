@@ -169,3 +169,41 @@ al 68–70% y blur 12px — el wash se desvanece sin borde perceptible.
 
 ### Fix del editor
 "Guardar cambios" quedaba debajo del botón flotante de Mathy (padding-right).
+
+---
+
+## v47–v48 (18-ago, tarde-2) — Mathy interactivo + correos de contacto
+
+### Rendimiento del agente (¡de 6–15s a ~1s!)
+El modelo pensaba de más: `gemini-3.6-flash` con `thinkingLevel: low` tardaba
+6–15 s. Se midió con curl directo y se cambió a **gemini-3.5-flash-lite** +
+`thinkingLevel: minimal` + maxOutputTokens 400 → ~0.7–2 s. (GEMINI_MODEL en el
+.env del VPS). El cliente además tiene timeout de 25 s (no más "escribiendo…"
+infinito).
+
+### Chat interactivo (protocolo de etiquetas)
+El modelo emite etiquetas que el sitio convierte en BOTONES:
+- `[OPCIONES: a | b | c]` → chips de respuesta rápida (máx 4; solo en el último
+  mensaje). Usadas para horarios ("Martes 18, 15:00"), sí/no y "Agéndala por mí
+  | Prefiero agendarla yo".
+- `[IR_AGENDA]` → botón "Ver horarios y agendar yo" → /agenda.
+- `[CONTACTO_HUMANO]` → botón verde de WhatsApp (sustituye al FAB, que se quitó).
+Parser en `parseaBot()` (ClienteSitio). Prompt en api/agente/route.ts.
+
+### Modo AMPLIO (PC/tableta) + mascota reactiva
+- Botón de ampliar en la cabecera del chat (≥761px): frame centrado
+  min(760px, 94vw) × 82vh sobre velo difuminado; clic fuera lo reduce.
+- La mascota reacciona: `piensa` (ojos buscan) mientras escribe, `feliz`
+  (brinco + ojos felices) al agendar, `triste` al fallar. Clases
+  `animo-*` en `.agente-ia`, aplican al botón flotante y al avatar.
+- Halo del botón: degradado suave verde↔azul translúcido (v47).
+
+### Correos del negocio
+- Contacto real: **cursosinmath@gmail.com** (leyenda de los correos, dato que
+  Mathy puede compartir, y destino del formulario del CTA).
+- **CTA final** ("Déjanos tus datos"): ahora pide nombre, WhatsApp, CORREO y un
+  mensaje opcional; guarda el prospecto (con correo) y ENVÍA la duda por correo
+  a cursosinmath@gmail.com.
+- **Mathy agenda con correo**: pide el correo al agendar ("tu confirmación se
+  enviará por correo"; si no lo dan, agenda sin correo), lo guarda en el
+  prospecto y envía la confirmación de la cita por correo (noreply).

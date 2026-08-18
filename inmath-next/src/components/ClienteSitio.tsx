@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icono } from "./Icono";
 
@@ -85,77 +86,129 @@ export function ScriptsSitio() {
   return null;
 }
 
-/** Chat flotante de Mathy — port del agente del sitio. */
-export function AgenteIA() {
+/** Extrae las acciones interactivas de una respuesta del bot. */
+function parseaBot(textoCrudo: string) {
+  let texto = textoCrudo;
+  const humano = texto.includes("[CONTACTO_HUMANO]");
+  const irAgenda = texto.includes("[IR_AGENDA]");
+  let opciones: string[] = [];
+  const m = texto.match(/\[OPCIONES:([^\]]+)\]/);
+  if (m) opciones = m[1].split("|").map((s) => s.trim()).filter(Boolean).slice(0, 4);
+  texto = texto.replace(/\[OPCIONES:[^\]]+\]/g, "").replace("[CONTACTO_HUMANO]", "").replace("[IR_AGENDA]", "").trim();
+  return { texto, humano, irAgenda, opciones };
+}
+
+const MascotaSVG = ({ id }: { id: string }) => (
+  <svg className="agente-libro" viewBox="0 0 48 48" aria-hidden="true">
+    <defs><linearGradient id={id} x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stopColor="#6B9FFF" /><stop offset="1" stopColor="#AFCFFF" /></linearGradient></defs>
+    <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke={`url(#${id})`} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M24 15 C 31 10.5 38 10 42 13.5 V 33 C 38 29.5 31 30 24 34.5" fill="none" stroke={`url(#${id})`} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+    <rect className="agente-ojo i" x="18.6" y="18.4" width="3.8" height="3.8" />
+    <rect className="agente-ojo d" x="25.6" y="18.4" width="3.8" height="3.8" />
+  </svg>
+);
+
+/** Chat flotante de Mathy — interactivo: chips de opciones, accesos directos,
+ *  modo ampliado (PC/tableta) y mascota que reacciona a la conversación. */
+export function AgenteIA({ whatsappUrl = "" }: { whatsappUrl?: string }) {
   // Abierto SIEMPRE al cargar/entrar (decisión de producto); el usuario puede
   // cerrarlo y reabrirlo con el botón. Cierre con animación "genio".
   const [abierto, setAbierto] = useState(true);
   const [cerrando, setCerrando] = useState(false);
+  const [amplio, setAmplio] = useState(false);
+  const [animo, setAnimo] = useState<"normal" | "piensa" | "feliz" | "triste">("normal");
   const cerrar = () => {
     setCerrando(true);
-    setTimeout(() => { setAbierto(false); setCerrando(false); }, 470);
+    setTimeout(() => { setAbierto(false); setCerrando(false); setAmplio(false); }, 470);
   };
   const [mensajes, setMensajes] = useState<{ rol: "usuario" | "asistente"; texto: string }[]>([
-    { rol: "asistente", texto: "¡Hola! Soy Mathy. ¿Tienes dudas del curso o quieres agendar tu asesoría gratis?" },
+    { rol: "asistente", texto: "¡Hola! Soy Mathy. ¿Tienes dudas del curso o quieres agendar tu asesoría gratis? [OPCIONES: Quiero agendar mi asesoría gratis | ¿Qué incluye el curso? | ¿Cuánto cuesta?]" },
   ]);
   const [texto, setTexto] = useState(""); const [cargando, setCargando] = useState(false);
   const lista = useRef<HTMLDivElement>(null);
-  useEffect(() => { lista.current?.scrollTo(0, 1e6); }, [mensajes, abierto]);
+  const animoTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => { lista.current?.scrollTo(0, 1e6); }, [mensajes, abierto, cargando]);
 
-  async function enviar() {
-    const m = texto.trim(); if (!m || cargando) return;
-    setTexto(""); setMensajes((x) => [...x, { rol: "usuario", texto: m }]); setCargando(true);
+  const reacciona = (a: "feliz" | "triste") => {
+    setAnimo(a);
+    if (animoTimer.current) clearTimeout(animoTimer.current);
+    animoTimer.current = setTimeout(() => setAnimo("normal"), 2800);
+  };
+
+  async function enviar(manual?: string) {
+    const m = (manual ?? texto).trim(); if (!m || cargando) return;
+    setTexto(""); setMensajes((x) => [...x, { rol: "usuario", texto: m }]); setCargando(true); setAnimo("piensa");
     try {
       const r = await fetch("/api/agente", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mensaje: m, historial: mensajes.slice(-12) }),
+        signal: AbortSignal.timeout(25_000),
       });
       const d = await r.json();
-      setMensajes((x) => [...x, { rol: "asistente", texto: d.respuesta ?? d.error ?? "No pude responder, intenta de nuevo." }]);
+      const respuesta = d.respuesta ?? d.error ?? "No pude responder, intenta de nuevo.";
+      setMensajes((x) => [...x, { rol: "asistente", texto: respuesta }]);
+      if (d.agendado || /¡Listo|agendada/i.test(respuesta)) reacciona("feliz");
+      else if (d.error) reacciona("triste");
+      else setAnimo("normal");
     } catch {
-      setMensajes((x) => [...x, { rol: "asistente", texto: "Sin conexión, intenta de nuevo." }]);
+      setMensajes((x) => [...x, { rol: "asistente", texto: "Sin conexión, intenta de nuevo. [CONTACTO_HUMANO]" }]);
+      reacciona("triste");
     } finally { setCargando(false); }
   }
 
   return (
-    <div className="agente-ia">
+    <div className={`agente-ia animo-${animo}`}>
       <button type="button" className="agente-btn" aria-expanded={abierto} aria-label="Abrir a Mathy"
         onClick={() => (abierto ? cerrar() : setAbierto(true))}>
-        <svg className="agente-libro" viewBox="0 0 48 48" aria-hidden="true">
-          <defs><linearGradient id="ag-t" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#6B9FFF" /><stop offset="1" stopColor="#AFCFFF" /></linearGradient></defs>
-          <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="url(#ag-t)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M24 15 C 31 10.5 38 10 42 13.5 V 33 C 38 29.5 31 30 24 34.5" fill="none" stroke="url(#ag-t)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-          <rect className="agente-ojo i" x="18.6" y="18.4" width="3.8" height="3.8" />
-          <rect className="agente-ojo d" x="25.6" y="18.4" width="3.8" height="3.8" />
-        </svg>
+        <MascotaSVG id="ag-t" />
       </button>
+      {abierto && amplio && <div className="ap-velo-fondo" onClick={() => setAmplio(false)} />}
       {abierto && (
-        <div className={`agente-panel genio${cerrando ? " genio-cierra" : ""}`} role="dialog" aria-label="Mathy">
+        <div className={`agente-panel genio${cerrando ? " genio-cierra" : ""}${amplio ? " amplio" : ""}`} role="dialog" aria-label="Mathy">
           <div className="ap-cab">
             <div className="ap-quien">
-              <svg className="ap-avatar" viewBox="0 0 48 48" aria-hidden="true">
-                <defs><linearGradient id="ag-t2" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
-                  <stop offset="0" stopColor="#6B9FFF" /><stop offset="1" stopColor="#AFCFFF" /></linearGradient></defs>
-                <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="url(#ag-t2)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M24 15 C 31 10.5 38 10 42 13.5 V 33 C 38 29.5 31 30 24 34.5" fill="none" stroke="url(#ag-t2)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-                <rect className="agente-ojo i" x="18.6" y="18.4" width="3.8" height="3.8" />
-                <rect className="agente-ojo d" x="25.6" y="18.4" width="3.8" height="3.8" />
-              </svg>
+              <span className="ap-avatar-caja"><MascotaSVG id="ag-t2" /></span>
               <div><b>Mathy</b><span>La IA de Cursos InMath</span></div>
             </div>
+            <button type="button" className="ap-cerrar ap-amplia" aria-label={amplio ? "Vista normal" : "Ampliar chat"}
+              onClick={() => setAmplio(!amplio)}>
+              <Icono n={amplio ? "reduce" : "amplia"} />
+            </button>
             <button type="button" className="ap-cerrar" aria-label="Cerrar" onClick={cerrar}><Icono n="x" /></button>
           </div>
           <div className="ap-mensajes" ref={lista}>
-            {mensajes.map((m, i) => (
-              <div key={i} className={`ap-msg ${m.rol === "usuario" ? "usuario" : "bot"}`}>{m.texto}</div>
-            ))}
+            {mensajes.map((m, i) => {
+              if (m.rol === "usuario") return <div key={i} className="ap-msg usuario">{m.texto}</div>;
+              const { texto: tx, humano, irAgenda, opciones } = parseaBot(m.texto);
+              const esUltimo = i === mensajes.length - 1;
+              return (
+                <div key={i} className="ap-msg bot">
+                  {tx}
+                  {humano && whatsappUrl && (
+                    <a className="ap-humano" href={whatsappUrl} target="_blank" rel="noopener">
+                      <Icono n="chat" /> Hablar con una persona
+                    </a>
+                  )}
+                  {irAgenda && (
+                    <Link className="ap-humano ap-agenda" href="/agenda"><Icono n="calendar" /> Ver horarios y agendar yo</Link>
+                  )}
+                  {esUltimo && !cargando && opciones.length > 0 && (
+                    <div className="ap-chips">
+                      {opciones.map((op) => (
+                        <button key={op} type="button" className="ap-chip" onClick={() => enviar(op)}>{op}</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             {cargando && <div className="ap-msg cargando">escribiendo…</div>}
           </div>
           <div className="ap-entrada">
             <input value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Escribe tu pregunta…"
               onKeyDown={(e) => e.key === "Enter" && enviar()} />
-            <button type="button" onClick={enviar} disabled={cargando} aria-label="Enviar"><Icono n="arrow" /></button>
+            <button type="button" onClick={() => enviar()} disabled={cargando} aria-label="Enviar"><Icono n="arrow" /></button>
           </div>
         </div>
       )}
@@ -163,7 +216,8 @@ export function AgenteIA() {
   );
 }
 
-/** Formulario del CTA final (mismo comportamiento que el PHP). */
+/** Formulario del CTA final: guarda al prospecto y además envía la duda por
+ *  correo al buzón de contacto (cursosinmath@gmail.com). */
 export function CtaForm() {
   const [estado, setEstado] = useState<{ ok?: string; error?: string }>({});
   async function enviar(e: React.FormEvent<HTMLFormElement>) {
@@ -174,15 +228,17 @@ export function CtaForm() {
     setEstado(r.ok ? { ok: d.nombre } : { error: d.error });
   }
   if (estado.ok) return (
-    <div className="form-cta"><div className="aviso-cta"><Icono n="check" /> ¡Gracias, {estado.ok}! Te escribimos por WhatsApp en breve.</div></div>
+    <div className="form-cta"><div className="aviso-cta"><Icono n="check" /> ¡Gracias, {estado.ok}! Recibimos tu mensaje y te contactamos muy pronto.</div></div>
   );
   return (
     <form className="form-cta" onSubmit={enviar}>
       {estado.error && <div className="aviso-cta">{estado.error}</div>}
       <input type="text" name="nombre" placeholder="Tu nombre" required />
       <input type="tel" name="telefono" placeholder="WhatsApp (10 dígitos)" required inputMode="numeric" />
+      <input type="email" name="correo" placeholder="Tu correo" required />
+      <textarea name="mensaje" placeholder="¿Qué te gustaría preguntarnos? (opcional)" rows={3} maxLength={600} />
       <button type="submit" className="boton glow glow-halo">Quiero que me escriban →</button>
-      <p className="legal">Sin spam. Solo lo usamos para contactarte por WhatsApp.</p>
+      <p className="legal">Sin spam. Solo lo usamos para contactarte y responder tu duda.</p>
     </form>
   );
 }
