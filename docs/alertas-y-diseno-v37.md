@@ -140,3 +140,32 @@ Figtree (se dejó la variable por compatibilidad) y ya no se carga la fuente.
   /panel/login/restablecer (token de un solo uso hasheado en
   configuraciones.resets_password) → nueva contraseña con bcrypt.
 - El recordatorio semanal de disponibilidad (cron del viernes) ahora SÍ envía.
+
+---
+
+## v44–v45 (18-ago, cierre)
+
+### Alertas: personalización TOTAL
+Cada alerta guarda un objeto `diseno` (normalizado con defaults, sin migración):
+- **Tipografías**: fuente del título y del texto, eligiendo entre las DOS de la
+  página (Sora/display, Figtree/cuerpo) — respetando la regla de tipografía única.
+- **Tamaños**: título (chico/normal/grande/extra) y texto (chico/normal/grande).
+- **Distribución**: alineación (izq/centro/der), lado de la imagen/video en el
+  banner, bordes (rectos suaves/redondeados/muy redondeados).
+- **Cuadritos del emergente**: estilo del cuadro del plan (claro/vidrio/oscuro),
+  mostrar/ocultar y TEXTO editable de: etiqueta superior (kicker), cuadrito del
+  plan (título, subtítulo, precio, precio tachado — vacíos = datos reales del
+  curso) y marcador de ahorro.
+- Implementación: `DisenoAlerta` + `varsDiseno()` en `lib/alertas-tipos.ts`
+  emiten variables CSS (`--a-f-tit`, `--a-tam-tit`, `--a-alin`, `--a-radio`,
+  `--a-cuadro-*`…) que consumen `.alerta-frame`/`.am-*` en inmath.css y su
+  réplica de preview en panel.css. El editor (ClienteAlertas) tiene secciones
+  "Tipografía y distribución", "Contenido de la ventana" y "Botón".
+
+### Kicker: fin del corte cuadrado (v44)
+La mancha del kicker unificado se veía cortada (parecía un rectángulo). Fix:
+caja del ::before mucho más amplia (inset -52/-110px), degradados que mueren
+al 68–70% y blur 12px — el wash se desvanece sin borde perceptible.
+
+### Fix del editor
+"Guardar cambios" quedaba debajo del botón flotante de Mathy (padding-right).

@@ -1,5 +1,5 @@
 import { config } from "./db";
-import { ESTILOS, type Alerta } from "./alertas-tipos";
+import { ESTILOS, normalizaDiseno, type Alerta } from "./alertas-tipos";
 
 export type { Alerta } from "./alertas-tipos";
 export { ESTILOS, POSICIONES, FORMATOS } from "./alertas-tipos";
@@ -15,6 +15,7 @@ function normaliza(x: Partial<Alerta>): Alerta {
     posicion: ["arriba", "precios", "final"].includes(x.posicion as string) ? (x.posicion as Alerta["posicion"]) : "arriba",
     formato: x.formato === "emergente" ? "emergente" : "banner",
     media: String(x.media ?? ""),
+    diseno: normalizaDiseno(x.diseno),
     activo: !!x.activo,
   };
 }

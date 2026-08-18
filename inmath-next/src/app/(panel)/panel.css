@@ -1951,3 +1951,17 @@ body::before { animation: none !important; }
 .reset-caja .login-entrar { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 100%; }
 /* El guardar de alertas no debe quedar debajo del botón flotante de Mathy */
 .al-guardar { padding-right: 96px; }
+
+/* v45 — Diseño configurable en los previews + separadores del editor */
+.al-seccion { font: 700 .72rem/1 var(--cuerpo); letter-spacing: .08em; text-transform: uppercase; color: var(--tinta-3); border-top: 1px solid var(--linea); padding-top: 14px; margin-top: 4px; }
+.alerta-frame { border-radius: var(--a-radio, 22px); text-align: var(--a-alin, left); justify-content: var(--a-just, flex-start); }
+.alerta-cuerpo b { font-family: var(--a-f-tit, var(--display)); font-size: var(--a-tam-tit, 1rem); }
+.alerta-cuerpo p { font-family: var(--a-f-tx, var(--cuerpo)); font-size: var(--a-tam-tx, .86rem); }
+.alerta-media { order: var(--a-media-orden, -1); border-radius: calc(var(--a-radio, 22px) * .58); }
+.am-contenido { text-align: var(--a-alin, center); justify-items: var(--a-just, center); }
+.am-contenido h3 { font-family: var(--a-f-tit, var(--display)); font-size: calc(var(--a-tam-tit, 1.24rem) * 1.6); }
+.am-texto { font-family: var(--a-f-tx, var(--cuerpo)); }
+.am-plan { border-radius: calc(var(--a-radio, 22px) * .7); background: var(--a-cuadro-bg, rgba(255,255,255,.94)); }
+.am-plan-info b, .am-plan-precio b { color: var(--a-cuadro-fg, var(--tinta)); }
+.am-plan-info span { color: var(--a-cuadro-sub, var(--tinta-2)); }
+.am-plan-precio s { color: var(--a-cuadro-sub, var(--tinta-3)); }

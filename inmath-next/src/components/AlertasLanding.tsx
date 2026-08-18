@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { alertasActivas, leerAlertas, type Alerta } from "@/lib/alertas";
+import { varsDiseno } from "@/lib/alertas-tipos";
 import { AlertaEmergente } from "./AlertaEmergente";
 
 /** Primera alerta activa en formato emergente (ventana sobre la página). */
@@ -9,8 +10,8 @@ export async function AlertaEmergenteLanding({ precio, curso }: { precio: string
   return <AlertaEmergente alerta={alerta} precio={precio} curso={curso} />;
 }
 
-/** Alertas configuradas desde el panel: frames de vidrio sin bordes con
- *  manchas de color difuminadas (estilo mesh) en los colores del sitio. */
+/** Alertas configuradas desde el panel: frames con TODO el diseño ajustable
+ *  (tipografías, tamaños, alineación, lado de la media, bordes). */
 export async function AlertasLanding({ posicion }: { posicion: Alerta["posicion"] }) {
   const alertas = (await alertasActivas(posicion)).filter((a) => a.formato === "banner");
   if (!alertas.length) return null;
@@ -18,7 +19,7 @@ export async function AlertasLanding({ posicion }: { posicion: Alerta["posicion"
     <section className="alertas-zona" aria-label="Avisos">
       <div className="centrado">
         {alertas.map((a) => (
-          <div key={a.id} className={`alerta-frame alerta-${a.estilo} reveal`}>
+          <div key={a.id} className={`alerta-frame alerta-${a.estilo} reveal`} style={varsDiseno(a.diseno) as React.CSSProperties}>
             {a.media && (a.media.endsWith(".mp4")
               ? <video className="alerta-media" src={a.media} muted loop autoPlay playsInline />
               : <img className="alerta-media" src={a.media} alt="" />)}

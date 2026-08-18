@@ -3,7 +3,10 @@ import { useActionState, useRef, useState } from "react";
 import { guardarAlertasAccion, alertaMediaSubirAccion, type ResultadoMedia } from "./acciones";
 import { useToastResultado } from "../ClientePanel";
 import { IconoPanel } from "@/components/IconoPanel";
-import { ESTILOS, POSICIONES, FORMATOS, DESTINOS, esVideo, type Alerta } from "@/lib/alertas-tipos";
+import {
+  ESTILOS, POSICIONES, FORMATOS, DESTINOS, esVideo, varsDiseno, DISENO_DEFECTO,
+  type Alerta, type DisenoAlerta,
+} from "@/lib/alertas-tipos";
 import type { Resultado } from "../acciones";
 
 const NOMBRE_ESTILO: Record<Alerta["estilo"], string> = {
@@ -14,13 +17,13 @@ const nueva = (): Alerta => ({
   id: Math.random().toString(36).slice(2, 9),
   titulo: "", texto: "", estilo: "ambar",
   enlace: "/pago", enlace_texto: "Inscribirme", posicion: "arriba",
-  formato: "banner", media: "", activo: true,
+  formato: "banner", media: "", diseno: { ...DISENO_DEFECTO }, activo: true,
 });
 
-/** Preview compartido: el MISMO markup del banner de la landing. */
+/** Preview del banner con el diseño configurado aplicado. */
 function PreviewBanner({ a }: { a: Alerta }) {
   return (
-    <div className={`alerta-frame alerta-${a.estilo}`}>
+    <div className={`alerta-frame alerta-${a.estilo}`} style={varsDiseno(a.diseno) as React.CSSProperties}>
       {a.media && (esVideo(a.media)
         ? <video className="alerta-media" src={a.media} muted loop autoPlay playsInline />
         : <img className="alerta-media" src={a.media} alt="" />)}
@@ -34,24 +37,27 @@ function PreviewBanner({ a }: { a: Alerta }) {
   );
 }
 
-/** Preview del emergente: la ventana de pantalla completa, a escala. */
+/** Preview del emergente (pantalla completa, a escala) con todo aplicado. */
 function PreviewEmergente({ a }: { a: Alerta }) {
+  const d = a.diseno;
   return (
     <div className="al-em-marco">
-      <div className={`am-lienzo alerta-${a.estilo}`}>
+      <div className={`am-lienzo alerta-${a.estilo}`} style={varsDiseno(d) as React.CSSProperties}>
         {a.media && (esVideo(a.media)
           ? <video className="am-fondo" src={a.media} muted loop autoPlay playsInline />
           : <img className="am-fondo" src={a.media} alt="" />)}
         <div className="am-velo-int" />
         <div className="am-contenido">
-          <span className="am-kicker"><IconoPanel n="reloj" /> Oferta por tiempo limitado</span>
+          {d.mostrar_kicker && d.kicker_texto && <span className="am-kicker"><IconoPanel n="reloj" /> {d.kicker_texto}</span>}
           <h3>{a.titulo || "Escribe un título…"}</h3>
           {a.texto && <p className="am-texto">{a.texto}</p>}
-          <div className="am-plan">
-            <div className="am-plan-info"><b>Curso Propedéutico InMath</b><span>Pago único · acceso inmediato</span></div>
-            <div className="am-plan-precio"><b>$4,000</b><s>$4,500</s></div>
-          </div>
-          <span className="am-marcador">Ahorras $500 inscribiéndote hoy</span>
+          {d.mostrar_plan && (
+            <div className="am-plan">
+              <div className="am-plan-info"><b>{d.plan_titulo || "Curso Propedéutico InMath"}</b>{d.plan_sub && <span>{d.plan_sub}</span>}</div>
+              <div className="am-plan-precio"><b>{d.plan_precio || "$4,000"}</b>{d.plan_antes && <s>{d.plan_antes}</s>}</div>
+            </div>
+          )}
+          {d.mostrar_marcador && d.marcador_texto && <span className="am-marcador">{d.marcador_texto}</span>}
           <span className="am-cta">{a.enlace_texto || "Inscribirme ahora"}</span>
         </div>
       </div>
@@ -59,7 +65,7 @@ function PreviewEmergente({ a }: { a: Alerta }) {
   );
 }
 
-/** Editor de alertas: tarjetas arriba; al seleccionar, frame con preview + configuración. */
+/** Editor de alertas: tarjetas; al seleccionar, preview + configuración TOTAL. */
 export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
   const toast = useToastResultado();
   const [alertas, setAlertas] = useState<Alerta[]>(iniciales);
@@ -76,6 +82,8 @@ export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
   const sel = alertas.find((a) => a.id === selId) ?? null;
   const set = (campo: keyof Alerta, v: string | boolean) =>
     setAlertas((xs) => xs.map((a) => (a.id === selId ? { ...a, [campo]: v } : a)));
+  const setD = (campo: keyof DisenoAlerta, v: string | boolean) =>
+    setAlertas((xs) => xs.map((a) => (a.id === selId ? { ...a, diseno: { ...a.diseno, [campo]: v } } : a)));
   const quitar = (id: string) => {
     setAlertas((xs) => xs.filter((a) => a.id !== id));
     if (selId === id) setSelId(null);
@@ -103,7 +111,7 @@ export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
       <div className="cabecera">
         <div>
           <h1>Alertas de la página</h1>
-          <div className="sub">Avisos que aparecen en la página pública: como banner dentro del contenido o como ventana emergente a pantalla completa. Selecciona una tarjeta para verla y configurarla.</div>
+          <div className="sub">Avisos de la página pública. Selecciona una tarjeta: verás el preview en vivo y podrás personalizarlo TODO — textos, tipografías, tamaños, distribución y los cuadritos.</div>
         </div>
         {alertas.length < 6 && (
           <button type="button" className="boton primario" onClick={agregar}>+ Agregar alerta</button>
@@ -112,7 +120,7 @@ export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
 
       {alertas.length === 0 ? (
         <div className="tarjeta al-vacio">
-          <p>Aún no hay alertas. Crea la primera con <b>+ Agregar alerta</b> — por ejemplo, un aviso de oferta con imagen, o una ventana de bienvenida con el plan.</p>
+          <p>Aún no hay alertas. Crea la primera con <b>+ Agregar alerta</b>.</p>
         </div>
       ) : (
         <div className="al-tarjetas">
@@ -150,7 +158,7 @@ export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
                   </select>
                 </label>
               ) : (
-                <div className="pl-campo al-nota-em">Aparece al entrar, a pantalla completa, con el plan y su descuento. Se muestra una vez por visita y el visitante puede cerrarla.</div>
+                <div className="pl-campo al-nota-em">Aparece al entrar, a pantalla completa. Se muestra una vez por visita y el visitante puede cerrarla.</div>
               )}
             </div>
             <label className="pl-campo">Título
@@ -162,7 +170,7 @@ export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
                 onChange={(e) => set("texto", e.target.value)} />
             </label>
             <div className="al-fila">
-              <div className="pl-campo al-estilos-campo">Estilo
+              <div className="pl-campo al-estilos-campo">Estilo de color
                 <div className="al-estilos" role="radiogroup" aria-label="Estilo de color">
                   {ESTILOS.map((es) => (
                     <button key={es} type="button" className={`al-sw al-sw-${es}${sel.estilo === es ? " activo" : ""}`}
@@ -182,6 +190,114 @@ export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
                 </div>
               </div>
             </div>
+
+            <div className="al-seccion">Tipografía y distribución</div>
+            <div className="al-fila">
+              <label className="pl-campo">Fuente del título
+                <select value={sel.diseno.fuente_titulo} onChange={(e) => setD("fuente_titulo", e.target.value)}>
+                  <option value="display">Sora (títulos de la página)</option>
+                  <option value="cuerpo">Figtree (texto de la página)</option>
+                </select>
+              </label>
+              <label className="pl-campo">Fuente del texto
+                <select value={sel.diseno.fuente_texto} onChange={(e) => setD("fuente_texto", e.target.value)}>
+                  <option value="cuerpo">Figtree (texto de la página)</option>
+                  <option value="display">Sora (títulos de la página)</option>
+                </select>
+              </label>
+            </div>
+            <div className="al-fila">
+              <label className="pl-campo">Tamaño del título
+                <select value={sel.diseno.tam_titulo} onChange={(e) => setD("tam_titulo", e.target.value)}>
+                  <option value="ch">Chico</option><option value="md">Normal</option>
+                  <option value="gd">Grande</option><option value="xg">Extra grande</option>
+                </select>
+              </label>
+              <label className="pl-campo">Tamaño del texto
+                <select value={sel.diseno.tam_texto} onChange={(e) => setD("tam_texto", e.target.value)}>
+                  <option value="ch">Chico</option><option value="md">Normal</option><option value="gd">Grande</option>
+                </select>
+              </label>
+            </div>
+            <div className="al-fila">
+              <label className="pl-campo">Alineación del contenido
+                <select value={sel.diseno.alineacion} onChange={(e) => setD("alineacion", e.target.value)}>
+                  <option value="izquierda">Izquierda</option><option value="centro">Centro</option><option value="derecha">Derecha</option>
+                </select>
+              </label>
+              {sel.formato === "banner" ? (
+                <label className="pl-campo">Lado de la imagen/video
+                  <select value={sel.diseno.media_lado} onChange={(e) => setD("media_lado", e.target.value)}>
+                    <option value="izquierda">Izquierda</option><option value="derecha">Derecha</option>
+                  </select>
+                </label>
+              ) : (
+                <label className="pl-campo">Diseño de los cuadritos
+                  <select value={sel.diseno.cuadro_estilo} onChange={(e) => setD("cuadro_estilo", e.target.value)}>
+                    <option value="claro">Claro (blanco)</option>
+                    <option value="vidrio">Vidrio (translúcido)</option>
+                    <option value="oscuro">Oscuro (tinta)</option>
+                  </select>
+                </label>
+              )}
+            </div>
+            <label className="pl-campo">Bordes
+              <select value={sel.diseno.radio} onChange={(e) => setD("radio", e.target.value)}>
+                <option value="suave">Rectos suaves</option><option value="medio">Redondeados</option><option value="redondo">Muy redondeados</option>
+              </select>
+            </label>
+
+            {sel.formato === "emergente" && (
+              <>
+                <div className="al-seccion">Contenido de la ventana</div>
+                <div className="al-fila">
+                  <label className="us-toggle al-toggle">
+                    <input type="checkbox" checked={sel.diseno.mostrar_kicker} onChange={(e) => setD("mostrar_kicker", e.target.checked)} />
+                    <span className="us-toggle-tx"><b>Mostrar etiqueta superior</b></span>
+                  </label>
+                  <label className="pl-campo">Texto de la etiqueta
+                    <input type="text" value={sel.diseno.kicker_texto} maxLength={50} onChange={(e) => setD("kicker_texto", e.target.value)} />
+                  </label>
+                </div>
+                <div className="al-fila">
+                  <label className="us-toggle al-toggle">
+                    <input type="checkbox" checked={sel.diseno.mostrar_plan} onChange={(e) => setD("mostrar_plan", e.target.checked)} />
+                    <span className="us-toggle-tx"><b>Mostrar cuadrito del plan</b></span>
+                  </label>
+                  <label className="us-toggle al-toggle">
+                    <input type="checkbox" checked={sel.diseno.mostrar_marcador} onChange={(e) => setD("mostrar_marcador", e.target.checked)} />
+                    <span className="us-toggle-tx"><b>Mostrar marcador de ahorro</b></span>
+                  </label>
+                </div>
+                {sel.diseno.mostrar_plan && (
+                  <>
+                    <div className="al-fila">
+                      <label className="pl-campo">Título del plan
+                        <input type="text" value={sel.diseno.plan_titulo} maxLength={60} placeholder="(vacío = nombre real del curso)" onChange={(e) => setD("plan_titulo", e.target.value)} />
+                      </label>
+                      <label className="pl-campo">Subtítulo del plan
+                        <input type="text" value={sel.diseno.plan_sub} maxLength={80} onChange={(e) => setD("plan_sub", e.target.value)} />
+                      </label>
+                    </div>
+                    <div className="al-fila">
+                      <label className="pl-campo">Precio
+                        <input type="text" value={sel.diseno.plan_precio} maxLength={16} placeholder="(vacío = precio real)" onChange={(e) => setD("plan_precio", e.target.value)} />
+                      </label>
+                      <label className="pl-campo">Precio anterior (tachado)
+                        <input type="text" value={sel.diseno.plan_antes} maxLength={16} placeholder="Vacío = no se muestra" onChange={(e) => setD("plan_antes", e.target.value)} />
+                      </label>
+                    </div>
+                  </>
+                )}
+                {sel.diseno.mostrar_marcador && (
+                  <label className="pl-campo">Texto del marcador
+                    <input type="text" value={sel.diseno.marcador_texto} maxLength={60} onChange={(e) => setD("marcador_texto", e.target.value)} />
+                  </label>
+                )}
+              </>
+            )}
+
+            <div className="al-seccion">Botón</div>
             <div className="al-fila">
               <label className="pl-campo">El botón lleva a
                 <select value={destinoActual} onChange={(e) => set("enlace", e.target.value === "custom" ? "" : e.target.value)}>

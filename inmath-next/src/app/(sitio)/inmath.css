@@ -2605,3 +2605,29 @@ body::before { animation: none !important; }
 }
 .am-velo-int { background: linear-gradient(180deg, rgba(13,20,38,.34), rgba(13,20,38,.18) 45%, rgba(13,20,38,.44)); }
 .am-velo { background: rgba(13,20,38,.18); }
+
+/* v44 — La mancha del kicker NO debe cortarse (parecía un cuadrado): caja
+   mucho más amplia, degradados que se desvanecen bien adentro y más blur. */
+.eyebrow::before, .interludio-kicker::before, .am-kicker::before {
+  inset: -52px -110px -52px -70px; left: -70px; top: -52px;
+  background:
+    radial-gradient(42% 46% at 24% 52%, var(--kick-a, rgba(107,159,255,.42)), transparent 68%),
+    radial-gradient(38% 42% at 55% 42%, var(--kick-b, rgba(124,92,255,.28)), transparent 70%);
+  filter: blur(12px);
+}
+
+/* v45 — Diseño configurable de alertas: las variables --a-* vienen del panel */
+.alerta-frame { border-radius: var(--a-radio, 24px); text-align: var(--a-alin, left); justify-content: var(--a-just, flex-start); }
+.alerta-cuerpo b { font-family: var(--a-f-tit, var(--display)); font-size: var(--a-tam-tit, 1.24rem); }
+.alerta-cuerpo p { font-family: var(--a-f-tx, var(--cuerpo)); font-size: var(--a-tam-tx, .95rem); }
+.alerta-media { order: var(--a-media-orden, -1); border-radius: calc(var(--a-radio, 24px) * .58); }
+.am-contenido { text-align: var(--a-alin, center); justify-items: var(--a-just, center); }
+.am-contenido h3 { font-family: var(--a-f-tit, var(--display)); font-size: var(--a-tam-tit-em, clamp(1.8rem, 5vw, 3rem)); }
+.am-contenido .am-texto { font-family: var(--a-f-tx, var(--cuerpo)); font-size: calc(var(--a-tam-tx, .95rem) + .07rem); }
+.am-contenido .am-plan {
+  border-radius: calc(var(--a-radio, 24px) * .75);
+  background: var(--a-cuadro-bg, rgba(255,255,255,.94));
+}
+.am-plan-info b, .am-plan-precio b { color: var(--a-cuadro-fg, var(--tinta)); }
+.am-plan-info span { color: var(--a-cuadro-sub, var(--tinta-2)); }
+.am-plan-precio s { color: var(--a-cuadro-sub, var(--tinta-3)); }
