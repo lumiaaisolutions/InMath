@@ -266,3 +266,27 @@ De mesh saturado a VIDRIO CLARO: rgba(255,255,255,.55) + blur 16 + splashes
 suaves en las esquinas (sin bordes duros). Tipografía en tinta; día activo
 en píldora ámbar; horas de vidrio con anillo azul → gradiente al elegir.
 v54: días/etiquetas del strip forzados a tinta (legibilidad).
+
+---
+
+## v55–v56 (18-ago, cierre del día)
+
+### Sin bordes, estilo eyebrow (regla de diseño consolidada)
+El calendario de /agenda y el bloque -$500 de /pago perdieron la CAJA: sin
+fondo, sin sombra, sin borde — solo manchas splash multicolor que se desvanecen
+(::before con radial-gradients que mueren al 64% + blur 42-46px, caja del
+pseudo-elemento mucho más grande que el contenido). Es la MISMA firma del
+eyebrow: cualquier bloque destacado nuevo usa este patrón, no tarjetas.
+Fix de legibilidad: los selectores reales del calendario son .cd-sem/.cd-num
+(no .dc-*); días en tinta, activo en píldora ámbar→coral, no disponibles al 38%.
+
+### Auditoría responsive móvil (v56)
+- html/body con overflow-x: clip en sitio y panel → las manchas que sobresalen
+  NO generan scroll horizontal.
+- Alertas banner en ≤560px: media a lo ancho (150px alto, arriba), CTA al 100%.
+- Cifras con clamp para no desbordar: precio de la banda (2.2rem–3rem) y
+  -$500 (2.6–3.6rem).
+- Chat: ancho seguro min(392px, 100vw-24px); modo amplio 94vw × 86dvh ≤820px.
+- Ya cubiertos antes: panel con hamburguesa y kanban vertical, banda de planes
+  apilada con badge reubicado, interludios con attachment scroll en táctil,
+  emergente full-screen fluida.
