@@ -81,7 +81,13 @@ export function PagoForm({ curso, datosPago }: { curso: { nombre: string; precio
                 </div>
               </div>
             )}
-            {curso && <div className="oferta-urgencia"><Icono n="clock" /> Precio de oferta: ahorras $500 · <b>por tiempo limitado</b></div>}
+            {curso && (
+              <div className="oferta-mega">
+                <b className="om-cifra">-$500</b>
+                <span className="om-titulo"><Icono n="clock" /> Oferta por tiempo limitado</span>
+                <span className="om-sub">Hoy pagas <b>$4,000</b> en lugar de <s>$4,500</s> al completar tu inscripción.</span>
+              </div>
+            )}
             <button type="submit" className="boton glow glow-halo bloque grande" disabled={iniPendiente}>
               {iniPendiente ? "Preparando…" : "Continuar al pago"} <span className="flecha">→</span>
             </button>

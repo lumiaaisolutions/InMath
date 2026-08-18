@@ -236,3 +236,33 @@ píldora ámbar→coral, horas como píldoras de vidrio que se encienden al eleg
 - Nota de planes: "Al completar tu inscripción hoy aseguras el precio con
   descuento."
 Regla: urgencia/escasez solo con datos verificables; nada inventado.
+
+---
+
+## v51–v54 (18-ago, cierre-3)
+
+### Correos con DISEÑO (aplica a TODOS los envíos del sistema)
+lib/correo.ts arma texto plano + HTML de marca: regla 60-30-10 (blanco
+dominante), hairline superior de gradiente (azul→violeta→ámbar), borde 1px
+#E3EEFF, logo con splash de color (PNG adjunto por cid: public/img/
+correo-logo.png, generado con sharp) + wordmark, y 3 botones: WhatsApp
+(verde), Visitar la página (azul) y Escribirnos (mailto cursosinmath@gmail.com).
+Como TODO pasa por enviarCorreo(), aplica a: confirmación de cita, reset de
+contraseña, recordatorio semanal, dudas del CTA y seguimiento de pago.
+
+### /pago — bloque de descuento
+"-$500" GIGANTE en gradiente azul→violeta con glow (referencia -55%),
+"OFERTA POR TIEMPO LIMITADO" en ámbar y sub con $4,000 vs $4,500. v54: el
+fondo pasó de marino a GLASS transparente con splash suave (blanco translúcido
++ blur + manchas azul/ámbar/menta), sin bordes.
+
+### Plan recomendado (landing) — v52
+Fuera el azul marino: tarjeta CLARA con splash suave (azul/ámbar/menta al 12-16%)
+y ANILLO de gradiente en el margen (azul→violeta→ámbar→menta) que la señala
+como la oferta. Texto en tinta, checks menta, CTA naranja único.
+
+### Calendario /agenda — v53
+De mesh saturado a VIDRIO CLARO: rgba(255,255,255,.55) + blur 16 + splashes
+suaves en las esquinas (sin bordes duros). Tipografía en tinta; día activo
+en píldora ámbar; horas de vidrio con anillo azul → gradiente al elegir.
+v54: días/etiquetas del strip forzados a tinta (legibilidad).

@@ -2786,3 +2786,130 @@ body::before { animation: none !important; }
 /* Respaldo del héroe: el chip del descuento resalta en ámbar */
 .respaldo-oferta { color: #C4801E !important; font-weight: 700; }
 .respaldo-oferta svg { color: #F09030 !important; }
+
+/* =========================================================================
+   v51 — /pago: "-$500" GIGANTE con brillo (referencia -55%), colores de la
+   página, que incita a completar la compra.
+   ========================================================================= */
+.oferta-mega {
+  position: relative; isolation: isolate; overflow: hidden; text-align: center;
+  margin: 12px 0 18px; padding: 26px 20px 22px; border-radius: 18px;
+  background:
+    radial-gradient(60% 80% at 80% 10%, rgba(107,159,255,.25), transparent 70%),
+    radial-gradient(50% 70% at 12% 90%, rgba(244,166,42,.18), transparent 70%),
+    linear-gradient(155deg, #22335E, #1B2F52 60%, #141F3B);
+  box-shadow: 0 8px 18px rgba(18,31,55,.16), 0 26px 54px -20px rgba(27,47,82,.55);
+}
+.om-cifra {
+  display: block; font: 800 clamp(3.2rem, 9vw, 4.4rem)/1 var(--display); letter-spacing: -.04em;
+  background-image: linear-gradient(115deg, #AFCFFF 5%, #6B9FFF 45%, #7C5CFF 90%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 4px 22px rgba(107,159,255,.55));
+  font-feature-settings: "tnum" 1;
+}
+.om-titulo {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 10px;
+  font: 800 .95rem/1 var(--display); letter-spacing: .06em; text-transform: uppercase; color: #FFD86B;
+}
+.om-titulo svg { width: 16px; height: 16px; }
+.om-sub { display: block; margin-top: 9px; font: 500 .9rem/1.5 var(--cuerpo); color: #C9D6F5; }
+.om-sub b { color: #fff; font-weight: 800; }
+.om-sub s { color: #8FA5D6; }
+
+/* =========================================================================
+   v52 — Plan recomendado SIN azul marino: tarjeta clara con splash suave y
+   MARGEN de gradiente que la señala como la oferta indicada.
+   ========================================================================= */
+.pk3-banda {
+  color: var(--tinta);
+  background:
+    radial-gradient(46% 80% at 90% 8%, rgba(107,159,255,.16), transparent 70%),
+    radial-gradient(40% 70% at 6% 100%, rgba(244,166,42,.14), transparent 70%),
+    radial-gradient(36% 60% at 55% 110%, rgba(62,217,176,.12), transparent 72%),
+    linear-gradient(#ffffff, #ffffff);
+  border: 2.5px solid transparent;
+  background-clip: padding-box, padding-box, padding-box, padding-box;
+  box-shadow: 0 3px 8px rgba(18,31,55,.06), 0 26px 54px -22px rgba(107,159,255,.5);
+  position: relative;
+}
+/* el margen-anillo de gradiente (lo que resalta que ESTA es la oferta) */
+.pk3-banda::before {
+  content: ""; position: absolute; inset: -2.5px; z-index: -1; border-radius: 26px;
+  background: linear-gradient(120deg, #6B9FFF, #7C5CFF 40%, #F6A62A 75%, #3ED9B0);
+}
+.pk3-banda h3 { color: var(--tinta); }
+.pk3-banda .pk3-sub { color: var(--tinta-2); }
+.pk3-precio-banda b { color: var(--tinta); }
+.pk3-viejo, .pk3-viejo s { color: var(--tinta-3); }
+.pk3-banda-puntos li { color: var(--tinta-2); }
+.pk3-banda-puntos li::before { background: rgba(62,217,176,.14); box-shadow: inset 0 0 0 1.4px rgba(34,193,166,.6); }
+.pk3-banda-puntos li::after { border-color: #17A2B8; }
+.pk3-limitado { color: #C4801E; }
+.pk3-limitado i { background: #3ED9B0; box-shadow: 0 0 10px rgba(62,217,176,.9); }
+/* CTA de acción en naranja (único botón caliente de la sección) */
+.pk3-cta-banda {
+  background: linear-gradient(120deg, #F6A62A, #E8590C); color: #fff;
+  box-shadow: 0 14px 32px -10px rgba(232,89,12,.6);
+}
+.pk3-cta-banda:hover { filter: brightness(1.05); }
+
+/* =========================================================================
+   v53 — Calendario TRANSPARENTE: vidrio claro con splash suave degradado
+   (nada saturado, sin bordes duros); texto en tinta.
+   ========================================================================= */
+.cal-widget {
+  background: rgba(255,255,255,.55);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15); backdrop-filter: blur(16px) saturate(1.15);
+  box-shadow: 0 3px 10px rgba(18,31,55,.07), 0 24px 50px -24px rgba(107,159,255,.45), inset 0 1px 0 rgba(255,255,255,.8);
+}
+.cal-widget::before {
+  inset: -35%; filter: blur(60px) saturate(1.1); opacity: 1;
+  background:
+    radial-gradient(34% 38% at 16% 18%, rgba(107,159,255,.34), transparent 66%),
+    radial-gradient(36% 40% at 86% 14%, rgba(124,92,255,.28), transparent 68%),
+    radial-gradient(34% 38% at 82% 88%, rgba(244,166,42,.24), transparent 68%),
+    radial-gradient(32% 36% at 12% 90%, rgba(62,217,176,.24), transparent 68%);
+}
+.cal-mes, .cal-num, .cal-widget .cal-dia-grande { color: var(--tinta); text-shadow: none; }
+.cal-sem { color: var(--tinta-2); }
+.cal-dia .dc-sem, .cal-strip .dc-sem { color: var(--tinta-3); }
+.cal-dia .dc-num { color: var(--tinta); }
+.cal-strip { background: rgba(255,255,255,.4); border-radius: 16px; }
+/* horas: píldoras de vidrio claras con anillo azul; elegida → gradiente */
+.slot span, .cal-grupo .slot span {
+  background: rgba(255,255,255,.65) !important;
+  box-shadow: inset 0 0 0 1.4px rgba(107,159,255,.4) !important;
+  color: var(--tinta) !important;
+}
+.slot:hover span { background: rgba(255,255,255,.9) !important; }
+.slot input:checked + span, .slot input:checked ~ span {
+  background: linear-gradient(120deg, #6B9FFF, #7C5CFF) !important; color: #fff !important;
+  box-shadow: 0 10px 22px -8px rgba(107,159,255,.65) !important;
+}
+
+/* =========================================================================
+   v54 — /pago: bloque -$500 TRANSPARENTE con splash de colores (sin marino,
+   sin bordes) + días del calendario siempre legibles en tinta.
+   ========================================================================= */
+.oferta-mega {
+  background:
+    radial-gradient(46% 70% at 82% 12%, rgba(107,159,255,.22), transparent 70%),
+    radial-gradient(40% 64% at 10% 92%, rgba(244,166,42,.2), transparent 70%),
+    radial-gradient(36% 58% at 55% 108%, rgba(62,217,176,.16), transparent 72%),
+    rgba(255,255,255,.6);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 0; box-shadow: 0 3px 10px rgba(18,31,55,.06), 0 22px 46px -20px rgba(107,159,255,.4);
+}
+.om-cifra {
+  background-image: linear-gradient(115deg, #4D7FF0 5%, #6B9FFF 45%, #7C5CFF 90%);
+  filter: drop-shadow(0 4px 18px rgba(107,159,255,.45));
+}
+.om-titulo { color: #C4801E; }
+.om-sub { color: var(--tinta-2); }
+.om-sub b { color: var(--tinta); }
+.om-sub s { color: var(--tinta-3); }
+
+/* Días del calendario SIEMPRE legibles (tinta) */
+.cal-strip .dc-sem, .dia-chip .dc-sem, .cal-dia .dc-sem { color: var(--tinta-3) !important; }
+.cal-strip .dc-num, .dia-chip .dc-num, .cal-dia .dc-num { color: var(--tinta) !important; }
+.cal-dia[aria-selected="true"] .dc-num, .cal-dia.activo .dc-num, .dia-chip.activo .dc-num { color: #fff !important; }
