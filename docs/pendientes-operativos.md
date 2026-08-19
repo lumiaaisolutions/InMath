@@ -2,68 +2,47 @@
 
 Resumen de las fases E1–E3 y lo que queda en manos del dueño.
 
-## E1 — Estabilidad de MySQL (pendiente: aprobación de reinicio)
+## E1 — Estabilidad de MySQL (RESUELTO, 17-ago-2026)
 
-**Síntoma:** tras cada reinicio del proceso Node, MySQL 8 falla de forma
+**Síntoma:** tras cada reinicio del proceso Node, MySQL 8 fallaba de forma
 intermitente con `Unknown authentication plugin 'sha256_password'` (caché frío).
-Se recupera solo al calentarse, pero reaparece en el siguiente reinicio, tirando
-/agenda y a Mathy con 500 mientras dura la ventana fría.
+Se recuperaba solo al calentarse, pero reaparecía en el siguiente reinicio,
+tirando /agenda y a Mathy con 500 mientras duraba la ventana fría.
 
-**Causa raíz:** el servidor tiene `default_authentication_plugin =
-caching_sha2_password`; el motor Rust de Prisma choca con el flujo de "full auth"
-de ese plugin en TCP sin TLS. Las cuentas `inmath` ya son `mysql_native_password`,
-así que el arreglo definitivo es cambiar el **default del servidor** a native.
+**Causa raíz:** el servidor tenía `default_authentication_plugin =
+caching_sha2_password`; el motor Rust de Prisma chocaba con el flujo de "full
+auth" de ese plugin en TCP sin TLS.
 
-**No borra datos.** Solo cambia un plugin de auth por defecto + reinicia el
-servicio MySQL (segundos de corte). Reversible (borrar el archivo + reiniciar).
+**Aplicado:** `/etc/mysql/mysql.conf.d/zz-native-auth.cnf` con
+`default_authentication_plugin=mysql_native_password` + reinicio de MySQL.
+**Rollback si algún día hiciera falta:**
+`sudo rm /etc/mysql/mysql.conf.d/zz-native-auth.cnf && sudo systemctl restart mysql`.
 
-**Comando (ejecutar con OK explícito del dueño — reinicia MySQL en prod):**
-```bash
-ssh -p 8080 deploy@2.24.123.93
-echo -e '[mysqld]\ndefault_authentication_plugin=mysql_native_password' | \
-  sudo tee /etc/mysql/mysql.conf.d/zz-native-auth.cnf
-sudo systemctl restart mysql
-sudo mysql -N -e "SHOW VARIABLES LIKE 'default_authentication_plugin'"   # debe decir mysql_native_password
-```
-**Rollback:** `sudo rm /etc/mysql/mysql.conf.d/zz-native-auth.cnf && sudo systemctl restart mysql`.
-**Verificación:** reiniciar la app (`pm2 delete inmath-web` + start) y golpear
-`/agenda` y `/api/agente` varias veces en frío; no debe reaparecer el error.
+**Verificado (18-ago-2026):** `SHOW VARIABLES LIKE 'default_authentication_plugin'`
+confirma `mysql_native_password` en el servidor. Tras el redeploy de hoy
+(varios reinicios de `pm2` durante la ronda de arreglos responsive) no apareció
+ni una sola línea nueva de `Unknown authentication plugin` en
+`~/.pm2/logs/inmath-web-error.log` — las únicas líneas de ese error en el log
+son de antes del 17-ago 17:50, previas al fix. `/agenda`, `/panel/alumnos` y
+el cron de vencimiento de pagos respondieron 200 en frío sin problema.
 
-## E2 — Correos por Gmail (SMTP)
+## E2 — Correos transaccionales (RESUELTO — Hostinger SMTP, no Gmail)
 
-El código ya envía con `nodemailer` vía `SMTP_URL` (ver `src/lib/correo.ts`).
-Si `SMTP_URL` no está, el envío se omite con log (no rompe nada). Falta solo la
-credencial de Gmail.
+El código envía con `nodemailer` vía `SMTP_URL` (ver `src/lib/correo.ts`). Se
+configuró con el correo corporativo de Hostinger en vez de Gmail:
+`CORREO_FROM="Cursos InMath <noreply@lumiaaisolutions.com>"` vía
+`smtp.hostinger.com`. Confirmado que `.env` (fuente) y
+`.next/standalone/.env` (el que realmente lee el proceso pm2) coinciden.
 
-**Cron del recordatorio semanal: YA INSTALADO** en el VPS.
+**Cron del recordatorio semanal:** instalado en el VPS.
 - Script: `/var/www/inmath/web/scripts/recordatorio-disponibilidad.sh`
 - Crontab: `0 9 * * 5` (viernes 9:00) → POST a `/api/disponibilidad/recordatorio`
-- Log: `~/inmath-recordatorio.log`. Hoy responde
-  `{"enviado":false,"motivo":"correo no configurado (falta SMTP_URL)"}` — correcto
-  hasta que se configure SMTP.
+- Log: `~/inmath-recordatorio.log`.
 
-**Pasos para activar Gmail (los hace el dueño; la contraseña no la maneja Claude):**
-1. En la cuenta de Google, activar **Verificación en 2 pasos**
-   (myaccount.google.com/security).
-2. Crear una **Contraseña de aplicación** en myaccount.google.com/apppasswords
-   → copiar el código de 16 caracteres (sin espacios).
-3. En el VPS, agregar al `.env` (fuente y standalone) y reiniciar:
-```bash
-ssh -p 8080 deploy@2.24.123.93
-cd /var/www/inmath/web
-# OJO: en SMTP_URL el "@" del correo va como %40, y la app password SIN espacios.
-cat >> .env <<'ENV'
-SMTP_URL="smtps://TUCORREO%40gmail.com:APPPASSWORD16@smtp.gmail.com:465"
-CORREO_FROM="Cursos InMath <TUCORREO@gmail.com>"
-ENV
-cp .env .next/standalone/.env
-pm2 delete inmath-web; cd .next/standalone && PORT=3010 pm2 start server.js --name inmath-web --update-env && pm2 save
-```
-4. Probar: `curl -s -X POST http://127.0.0.1:3010/api/disponibilidad/recordatorio -H "x-api-key: $(grep ^API_KEY /var/www/inmath/web/.env | cut -d= -f2-)"`
-   → debe decir `"enviado":true` (y llegar el correo a los admins).
-
-A partir de ahí se envían: el **seguimiento del pago por correo** y el
-**recordatorio semanal de disponibilidad**.
+A partir de la configuración de `noreply@lumiaaisolutions.com` ya se envían:
+el **seguimiento del pago por correo**, la **confirmación de pago aprobado**,
+los **avisos de vencimiento a 24h/3h** y el **recordatorio semanal de
+disponibilidad**. No requiere más pasos del dueño.
 
 ## E3 — Más efectos de scroll/parallax (HECHO)
 
@@ -98,3 +77,45 @@ confirmación por correo.
   un pago verificado por otro medio) y **Cancelar** en cada fila; **clic en
   la fila abre una ficha completa** (portal) con todos los datos del
   prospecto, el pago, fechas y comprobante.
+
+---
+
+## Cierre de sesión — 18-ago-2026
+
+Resumen de lo hecho hoy, todo desplegado y verificado en producción
+(`inmath.lumiaaisolutions.com`, pm2 `inmath-web` en el VPS):
+
+1. **Vencimiento de pagos a 72h** con avisos por correo a 24h/3h antes del
+   límite (detalle arriba) — incluyó una `ALTER TABLE` aditiva autorizada
+   explícitamente por el dueño.
+2. **Panel de pagos rediseñado:** columna de cuenta regresiva, botón
+   Aprobar/Cancelar sin exigir comprobante, ficha de detalle completa al
+   dar clic en la fila (ver arriba).
+3. **Auditoría y arreglo responsive** de sitio público y panel (ver
+   `alertas-y-diseno-v37.md`, secciones v58, v58.1 y v59):
+   - `/pago`: caja de precio ya no se aprieta con nombres largos de curso.
+   - `/agenda` e `/inscribirme`: encabezados ya no se cortan a media palabra.
+   - Chat de Mathy centrado en móvil (antes colgaba pegado a la derecha).
+   - `/panel/usuarios`: grilla de tarjetas ya no desborda en pantallas ≤380px.
+   - Tablas del panel (`/panel/pagos`, `/panel/configuracion`,
+     `/panel/alumnos`) ganaron scroll horizontal propio dentro de la tarjeta.
+   - Subrayado "swoosh" bajo "acompañamiento" quitado solo en vista móvil.
+   - **Bug real de fondo encontrado y corregido (v59):** `.formulario` y
+     `.campo` (grids sin `grid-template-columns`) se estiraban al ancho del
+     contenido más grande (el carrusel de 7 días) en vez de al contenedor,
+     cortando el formulario en /agenda y /pago en celulares reales. Este
+     era el verdadero causante del desfase que el dueño seguía viendo
+     después de los primeros dos intentos de arreglo — verificado con
+     Playwright emulando un iPhone 13 real contra el sitio ya desplegado
+     (no solo lectura de CSS), confirmando cero scroll horizontal de página
+     y que los campos miden exactamente el ancho del contenedor.
+4. **E1 (MySQL) y E2 (correos) confirmados resueltos** — no eran pendientes
+   reales, solo documentación desactualizada; ambos verificados en vivo hoy
+   (ver secciones arriba).
+
+**Estado del sistema al cierre:** sin bugs conocidos abiertos. Lo único
+pendiente de verdad son credenciales que dependen del cliente (WhatsApp
+Business Cloud API de Meta, MercadoPago, Google Calendar OAuth para n8n) y
+el módulo de práctica/reactivos (Fase 5, fuera del MVP) — ver
+`fases-y-pendientes.md`. Los 3 usuarios reales del panel siguen con
+contraseña temporal pendiente de cambiar en Mi perfil.

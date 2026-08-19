@@ -161,7 +161,8 @@ textarea { resize: vertical; min-height: 120px; font-family: var(--mono); font-s
 .aviso.ok { background: var(--ok-suave); color: var(--ok); }
 .aviso.error { background: var(--error-suave); color: var(--error); }
 
-table.lista { width: 100%; border-collapse: collapse; }
+.tarjeta:has(> table.lista) { overflow-x: auto; }
+table.lista { width: 100%; border-collapse: collapse; min-width: 560px; }
 table.lista th { text-align: left; font: 600 .66rem/1 var(--mono); color: var(--tinta-3); padding: 13px 16px; border-bottom: 1px solid var(--linea); text-transform: uppercase; letter-spacing: .06em; }
 table.lista td { padding: 13px 16px; border-bottom: 1px solid var(--linea); }
 table.lista tr:last-child td { border-bottom: 0; }
@@ -1220,6 +1221,7 @@ input[type="range"].aj-zoom::-webkit-slider-thumb:hover { transform: scale(1.15)
    chips de módulos permitidos.
    ========================================================================= */
 .us-rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; align-items: start; }
+@media (max-width: 380px) { .us-rejilla { grid-template-columns: 1fr; } }
 .us-carta { display: grid; gap: 14px; padding: 20px !important; }
 .us-carta.bloqueado { opacity: .72; }
 .us-cab { display: flex; align-items: center; gap: 12px; }

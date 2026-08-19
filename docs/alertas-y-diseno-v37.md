@@ -290,3 +290,125 @@ Fix de legibilidad: los selectores reales del calendario son .cd-sem/.cd-num
 - Ya cubiertos antes: panel con hamburguesa y kanban vertical, banda de planes
   apilada con badge reubicado, interludios con attachment scroll en táctil,
   emergente full-screen fluida.
+
+## v58 — Segunda pasada responsive: agenda, chat de Mathy, pago, panel (18-ago-2026)
+
+Reporte del dueño con capturas reales de celular: el encabezado de "Agendar tu
+asesoría gratis" se salía del ancho, el chat de Mathy no quedaba centrado, y el
+resumen de precio de /pago (inscribirme) se rompía. Se pidió auditar TODO el
+sitio y el panel, no solo esas tres capturas.
+
+**Causa técnica común:** varios elementos son hijos de `flex`/`grid` con el
+`min-width: auto` por defecto — un texto largo sin espacios (nombre de curso,
+encabezado) fuerza la fila/columna más ancha que el contenedor aunque el padre
+tenga `justify-content: space-between` o ya colapse a 1 columna en el
+breakpoint. `overflow-x: clip` en `html/body` evita el scroll horizontal de la
+página pero no arregla el layout — el contenido se corta en vez de ajustarse.
+
+**Landing (`src/app/(sitio)/inmath.css`):**
+- `.resumen-pago` (caja de precio en /pago): ganó `flex-wrap: wrap`,
+  `min-width: 0` + `overflow-wrap: anywhere` en el nombre del curso, y en
+  `≤480px` pasa a columna (nombre arriba, precio abajo) en vez de apretarse
+  en una fila.
+- `.agenda-lado h1` / `.pagina-form h1` (encabezados de /agenda e /inscribirme):
+  ganaron `overflow-wrap: anywhere; min-width: 0` — con `text-wrap: balance`
+  solo, una palabra suelta muy larga (o el viewport muy angosto) podía
+  desbordar; ahora corta con seguridad.
+- `.agenda-rej` (grid de dos columnas foto+formulario en /agenda): sus hijos
+  directos ganaron `min-width: 0` — aunque el grid ya colapsaba a 1 columna en
+  móvil, sin esto el contenido interno podía seguir empujando el ancho.
+- **Chat de Mathy** (`.agente-panel`): el bug real era que el panel cuelga con
+  `position: absolute; right: 0` del botón flotante (que vive en la esquina
+  inferior derecha) — nunca estuvo centrado, solo pegado a la derecha con
+  márgenes asimétricos. En `≤560px` ahora se fija con
+  `position: fixed; left: 12px; right: 12px; width: auto` — márgenes iguales
+  a ambos lados, independiente de dónde está el botón.
+
+**Panel (`src/app/(panel)/panel.css`):**
+- `.us-rejilla` (tarjetas de usuarios en /panel/usuarios): la columna mínima
+  de grid era `minmax(340px, 1fr)` sin breakpoint — en pantallas ≤380px de
+  ancho (iPhone SE y similares, con el padding del panel) el mínimo de 340px
+  no cabía y desbordaba. Se agregó `≤380px → 1fr`.
+- **Tablas** (`table.lista`, usada en /panel/pagos, /panel/configuracion,
+  /panel/alumnos): no tenían wrapper con scroll — con `overflow-x: clip` en
+  el body, las columnas de más se recortaban y quedaban invisibles en vez de
+  accesibles. Se agregó `.tarjeta:has(> table.lista) { overflow-x: auto }` +
+  `min-width: 560px` en la tabla, así en móvil se puede deslizar
+  horizontalmente dentro de la tarjeta para ver todas las columnas.
+- Resto del panel (kanban, formularios de login/perfil, grids de galería,
+  cabeceras) ya tenía overrides de mobile correctos — se revisaron todos los
+  `grid-template-columns` y `display:flex` del archivo, sin más brechas.
+
+**Limitación de verificación:** el entorno de automatización de navegador no
+reproduce fielmente un viewport angosto (`resize_window` no cambia
+`window.innerWidth` real), así que estos cambios se verificaron por lectura
+de CSS/DOM y build exitoso local + VPS, no con captura en vivo a 375px. Pedir
+confirmación visual en un celular real tras el deploy.
+
+**Deploy:** rsync de `src/` → build en el VPS → copiar `.next/static` y
+`public/` al standalone → `pm2 delete inmath-web` + start. Verificado con
+`curl` 200 en `/agenda` y `/pago` tras el reinicio.
+
+## v58.1 — Quitar el subrayado "swoosh" de "acompañamiento" en móvil (18-ago-2026)
+
+Pedido puntual del dueño: el subrayado dibujado a mano (SVG en
+`background-image`, con animación `swoosh` de entrada) bajo la palabra
+"acompañamiento" del héroe (`.heroe h1 .marca`) se quita **solo en vista
+móvil** (`≤640px`), dejando el texto en azul sin decoración. En escritorio
+sigue igual. Cambio de una sola regla en `src/app/(sitio)/inmath.css`
+(`background-image:none; animation:none; padding-bottom:0` dentro del media
+query). Desplegado con el mismo pipeline de siempre.
+
+## v59 — Causa raíz real del desfase en /agenda y /pago (18-ago-2026)
+
+El dueño reportó con capturas reales de iPhone (navegador in-app de WhatsApp)
+que el formulario de /agenda seguía viéndose cortado por la derecha después
+del v58 (que solo había contenido una salpicadura decorativa, insuficiente).
+
+**Diagnóstico correcto, esta vez verificado con viewport móvil real:** el
+entorno de automatización de este proyecto no reproduce un viewport angosto
+de verdad (`resize_window` no cambia `window.innerWidth`), así que se instaló
+Playwright localmente (`npx playwright install chromium`, aislado en el
+scratchpad) para emular un iPhone 13 real y medir con
+`getBoundingClientRect()` qué elemento se salía del viewport de 390px.
+
+**Causa raíz:** `.formulario` y `.campo` (usadas en `/agenda` e `/pago`) son
+`display:grid` **sin `grid-template-columns`**. Sin esa propiedad, la única
+columna implícita del grid se dimensiona según el `max-content` del hijo más
+ancho — en este caso el carrusel de 7 días del calendario, que pide ~404px —
+en vez de encogerse al espacio disponible (305px en un iPhone). El resultado:
+`.campo` medía 444px de ancho real dentro de una tarjeta de 305px, y todo lo
+de adentro (inputs, botón "Confirmar") quedaba cortado por el
+`overflow:hidden` de la tarjeta. En escritorio nunca se notó porque sobra
+espacio de sitio.
+
+**Arreglo:** `grid-template-columns:minmax(0,1fr)` en ambas clases
+(`src/app/(sitio)/inmath.css`), forzando la columna a ocupar el 100% del
+contenedor en vez de crecer con el contenido. Sin cambios visuales en
+escritorio.
+
+**Verificación (no solo lectura de CSS, medición real con Playwright +
+emulación de iPhone 13, contra el sitio ya desplegado):**
+- `document.documentElement.scrollWidth` = 390 (igual al viewport, cero
+  scroll horizontal de página) en `/agenda` y `/pago`.
+- `.campo`/`.formulario` pasaron de 444px a 305px, exactamente el ancho del
+  contenedor.
+- Los únicos elementos que siguen "saliéndose" del viewport en el escaneo
+  son los botones de días del carrusel de fechas (`.cal-dia`) — eso es
+  scroll horizontal intencional dentro de su propia tira (con difuminado de
+  borde como pista visual), no el bug reportado.
+
+**Nota para el futuro:** cuando se reporte un desfase/corte en móvil que
+persista tras un fix, usar este método (Playwright + `devices['iPhone 13']`
++ medición de `getBoundingClientRect()`) en vez de solo razonar sobre el CSS
+— así se hubiera encontrado el `grid-template-columns` faltante desde el
+primer intento.
+
+**Descartado en el diagnóstico:** se revisó si Cloudflare (que sirve
+`inmath.lumiaaisolutions.com`) podía estar cacheando el HTML/CSS viejo y
+mostrando una versión previa al deploy. Confirmado que no: la respuesta de
+`/agenda` trae `cache-control: private, no-cache, no-store, max-age=0,
+must-revalidate` y `cf-cache-status: DYNAMIC`, y el hash del chunk CSS
+cambia en cada build (`/_next/static/chunks/<hash>.css`). El desfase que
+persistió tras el v58 era 100% el bug real de `grid-template-columns`
+descrito arriba, no un problema de caché.
