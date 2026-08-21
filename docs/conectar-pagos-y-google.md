@@ -72,7 +72,27 @@ abre el portal sin intervención manual.
 
 ---
 
-## B) Google Sign-In — qué necesito yo y de dónde
+## B) Google Sign-In — ✅ CONFIGURADO Y EN PRODUCCIÓN (21-ago-2026)
+
+**Estado: HECHO y verificado en vivo.** El botón "Continuar con Google" aparece en
+`/panel/login` y `/api/portal/google/inicio` redirige a Google con el client_id y
+redirect correctos. La pantalla de consentimiento está **publicada "En producción"**
+(cualquier cuenta de Google puede entrar; permisos no sensibles → sin verificación
+obligatoria de Google; puede aparecer el aviso "app no verificada", que el usuario
+descarta con *Continuar*).
+
+- **Proyecto Google Cloud:** `inmath-506223`.
+- **Client ID:** `746722705015-…apps.googleusercontent.com` (no es secreto).
+- **Secreto (`GOCSPX-…`):** vive SOLO en `/var/www/inmath/web/.env` del VPS
+  (variables `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`) y su copia en
+  `.next/standalone/.env`. **NO se guarda en este repo.** Si algún día hay que
+  rotarlo: Google Cloud → Clientes → el cliente OAuth → generar secreto nuevo →
+  reemplazar en el `.env` del VPS y `pm2 delete + start inmath-web`.
+- Redirect autorizado en Google: `https://inmath.lumiaaisolutions.com/api/portal/google/callback`.
+
+Guía original de referencia (cómo se hizo), por si se recrea en otro entorno:
+
+### B.1) Cómo se creó (referencia)
 
 Credenciales **OAuth 2.0** de **Google Cloud Console** (cuenta Google del proyecto,
 puede ser la del negocio). Scopes que pide el código: `openid email profile`
