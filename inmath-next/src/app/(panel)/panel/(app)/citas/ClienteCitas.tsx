@@ -52,6 +52,10 @@ export function NuevaCitaBoton({ asesores, hoy }: { asesores: { id: number; nomb
                 {asesores.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
               </select>
             </label>
+            <label className="pl-campo">Enlace de videollamada <span style={{ color: "var(--tinta-3)", fontWeight: 400 }}>(opcional)</span>
+              <input type="url" name="meet_link" inputMode="url" placeholder="https://meet.google.com/… o Zoom" />
+              <small style={{ color: "var(--tinta-3)" }}>El alumno lo verá en su portal para entrar a la asesoría.</small>
+            </label>
             <div className="us-pie"><button className="boton primario" disabled={pendiente}>{pendiente ? "Agendando…" : "Agendar cita"}</button></div>
           </form>
         </div>

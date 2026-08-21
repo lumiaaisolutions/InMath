@@ -3033,3 +3033,104 @@ body::before { animation: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .faq-cuerpo, .faq-summary .mas { transition: none; }
 }
+
+/* =========================================================================
+   v62 — Mathy SIN FONDO: el botón flotante deja de ser una pastilla de vidrio
+   y pasa a ser solo la mascota sobre un splash de color (misma firma que el
+   .eyebrow: wash radial suave, teal→azul→lila, difuminado y semitransparente).
+   Gana sobre todas las versiones anteriores del botón.
+   ========================================================================= */
+.agente-btn,
+.agente-btn:hover {
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+/* fuera el anillo duro pulsante (solo tenía sentido con el círculo) */
+.agente-btn::before { display: none !important; content: none !important; animation: none !important; }
+/* EL SPLASH: halo multirradial estilo eyebrow, contenido detrás de la mascota */
+.agente-btn::after {
+  content: "" !important; position: absolute; z-index: -1; pointer-events: none;
+  inset: -24% !important; left: -24%; top: -24%; right: -24%; bottom: -24%;
+  background:
+    radial-gradient(closest-side, rgba(255,255,255,.92) 0%, rgba(255,255,255,.55) 40%, transparent 66%),
+    radial-gradient(58% 84% at 30% 34%, rgba(62,217,176,.6), transparent 70%),
+    radial-gradient(56% 80% at 70% 64%, rgba(107,159,255,.5), transparent 72%),
+    radial-gradient(52% 70% at 50% 52%, rgba(124,92,255,.36), transparent 74%) !important;
+  border-radius: 50% !important;
+  filter: blur(7px) !important; opacity: .96 !important;
+  animation: mathySplash 5.5s ease-in-out infinite !important;
+}
+@keyframes mathySplash { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+/* Mathy RESALTA: launcher grande, mascota protagonista con halo claro. */
+.agente-btn { width: 120px !important; height: 120px !important; }
+.agente-btn .agente-libro { width: 116px !important; height: 116px !important; }
+@media (min-width: 900px) {
+  .agente-btn { width: 148px !important; height: 148px !important; }
+  .agente-btn .agente-libro { width: 140px !important; height: 140px !important; }
+}
+.agente-libro {
+  filter: drop-shadow(0 0 3px rgba(255,255,255,.95)) drop-shadow(0 1px 1px rgba(255,255,255,.9)) drop-shadow(0 3px 8px rgba(18,31,55,.28));
+}
+@media (prefers-reduced-motion: reduce) { .agente-btn::after { animation: none !important; } }
+
+
+
+
+
+
+/* =========================================================================
+   v64 — Mathy: libro de líneas + ojos que parpadean + manos flotantes con
+   guante a los lados que saludan, agarran y se señalan. IMPORTANTE:
+   transform-box:fill-box SOLO en los grupos ANIMADOS (no en los grupos de
+   posición, que usan coordenadas del viewBox — si no, se descolocan/invierten).
+   ========================================================================= */
+.mathy-mascota { overflow: visible; }
+.mathy-ojos, .mathy-mano-izq, .mathy-mano-der, .mathy-dedos { transform-box: fill-box; }
+.mathy-ojos { transform-origin: center; animation: mathyParpadeo 3.4s steps(1, end) infinite; }
+@keyframes mathyParpadeo { 0%, 88%, 100% { transform: scaleY(1); } 91%, 95% { transform: scaleY(.1); } }
+.mathy-mano-izq { transform-origin: 15% 50%; animation: mathyMano 3.6s ease-in-out infinite; }
+.mathy-mano-der { transform-origin: 15% 50%; animation: mathyMano 3.6s ease-in-out infinite 1s; }
+@keyframes mathyMano {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  8%  { transform: translateY(-1.5px) rotate(-16deg); }
+  14% { transform: translateY(-1.5px) rotate(-2deg); }
+  20% { transform: translateY(-1.5px) rotate(-16deg); }
+  27% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-2.5px) rotate(7deg); }
+  70% { transform: translateY(-.5px) rotate(-3deg); }
+}
+.mathy-dedos { transform-origin: 0% 50%; animation: mathyAgarra 3.6s ease-in-out infinite; }
+@keyframes mathyAgarra {
+  0%, 40%, 100% { transform: rotate(0deg); }
+  55%, 66% { transform: rotate(50deg); }
+  82% { transform: rotate(12deg); }
+}
+@media (prefers-reduced-motion: reduce) { .mathy-ojos, .mathy-mano-izq, .mathy-mano-der, .mathy-dedos { animation: none; } }
+
+
+/* =========================================================================
+   v66 — Wizard de inscripción paso a paso (reemplaza el formulario único).
+   ========================================================================= */
+.wz { position: relative; z-index: 1; }
+.wz-barra { display: flex; gap: 7px; margin-bottom: 12px; }
+.wz-punto { flex: 1; height: 6px; border-radius: 99px; background: var(--linea-2); transition: background .3s ease; }
+.wz-punto.hecho { background: var(--pino); }
+.wz-punto.activo { background: linear-gradient(90deg, var(--azul), var(--pino)); }
+.wz-meta { font: 600 .82rem/1 var(--cuerpo); color: var(--tinta-3); margin-bottom: 18px; }
+.wz-cuerpo { min-height: 96px; animation: wzEntra .32s cubic-bezier(.22,.7,.31,1); }
+@keyframes wzEntra { from { opacity: 0; transform: translateX(14px); } }
+.wz-cuerpo .campo label { font-size: 1.05rem; }
+.wz-nav { display: flex; gap: 10px; margin-top: 22px; }
+.wz-nav .boton.bloque { flex: 1; }
+.wz-resumen { display: grid; gap: 14px; }
+.wz-cursos { display: grid; gap: 8px; }
+.wz-curso { text-align: left; padding: 13px 16px; border-radius: var(--r-m); border: 1.5px solid var(--linea-2); background: var(--blanco); cursor: pointer; font: 600 .95rem var(--cuerpo); color: var(--tinta); transition: border-color var(--t), background var(--t); }
+.wz-curso.activo { border-color: var(--azul); background: var(--azul-suave); }
+.wz-checklist { display: grid; gap: 7px; }
+.wz-checklist li { display: flex; align-items: center; gap: 9px; font: 500 .92rem var(--cuerpo); color: var(--tinta-2); }
+.wz-checklist svg { width: 17px; height: 17px; color: var(--ok); flex: 0 0 auto; }
+.wz-despues { display: block; text-align: center; margin-top: 16px; font: 600 .9rem var(--cuerpo); color: var(--tinta-2); }
+.wz-despues:hover { color: var(--azul); }
+@media (prefers-reduced-motion: reduce) { .wz-cuerpo { animation: none; } }

@@ -2040,3 +2040,124 @@ body::before { animation: none !important; }
 .pg-link { text-decoration: none; color: var(--pino) !important; font-weight: 700; }
 .pg-link .ic-sm { color: var(--pino); }
 .pg-link:hover { text-decoration: underline; }
+
+/* =========================================================================
+   v60 — Material del curso (admin): lista editable de enlaces para el portal
+   del alumno. Filas con orden (subir/bajar), tipo, título y URL.
+   ========================================================================= */
+.mat-form { display: flex; flex-direction: column; gap: 16px; }
+.mat-tarjeta { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.mat-fila { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border-radius: 14px; background: var(--crema); border: 1px solid var(--linea); }
+.mat-orden { display: flex; flex-direction: column; gap: 4px; flex: 0 0 auto; }
+.mat-mini {
+  width: 28px; height: 24px; border-radius: 8px; border: 1px solid var(--linea-2);
+  background: var(--papel); color: var(--tinta-2); font-size: .9rem; line-height: 1; cursor: pointer;
+  transition: border-color .15s ease, color .15s ease;
+}
+.mat-mini:hover:not(:disabled) { border-color: var(--azul, #6B9FFF); color: var(--azul, #6B9FFF); }
+.mat-mini:disabled { opacity: .4; cursor: default; }
+.mat-campos { flex: 1; min-width: 0; display: grid; gap: 8px; }
+.mat-fila2 { display: grid; grid-template-columns: 140px 1fr; gap: 8px; }
+@media (max-width: 560px) { .mat-fila2 { grid-template-columns: 1fr; } }
+.mat-inp, .mat-sel {
+  width: 100%; font: 400 .92rem/1.3 var(--cuerpo); color: var(--tinta);
+  background: var(--papel); border: 1.5px solid var(--linea-2); border-radius: 10px; padding: 10px 12px;
+}
+.mat-inp:focus, .mat-sel:focus { outline: none; border-color: var(--azul, #6B9FFF); box-shadow: 0 0 0 3px rgba(107,159,255,.16); }
+.mat-quitar {
+  flex: 0 0 auto; width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--linea-2);
+  background: var(--papel); color: var(--rojo, #E5484D); cursor: pointer; display: grid; place-items: center;
+  transition: border-color .15s ease, background .15s ease;
+}
+.mat-quitar:hover { border-color: var(--rojo, #E5484D); background: rgba(229,72,77,.08); }
+.mat-acciones { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+/* v61 — Login único: botón de Google + separador (en el split del panel) */
+.login-google {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 12px 16px; border-radius: 14px; margin-bottom: 4px;
+  background: #fff; border: 1.5px solid var(--linea-2, #DDE3EC);
+  font: 600 .95rem/1 var(--cuerpo); color: var(--tinta, #1B2140); cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.login-google:hover { border-color: #6B9FFF; box-shadow: 0 8px 22px -12px rgba(27,47,82,.4); transform: translateY(-1px); }
+.login-google svg { flex: 0 0 auto; }
+.login-sep { display: flex; align-items: center; gap: 12px; margin: 14px 0; color: var(--tinta-3, #8A93A6); font-size: .8rem; }
+.login-sep::before, .login-sep::after { content: ""; flex: 1; height: 1px; background: var(--linea-2, #DDE3EC); }
+
+/* =========================================================================
+   v62 — Mathy del panel SIN FONDO (misma firma que en el sitio): solo la
+   mascota sobre un splash de color estilo eyebrow, transparente.
+   ========================================================================= */
+.agente-btn,
+.agente-btn:hover {
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+.agente-btn::before { display: none !important; content: none !important; animation: none !important; }
+.agente-btn::after {
+  content: "" !important; position: absolute; z-index: -1; pointer-events: none;
+  inset: -24% !important; left: -24%; top: -24%; right: -24%; bottom: -24%;
+  background:
+    radial-gradient(closest-side, rgba(255,255,255,.92) 0%, rgba(255,255,255,.55) 40%, transparent 66%),
+    radial-gradient(58% 84% at 30% 34%, rgba(62,217,176,.6), transparent 70%),
+    radial-gradient(56% 80% at 70% 64%, rgba(107,159,255,.5), transparent 72%),
+    radial-gradient(52% 70% at 50% 52%, rgba(124,92,255,.36), transparent 74%) !important;
+  border-radius: 50% !important;
+  filter: blur(7px) !important; opacity: .96 !important;
+  animation: mathySplash 5.5s ease-in-out infinite !important;
+}
+@keyframes mathySplash { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+.agente-btn { width: 116px !important; height: 116px !important; }
+.agente-btn .agente-libro { width: 112px !important; height: 112px !important; }
+@media (min-width: 900px) {
+  .agente-btn { width: 144px !important; height: 144px !important; }
+  .agente-btn .agente-libro { width: 136px !important; height: 136px !important; }
+}
+.agente-libro {
+  filter: drop-shadow(0 0 3px rgba(255,255,255,.95)) drop-shadow(0 1px 1px rgba(255,255,255,.9)) drop-shadow(0 3px 8px rgba(18,31,55,.28));
+}
+@media (prefers-reduced-motion: reduce) { .agente-btn::after { animation: none !important; } }
+
+
+
+
+
+
+/* =========================================================================
+   v64 — Mathy: libro de líneas + ojos que parpadean + manos flotantes con
+   guante a los lados que saludan, agarran y se señalan. IMPORTANTE:
+   transform-box:fill-box SOLO en los grupos ANIMADOS (no en los grupos de
+   posición, que usan coordenadas del viewBox — si no, se descolocan/invierten).
+   ========================================================================= */
+.mathy-mascota { overflow: visible; }
+.mathy-ojos, .mathy-mano-izq, .mathy-mano-der, .mathy-dedos { transform-box: fill-box; }
+.mathy-ojos { transform-origin: center; animation: mathyParpadeo 3.4s steps(1, end) infinite; }
+@keyframes mathyParpadeo { 0%, 88%, 100% { transform: scaleY(1); } 91%, 95% { transform: scaleY(.1); } }
+.mathy-mano-izq { transform-origin: 15% 50%; animation: mathyMano 3.6s ease-in-out infinite; }
+.mathy-mano-der { transform-origin: 15% 50%; animation: mathyMano 3.6s ease-in-out infinite 1s; }
+@keyframes mathyMano {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  8%  { transform: translateY(-1.5px) rotate(-16deg); }
+  14% { transform: translateY(-1.5px) rotate(-2deg); }
+  20% { transform: translateY(-1.5px) rotate(-16deg); }
+  27% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-2.5px) rotate(7deg); }
+  70% { transform: translateY(-.5px) rotate(-3deg); }
+}
+.mathy-dedos { transform-origin: 0% 50%; animation: mathyAgarra 3.6s ease-in-out infinite; }
+@keyframes mathyAgarra {
+  0%, 40%, 100% { transform: rotate(0deg); }
+  55%, 66% { transform: rotate(50deg); }
+  82% { transform: rotate(12deg); }
+}
+@media (prefers-reduced-motion: reduce) { .mathy-ojos, .mathy-mano-izq, .mathy-mano-der, .mathy-dedos { animation: none; } }
+
+
+/* Paso de código 2FA en el login (M6/M7) */
+.login-2fa { animation: login2faEntra .4s cubic-bezier(.22,1.2,.32,1) both; }
+@keyframes login2faEntra { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+.login-2fa-cod { text-align: center; letter-spacing: .5em; font: 700 1.4rem/1 var(--display); text-indent: .5em; }
+@media (prefers-reduced-motion: reduce) { .login-2fa { animation: none; } }

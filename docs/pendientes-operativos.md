@@ -119,3 +119,79 @@ Business Cloud API de Meta, MercadoPago, Google Calendar OAuth para n8n) y
 el módulo de práctica/reactivos (Fase 5, fuera del MVP) — ver
 `fases-y-pendientes.md`. Los 3 usuarios reales del panel siguen con
 contraseña temporal pendiente de cambiar en Mi perfil.
+
+---
+
+## Fases 3 y 4 — Portal del alumno + pago con tarjeta (19-ago-2026, EN LOCAL)
+
+Construido y verificado en local (Playwright/iPhone 13); **NO desplegado** aún
+por indicación del dueño. Detalle completo en
+[`portal-alumno-y-pagos.md`](portal-alumno-y-pagos.md).
+
+**Qué se entregó (código listo):**
+- **Portal del alumno** en `/portal` con login por usuario/contraseña y con
+  **Google**, dashboard (inscripción, próxima asesoría, reportes de avance con
+  descarga autenticada, material del curso).
+- **El pago es el validador del login:** solo entra quien tiene un pago
+  confirmado. Se unificó la generación de credenciales para que el **webhook de
+  tarjeta** y la **aprobación manual** den idéntico acceso (antes el webhook no
+  generaba credenciales — bug corregido).
+- **Pago con tarjeta (MercadoPago) LISTO** — cableado completo; solo falta el
+  `MERCADOPAGO_ACCESS_TOKEN` y poner `procesador_pago_activo=mercadopago`.
+- **Gestión de material del curso** en `/panel/materiales` (admin).
+
+**Falta para activar (tareas del dueño, dependen de credenciales):**
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` en el `.env` → activa el login con
+  Google del portal.
+- `MERCADOPAGO_ACCESS_TOKEN` + config `procesador_pago_activo=mercadopago` →
+  activa el cobro con tarjeta.
+- **n8n (interactivo, no lo puede hacer Claude):** crear la credencial Google
+  Calendar OAuth2 (flujo 03, rellena el `meet_link` que el portal ya muestra) y
+  la credencial SMTP (flujo 08, envío de reportes) dentro de la UI de n8n. Pasos
+  exactos en `portal-alumno-y-pagos.md`.
+
+**Pendiente de despliegue:** cuando el dueño dé el OK, desplegar con el pipeline
+de siempre (rsync → build en VPS → copiar static/public al standalone → pm2
+delete/start). El portal no requiere migración de BD (usa columnas ya
+existentes en `alumnos` y config JSON para el material).
+
+---
+
+## Cierre de sesión — 21-ago-2026 (login único + rediseño portal + Mathy)
+
+Todo construido y verificado EN LOCAL (Playwright: desktop + iPhone 13);
+**NADA desplegado ni comiteado**, a la espera del OK del dueño.
+
+**Lo hecho hoy:**
+1. **Login ÚNICO** para staff y alumnos en `/panel/login` (antes eran dos): el
+   mismo formulario resuelve staff→/panel y alumno→/portal, validado por el
+   pago. Campo "Correo o usuario". El login **aparece en la landing** ("Entrar"
+   en nav + footer). `/portal/login` redirige al login único. Verificado E2E.
+2. **Fix del logout del portal**: quedaba en página en blanco (usaba `APP_URL`
+   ausente en local → URL relativa que `NextResponse.redirect` rechaza). Ahora
+   usa el origen de la petición; robusto en local y prod. Mismo fix en las
+   rutas de Google. Verificado.
+3. **Rediseño del portal del alumno** (dev senior + UX/UI senior): estilo panel
+   educativo moderno, regla 60-30-10, tarjetas hero de gradiente con cifra
+   gigante (verde=avance, coral=próxima asesoría), chips de métricas, material
+   como tarjetas, cifras animadas al entrar en viewport, reveal escalonado —
+   todo con `prefers-reduced-motion`. Se usaron (autorizadas) las skills de
+   diseño ui-ux-pro-max, frontend-design, emil (animación) y hallmark;
+   conservando la marca InMath (no plantilla genérica). Detalle en
+   `alertas-y-diseno-v37.md` §v60–v62.
+4. **Mathy SIN FONDO** (sitio y panel): botón transparente, solo la mascota
+   sobre un splash de color estilo `.eyebrow` (con núcleo claro para legibilidad).
+
+**Sigue pendiente (igual que antes — nada nuevo se destrabó):**
+- Cambio de contraseña del alumno en el portal + recuperación de contraseña
+  para alumnos (los recomendé; el dueño aún no dio el OK para hacerlos).
+- Credenciales del dueño: Google (login), MercadoPago (tarjeta), WhatsApp
+  Business (Meta), y las tareas interactivas de n8n (Calendar OAuth + SMTP).
+- **Desplegar a producción** todo lo de Fases 3–4 + rediseño (a la espera del OK).
+- Los 3 usuarios reales del panel siguen con contraseña temporal por cambiar.
+- Fase 5 (práctica/reactivos) sigue fuera del MVP.
+
+**Nota:** las skills de diseño se instalaron en `inmath-next/.agents/skills/`
+(y crearon `.claude/`, `skills-lock.json`); se agregaron al `.gitignore` para no
+comitearlas. Quedan datos de prueba en la BD local (alumno `5210000000001` /
+`prueba123`, admin `admin.prueba@example.com` / `admin123`) para previsualizar.

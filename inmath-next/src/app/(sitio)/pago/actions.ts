@@ -1,9 +1,69 @@
 "use server";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { ahoraPared } from "@/lib/fechas";
 import { upsertPorTelefono, normalizaTelefono } from "@/lib/prospectos";
 import { pagoParaProspecto, tokenPago, tokenPagoValido, guardarComprobante } from "@/lib/pagos";
 import { enviarCorreo } from "@/lib/correo";
+
+export type EstadoRegistro = {
+  error?: string;
+  ok?: { pagoId: number; token: string; montoCentavos: number; moneda: string; link: string | null };
+};
+
+/**
+ * Registro paso a paso (wizard): crea la CUENTA del alumno con su propia
+ * contraseña (para que pueda entrar a su portal aunque aún no pague) + un pago
+ * pendiente. Si paga después, entra al portal pero queda BLOQUEADO hasta pagar.
+ */
+export async function registrarAlumnoAccion(fd: FormData): Promise<EstadoRegistro> {
+  const nombre = String(fd.get("nombre") ?? "").trim();
+  const correo = String(fd.get("correo") ?? "").trim().toLowerCase();
+  const password = String(fd.get("password") ?? "");
+  const digitos = String(fd.get("whatsapp") ?? "").replace(/\D+/g, "");
+  const cursoId = parseInt(String(fd.get("curso_id") ?? "0"), 10);
+  const esGoogle = String(fd.get("google") ?? "") === "1";
+
+  if (nombre.length < 2) return { error: "Escribe tu nombre completo." };
+  if (digitos.length !== 10) return { error: "Tu WhatsApp debe tener 10 dígitos." };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return { error: "Escribe un correo válido." };
+  // Las cuentas de Google no usan contraseña (entran con Google).
+  if (!esGoogle && password.length < 8) return { error: "Tu contraseña debe tener al menos 8 caracteres." };
+
+  const telefono = normalizaTelefono(digitos);
+  if (!telefono) return { error: "Tu WhatsApp no es válido." };
+  const curso = (cursoId ? await prisma.cursos.findFirst({ where: { id: cursoId, activo: true } }) : null)
+    ?? await prisma.cursos.findFirst({ where: { activo: true }, orderBy: { id: "asc" } });
+  if (!curso) return { error: "No hay curso disponible por ahora." };
+
+  const { prospecto } = await upsertPorTelefono(telefono, { nombre, fuente: "organico" });
+  await prisma.prospectos.update({ where: { id: prospecto.id }, data: { nombre, correo } });
+
+  // Cuenta del alumno. Con Google no se guarda contraseña (entra con Google).
+  const hash = esGoogle ? null : await bcrypt.hash(password, 10);
+  const existente = await prisma.alumnos.findUnique({ where: { prospecto_id: prospecto.id } });
+  if (existente) {
+    await prisma.alumnos.update({ where: { id: existente.id }, data: { nombre, email: correo, usuario: telefono, ...(hash ? { password_hash: hash } : {}), estado: "activo" } });
+  } else {
+    await prisma.alumnos.create({
+      data: { prospecto_id: prospecto.id, curso_id: curso.id, nombre, telefono, email: correo, usuario: telefono, password_hash: hash, estado: "activo", inscrito_en: ahoraPared() },
+    });
+  }
+
+  const pago = await pagoParaProspecto(prospecto.id, curso);
+  await enviarCorreo({
+    para: [correo],
+    asunto: `Tu registro a ${curso.nombre} — Cursos InMath`,
+    texto: [
+      `Hola ${nombre},`, "",
+      `Creamos tu cuenta para ${curso.nombre}. Ya puedes entrar a tu portal con tu WhatsApp (${digitos}) y la contraseña que elegiste.`,
+      "Para desbloquear todo el contenido, completa tu pago desde el portal o en la página de inscripción.", "",
+      "— Cursos InMath",
+    ].join("\n"),
+  });
+
+  return { ok: { pagoId: pago.id, token: tokenPago(pago.id), montoCentavos: pago.monto_centavos, moneda: pago.moneda, link: pago.link_pago } };
+}
 
 export type EstadoPago = {
   error?: string;

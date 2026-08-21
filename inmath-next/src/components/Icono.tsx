@@ -18,6 +18,11 @@ const P: Record<string, string> = {
   x: '<path d="M18 6 6 18M6 6l12 12"/>',
   amplia: '<path d="M15 3h6v6M9 21H3v-6M21 3l-8 8M3 21l8-8"/>',
   reduce: '<path d="M10 4v6H4M14 20v-6h6M10 10 3 3M14 14l7 7"/>',
+  lock: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  download: '<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>',
+  file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
+  book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M19 3v18"/>',
+  logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
 };
 /** Ícono frosted de dos capas — mismo output que icono() en PHP. */
 export function Icono({ n, cls = "" }: { n: string; cls?: string }) {

@@ -2,14 +2,18 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { usuarioActual } from "@/lib/panel/sesion";
+import { alumnoActual } from "@/lib/portal/sesion";
+import { googleConfigurado } from "@/lib/portal/auth";
 import { archivosLogin } from "@/lib/panel/media";
 import { LoginClient, type SlideLogin } from "./LoginClient";
 
-export const metadata: Metadata = { title: "Login — Cursos Inmath" };
+export const metadata: Metadata = { title: "Entrar — Cursos Inmath" };
 export const dynamic = "force-dynamic";
 
-export default async function Login() {
+export default async function Login({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   if (await usuarioActual()) redirect("/panel");
+  if (await alumnoActual()) redirect("/portal");
+  const { error } = await searchParams;
 
   const filas = await prisma.configuraciones.findMany({
     where: { clave: { in: ["login_titulo", "login_texto", "login_media_meta"] } },
@@ -28,5 +32,14 @@ export default async function Login() {
   }));
 
   const sitioUrl = process.env.APP_URL?.replace(/\/$/, "") || "/";
-  return <LoginClient slides={slides} sitioUrl={sitioUrl} tituloDefecto={conf.login_titulo?.trim() ?? ""} textoDefecto={conf.login_texto?.trim() ?? ""} />;
+  return (
+    <LoginClient
+      slides={slides}
+      sitioUrl={sitioUrl}
+      tituloDefecto={conf.login_titulo?.trim() ?? ""}
+      textoDefecto={conf.login_texto?.trim() ?? ""}
+      conGoogle={googleConfigurado()}
+      errorGoogle={error}
+    />
+  );
 }

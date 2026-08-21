@@ -1,3 +1,36 @@
+# Portal del alumno — Fase B completa (21-ago-2026)
+
+Detalle modular en `docs/portal-fase-b.md`. Resumen de lo entregado y verificado
+en local (sin desplegar):
+
+- **Íconos con firma `eyebrow`** en todo el portal (sin caja, splash de color).
+- **Avance %** en dot-matrix que **cuenta de 0 al valor** al recargar/entrar en
+  viewport (respeta reduced-motion).
+- **Parallax + tilt + reveals** escalonados en las tarjetas del portal;
+  **pantalla de carga** al recargar/navegar (faltaba en el portal).
+- **Mi cuenta personalizable:** foto, **portada** (si no hay, transparente sin
+  blur, solo color), **nombre** y **WhatsApp** editables (con verificación de
+  unicidad).
+- **2FA opcional (M6):** interruptor en Mi cuenta → Seguridad; al entrar, código
+  **OTP de 6 dígitos por correo** (hash en config, 10 min); segundo paso animado
+  en el login. Librería `src/lib/portal/dosfactores.ts`.
+- **Login animado (M7):** entrada escalonada del formulario + entrada del paso
+  2FA + aviso con sacudida.
+- **Google → registro obligatorio (M8):** si el correo de Google no tiene
+  cuenta, el callback manda al **wizard** de `/pago` (pre-llenado, sin
+  contraseña) y no deja entrar al portal hasta completarlo.
+- **Registro paso a paso (M9):** `/pago` es un **wizard** (nombre → WhatsApp →
+  correo → contraseña → pago), crea la cuenta y permite **pagar después**.
+- **Gate de pago (M10):** sin pago confirmado, el dashboard muestra "Falta
+  completar tu pago", Material/Reportes redirigen, **Mathy abre solo y recuerda
+  pagar** (con opción de agendar la sesión gratis); Mi cuenta y agenda quedan
+  accesibles. El login ya no exige pago; el gate vive en el portal.
+- **Mathy (M11):** manos con manga hacia el libro y **dedos/pulgares afuera**,
+  separadas del libro; mascota más grande. Menú con burbuja llamativa y texto
+  visible.
+
+---
+
 # v37 — Alertas de la landing + rediseño de paquetes + Mathy (18-ago-2026)
 
 ## Alertas personalizables de la landing (nuevo módulo)
@@ -412,3 +445,178 @@ must-revalidate` y `cf-cache-status: DYNAMIC`, y el hash del chunk CSS
 cambia en cada build (`/_next/static/chunks/<hash>.css`). El desfase que
 persistió tras el v58 era 100% el bug real de `grid-template-columns`
 descrito arriba, no un problema de caché.
+
+## v60–v62 — Rediseño del portal del alumno + Mathy sin fondo (21-ago-2026, EN LOCAL)
+
+Construido y verificado en local (Playwright, desktop + iPhone 13); **NO
+desplegado** por indicación del dueño. El dueño pidió actuar como dev senior +
+diseñador UX/UI senior, con referencia a un dashboard de salud (tarjetas de
+gradiente suave), estilo moderno/educativo, regla 60-30-10, colores llamativos
+y jerarquía psicológica para navegación intuitiva.
+
+**Skills de diseño usadas** (autorizadas e instaladas por el dueño en
+`.agents/skills/`, gitignoradas): `ui-ux-pro-max` (nextlevelbuilder),
+`frontend-design` (anthropics), skills de animación de `emilkowalski`, y
+`hallmark` (Nutlope). Se consultó su guía; se descartó su sugerencia de
+claymorphism + fuentes infantiles (Baloo/Comic Neue) por chocar con la marca
+InMath ya establecida — la disciplina de hallmark/frontend-design manda
+**conservar la identidad** (Bricolage Grotesque + Hanken Grotesk, tokens de
+`inmath.css`). Se tomó de la referencia el **layout y el lenguaje de gradientes**,
+no una plantilla genérica.
+
+### v60 — Portal del alumno (`/portal`) rediseñado
+
+Regla **60-30-10** aplicada:
+- **60%** base neutra: lienzo blanco-azulado + tarjetas blancas.
+- **30%** azul de marca (`#6B9FFF`) en estructura, texto y chips.
+- **10%** acentos llamativos que **codifican significado** (Von Restorff /
+  procesamiento preatentivo): **verde→teal = tu avance (logro)**,
+  **coral→ámbar = qué sigue (acción)**. Solo en las dos tarjetas hero.
+
+Estructura (fiel a la referencia, adaptada a lo educativo):
+- Encabezado personalizado "Hola, [nombre]" + fila de **chips de métricas**
+  (días contigo, reportes, asesorías, materiales) para escaneo de un vistazo.
+- **Dos tarjetas hero de gradiente** con blob de color y **cifra gigante**:
+  avance del curso en % (con delta vs. semana pasada, de `avance_alumnos`) y
+  próxima asesoría (fecha grande + CTA a la videollamada).
+- **Fila de datos clave** (duración, reportes, asesorías, material).
+- **Material del curso como tarjetas** con ícono de gradiente por tipo
+  (documento=verde, video=coral, enlace=azul).
+- **Reportes** como lista con descarga.
+- Archivos: `src/app/(portal)/portal/page.tsx` (reescrito, server component),
+  `src/app/(portal)/portal.css` (reescrito), y
+  `src/app/(portal)/portal/NumeroAnimado.tsx` (nuevo, cliente).
+
+**Motion sutil** (skill emil): las cifras hero **cuentan de 0 al valor** al
+entrar en viewport (refuerzo de "logro/progreso"), y las secciones hacen
+**reveal escalonado** al cargar. Todo respeta `prefers-reduced-motion` (muestra
+el estado final estático). Verificado: sin scroll horizontal en móvil, cifras
+tabulares, contraste, foco.
+
+### v61 — Botón de Google en el login único (ya documentado en portal-alumno-y-pagos)
+
+CSS del botón "Continuar con Google" + separador en el split del panel.
+
+### v62 — Mathy SIN FONDO (sitio y panel)
+
+El dueño pidió que el asistente de IA no tenga fondo en ningún lado: **solo la
+mascota** (el librito con ojos) sobre un **splash de color estilo `.eyebrow`**.
+
+- `.agente-btn` pierde `background`, `border`, `box-shadow` y `backdrop-filter`
+  (transparente), y se quita el anillo duro pulsante (`::before`).
+- El `::after` pasa a ser un **wash multirradial** (teal→azul→lila) con un
+  **núcleo claro** en el centro — así la mascota (líneas azules) queda legible
+  aunque el fondo de página sea de color, igual que el eyebrow vive sobre
+  blanco. Animación de "respiración" suave (`mathySplash`), con
+  `prefers-reduced-motion` respetado.
+- La mascota se agranda (protagonista) y gana halo blanco + sombra sutil.
+- Aplicado en `inmath.css` (Mathy del sitio) y `panel.css` (Mathy del panel),
+  con overrides `!important` que ganan sobre todas las versiones previas del
+  botón. Verificado en vivo: `background:none`, `border:0`, `box-shadow:none`.
+
+## v63 — Mathy más grande + en el portal, nav inferior, íconos eyebrow, IA EXANI-II (21-ago-2026, EN LOCAL)
+
+Construido y verificado en local (Playwright + pruebas reales al chat). **NO
+desplegado.** El dueño pidió (como dev senior + AI Engineer senior):
+
+**1. Mathy (agente IA) más grande — resalta.** El launcher del sitio y del panel
+subió a 78px (96px en desktop) con la mascota a 62–78px, conservando el diseño
+sin fondo + splash eyebrow (v62).
+
+**2. Mathy en el portal del alumno.** Se agregó el `AgenteIA` al layout del
+portal con `sinBoton` + `abrirInicial={false}`: no muestra su botón flotante,
+arranca cerrado y se abre desde el **botón central del nav inferior** (evento
+`mathy:alternar` / `mathy:abrir`, escuchado por el componente). Reusa todo el
+chat existente (chips, opciones, modo amplio).
+
+**3. Nav inferior del portal (ref: barra flotante con botón central destacado).**
+Nuevo `src/app/(portal)/NavPortal.tsx`: pastilla flotante de vidrio con
+Inicio · Material · **[Mathy]** · Reportes · Cuenta. El centro es Mathy —
+círculo elevado con anillo blanco (efecto notch) y splash de color estilo
+eyebrow; así el asistente vive en el panel del alumno y resalta. Respeta los
+colores de marca (azul + acentos). CSS en `portal.css`; el `.pt-panel` ganó
+`padding-bottom` para no tapar el contenido.
+
+**4. Íconos del portal SIN caja (firma eyebrow).** Los íconos de material
+(`.pt-mat-ic`) y de la lista de reportes (`.pt-lista-ic`) dejaron de ser
+cuadros de color sólido: ahora son el ícono en color de acento sobre un
+**splash radial suave y difuminado** (misma firma que `.eyebrow`), por tipo
+(verde=documento, coral=video, azul=enlace).
+
+**5. IA entrenada con el examen EXANI-II (Ceneval).** Nuevo
+`src/lib/conocimiento-exani.ts` (`CONOCIMIENTO_EXANI`) con: las dos áreas del
+examen (transversales: comprensión lectora, redacción indirecta, pensamiento
+matemático; y los 2 módulos específicos por carrera, de un conjunto de 15),
+un mapeo compacto **carrera → módulos** (derivado de
+`Módulos_específicos_carreras.docx`), y reglas anti-alucinación sobre
+universidades (la mayoría aplica EXANI-II pero hay excepciones: UANL sí, UdeG
+usa la PAA de College Board; ante la duda, confirmar en la asesoría). Se agrega
+al prompt del chat del sitio (`api/agente`) y —para consistencia— debe agregarse
+al prompt del bot de WhatsApp (`prompts.sistema_bot`) en producción (en la BD
+local recreada aún no existe esa fila).
+- **Verificado en vivo** contra Gemini: "¿UdeG aplica EXANI-II?" → responde
+  correctamente que no (usa PAA); "Medicina" → Premedicina + Ciencias de la
+  salud; "UANL" → sí aplica. Sin alucinar, y siempre invitando a la asesoría.
+- **Nota de AI Engineering:** NO se activó el grounding de búsqueda de Gemini
+  para no romper el formato de comandos (`<agendar>`, `[OPCIONES]`) del chat;
+  la fiabilidad se logra con conocimiento curado + regla de "verificar en la
+  asesoría". Queda como mejora futura opcional activar `google_search` para
+  confirmar universidades no listadas en tiempo real.
+
+**Skills de diseño**: se consultaron las autorizadas (ui-ux-pro-max,
+frontend-design, emil, hallmark) instaladas en `.agents/`/`.claude/`
+(gitignoradas), conservando la marca InMath.
+
+**Infra local:** la MySQL de prueba desechable (socket `/tmp/exani2-test.sock`)
+se había caído; se recreó una instancia limpia en el scratchpad, se cargó el
+esquema con `prisma db push` y se sembraron datos de prueba (alumno con pago,
+avance, cita con meet, materiales, admin) para poder ver el portal en localhost.
+
+## v65 — Portal Fase B, Lote A (21-ago-2026, EN LOCAL)
+
+Pulido del panel del alumno con el DNA del dashboard de referencia (Superpower)
++ mejoras funcionales. Plan modular completo en `portal-fase-b.md`. **NO
+desplegado.** Verificado con Playwright (desktop + iPhone 13, sin desbordes).
+
+- **Dashboard estilo referencia:** tarjetas hero de **gradiente suave completo**
+  (verde→ámbar / coral→durazno), número de avance en **dot-matrix** (perforado,
+  como los "70/25/103" de la ref), **notificación flotante** "Tu avance va
+  subiendo" con sparkline, y **píldoras de estado** frosted. Componentes
+  `NumeroPuntos` (renderer dot-matrix) + `AvancePuntos` (cliente, cuenta 0→valor).
+- **M1 — Íconos con firma eyebrow:** material, reportes, datos de cuenta, accesos
+  usan el ícono en color sobre splash difuminado (sin caja).
+- **M2 — Avance animado:** el % dot-matrix cuenta de 0 al valor al recargar
+  (easeOutCubic; respeta reduced-motion).
+- **M3 — Scroll/parallax/hover:** `ScriptsPortal` agrega parallax suave de las
+  tarjetas hero al hacer scroll + **tilt 3D** en hover (tarjetas hero/accesos/
+  stats), con vars `--par/--rx/--ry`. Reveals escalonados ya existían.
+- **M4 — Pantalla de carga:** faltaba en el portal; se agregó `OverlayCarga` +
+  show/hide al navegar/enviar (mismo patrón que sitio/panel).
+- **M5 — Datos editables + portada:** Mi cuenta ahora edita **nombre** y
+  **WhatsApp** (acción con validación de unicidad; mantiene el login si el
+  usuario era el WhatsApp). La **portada sin foto** ya no satura: color suave
+  **transparente sin blur**.
+- **M11 — Mathy:** manos corregidas — **puño (manga) hacia el libro, dedos hacia
+  afuera, pulgares arriba** (se quitó el volteo vertical que los invertía). Y
+  **Mathy más grande** (botón 102–124px; mascota 88–106px) en sitio y panel.
+
+**Pendiente (Lote B, siguiente sesión):** M6 2FA opcional (código por correo),
+M7 animación del login, M8 login con Google que exige completar registro, M9
+registro paso a paso (wizard, pago al final), M10 gate de pago en el portal
+(bloqueo suave + alerta + Mathy recuerda pagar + agendar sesión gratis). Son
+interdependientes (auth + pago + wizard) y se hacen juntos. Ver `portal-fase-b.md`.
+
+## v66 — Wizard de inscripción + gate de pago + Mathy (21-ago-2026, EN LOCAL)
+
+- **Registro paso a paso (M9):** `/pago` dejó de ser un formulario largo; ahora
+  es un **wizard** (nombre → WhatsApp → correo → contraseña → pago) con barra de
+  progreso y validación por paso. Al terminar crea la **cuenta del alumno** (con
+  su propia contraseña) + pago pendiente; puede pagar ahora o después.
+- **Gate de pago (M10):** el login ya no exige pago; el portal bloquea a quien no
+  ha pagado (dashboard "Falta completar tu pago" con CTA pagar + agendar sesión
+  gratis, Material/Reportes redirigen, y **Mathy abre solo recordando el pago**).
+- **Mathy (M11):** más grande y con las **manos separadas fuera del libro**
+  (manga hacia el libro, dedos hacia afuera, pulgares arriba).
+- **Íconos eyebrow:** accesos del dashboard y la notificación flotante pasaron a
+  la firma eyebrow (ícono en color sobre splash, sin caja).
+Ver plan modular completo en `portal-fase-b.md`.

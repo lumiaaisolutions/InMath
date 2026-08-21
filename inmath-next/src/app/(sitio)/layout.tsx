@@ -27,7 +27,6 @@ export const metadata: Metadata = {
   },
 };
 
-const PANEL_URL = process.env.PANEL_URL ?? "";
 const WHATSAPP = (process.env.WHATSAPP_NUMERO ?? "").replace(/\D+/g, "");
 const WHATSAPP_URL = WHATSAPP
   ? `https://wa.me/${WHATSAPP}?text=${encodeURIComponent("Hola, me interesa el Curso Propedéutico InMath. ¿Me dan más información?")}`
@@ -52,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="/#como" className="n-como"><Icono n="route" /> Cómo funciona</a>
             <a href="/#incluye" className="n-incl"><Icono n="list" /> Qué incluye</a>
             <Link href="/agenda" className="n-ases"><Icono n="calendar" /> Asesoría gratis</Link>
-            {PANEL_URL && <a href={PANEL_URL} className="n-login"><Icono n="user" /> Entrar</a>}
+            <Link href="/panel/login" className="n-login"><Icono n="user" /> Entrar</Link>
             <Link href="/pago" className="cta">Inscribirme</Link>
           </nav>
         </header>
@@ -68,7 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <a href="/#incluye">Qué incluye</a>
               <Link href="/agenda">Agendar asesoría</Link>
               <Link href="/pago">Inscribirme</Link>
-              {PANEL_URL && <a href={PANEL_URL}>Acceso asesores</a>}
+              <Link href="/panel/login">Entrar / Portal del alumno</Link>
             </nav>
             <a className="lumia-badge" href="https://lumiaaisolutions.com/" target="_blank" rel="noopener">
               <img src="/img/lumia.svg" alt="" width={18} height={18} />

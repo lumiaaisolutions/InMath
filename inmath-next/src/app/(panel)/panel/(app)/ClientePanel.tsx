@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { IconoPanel } from "@/components/IconoPanel";
+import { MascotaMathy } from "@/components/MascotaMathy";
 import { logoutAccion, agentePanelAccion } from "./acciones";
 
 /**
@@ -229,17 +230,7 @@ export function AgentePanelIA() {
     } finally { setCargando(false); }
   }
 
-  const libro = (
-    <svg className="agente-libro" viewBox="0 0 48 48" aria-hidden="true">
-      <defs><linearGradient id="agp-t" x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
-        <stop offset="0" stopColor="#6B9FFF" /><stop offset="1" stopColor="#AFCFFF" /></linearGradient></defs>
-      <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="url(#agp-t)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M24 15 C 31 10.5 38 10 42 13.5 V 33 C 38 29.5 31 30 24 34.5" fill="none" stroke="url(#agp-t)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-      <line x1="24" y1="15" x2="24" y2="34.5" stroke="url(#agp-t)" strokeWidth="1.6" strokeLinecap="round" opacity=".5" />
-      <rect className="agente-ojo i" x="18.6" y="18.4" width="3.8" height="3.8" />
-      <rect className="agente-ojo d" x="25.6" y="18.4" width="3.8" height="3.8" />
-    </svg>
-  );
+  const libro = <MascotaMathy />;
 
   return (
     <div className="agente-ia">

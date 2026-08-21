@@ -66,8 +66,13 @@ versión de n8n instalada.
 - **Fase 3 (Pago y alta):** pago en línea (MercadoPago listo, sin credenciales)
   + pago por transferencia con subida de comprobante; aprobación en panel →
   inscripción + usuario/contraseña del alumno. Ver `pagos.md`.
+- **Fase 4 (Portal del alumno):** portal `/portal` con login validado por el
+  pago (usuario/contraseña + Google), dashboard con inscripción, próxima
+  asesoría, reportes de avance (descarga autenticada) y material del curso
+  gestionable desde `/panel/materiales`. Construido y verificado EN LOCAL el
+  19-ago-2026; pendiente de desplegar. Ver `portal-alumno-y-pagos.md`.
 - **Faltante del MVP:** Fase 5 (módulo de práctica/reactivos del alumno).
-  Fases 4 y 6 ya están cubiertas por el panel y la agenda actuales.
+  Fase 6 ya está cubierta por el panel y la agenda actuales.
 - **Preguntas abiertas al cliente:** ver `preguntas-cliente.md`.
 
 ### Pendientes tras respuestas del cliente (13-ago-2026)

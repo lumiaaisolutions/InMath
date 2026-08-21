@@ -4,6 +4,7 @@ import { slotsDisponibles, agendar } from "@/lib/agenda";
 import { upsertPorTelefono, normalizaTelefono } from "@/lib/prospectos";
 import { responderGemini, type Turno } from "@/lib/gemini";
 import { enviarCorreo } from "@/lib/correo";
+import { CONOCIMIENTO_EXANI } from "@/lib/conocimiento-exani";
 
 // Rate limit en memoria por IP: 20 mensajes / 10 min (port del PHP por sesión).
 const hits = new Map<string, number[]>();
@@ -36,6 +37,7 @@ export async function POST(req: NextRequest) {
     "\n- 100% en línea: clases grabadas 24/7 + asesorías personalizadas por videollamada (1 hora cada una). Material incluido sin costo extra." +
     "\n- Asesorías gratuitas de orientación: todos los días de 8:00 a 21:00, de 30 minutos." +
     "\n- Fecha de inicio, si aplica a una escuela/carrera específica o costo de asesorías extra: NO lo inventes; invita a la asesoría gratuita o a WhatsApp para confirmarlo." +
+    "\n\n" + CONOCIMIENTO_EXANI +
     "\n\nHORARIOS DISPONIBLES REALES para asesoría gratuita (única fuente válida):\n" + slotsTexto +
     "\n\nREGLAS PARA AGENDAR (obligatorias):" +
     "\n1. Solo ofrece horarios de la lista. Si piden uno que no está, dilo y ofrece los 2-3 más cercanos." +

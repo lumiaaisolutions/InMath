@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icono } from "./Icono";
+import { MascotaMathy } from "./MascotaMathy";
 
 /** Overlay de carga + nav móvil + motor de scrubbing — port del JS de _comun.php. */
 export function ScriptsSitio() {
@@ -98,23 +99,13 @@ function parseaBot(textoCrudo: string) {
   return { texto, humano, irAgenda, opciones };
 }
 
-const MascotaSVG = ({ id }: { id: string }) => (
-  <svg className="agente-libro" viewBox="0 0 48 48" aria-hidden="true">
-    <defs><linearGradient id={id} x1="6" y1="34" x2="42" y2="13" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stopColor="#6B9FFF" /><stop offset="1" stopColor="#AFCFFF" /></linearGradient></defs>
-    <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke={`url(#${id})`} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M24 15 C 31 10.5 38 10 42 13.5 V 33 C 38 29.5 31 30 24 34.5" fill="none" stroke={`url(#${id})`} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-    <rect className="agente-ojo i" x="18.6" y="18.4" width="3.8" height="3.8" />
-    <rect className="agente-ojo d" x="25.6" y="18.4" width="3.8" height="3.8" />
-  </svg>
-);
 
 /** Chat flotante de Mathy — interactivo: chips de opciones, accesos directos,
  *  modo ampliado (PC/tableta) y mascota que reacciona a la conversación. */
-export function AgenteIA({ whatsappUrl = "" }: { whatsappUrl?: string }) {
-  // Abierto SIEMPRE al cargar/entrar (decisión de producto); el usuario puede
-  // cerrarlo y reabrirlo con el botón. Cierre con animación "genio".
-  const [abierto, setAbierto] = useState(true);
+export function AgenteIA({ whatsappUrl = "", abrirInicial = true, sinBoton = false, saludo }: { whatsappUrl?: string; abrirInicial?: boolean; sinBoton?: boolean; saludo?: string }) {
+  // En el sitio abre solo al entrar; en el portal arranca cerrado y se abre
+  // desde el botón central del nav inferior (evento "mathy:abrir").
+  const [abierto, setAbierto] = useState(abrirInicial);
   const [cerrando, setCerrando] = useState(false);
   const [amplio, setAmplio] = useState(false);
   const [animo, setAnimo] = useState<"normal" | "piensa" | "feliz" | "triste">("normal");
@@ -123,12 +114,21 @@ export function AgenteIA({ whatsappUrl = "" }: { whatsappUrl?: string }) {
     setTimeout(() => { setAbierto(false); setCerrando(false); setAmplio(false); }, 470);
   };
   const [mensajes, setMensajes] = useState<{ rol: "usuario" | "asistente"; texto: string }[]>([
-    { rol: "asistente", texto: "¡Hola! Soy Mathy. ¿Tienes dudas del curso o quieres agendar tu asesoría gratis? [OPCIONES: Quiero agendar mi asesoría gratis | ¿Qué incluye el curso? | ¿Cuánto cuesta?]" },
+    { rol: "asistente", texto: saludo ?? "¡Hola! Soy Mathy. ¿Tienes dudas del curso o quieres agendar tu asesoría gratis? [OPCIONES: Quiero agendar mi asesoría gratis | ¿Qué incluye el curso? | ¿Cuánto cuesta?]" },
   ]);
   const [texto, setTexto] = useState(""); const [cargando, setCargando] = useState(false);
   const lista = useRef<HTMLDivElement>(null);
   const animoTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => { lista.current?.scrollTo(0, 1e6); }, [mensajes, abierto, cargando]);
+
+  // Trigger externo (nav del portal): abrir/alternar Mathy desde otro componente.
+  useEffect(() => {
+    const abrir = () => { setCerrando(false); setAbierto(true); };
+    const alternar = () => setAbierto((v) => !v);
+    window.addEventListener("mathy:abrir", abrir);
+    window.addEventListener("mathy:alternar", alternar);
+    return () => { window.removeEventListener("mathy:abrir", abrir); window.removeEventListener("mathy:alternar", alternar); };
+  }, []);
 
   const reacciona = (a: "feliz" | "triste") => {
     setAnimo(a);
@@ -158,17 +158,19 @@ export function AgenteIA({ whatsappUrl = "" }: { whatsappUrl?: string }) {
   }
 
   return (
-    <div className={`agente-ia animo-${animo}`}>
-      <button type="button" className="agente-btn" aria-expanded={abierto} aria-label="Abrir a Mathy"
-        onClick={() => (abierto ? cerrar() : setAbierto(true))}>
-        <MascotaSVG id="ag-t" />
-      </button>
+    <div className={`agente-ia animo-${animo}${sinBoton ? " sin-boton" : ""}`}>
+      {!sinBoton && (
+        <button type="button" className="agente-btn" aria-expanded={abierto} aria-label="Abrir a Mathy"
+          onClick={() => (abierto ? cerrar() : setAbierto(true))}>
+          <MascotaMathy />
+        </button>
+      )}
       {abierto && amplio && <div className="ap-velo-fondo" onClick={() => setAmplio(false)} />}
       {abierto && (
         <div className={`agente-panel genio${cerrando ? " genio-cierra" : ""}${amplio ? " amplio" : ""}`} role="dialog" aria-label="Mathy">
           <div className="ap-cab">
             <div className="ap-quien">
-              <span className="ap-avatar-caja"><MascotaSVG id="ag-t2" /></span>
+              <span className="ap-avatar-caja"><MascotaMathy cls="agente-libro mathy-mascota" /></span>
               <div><b>Mathy</b><span>La IA de Cursos InMath</span></div>
             </div>
             <button type="button" className="ap-cerrar ap-amplia" aria-label={amplio ? "Vista normal" : "Ampliar chat"}

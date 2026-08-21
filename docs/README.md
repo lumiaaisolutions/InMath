@@ -20,6 +20,7 @@ archivo: cada tema vive en su propio `.md`.
 | [`base-de-datos.md`](base-de-datos.md) | Esquema, tablas, migraciones y claves de configuración |
 | [`api.md`](api.md) | Contrato de la API que consumen n8n y el panel |
 | [`pagos.md`](pagos.md) | Capa de procesadores de pago (Stripe/Conekta/MercadoPago/simulado) |
+| [`portal-alumno-y-pagos.md`](portal-alumno-y-pagos.md) | **Portal del alumno (Fases 3–4)**: login validado por pago, login con Google, pago con tarjeta listo, material del curso, y lo que falta en n8n |
 | [`sistema-de-diseno.md`](sistema-de-diseno.md) | Identidad visual, tokens, regla 60-30-10, animaciones, skills |
 | [`fases-y-pendientes.md`](fases-y-pendientes.md) | Estado de las 7 fases y lo que falta por decidir/credenciales |
 | [`migracion-vps-exposicion-api.md`](migracion-vps-exposicion-api.md) | Migración al VPS: por qué `backend/public/index.php` no quedó expuesto por HTTP y si hace falta |

@@ -1,29 +1,62 @@
 "use server";
-import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/db";
+import { resolverLoginPassword } from "@/lib/auth-unificado";
 import { crearSesion } from "@/lib/panel/sesion";
+import { crearSesionAlumno } from "@/lib/portal/sesion";
+import { dosFactoresActivo, emitirCodigo2fa, verificarCodigo2fa, tokenReto, alumnoDeReto } from "@/lib/portal/dosfactores";
 
-export type EstadoLogin = { error?: string };
+export type EstadoLogin = { error?: string; reto2fa?: string };
 
-// Freno de fuerza bruta en memoria por email (capa 1, como el PHP por sesión).
+// Freno de fuerza bruta en memoria por identificador (correo o usuario).
 const fallos = new Map<string, { n: number; hasta: number }>();
 
 export async function loginAccion(_prev: EstadoLogin, fd: FormData): Promise<EstadoLogin> {
-  const email = String(fd.get("email") ?? "").trim().toLowerCase();
+  const identificador = String(fd.get("identificador") ?? fd.get("email") ?? "").trim();
   const password = String(fd.get("password") ?? "");
-  const f = fallos.get(email);
+  if (!identificador || !password) return { error: "Escribe tu correo o usuario y tu contraseña." };
+
+  const clave = identificador.toLowerCase();
+  const f = fallos.get(clave);
   if (f && f.n >= 5 && Date.now() < f.hasta) {
     return { error: "Demasiados intentos. Espera unos segundos e intenta de nuevo." };
   }
-  const usuario = await prisma.usuarios.findFirst({ where: { email, activo: true } });
-  if (!usuario || !(await bcrypt.compare(password, usuario.password_hash))) {
+
+  const r = await resolverLoginPassword(identificador, password);
+  if (r.tipo === "error") {
     const n = (f?.n ?? 0) + 1;
-    fallos.set(email, { n, hasta: Date.now() + Math.min(8, Math.max(1, n - 3)) * 1000 });
-    await new Promise((r) => setTimeout(r, 1000));
-    return { error: "Correo o contraseña incorrectos" };
+    fallos.set(clave, { n, hasta: Date.now() + Math.min(8, Math.max(1, n - 3)) * 1000 });
+    await new Promise((res) => setTimeout(res, 900));
+    if (r.motivo === "inactivo") return { error: "Tu cuenta no está activa. Escríbenos por WhatsApp." };
+    return { error: "Correo/usuario o contraseña incorrectos." };
   }
-  fallos.delete(email);
-  await crearSesion(usuario.id);
-  redirect("/panel");
+  fallos.delete(clave);
+
+  if (r.tipo === "staff") {
+    await crearSesion(r.id);
+    redirect("/panel");
+  }
+
+  // Alumno: si tiene 2FA, pedimos el código por correo antes de crear la sesión.
+  if (await dosFactoresActivo(r.id)) {
+    const enviado = await emitirCodigo2fa(r.id);
+    if (enviado) return { reto2fa: tokenReto(r.id) };
+    // Sin correo no podemos enviar el código: entramos igual (no bloqueamos).
+  }
+  await crearSesionAlumno(r.id);
+  redirect("/portal");
+}
+
+/** Segundo paso del login con 2FA: valida el código y crea la sesión. */
+export async function verificar2faAccion(_prev: EstadoLogin, fd: FormData): Promise<EstadoLogin> {
+  const token = String(fd.get("reto") ?? "");
+  const codigo = String(fd.get("codigo") ?? "").replace(/\D+/g, "");
+  const alumnoId = alumnoDeReto(token);
+  if (!alumnoId) return { error: "La sesión expiró. Vuelve a iniciar sesión." };
+  if (codigo.length !== 6) return { error: "Escribe el código de 6 dígitos.", reto2fa: token };
+  if (!(await verificarCodigo2fa(alumnoId, codigo))) {
+    await new Promise((res) => setTimeout(res, 700));
+    return { error: "Código incorrecto o vencido.", reto2fa: token };
+  }
+  await crearSesionAlumno(alumnoId);
+  redirect("/portal");
 }

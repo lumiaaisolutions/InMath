@@ -14,8 +14,7 @@ import { responderGemini, type Turno } from "@/lib/gemini";
 import { Prisma } from "@/generated/prisma/client";
 import { cerrarSesion, requiereSesion, requiereAdmin, requiereModulo } from "@/lib/panel/sesion";
 import { dirImgPanel } from "@/lib/panel/media";
-import { enviarCorreo } from "@/lib/correo";
-import { dinero } from "@/lib/panel/formato";
+import { inscribirPorPago } from "@/lib/inscripcion";
 
 export type Resultado = { ok?: string; error?: string };
 
@@ -138,9 +137,17 @@ export async function citaCrearAccion(_prev: Resultado, fd: FormData): Promise<R
   }
   const { prospecto } = await upsertPorTelefono(telefono, { nombre, fuente: "manual" });
   const asesorId = fd.get("asesor_id") ? parseInt(String(fd.get("asesor_id")), 10) : null;
+  const meetLink = String(fd.get("meet_link") ?? "").trim();
+  if (meetLink && !/^https?:\/\//i.test(meetLink)) {
+    return { error: "El enlace de videollamada debe empezar con http:// o https://" };
+  }
   const r = await agendar(prospecto.id, inicio, asesorId);
+  if ("error" in r) return { error: r.error };
+  // Enlace de videollamada manual (Zoom/Meet): el alumno lo ve en su portal.
+  // Evita depender del flujo de Google Calendar de n8n para tener el enlace.
+  if (meetLink) await prisma.citas.update({ where: { id: r.cita.id }, data: { meet_link: meetLink } });
   revalidatePath("/panel/citas");
-  return "error" in r ? { error: r.error } : { ok: "Cita registrada" };
+  return { ok: "Cita registrada" };
 }
 
 /** Port de /accion/alumno-crear (alta manual sin pasar por el pipeline). */
@@ -186,47 +193,14 @@ export async function pagoAprobarAccion(pagoId: number): Promise<Resultado> {
   });
   if (n.count === 0) return { error: "Ese pago ya fue procesado por alguien más" };
 
-  // Port de InscripcionServicio::porPago (UNIQUE prospecto_id absorbe carreras)
-  const prospecto = (await prisma.prospectos.findUnique({ where: { id: pago.prospecto_id } }))!;
-  let alumnoId: number;
-  try {
-    const alumno = await prisma.alumnos.create({
-      data: {
-        prospecto_id: prospecto.id, curso_id: pago.curso_id,
-        nombre: prospecto.nombre ?? `Alumno ${prospecto.telefono_whatsapp}`,
-        telefono: prospecto.telefono_whatsapp, inscrito_en: ahoraPared(),
-      },
-    });
-    alumnoId = alumno.id;
-  } catch (e: unknown) {
-    if ((e as { code?: string }).code !== "P2002") throw e;
-    alumnoId = (await prisma.alumnos.findUnique({ where: { prospecto_id: prospecto.id } }))!.id;
-  }
-  await prisma.pagos.update({ where: { id: pagoId }, data: { alumno_id: alumnoId } });
-  if (prospecto.etapa !== "inscrito") {
-    await prisma.prospectos.update({ where: { id: prospecto.id }, data: { etapa: "inscrito" } });
-    await prisma.bitacora_pipeline.create({
-      data: { prospecto_id: prospecto.id, etapa_anterior: prospecto.etapa, etapa_nueva: "inscrito", origen: "sistema", nota: `Pago #${pagoId} confirmado` },
-    });
-  }
-  // Credenciales del alumno (usuario = su WhatsApp), como en el PHP
+  // Inscripción + acceso al portal: MISMA ruta que el webhook de tarjeta
+  // (inscribirPorPago), así el alumno recibe idéntico acceso venga de donde
+  // venga el pago. Aquí además mostramos la contraseña temporal al admin para
+  // que la comparta por WhatsApp si el alumno no dejó correo.
+  const { cred } = await inscribirPorPago(pago);
   let aviso = "Pago aprobado y alumno inscrito.";
-  const alumno = await prisma.alumnos.findUnique({ where: { id: alumnoId } });
-  if (alumno && alumno.usuario === null) {
-    const passTmp = randomBytes(8).toString("base64url").replace(/[-_]/g, "x").slice(0, 10);
-    await prisma.alumnos.update({
-      where: { id: alumnoId },
-      data: { usuario: prospecto.telefono_whatsapp, password_hash: await bcrypt.hash(passTmp, 10) },
-    });
-    aviso += ` Usuario: ${prospecto.telefono_whatsapp} · Contraseña temporal: ${passTmp} — compártela por WhatsApp.`;
-  }
-  if (prospecto.correo) {
-    const curso = await prisma.cursos.findUnique({ where: { id: pago.curso_id }, select: { nombre: true } });
-    await enviarCorreo({
-      para: [prospecto.correo],
-      asunto: "¡Tu pago fue confirmado! — Cursos InMath",
-      texto: `Hola ${prospecto.nombre ?? ""},\n\nConfirmamos tu pago de ${dinero(pago.monto_centavos, pago.moneda)} por ${curso?.nombre ?? "tu curso"}. Tu inscripción ya está activa.\n\nEn breve te contactamos por WhatsApp con tus datos de acceso.`,
-    });
+  if (cred.passTmp) {
+    aviso += ` Usuario: ${cred.usuario} · Contraseña temporal: ${cred.passTmp} — compártela por WhatsApp si no dejó correo.`;
   }
   revalidatePath("/panel/pagos"); revalidatePath("/panel/alumnos"); revalidatePath("/panel");
   return { ok: aviso };
