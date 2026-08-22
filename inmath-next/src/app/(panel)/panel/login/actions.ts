@@ -4,32 +4,29 @@ import { resolverLoginPassword } from "@/lib/auth-unificado";
 import { crearSesion } from "@/lib/panel/sesion";
 import { crearSesionAlumno } from "@/lib/portal/sesion";
 import { dosFactoresActivo, emitirCodigo2fa, verificarCodigo2fa, tokenReto, alumnoDeReto } from "@/lib/portal/dosfactores";
+import { loginBloqueado, registrarFalloLogin, limpiarFallosLogin } from "@/lib/rate-limit";
 
 export type EstadoLogin = { error?: string; reto2fa?: string };
-
-// Freno de fuerza bruta en memoria por identificador (correo o usuario).
-const fallos = new Map<string, { n: number; hasta: number }>();
 
 export async function loginAccion(_prev: EstadoLogin, fd: FormData): Promise<EstadoLogin> {
   const identificador = String(fd.get("identificador") ?? fd.get("email") ?? "").trim();
   const password = String(fd.get("password") ?? "");
   if (!identificador || !password) return { error: "Escribe tu correo o usuario y tu contraseña." };
 
+  // Freno de fuerza bruta PERSISTENTE (BD): sobrevive reinicios y multi-proceso.
   const clave = identificador.toLowerCase();
-  const f = fallos.get(clave);
-  if (f && f.n >= 5 && Date.now() < f.hasta) {
-    return { error: "Demasiados intentos. Espera unos segundos e intenta de nuevo." };
+  if (await loginBloqueado(clave)) {
+    return { error: "Demasiados intentos. Espera unos minutos e intenta de nuevo." };
   }
 
   const r = await resolverLoginPassword(identificador, password);
   if (r.tipo === "error") {
-    const n = (f?.n ?? 0) + 1;
-    fallos.set(clave, { n, hasta: Date.now() + Math.min(8, Math.max(1, n - 3)) * 1000 });
+    await registrarFalloLogin(clave);
     await new Promise((res) => setTimeout(res, 900));
     if (r.motivo === "inactivo") return { error: "Tu cuenta no está activa. Escríbenos por WhatsApp." };
     return { error: "Correo/usuario o contraseña incorrectos." };
   }
-  fallos.delete(clave);
+  await limpiarFallosLogin(clave);
 
   if (r.tipo === "staff") {
     await crearSesion(r.id);
