@@ -1,3 +1,34 @@
+# Rediseño de la landing: hero cinematográfico, mega-menú, bento, comunidad, errores de marca (22-ago-2026, v71-v75)
+
+- **Header full-width sticky** (v71): la barra dejó de ser píldora flotante; ahora
+  es full-width pegada arriba, transparente sobre el hero y sólida con sombra al
+  hacer scroll (`body:has(.heroe-cine) .barra`). Sombra vía clase `.scrolled`
+  (ScriptsSitio).
+- **Hero cinematográfico** (v72): fondo full-bleed con **image-sequence scrubbing**
+  + parallax + Ken Burns + glows de marca + velo; texto centrado blanco con
+  titular en degradado menta→azul; **entrada escalonada** (primeros segundos);
+  CTA con pulso; indicador de scroll. Respeta `prefers-reduced-motion`.
+  Eyebrow con clase estándar `.eyebrow`.
+- **Imágenes de sección FIJAS** (v72): el motor `.scrub` de las secciones ya NO
+  aplica Ken Burns; las imágenes quedan estáticas y solo cambian con el
+  crossfade al hacer scroll (a diferencia del fondo del hero).
+- **Mega-menú** (v75): "Qué incluye" abre un panel de 2 columnas (El curso /
+  Acompañamiento) + tarjeta CTA. CSS hover/focus, se aplana en el menú móvil.
+- **Sección BENTO** (v74): "Todo en un solo lugar" — grid con tarjeta oscura,
+  soft y blancas, íconos, chips y mini-stat.
+- **Sección COMUNIDAD** (v74): tarjetas flotantes de testimonios con avatares +
+  textura binaria de fondo; se apilan en móvil.
+- **Formulario CTA** más compacto (v73): menos padding, textarea de 2 filas.
+- **Footer + páginas legales** (v73): fila de enlaces (Términos de uso, Código de
+  conducta, Información regulatoria, Programa de referidos, Política de
+  privacidad, Gestionar cookies). Nuevas rutas `/codigo-conducta`,
+  `/informacion-regulatoria`, `/referidos`, `/cookies` (con preferencia real en
+  localStorage), reutilizando el estilo `.legal`.
+- **Errores de marca** (v73): `not-found.tsx` (404) y `global-error.tsx` con la
+  clase `.eyebrow`, número en degradado y CTAs.
+
+---
+
 # Correcciones post-Google: usuario=correo, redirect a pago, móvil y Mathy (21-ago-2026, v69)
 
 - **Usuario de acceso = CORREO** (antes era el WhatsApp). El WhatsApp queda solo
