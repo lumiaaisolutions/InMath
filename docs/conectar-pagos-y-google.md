@@ -53,6 +53,13 @@ su propia cuenta MP, no de nosotros):
   para confirmar que el link se crea y el webhook confirma el pago.
 - (Opcional) ajusto el texto `datos_pago` que ve el alumno.
 
+**UI ya lista (22-ago):** la pantalla de pago (`PantallaPago`) ya muestra los DOS
+métodos como opciones ("Pagar con tarjeta u OXXO" / "Pagar por transferencia").
+Mientras MercadoPago no esté configurado, la opción en línea aparece en gris
+("Disponible muy pronto"); en cuanto se activen las variables + `procesador_pago_activo`,
+`asegurarLinkDePago()` genera el enlace sobre el pago pendiente existente (sin
+duplicar) y la opción se vuelve un botón activo. No hace falta re-registrar a nadie.
+
 **Cómo queda:** el wizard de `/pago` generará el enlace de Checkout Pro
 automáticamente; al aprobarse el pago, MP avisa por webhook (firmado y
 re-verificado contra su API) y el alumno queda con **pago confirmado** → se le
@@ -92,6 +99,22 @@ descarta con *Continuar*).
 - **App publicada "En producción"** (21-ago) → cualquier cuenta de Google entra.
 - **Fix aplicado:** el callback redirigía a `0.0.0.0:3010` detrás de nginx; ahora
   usa `APP_URL` como base. Verificado en vivo.
+
+### Pulido de Google — parte de desarrollo HECHA (22-ago-2026)
+Para poder poner marca y enviar a verificación, Google exige páginas legales en
+el dominio. Ya se crearon y publicaron:
+- **/privacidad** — Aviso de Privacidad (LFPDPPP + cláusula de Uso Limitado de
+  datos de las APIs de Google). URL: `https://inmath.lumiaaisolutions.com/privacidad`
+- **/terminos** — Términos y Condiciones. URL: `https://inmath.lumiaaisolutions.com/terminos`
+- Enlazadas en el footer del sitio.
+
+Lo que falta lo hace el dueño en Google Cloud (console.cloud.google.com):
+1. *Información de la marca*: subir logo (usar `public/img/correo-logo.png`, es
+   cuadrado) y color.
+2. *Pantalla de consentimiento*: pegar los enlaces de **Página principal**
+   (`https://inmath.lumiaaisolutions.com`), **Política de privacidad**
+   (`/privacidad`) y **Condiciones del servicio** (`/terminos`).
+3. (Opcional) *Enviar para verificación* para quitar el aviso "app no verificada".
 
 ### Pulido opcional (no urgente, requiere acción en Google Cloud)
 - **Logo y marca:** en Google Cloud → *Información de la marca* (Branding),
