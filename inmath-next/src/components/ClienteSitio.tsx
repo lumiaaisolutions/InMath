@@ -22,8 +22,22 @@ export function ScriptsSitio() {
     const clickNav = (e: MouseEvent) => {
       const a = (e.target as HTMLElement).closest("a[href]") as HTMLAnchorElement | null;
       if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
+      // Menú móvil: cualquier enlace dentro del nav lo cierra al pulsarlo
+      // (antes se quedaba abierto y había que cerrarlo a mano).
+      const navMovil = document.getElementById("navPrincipal");
+      if (navMovil?.contains(a)) {
+        navMovil.classList.remove("abierto");
+        document.getElementById("navToggle")?.setAttribute("aria-expanded", "false");
+      }
       try {
         const d = new URL(a.href, location.href);
+        // Logo: si ya estás en la landing, Next no vuelve a navegar (misma ruta)
+        // así que no hacía nada — en su lugar, sube al inicio de la página.
+        if (a.classList.contains("logo") && d.pathname === "/" && location.pathname === "/") {
+          const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+          window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+          return;
+        }
         if (d.origin !== location.origin || (d.pathname === location.pathname && d.search === location.search)) return;
         mostrar();
       } catch { /* no-op */ }
@@ -34,7 +48,13 @@ export function ScriptsSitio() {
 
     // Nav móvil
     const btn = document.getElementById("navToggle"), nav = document.getElementById("navPrincipal");
-    const toggle = () => { const ab = nav?.classList.toggle("abierto"); btn?.setAttribute("aria-expanded", ab ? "true" : "false"); };
+    const toggle = () => {
+      const ab = nav?.classList.toggle("abierto");
+      btn?.setAttribute("aria-expanded", ab ? "true" : "false");
+      // Si Mathy está abierto (auto en landing), se cierra al abrir el menú
+      // móvil para que no se encimen en pantallas chicas.
+      if (ab) window.dispatchEvent(new Event("mathy:cerrar"));
+    };
     btn?.addEventListener("click", toggle);
 
     // Header sticky: sombra sutil al hacer scroll.
@@ -184,13 +204,19 @@ function parseaBot(textoCrudo: string) {
 
 /** Chat flotante de Mathy — interactivo: chips de opciones, accesos directos,
  *  modo ampliado (PC/tableta) y mascota que reacciona a la conversación. */
-export function AgenteIA({ whatsappUrl = "", abrirInicial = true, sinBoton = false, saludo }: { whatsappUrl?: string; abrirInicial?: boolean; sinBoton?: boolean; saludo?: string }) {
-  // En el sitio abre solo al entrar; en el portal arranca cerrado y se abre
-  // desde el botón central del nav inferior (evento "mathy:abrir").
-  const [abierto, setAbierto] = useState(abrirInicial);
+export function AgenteIA({ whatsappUrl = "", abrirInicial, sinBoton = false, saludo }: { whatsappUrl?: string; abrirInicial?: boolean; sinBoton?: boolean; saludo?: string }) {
+  // En el sitio abre solo al entrar en la LANDING (/); en el resto de páginas
+  // del sitio arranca cerrado. En el portal, `abrirInicial` llega explícito
+  // (según si el pago está pendiente) y manda sobre esta regla.
+  const pathname = usePathname();
+  const [abierto, setAbierto] = useState(() => abrirInicial ?? pathname === "/");
   const [cerrando, setCerrando] = useState(false);
   const [amplio, setAmplio] = useState(false);
   const [animo, setAnimo] = useState<"normal" | "piensa" | "feliz" | "triste">("normal");
+  // Al cambiar de ruta (sin prop explícito): abierto solo si volvió a la landing.
+  useEffect(() => {
+    if (abrirInicial === undefined) setAbierto(pathname === "/");
+  }, [pathname, abrirInicial]);
   const cerrar = () => {
     setCerrando(true);
     setTimeout(() => { setAbierto(false); setCerrando(false); setAmplio(false); }, 470);
@@ -207,9 +233,11 @@ export function AgenteIA({ whatsappUrl = "", abrirInicial = true, sinBoton = fal
   useEffect(() => {
     const abrir = () => { setCerrando(false); setAbierto(true); };
     const alternar = () => setAbierto((v) => !v);
+    const cerrarExterno = () => cerrar();
     window.addEventListener("mathy:abrir", abrir);
     window.addEventListener("mathy:alternar", alternar);
-    return () => { window.removeEventListener("mathy:abrir", abrir); window.removeEventListener("mathy:alternar", alternar); };
+    window.addEventListener("mathy:cerrar", cerrarExterno);
+    return () => { window.removeEventListener("mathy:abrir", abrir); window.removeEventListener("mathy:alternar", alternar); window.removeEventListener("mathy:cerrar", cerrarExterno); };
   }, []);
 
   const reacciona = (a: "feliz" | "triste") => {
