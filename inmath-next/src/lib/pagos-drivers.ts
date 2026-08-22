@@ -83,6 +83,16 @@ const driverMercadoPago: ProcesadorPago = {
     }
     const ts = partes.ts ?? "", v1 = partes.v1 ?? "";
     if (!ts || !v1) return null;
+    // Anti-replay (defensa en profundidad; el control primario es la re-consulta
+    // del pago a la API de MP más abajo). MercadoPago puede enviar `ts` en
+    // segundos o milisegundos según la integración: se normaliza a milisegundos
+    // y se aplica una ventana amplia (±15 min) para nunca rechazar webhooks
+    // legítimos por desfase de reloj / unidad, pero sí cortar replays viejos.
+    const tsRaw = Number(ts);
+    if (Number.isFinite(tsRaw) && tsRaw > 0) {
+      const tsMs = tsRaw > 1e12 ? tsRaw : tsRaw * 1000;
+      if (Math.abs(Date.now() - tsMs) > 15 * 60_000) return null;
+    }
     let datos: { type?: string; data?: { id?: unknown } };
     try { datos = JSON.parse(cuerpoCrudo); } catch { return null; }
     const pagoId = String(datos.data?.id ?? "");

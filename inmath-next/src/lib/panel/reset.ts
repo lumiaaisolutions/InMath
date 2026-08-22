@@ -95,7 +95,7 @@ export async function restablecerConToken(token: string, password: string): Prom
   if (!entrada) return false;
   delete mapa[h];
   await guardarMapa(mapa);
-  const hash = await bcrypt.hash(password, 10);
+  const hash = await bcrypt.hash(password, 12);
   if (entrada.tipo === "alumno") {
     await prisma.alumnos.update({ where: { id: entrada.id }, data: { password_hash: hash } });
   } else {

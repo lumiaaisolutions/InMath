@@ -46,10 +46,10 @@ export async function emitirCodigo2fa(alumnoId: number): Promise<boolean> {
   const alumno = await prisma.alumnos.findUnique({ where: { id: alumnoId }, select: { email: true, nombre: true } });
   if (!alumno?.email) return false;
   const codigo = String(randomInt(0, 1_000_000)).padStart(6, "0");
-  const codes = await leerJson<Record<string, { h: string; exp: number }>>(CLAVE_COD);
+  const codes = await leerJson<Record<string, { h: string; exp: number; n?: number }>>(CLAVE_COD);
   const ahora = Date.now();
   for (const k of Object.keys(codes)) if (codes[k].exp < ahora) delete codes[k];
-  codes[String(alumnoId)] = { h: hashCod(codigo), exp: ahora + VIGENCIA_MS };
+  codes[String(alumnoId)] = { h: hashCod(codigo), exp: ahora + VIGENCIA_MS, n: 0 };
   await guardarJson(CLAVE_COD, codes);
   await enviarCorreo({
     para: [alumno.email],
@@ -62,14 +62,28 @@ export async function emitirCodigo2fa(alumnoId: number): Promise<boolean> {
   return true;
 }
 
-/** Verifica el código y lo consume. */
+/** Nº máximo de intentos fallidos por código antes de invalidarlo (anti fuerza
+ *  bruta del OTP de 6 dígitos: obliga a re-emitir el código). */
+const MAX_INTENTOS_2FA = 5;
+
+/** Verifica el código y lo consume. Limita los intentos fallidos por código. */
 export async function verificarCodigo2fa(alumnoId: number, codigo: string): Promise<boolean> {
-  const codes = await leerJson<Record<string, { h: string; exp: number }>>(CLAVE_COD);
+  const codes = await leerJson<Record<string, { h: string; exp: number; n?: number }>>(CLAVE_COD);
   const e = codes[String(alumnoId)];
   if (!e || e.exp < Date.now()) return false;
+
   const dado = Buffer.from(hashCod(codigo.trim()));
   const esperado = Buffer.from(e.h);
-  if (dado.length !== esperado.length || !timingSafeEqual(dado, esperado)) return false;
+  const ok = dado.length === esperado.length && timingSafeEqual(dado, esperado);
+
+  if (!ok) {
+    // Cuenta el intento fallido; al llegar al máximo, invalida el código.
+    e.n = (e.n ?? 0) + 1;
+    if (e.n >= MAX_INTENTOS_2FA) delete codes[String(alumnoId)];
+    await guardarJson(CLAVE_COD, codes);
+    return false;
+  }
+
   delete codes[String(alumnoId)];
   await guardarJson(CLAVE_COD, codes);
   return true;

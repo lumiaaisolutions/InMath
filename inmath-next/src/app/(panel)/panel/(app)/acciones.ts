@@ -228,7 +228,7 @@ export async function usuarioCrearAccion(_prev: Resultado, fd: FormData): Promis
   }
   if (await prisma.usuarios.findUnique({ where: { email } })) return { error: "Ya existe un usuario con ese correo" };
   await prisma.usuarios.create({
-    data: { nombre, email, password_hash: await bcrypt.hash(password, 10), rol: fd.get("rol") === "admin" ? "admin" : "asesor", activo: true },
+    data: { nombre, email, password_hash: await bcrypt.hash(password, 12), rol: fd.get("rol") === "admin" ? "admin" : "asesor", activo: true },
   });
   revalidatePath("/panel/usuarios");
   return { ok: "Usuario creado" };
@@ -259,7 +259,7 @@ export async function usuarioGuardarAccion(_prev: Resultado, fd: FormData): Prom
   const password = String(fd.get("password") ?? "");
   if (password !== "") {
     if (password.length < 8) return { error: "La contraseña nueva debe tener al menos 8 caracteres" };
-    await prisma.usuarios.update({ where: { id: uid }, data: { password_hash: await bcrypt.hash(password, 10) } });
+    await prisma.usuarios.update({ where: { id: uid }, data: { password_hash: await bcrypt.hash(password, 12) } });
   }
   revalidatePath("/panel/usuarios");
   return { ok: "Usuario actualizado" };
@@ -287,7 +287,7 @@ export async function perfilGuardarAccion(_prev: Resultado, fd: FormData): Promi
   if (p1 !== "") {
     if (p1.length < 8) return { error: "La contraseña nueva debe tener al menos 8 caracteres" };
     if (p1 !== String(fd.get("password2") ?? "")) return { error: "Las contraseñas no coinciden" };
-    await prisma.usuarios.update({ where: { id: yo.id }, data: { password_hash: await bcrypt.hash(p1, 10) } });
+    await prisma.usuarios.update({ where: { id: yo.id }, data: { password_hash: await bcrypt.hash(p1, 12) } });
   }
   revalidatePath("/panel/perfil");
   return { ok: "Perfil actualizado" };

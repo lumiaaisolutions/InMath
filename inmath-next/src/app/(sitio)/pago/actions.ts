@@ -43,7 +43,7 @@ export async function registrarAlumnoAccion(fd: FormData): Promise<EstadoRegistr
   await prisma.prospectos.update({ where: { id: prospecto.id }, data: { nombre, correo } });
 
   // Cuenta del alumno. Con Google no se guarda contraseña (entra con Google).
-  const hash = esGoogle ? null : await bcrypt.hash(password, 10);
+  const hash = esGoogle ? null : await bcrypt.hash(password, 12);
   const existente = await prisma.alumnos.findUnique({ where: { prospecto_id: prospecto.id } });
   if (existente) {
     await prisma.alumnos.update({ where: { id: existente.id }, data: { nombre, email: correo, usuario: correo, ...(hash ? { password_hash: hash } : {}), estado: "activo" } });

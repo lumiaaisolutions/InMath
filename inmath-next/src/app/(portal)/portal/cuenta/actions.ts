@@ -91,6 +91,6 @@ export async function cambiarPasswordAlumnoAccion(_prev: EstadoCuenta, fd: FormD
     return { error: "La nueva contraseña debe ser distinta a la actual." };
   }
 
-  await prisma.alumnos.update({ where: { id: alumno.id }, data: { password_hash: await bcrypt.hash(nueva, 10) } });
+  await prisma.alumnos.update({ where: { id: alumno.id }, data: { password_hash: await bcrypt.hash(nueva, 12) } });
   return { ok: "¡Listo! Tu contraseña se actualizó." };
 }

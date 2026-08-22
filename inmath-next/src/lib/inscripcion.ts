@@ -73,7 +73,7 @@ export async function provisionarAccesoAlumno(
   const passTmp = randomBytes(8).toString("base64url").replace(/[-_]/g, "x").slice(0, 10);
   await prisma.alumnos.update({
     where: { id: alumnoId },
-    data: { usuario, password_hash: await bcrypt.hash(passTmp, 10) },
+    data: { usuario, password_hash: await bcrypt.hash(passTmp, 12) },
   });
   return { usuario, passTmp };
 }
