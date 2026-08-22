@@ -3523,3 +3523,46 @@ body:has(.heroe-cine) .barra:not(.scrolled) .nav-toggle { color:#fff; border-col
   .nav-caret { display: none; }
   .np-cta { margin-top: 8px; }
 }
+
+/* ============ v76 — Bento con imágenes (scrubbing) + íconos eyebrow + CTA compacto ============ */
+/* Reacomodo del grid con 2 tarjetas de imagen */
+.bento-a { grid-column: span 2; } .bento-media { grid-column: span 2; } .bento-c { grid-column: span 2; }
+.bento-b { grid-column: span 4; } .bento-d { grid-column: span 2; }
+.bento-e { grid-column: span 2; } .bento-media2 { grid-column: span 4; }
+@media (max-width: 860px) {
+  .bento-a,.bento-b,.bento-c,.bento-d,.bento-e,.bento-media,.bento-media2 { grid-column: span 2; }
+}
+
+/* Íconos con firma EYEBROW: color sobre splash suave, SIN caja de gradiente */
+.bento-ic.ey-ic { position: relative; background: none !important; color: var(--azul); overflow: visible; }
+.bento-ic.ey-ic svg { position: relative; z-index: 1; }
+.bento-ic.ey-ic::before { content: ""; position: absolute; inset: 2px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(107,159,255,.32), rgba(107,159,255,0) 68%); }
+.bento-ic.ey-menta { color: #12A594; }
+.bento-ic.ey-menta::before { background: radial-gradient(circle, rgba(18,165,148,.3), rgba(18,165,148,0) 68%); }
+.bento-ic.ey-dark { color: #7FB2FF; }
+.bento-ic.ey-dark::before { background: radial-gradient(circle, rgba(127,178,255,.3), rgba(127,178,255,0) 68%); }
+
+/* Tarjetas de imagen con scrubbing */
+.bento-media { padding: 0; overflow: hidden; min-height: 230px; border: 0; }
+.bento-media .bento-scrub { position: relative; width: 100%; height: 100%; min-height: 230px; border-radius: inherit; overflow: hidden; }
+.bento-media .scrub-frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.bento-media .bento-media-chip { position: absolute; left: 14px; bottom: 14px; z-index: 3;
+  display: inline-flex; align-items: center; gap: 7px; font: 700 .8rem/1 var(--cuerpo); color: var(--tinta);
+  background: rgba(255,255,255,.92); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  padding: 9px 13px; border-radius: 999px; box-shadow: 0 10px 24px -10px rgba(18,31,55,.4); }
+.bento-media .bento-media-chip svg { width: 15px; height: 15px; color: #12A594; }
+.bento-media:hover { transform: translateY(-4px); box-shadow: 0 30px 60px -34px rgba(18,31,55,.5); }
+
+/* CTA final compacto y centrado (adiós caja gigante con huecos) */
+.cta-final .cta-caja { padding: clamp(30px,4vw,52px); }
+/* Flex column: los hijos toman su altura de contenido (grid con align stretch
+   estiraba el formulario a ~1200px). */
+.cta-final .cta-caja .cta-rej { display: flex !important; flex-direction: column; align-items: center;
+  gap: 22px; max-width: 480px; margin: 0 auto; text-align: center; }
+.cta-final .cta-caja .cta-rej > div { text-align: center; }
+.cta-final .form-cta { width: 100%; margin: 0 auto; align-self: stretch; }
+
+/* v76 fix — la clase de PÁGINA .legal (min-height:100vh) colisionaba con la nota
+   <p class="legal"> de los formularios, estirándola a 900px. Se resetea la nota. */
+p.legal { min-height: 0 !important; background: none !important; padding: 0 !important; }

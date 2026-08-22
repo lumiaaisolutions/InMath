@@ -157,12 +157,25 @@ export default async function Landing() {
           </div>
           <div className="bento-grid">
             <div className="bento-card bento-a reveal">
-              <span className="bento-ic"><Icono n="play" /></span>
+              <span className="bento-ic ey-ic"><Icono n="play" /></span>
               <h3>Clases grabadas</h3>
               <p>Estudia cuando puedas. Las clases quedan disponibles siempre, a tu ritmo.</p>
             </div>
+            {/* Imagen con image-sequence scrubbing (cambia al hacer scroll) */}
+            <div className="bento-card bento-media reveal">
+              <div className="scrub bento-scrub" aria-label="Estudiantes avanzando en su curso">
+                <img className="scrub-frame f1" src="/img/fotos/acompana-1.jpg" alt="Escritorio de estudio" />
+                <img className="scrub-frame f2" src="/img/fotos/acompana-2.jpg" alt="Grupo repasando en una laptop" loading="lazy" />
+                <span className="bento-media-chip"><Icono n="check" /> Aprendes acompañado</span>
+              </div>
+            </div>
+            <div className="bento-card bento-c reveal">
+              <span className="bento-ic ey-ic ey-menta"><Icono n="book" /></span>
+              <h3>Material incluido</h3>
+              <p>Guías y ejercicios descargables para reforzar cada tema.</p>
+            </div>
             <div className="bento-card bento-b bento-dark reveal">
-              <span className="bento-ic"><Icono n="user" /></span>
+              <span className="bento-ic ey-ic ey-dark"><Icono n="user" /></span>
               <h3>Asesorías 1 a 1</h3>
               <p>Un asesor humano te guía por WhatsApp y videollamada, y ajusta tu plan.</p>
               <div className="bento-chips">
@@ -170,21 +183,24 @@ export default async function Landing() {
                 <span><Icono n="chat" /> Dudas al instante</span>
               </div>
             </div>
-            <div className="bento-card bento-c reveal">
-              <span className="bento-ic"><Icono n="book" /></span>
-              <h3>Material incluido</h3>
-              <p>Guías y ejercicios descargables para reforzar cada tema.</p>
-            </div>
             <div className="bento-card bento-d bento-soft reveal">
-              <span className="bento-ic"><Icono n="trend" /></span>
+              <span className="bento-ic ey-ic ey-menta"><Icono n="trend" /></span>
               <h3>Reporte de avance semanal</h3>
               <p>Cada semana ves lo que lograste y lo que sigue, para no perder el hilo.</p>
               <div className="bento-mini"><b>70%</b><span>de avance promedio con acompañamiento</span></div>
             </div>
             <div className="bento-card bento-e reveal">
-              <span className="bento-ic"><Icono n="chat" /></span>
+              <span className="bento-ic ey-ic"><Icono n="chat" /></span>
               <h3>Mathy, tu asistente</h3>
               <p>Resuelve dudas del curso al momento, directo en la página.</p>
+            </div>
+            {/* Segunda imagen con scrubbing */}
+            <div className="bento-card bento-media bento-media2 reveal">
+              <div className="scrub bento-scrub" aria-label="Avance del alumno">
+                <img className="scrub-frame f1" src="/img/fotos/avance-2.jpg" alt="Cuaderno con notas" />
+                <img className="scrub-frame f2" src="/img/fotos/avance-1.jpg" alt="Persona celebrando su avance" loading="lazy" />
+                <span className="bento-media-chip"><Icono n="trend" /> Avance real</span>
+              </div>
             </div>
           </div>
         </div>
