@@ -37,12 +37,8 @@ export async function guardarDatosAlumnoAccion(_prev: EstadoCuenta, fd: FormData
       const otro = await prisma.prospectos.findUnique({ where: { telefono_whatsapp: whatsapp } });
       if (otro && otro.id !== alumno.prospecto_id) return { error: "Ese WhatsApp ya está registrado con otra cuenta." };
       await prisma.prospectos.update({ where: { id: alumno.prospecto_id }, data: { telefono_whatsapp: whatsapp } });
-      // Mantiene el login: si el usuario era el WhatsApp anterior, lo actualiza.
-      const a = await prisma.alumnos.findUnique({ where: { id: alumno.id }, select: { usuario: true, telefono: true } });
-      await prisma.alumnos.update({
-        where: { id: alumno.id },
-        data: { telefono: whatsapp, ...(a?.usuario === a?.telefono ? { usuario: whatsapp } : {}) },
-      });
+      // El WhatsApp es solo dato de contacto: NO afecta el usuario de acceso (que es el correo).
+      await prisma.alumnos.update({ where: { id: alumno.id }, data: { telefono: whatsapp } });
     }
   } catch {
     return { error: "No pudimos guardar tus datos. Intenta de nuevo." };

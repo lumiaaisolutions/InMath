@@ -1,9 +1,8 @@
 "use client";
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { Icono } from "@/components/Icono";
-import { registrarAlumnoAccion, subirComprobante, type EstadoComprobante } from "./actions";
-import { useActionState } from "react";
+import { registrarAlumnoAccion } from "./actions";
+import { PantallaPago } from "./PantallaPago";
 import { REGLAS_PASSWORD, evaluaPassword, passwordSegura, fuerzaPassword } from "@/lib/password";
 
 const money = (c: number) => (c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -30,7 +29,6 @@ export function InscripcionWizard({ curso, cursos, datosPago, prefill }: { curso
   const [error, setError] = useState<string>("");
   const [pago, setPago] = useState<Pago | null>(null);
   const [pendiente, start] = useTransition();
-  const [comp, compAccion, compPend] = useActionState<EstadoComprobante, FormData>(subirComprobante, {});
 
   const set = (k: keyof Datos, v: string | number) => setD((x) => ({ ...x, [k]: v }));
   const total = PASOS.length;
@@ -67,47 +65,15 @@ export function InscripcionWizard({ curso, cursos, datosPago, prefill }: { curso
     });
   };
 
-  // Pantalla final: comprobante subido.
-  if (comp.ok) {
-    return (
-      <div className="tarjeta-form wz-fin">
-        <div className="aviso ok">¡Recibimos tu comprobante! En cuanto se confirme, tu portal se desbloquea. Mientras, ya puedes entrar con tu WhatsApp y contraseña.</div>
-        <Link className="boton glow bloque grande" href="/panel/login" style={{ marginTop: 14 }}>Entrar a mi portal</Link>
-      </div>
-    );
-  }
-
-  // Pantalla de PAGO (tras registrar).
+  // Pantalla de PAGO (tras registrar): elegir cómo pagar.
   if (pago) {
     return (
-      <div className="tarjeta-form wz-pago">
-        <div className="aviso ok">¡Cuenta creada, {d.nombre.split(" ")[0]}! Elige cómo pagar. Puedes entrar a tu portal ahora mismo (se desbloquea al confirmar el pago).</div>
-        <div className="resumen-pago" style={{ marginBottom: 16 }}>
-          <span>{curso?.nombre}</span>
-          <b>${money(pago.montoCentavos)} {pago.moneda}</b>
-        </div>
-        {pago.link && (
-          <>
-            <a className="boton glow glow-halo bloque grande" href={pago.link}>Pagar de forma segura <span className="flecha"><Icono n="arrow" /></span></a>
-            <div className="pago-sep">o paga por transferencia</div>
-          </>
-        )}
-        <div className="transferencia">
-          <b>Pago por transferencia</b>
-          <p className="datos-transferencia">{datosPago}</p>
-          <form action={compAccion} className="formulario" style={{ marginTop: 12 }}>
-            <input type="hidden" name="pago_id" value={pago.pagoId} />
-            <input type="hidden" name="token" value={pago.token} />
-            <div className="campo">
-              <label htmlFor="comprobante">Sube tu comprobante (foto o PDF)</label>
-              <input type="file" id="comprobante" name="comprobante" accept=".jpg,.jpeg,.png,.webp,.pdf" required />
-            </div>
-            <button type="submit" className="boton bloque grande" disabled={compPend}>{compPend ? "Enviando…" : "Enviar comprobante"} <span className="flecha"><Icono n="arrow" /></span></button>
-          </form>
-        </div>
-        {comp.error && <div className="aviso error" style={{ marginTop: 12 }}>{comp.error}</div>}
-        <Link className="wz-despues" href="/panel/login">Prefiero pagar después — entrar a mi portal →</Link>
-      </div>
+      <PantallaPago
+        pago={pago}
+        cursoNombre={cursos.find((c) => c.id === d.cursoId)?.nombre ?? curso?.nombre ?? "tu curso"}
+        nombre={d.nombre}
+        datosPago={datosPago}
+      />
     );
   }
 
@@ -134,7 +100,7 @@ export function InscripcionWizard({ curso, cursos, datosPago, prefill }: { curso
             <label htmlFor="w-wa"><Icono n="chat" /> Tu WhatsApp (10 dígitos)</label>
             <input id="w-wa" type="tel" inputMode="numeric" value={d.whatsapp} autoFocus placeholder="55 1234 5678"
               onChange={(e) => set("whatsapp", e.target.value.replace(/\D+/g, "").slice(0, 10))} onKeyDown={(e) => e.key === "Enter" && siguiente()} />
-            <small className="ayuda-campo">Será tu usuario para entrar al portal.</small>
+            <small className="ayuda-campo">Solo lo usamos para contactarte y darte seguimiento.</small>
           </div>
         )}
         {clave === "correo" && (
@@ -142,7 +108,7 @@ export function InscripcionWizard({ curso, cursos, datosPago, prefill }: { curso
             <label htmlFor="w-correo"><Icono n="chat" /> Tu correo electrónico</label>
             <input id="w-correo" type="email" value={d.correo} autoFocus placeholder="tu@correo.com" autoComplete="email"
               onChange={(e) => set("correo", e.target.value)} onKeyDown={(e) => e.key === "Enter" && siguiente()} />
-            <small className="ayuda-campo">Ahí te damos el seguimiento y tus datos de acceso.</small>
+            <small className="ayuda-campo">Con este correo entrarás a tu portal (será tu usuario).</small>
           </div>
         )}
         {clave === "password" && (() => {

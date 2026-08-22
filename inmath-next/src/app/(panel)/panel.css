@@ -726,6 +726,17 @@ body::before {
 .login-plano .campo-pass input { padding-right: 48px; }
 .login-plano .login-entrar { margin-top: 8px; border-radius: 999px; padding: 15px; font-size: .98rem; }
 @media (max-width: 860px) { .login-plano { width: min(400px, 92vw); } }
+/* Móvil: el 92vw no descontaba el padding lateral de .login-lado y la caja se
+   desbordaba hacia la izquierda (se veía descentrada). Se ajusta al ancho real
+   del contenedor y se centra. */
+@media (max-width: 560px) {
+  .login-lado { padding: 64px 20px 36px; }
+  /* .login-lado es grid con place-items:center → su columna colapsa al
+     contenido; por eso el ancho debe ser explícito (no %) para centrar bien. */
+  .login-plano { width: min(400px, calc(100vw - 40px)); }
+  .login-plano .login-saludo { font-size: 1.85rem; }
+  .login-volver { top: 16px; left: 16px; }
+}
 
 /* =========================================================================
    v13 — "Personalizar login" (dropzone, galería, vista previa viva) y pulido

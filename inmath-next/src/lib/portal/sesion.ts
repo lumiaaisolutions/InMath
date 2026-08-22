@@ -24,12 +24,16 @@ function firma(aid: number, exp: number): string {
 
 export async function crearSesionAlumno(alumnoId: number): Promise<void> {
   const exp = Math.floor(Date.now() / 1000) + DURACION_S;
+  // path "/" para que la sesión sea legible también fuera de /portal (ej. la
+  // página pública /pago cuando el alumno registrado va a "Completar mi pago").
   (await cookies()).set(COOKIE, `${alumnoId}.${exp}.${firma(alumnoId, exp)}`, {
-    httpOnly: true, sameSite: "lax", path: "/portal", secure: process.env.NODE_ENV === "production",
+    httpOnly: true, sameSite: "lax", path: "/", secure: process.env.NODE_ENV === "production",
   });
 }
 
 export async function cerrarSesionAlumno(): Promise<void> {
+  (await cookies()).delete({ name: COOKIE, path: "/" });
+  // Compat: limpia también sesiones antiguas emitidas con path /portal.
   (await cookies()).delete({ name: COOKIE, path: "/portal" });
 }
 

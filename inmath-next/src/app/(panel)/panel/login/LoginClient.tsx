@@ -111,9 +111,9 @@ export function LoginClient({ slides, sitioUrl, tituloDefecto, textoDefecto, con
               <div className="campo lc-e e4">
                 <label htmlFor="identificador">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="3" /><path d="m3 6 9 7 9-7" /></svg>
-                  Correo o usuario
+                  Correo
                 </label>
-                <input type="text" id="identificador" name="identificador" required autoFocus autoComplete="username" placeholder="tu@correo.com o tu WhatsApp" />
+                <input type="text" id="identificador" name="identificador" required autoFocus autoComplete="username" placeholder="tu@correo.com" />
               </div>
               <div className="campo lc-e e5">
                 <label htmlFor="password">

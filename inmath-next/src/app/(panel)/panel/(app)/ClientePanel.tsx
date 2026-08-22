@@ -242,7 +242,7 @@ export function AgentePanelIA() {
         <div className="agente-panel" role="dialog" aria-label="Mathy, el asistente del panel">
           <div className="ap-cab">
             <div className="ap-quien">
-              {libro}
+              <MascotaMathy sinManos />
               <div><b>Mathy</b><span>La IA del panel</span></div>
             </div>
             <button type="button" className="ap-cerrar" aria-label="Cerrar asistente" onClick={() => setAbierto(false)}><IconoPanel n="x" /></button>

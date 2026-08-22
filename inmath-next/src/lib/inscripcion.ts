@@ -51,9 +51,9 @@ export async function inscribirPorPago(
 
 /**
  * Genera las credenciales del portal del alumno UNA sola vez (usuario = su
- * WhatsApp) y rellena su correo desde el prospecto. Devuelve la contraseña
- * temporal en claro solo la primera vez (para mostrarla al admin o enviarla
- * por correo); `passTmp: null` si ya estaban provisionadas.
+ * CORREO; el WhatsApp queda solo como dato de contacto). Si no dejó correo, se
+ * usa el WhatsApp como respaldo. Devuelve la contraseña temporal en claro solo
+ * la primera vez; `passTmp: null` si ya estaban provisionadas.
  */
 export async function provisionarAccesoAlumno(
   alumnoId: number,
@@ -68,12 +68,14 @@ export async function provisionarAccesoAlumno(
   }
   if (alumno.usuario) return { usuario: alumno.usuario, passTmp: null };
 
+  // Usuario = correo (dato principal de acceso); WhatsApp solo de respaldo.
+  const usuario = alumno.email ?? prospecto.correo ?? prospecto.telefono_whatsapp;
   const passTmp = randomBytes(8).toString("base64url").replace(/[-_]/g, "x").slice(0, 10);
   await prisma.alumnos.update({
     where: { id: alumnoId },
-    data: { usuario: prospecto.telefono_whatsapp, password_hash: await bcrypt.hash(passTmp, 10) },
+    data: { usuario, password_hash: await bcrypt.hash(passTmp, 10) },
   });
-  return { usuario: prospecto.telefono_whatsapp, passTmp };
+  return { usuario, passTmp };
 }
 
 /** Correo con las credenciales del portal (solo si el alumno dejó correo). */

@@ -28,12 +28,14 @@ function Guante() {
   );
 }
 
-export function MascotaMathy({ cls = "agente-libro mathy-mascota" }: { cls?: string }) {
+export function MascotaMathy({ cls = "agente-libro mathy-mascota", sinManos = false }: { cls?: string; sinManos?: boolean }) {
   return (
     <svg className={cls} viewBox="0 0 48 48" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {/* Libro (mismo diseño de líneas) — más chico y centrado para que las
-          manos queden claramente FUERA del libro, a los lados. */}
-      <g style={{ transform: "translate(24px, 23px) scale(0.58) translate(-24px, -23px)" }}>
+      {/* Libro (mismo diseño de líneas). Con manos se encoge (.58) para dejarles
+          lugar a los lados; sin manos (avatar mini) se centra y llena la caja. */}
+      <g style={{ transform: sinManos
+        ? "translate(24px, 24px) scale(0.92) translate(-24px, -24px)"
+        : "translate(24px, 23px) scale(0.58) translate(-24px, -23px)" }}>
         <path d="M24 15 C 17 10.5 10 10 6 13.5 V 33 C 10 29.5 17 30 24 34.5" fill="none" stroke="#5B8DF7" strokeWidth={2.6} />
         <path d="M24 15 C 31 10.5 38 10 42 13.5 V 33 C 38 29.5 31 30 24 34.5" fill="none" stroke="#5B8DF7" strokeWidth={2.6} />
         <line x1={24} y1={15.5} x2={24} y2={34} stroke="#5B8DF7" strokeWidth={1.3} opacity={0.45} />
@@ -44,16 +46,18 @@ export function MascotaMathy({ cls = "agente-libro mathy-mascota" }: { cls?: str
         </g>
       </g>
 
-      {/* Mano IZQUIERDA — puño (manga) tocando el borde del libro, mano y dedos
-          claramente AFUERA (a la izquierda). Guante base espejado. */}
-      <g style={{ transform: "translate(3px, 23px) scale(-0.88, 0.88)" }}>
-        <g className="mathy-mano-izq"><Guante /></g>
-      </g>
-      {/* Mano DERECHA — puño tocando el borde del libro, mano y dedos AFUERA
-          (a la derecha). Guante base sin espejar. */}
-      <g style={{ transform: "translate(45px, 23px) scale(0.88)" }}>
-        <g className="mathy-mano-der"><Guante /></g>
-      </g>
+      {!sinManos && (<>
+        {/* Mano IZQUIERDA — puño (manga) tocando el borde del libro, mano y dedos
+            claramente AFUERA (a la izquierda). Guante base espejado. */}
+        <g style={{ transform: "translate(3px, 23px) scale(-0.88, 0.88)" }}>
+          <g className="mathy-mano-izq"><Guante /></g>
+        </g>
+        {/* Mano DERECHA — puño tocando el borde del libro, mano y dedos AFUERA
+            (a la derecha). Guante base sin espejar. */}
+        <g style={{ transform: "translate(45px, 23px) scale(0.88)" }}>
+          <g className="mathy-mano-der"><Guante /></g>
+        </g>
+      </>)}
     </svg>
   );
 }

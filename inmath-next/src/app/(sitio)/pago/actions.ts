@@ -46,10 +46,10 @@ export async function registrarAlumnoAccion(fd: FormData): Promise<EstadoRegistr
   const hash = esGoogle ? null : await bcrypt.hash(password, 10);
   const existente = await prisma.alumnos.findUnique({ where: { prospecto_id: prospecto.id } });
   if (existente) {
-    await prisma.alumnos.update({ where: { id: existente.id }, data: { nombre, email: correo, usuario: telefono, ...(hash ? { password_hash: hash } : {}), estado: "activo" } });
+    await prisma.alumnos.update({ where: { id: existente.id }, data: { nombre, email: correo, usuario: correo, ...(hash ? { password_hash: hash } : {}), estado: "activo" } });
   } else {
     await prisma.alumnos.create({
-      data: { prospecto_id: prospecto.id, curso_id: curso.id, nombre, telefono, email: correo, usuario: telefono, password_hash: hash, estado: "activo", inscrito_en: ahoraPared() },
+      data: { prospecto_id: prospecto.id, curso_id: curso.id, nombre, telefono, email: correo, usuario: correo, password_hash: hash, estado: "activo", inscrito_en: ahoraPared() },
     });
   }
 
@@ -58,14 +58,14 @@ export async function registrarAlumnoAccion(fd: FormData): Promise<EstadoRegistr
   await enviarCorreo({
     para: [correo],
     asunto: `Tu cuenta para ${curso.nombre} está lista`,
-    preheader: `Entra con tu WhatsApp (${digitos}) y completa tu pago para desbloquear todo.`,
+    preheader: `Entra con tu correo (${correo}) y completa tu pago para desbloquear todo.`,
     texto: [
       `Hola ${nombre},`, "",
       `Creamos tu cuenta para ${curso.nombre}. Ya puedes entrar a tu portal de alumno.`,
     ].join("\n"),
-    destacado: `Tus datos de acceso:\nUsuario: tu WhatsApp (${digitos})\nContraseña: la que elegiste al registrarte`,
+    destacado: `Tus datos de acceso:\nUsuario: tu correo (${correo})\nContraseña: la que elegiste al registrarte`,
     pasos: [
-      "Entra a tu portal con tu WhatsApp y contraseña.",
+      "Entra a tu portal con tu correo y contraseña.",
       "Completa tu pago desde el portal o en la página de inscripción.",
       "Al confirmarse, se desbloquea todo el contenido, tus asesorías y el material.",
     ],

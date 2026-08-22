@@ -170,7 +170,7 @@ export function AgenteIA({ whatsappUrl = "", abrirInicial = true, sinBoton = fal
         <div className={`agente-panel genio${cerrando ? " genio-cierra" : ""}${amplio ? " amplio" : ""}`} role="dialog" aria-label="Mathy">
           <div className="ap-cab">
             <div className="ap-quien">
-              <span className="ap-avatar-caja"><MascotaMathy cls="agente-libro mathy-mascota" /></span>
+              <span className="ap-avatar-caja"><MascotaMathy cls="agente-libro mathy-mascota" sinManos /></span>
               <div><b>Mathy</b><span>La IA de Cursos InMath</span></div>
             </div>
             <button type="button" className="ap-cerrar ap-amplia" aria-label={amplio ? "Vista normal" : "Ampliar chat"}

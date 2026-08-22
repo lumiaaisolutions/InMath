@@ -25,7 +25,7 @@ export default async function CuentaPage() {
 
   const datos: { etq: string; valor: string; icono: string }[] = [
     { etq: "Curso", valor: alumno.curso_nombre, icono: "book" },
-    { etq: "Usuario", valor: alumno.usuario ?? alumno.telefono, icono: "lock" },
+    { etq: "Usuario", valor: alumno.usuario ?? alumno.email ?? alumno.telefono, icono: "lock" },
     { etq: "Correo", valor: alumno.email ?? "—", icono: "chat" },
     { etq: "Inscrito", valor: fecha(alumno.inscrito_en), icono: "calendar" },
   ];
