@@ -49,7 +49,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </button>
           <nav id="navPrincipal">
             <a href="/#como" className="n-como"><Icono n="route" /> Cómo funciona</a>
-            <a href="/#incluye" className="n-incl"><Icono n="list" /> Qué incluye</a>
+            <div className="nav-drop">
+              <a href="/#incluye" className="n-incl nav-drop-btn"><Icono n="list" /> Qué incluye <span className="nav-caret" aria-hidden="true">▾</span></a>
+              <div className="nav-panel" role="menu">
+                <div className="np-cols">
+                  <div className="np-col">
+                    <span className="np-tit">El curso</span>
+                    <a href="/#incluye"><Icono n="play" /> Clases grabadas</a>
+                    <a href="/#incluye"><Icono n="book" /> Material incluido</a>
+                    <a href="/#como"><Icono n="route" /> Cómo funciona</a>
+                  </div>
+                  <div className="np-col">
+                    <span className="np-tit">Acompañamiento</span>
+                    <Link href="/agenda"><Icono n="user" /> Asesorías 1 a 1</Link>
+                    <a href="/#incluye"><Icono n="trend" /> Reportes semanales</a>
+                    <Link href="/panel/login"><Icono n="lock" /> Portal del alumno</Link>
+                  </div>
+                </div>
+                <Link href="/pago" className="np-cta">
+                  <span><b>¿List@ para empezar?</b><small>Inscríbete hoy con $500 de descuento</small></span>
+                  <Icono n="arrow" />
+                </Link>
+              </div>
+            </div>
             <Link href="/agenda" className="n-ases"><Icono n="calendar" /> Asesoría gratis</Link>
             <Link href="/panel/login" className="n-login"><Icono n="user" /> Entrar</Link>
             <Link href="/pago" className="cta">Inscribirme</Link>
@@ -68,13 +90,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/agenda">Agendar asesoría</Link>
               <Link href="/pago">Inscribirme</Link>
               <Link href="/panel/login">Entrar / Portal del alumno</Link>
-              <Link href="/privacidad">Aviso de privacidad</Link>
-              <Link href="/terminos">Términos y condiciones</Link>
             </nav>
             <a className="lumia-badge" href="https://lumiaaisolutions.com/" target="_blank" rel="noopener">
               <img src="/img/lumia.svg" alt="" width={18} height={18} />
               Desarrollado por <b>LUMIA</b>
             </a>
+          </div>
+          <div className="centrado pie-legal">
+            <Link href="/terminos">Términos de uso</Link>
+            <Link href="/codigo-conducta">Código de conducta</Link>
+            <Link href="/informacion-regulatoria">Información regulatoria</Link>
+            <Link href="/referidos">Programa de referidos</Link>
+            <Link href="/privacidad">Política de privacidad</Link>
+            <Link href="/cookies">Gestionar cookies</Link>
           </div>
         </footer>
                 <AgenteIA whatsappUrl={WHATSAPP_URL} />

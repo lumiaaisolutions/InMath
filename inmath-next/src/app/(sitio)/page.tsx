@@ -16,34 +16,43 @@ export default async function Landing() {
   return (
     <>
       <AlertaEmergenteLanding precio={precio} curso={curso?.nombre ?? ""} />
-      <section className="heroe">
-        <Malla />
-        <div className="heroe-rej">
-          <div className="heroe-texto reveal-mueve">
-            <h1>Cursos en línea que <span className="marca-pino">sí terminas</span>, con <span className="marca">acompañamiento</span> de verdad.</h1>
-            <p className="entrada">Clases para estudiar cuando puedas, un asesor que te guía por WhatsApp y un reporte de tu avance cada semana. Aprendes a tu ritmo, sin perder el hilo.</p>
-            <div className="acciones">
-              <Link className="boton glow glow-halo grande" href="/pago">Inscribirme <Icono n="arrow" cls="flecha" /></Link>
-              <Link className="boton pastel grande" href="/agenda">Agendar asesoría gratis</Link>
-            </div>
-            <div className="respaldo">
-              <span><Icono n="clock" /> Acceso inmediato</span>
-              <span><Icono n="user" /> Asesoría 1 a 1</span>
-              <span><Icono n="play" /> Estudias a tu ritmo</span>
-              <span className="respaldo-oferta"><Icono n="card" /> Hoy con $500 de descuento</span>
-            </div>
+      <section className="heroe-cine" id="heroCine" aria-label="Cursos en línea con acompañamiento">
+        {/* Fondo inmersivo: secuencia de imágenes (scrubbing) + parallax + Ken Burns */}
+        <div className="hc-fondo" aria-hidden="true">
+          <div className="hc-seq" id="hcSeq">
+            <img className="hc-frame on" src="/img/fotos/full-estudio.jpg" alt="" />
+            <img className="hc-frame" src="/img/fotos/acompana-2.jpg" alt="" loading="lazy" />
+            <img className="hc-frame" src="/img/fotos/full-meta.jpg" alt="" loading="lazy" />
           </div>
-          <div className="demo-marco zoom-in">
-            <div className="chip-flota arriba"><Icono n="check" /> Cita agendada</div>
-            <div className="chip-flota abajo"><Icono n="trend" /> Avance 70%</div>
-            <div className="scrub scrub-hero" aria-label="Estudiante acompañado por WhatsApp durante su curso">
-              <img className="scrub-frame f1" src="/img/fotos/hero-1.jpg" alt="Persona escribiendo por WhatsApp" />
-              <img className="scrub-frame f2" src="/img/fotos/hero-2.jpg" alt="Estudiantes repasando frente a una laptop" loading="lazy" />
-              <span className="tinte" />
-              <Link className="scrub-accion" href="/agenda" aria-label="Agendar una asesoría gratis"><Icono n="arrow" /></Link>
-            </div>
+          <span className="hc-velo" />
+          <span className="hc-glow hc-glow-1" />
+          <span className="hc-glow hc-glow-2" />
+          <span className="hc-grain" />
+        </div>
+
+        {/* Contenido centrado con entrada escalonada (primeros segundos) */}
+        <div className="hc-contenido">
+          <span className="eyebrow hc-eyebrow"><span className="hc-eyebrow-dot" /> Cursos con acompañamiento real</span>
+          <h1 className="hc-title">
+            <span className="hc-line">Cursos en línea</span>
+            <span className="hc-line">que <em>sí terminas</em>,</span>
+            <span className="hc-line">con acompañamiento</span>
+            <span className="hc-line">de verdad.</span>
+          </h1>
+          <p className="hc-sub">Clases para estudiar cuando puedas, un asesor que te guía por WhatsApp y un reporte de tu avance cada semana. Aprendes a tu ritmo, sin perder el hilo.</p>
+          <div className="hc-cta">
+            <Link className="hc-btn hc-btn-primary" href="/pago">Inscribirme <Icono n="arrow" cls="flecha" /></Link>
+            <Link className="hc-btn hc-btn-ghost" href="/agenda"><span className="hc-play"><Icono n="play" /></span> Agendar asesoría gratis</Link>
+          </div>
+          <div className="hc-chips">
+            <span><Icono n="clock" /> Acceso inmediato</span>
+            <span><Icono n="user" /> Asesoría 1 a 1</span>
+            <span><Icono n="play" /> Estudias a tu ritmo</span>
+            <span className="hc-chip-oferta"><Icono n="card" /> Hoy con $500 de descuento</span>
           </div>
         </div>
+
+        <span className="hc-scroll" aria-hidden="true"><i /></span>
       </section>
 
       <AlertasLanding posicion="arriba" />
@@ -139,6 +148,48 @@ export default async function Landing() {
 
       <AlertasLanding posicion="precios" />
 
+      {/* Bento: todo en un solo lugar */}
+      <section className="bento" aria-label="Todo lo que incluye tu inscripción">
+        <div className="centrado">
+          <div className="cab-seccion reveal-mueve" style={{ textAlign: "center", margin: "0 auto" }}>
+            <span className="eyebrow"><Icono n="check" cls="ic-ey" /> Todo en un solo lugar</span>
+            <h2>Aprende, practica y avanza: todo desde tu portal.</h2>
+          </div>
+          <div className="bento-grid">
+            <div className="bento-card bento-a reveal">
+              <span className="bento-ic"><Icono n="play" /></span>
+              <h3>Clases grabadas</h3>
+              <p>Estudia cuando puedas. Las clases quedan disponibles siempre, a tu ritmo.</p>
+            </div>
+            <div className="bento-card bento-b bento-dark reveal">
+              <span className="bento-ic"><Icono n="user" /></span>
+              <h3>Asesorías 1 a 1</h3>
+              <p>Un asesor humano te guía por WhatsApp y videollamada, y ajusta tu plan.</p>
+              <div className="bento-chips">
+                <span><Icono n="check" /> Cita agendada</span>
+                <span><Icono n="chat" /> Dudas al instante</span>
+              </div>
+            </div>
+            <div className="bento-card bento-c reveal">
+              <span className="bento-ic"><Icono n="book" /></span>
+              <h3>Material incluido</h3>
+              <p>Guías y ejercicios descargables para reforzar cada tema.</p>
+            </div>
+            <div className="bento-card bento-d bento-soft reveal">
+              <span className="bento-ic"><Icono n="trend" /></span>
+              <h3>Reporte de avance semanal</h3>
+              <p>Cada semana ves lo que lograste y lo que sigue, para no perder el hilo.</p>
+              <div className="bento-mini"><b>70%</b><span>de avance promedio con acompañamiento</span></div>
+            </div>
+            <div className="bento-card bento-e reveal">
+              <span className="bento-ic"><Icono n="chat" /></span>
+              <h3>Mathy, tu asistente</h3>
+              <p>Resuelve dudas del curso al momento, directo en la página.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="precio" id="precios">
         <Malla />
         <div className="centrado" style={{ textAlign: "center", marginBottom: 36 }}>
@@ -176,6 +227,36 @@ export default async function Landing() {
       </section>
 
       <AlertasLanding posicion="final" />
+
+      {/* Comunidad: tarjetas flotantes */}
+      <section className="comunidad" aria-label="Cientos de estudiantes acompañados">
+        <span className="com-tex" aria-hidden="true">01001100 00110101 10 0100111 000 110 0101 000111 100 010 000101</span>
+        <div className="com-centro reveal">
+          <span className="eyebrow"><Icono n="user" cls="ic-ey" /> Comunidad InMath</span>
+          <h2>Cientos de estudiantes <span className="resalte">avanzando acompañados</span>.</h2>
+          <p>No estudias en solitario: un asesor y una comunidad que te empuja hasta terminar.</p>
+        </div>
+        <div className="com-card com-1" aria-hidden="true">
+          <div className="com-cab"><span className="com-avatar">A</span><b>Ana L.</b></div>
+          <p>“Por fin entendí álgebra. Mi asesor me explicó a mi ritmo.”</p>
+          <span className="com-tag"><Icono n="check" /> Inscrita</span>
+        </div>
+        <div className="com-card com-2" aria-hidden="true">
+          <div className="com-cab"><span className="com-avatar">J</span><b>Jorge M.</b></div>
+          <p>“Los reportes semanales me mantuvieron enfocado.”</p>
+          <span className="com-like"><Icono n="trend" /> Avance 82%</span>
+        </div>
+        <div className="com-card com-3" aria-hidden="true">
+          <div className="com-cab"><span className="com-avatar">S</span><b>Sofía R.</b></div>
+          <p>“Agendé mi asesoría gratis y me convencí al instante.”</p>
+          <span className="com-tag"><Icono n="calendar" /> Cita agendada</span>
+        </div>
+        <div className="com-card com-4" aria-hidden="true">
+          <div className="com-cab"><span className="com-avatar">D</span><b>Diego P.</b></div>
+          <p>“Estudiaba de noche; las clases grabadas fueron clave.”</p>
+          <span className="com-like"><Icono n="play" /> A mi ritmo</span>
+        </div>
+      </section>
 
       <section className="cta-final">
         <div className="cta-caja reveal zoom-in">

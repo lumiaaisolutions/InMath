@@ -37,6 +37,35 @@ export function ScriptsSitio() {
     const toggle = () => { const ab = nav?.classList.toggle("abierto"); btn?.setAttribute("aria-expanded", ab ? "true" : "false"); };
     btn?.addEventListener("click", toggle);
 
+    // Header sticky: sombra sutil al hacer scroll.
+    const barra = document.querySelector(".barra");
+    const onScrollBarra = () => barra?.classList.toggle("scrolled", window.scrollY > 8);
+    onScrollBarra();
+    window.addEventListener("scroll", onScrollBarra, { passive: true });
+
+    // Hero cinematográfico: parallax del fondo + image-sequence scrubbing.
+    const cine = document.getElementById("heroCine");
+    const fondo = cine?.querySelector<HTMLElement>(".hc-fondo");
+    const frames = Array.from(cine?.querySelectorAll<HTMLElement>(".hc-frame") ?? []);
+    const motion = matchMedia("(prefers-reduced-motion: no-preference)").matches;
+    let raf = 0;
+    const onScrollCine = () => {
+      if (!cine || raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const h = cine.offsetHeight || 1;
+        const prog = Math.min(1, Math.max(0, window.scrollY / h));
+        if (fondo && motion) fondo.style.transform = `translateY(${prog * 14}%)`;
+        // Scrubbing: la imagen activa avanza según el progreso del scroll.
+        if (frames.length) {
+          const idx = Math.min(frames.length - 1, Math.floor(prog * frames.length + 0.0001));
+          frames.forEach((f, i) => f.classList.toggle("on", i === idx));
+        }
+      });
+    };
+    onScrollCine();
+    if (cine) window.addEventListener("scroll", onScrollCine, { passive: true });
+
     let quitarScrub: (() => void) | undefined;
     // Scrubbing (crossfade + Ken Burns anclado al scroll desde la carga)
     if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
@@ -49,7 +78,6 @@ export function ScriptsSitio() {
           return { caja, ancla: Math.max(0, r.top + sy - vh), recorrido: Math.max(280, r.height) };
         });
       };
-      const mezcla = (a: number, b: number, t: number) => a + (b - a) * t;
       const cruce = (lp: number, entra: boolean) => (lp <= 0.42 ? (entra ? 0 : 1) : entra ? (lp - 0.42) / 0.58 : 1 - (lp - 0.42) / 0.58);
       let marcado = false;
       const pintar = () => {
@@ -60,8 +88,9 @@ export function ScriptsSitio() {
           const lp = Math.min(1, Math.max(0, (p - 0.15) / 0.7));
           f1.style.setProperty("opacity", String(cruce(lp, false)), "important");
           f2.style.setProperty("opacity", String(cruce(lp, true)), "important");
-          f1.style.setProperty("transform", `scale(${mezcla(1.1, 1, p)}) translate(${mezcla(0, -1.5, p)}%, ${mezcla(0, 1.5, p)}%)`, "important");
-          f2.style.setProperty("transform", `scale(${mezcla(1, 1.1, p)}) translate(${mezcla(1.5, 0, p)}%, ${mezcla(-1.5, 0, p)}%)`, "important");
+          // Imágenes de sección FIJAS: sin Ken Burns; solo cambian con el crossfade.
+          f1.style.setProperty("transform", "scale(1)", "important");
+          f2.style.setProperty("transform", "scale(1)", "important");
         });
         marcado = false;
       };
@@ -81,6 +110,8 @@ export function ScriptsSitio() {
       document.removeEventListener("click", clickNav);
       document.removeEventListener("submit", onSubmit);
       btn?.removeEventListener("click", toggle);
+      window.removeEventListener("scroll", onScrollBarra);
+      window.removeEventListener("scroll", onScrollCine);
       quitarScrub?.();
     };
   }, [pathname]);
@@ -238,7 +269,7 @@ export function CtaForm() {
       <input type="text" name="nombre" placeholder="Tu nombre" required />
       <input type="tel" name="telefono" placeholder="WhatsApp (10 dígitos)" required inputMode="numeric" />
       <input type="email" name="correo" placeholder="Tu correo" required />
-      <textarea name="mensaje" placeholder="¿Qué te gustaría preguntarnos? (opcional)" rows={3} maxLength={600} />
+      <textarea name="mensaje" placeholder="¿Qué te gustaría preguntarnos? (opcional)" rows={2} maxLength={600} />
       <button type="submit" className="boton glow glow-halo">Quiero que me escriban →</button>
       <p className="legal">Sin spam. Solo lo usamos para contactarte y responder tu duda.</p>
     </form>
