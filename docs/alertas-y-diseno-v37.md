@@ -1,3 +1,27 @@
+# Correcciones post-Google: usuario=correo, redirect a pago, móvil y Mathy (21-ago-2026, v69)
+
+- **Usuario de acceso = CORREO** (antes era el WhatsApp). El WhatsApp queda solo
+  como dato de contacto para el admin. Cambiado en `registrarAlumnoAccion`,
+  `provisionarAccesoAlumno` (inscripcion.ts), textos de correos y del wizard;
+  cambiar el WhatsApp en Mi cuenta ya no toca el usuario. El login (`auth-unificado`)
+  ya aceptaba entrar por correo, así que es retrocompatible.
+- **Fix "Completar mi pago":** desde el portal llevaba al **wizard desde el paso 1**
+  (pedía el nombre otra vez). Ahora `/pago` detecta al **alumno logueado con pago
+  pendiente** y muestra directo la pantalla de **elegir cómo pagar** (nuevo
+  componente `PantallaPago`, reutilizado también por el wizard tras crear la
+  cuenta). Para que `/pago` (público) lea la sesión del alumno, la cookie
+  `inmath_alumno` pasó de `path:/portal` a **`path:/`**.
+- **Login móvil:** la caja se desbordaba a la izquierda (el `92vw` no descontaba
+  el padding lateral del contenedor grid `place-items:center`). Ahora usa ancho
+  explícito `min(400px, calc(100vw - 40px))` y queda **centrada**. Etiqueta
+  simplificada a "Correo".
+- **Mathy — encabezado:** las manos flotantes se salían de su caja (viewBox 48,
+  mano derecha a x≈52) y **pisaban el texto** "Mathy / La IA…". Se añadió la
+  opción `sinManos` a `MascotaMathy`; el avatar del encabezado (sitio y panel)
+  la usa (libro centrado sin manos). El botón lanzador conserva las manos.
+
+---
+
 # Correos rediseñados + registro seguro + fix login Google (21-ago-2026, v67-v68)
 
 Ajustes tras poner Google en producción y probar el flujo real:
