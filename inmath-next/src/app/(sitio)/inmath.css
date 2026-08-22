@@ -3627,3 +3627,56 @@ p.legal { min-height: 0 !important; background: none !important; padding: 0 !imp
 
 /* Contador animado del 70% (evita salto de layout) */
 .bento-count { display: inline-block; min-width: 2.4ch; }
+
+/* ============ v79 — Menú móvil responsive (fix): sólido, scrollable, mega-menú limpio ============ */
+@media (max-width: 900px) {
+  .nav-toggle { display: grid !important; }
+  .barra nav {
+    position: absolute; top: calc(100% + 8px); left: 12px; right: 12px;
+    display: flex; flex-direction: column; align-items: stretch; gap: 3px;
+    background: #fff; border: 1px solid var(--linea, #E6ECF7); border-radius: 20px;
+    padding: 12px; box-shadow: 0 24px 60px rgba(18,31,55,.22);
+    max-height: 0; overflow: hidden; opacity: 0; pointer-events: none;
+    transition: max-height .34s ease, opacity .24s ease;
+  }
+  .barra nav.abierto { max-height: min(82vh, 660px); overflow-y: auto; opacity: 1; pointer-events: auto; }
+  .barra nav a:not(.cta) { width: 100%; justify-content: flex-start; padding: 12px 14px; border-radius: 12px; }
+  .barra nav a.cta { width: 100%; justify-content: center; margin-top: 6px; }
+
+  /* Mega-menú aplanado dentro del hamburguesa: lista indentada limpia */
+  .nav-drop { display: block; width: 100%; }
+  .nav-drop-btn { pointer-events: none; }              /* el título es solo encabezado en móvil */
+  .nav-drop-btn .nav-caret { display: none; }
+  .nav-panel {
+    position: static !important; width: 100% !important; max-width: none !important;
+    opacity: 1 !important; visibility: visible !important; transform: none !important;
+    box-shadow: none !important; border: 0 !important; background: none !important;
+    padding: 2px 0 4px 10px !important;
+  }
+  .nav-panel::before { display: none; }
+  .np-cols { grid-template-columns: 1fr !important; gap: 0 !important; }
+  .np-tit { margin: 8px 0 2px !important; }
+  .np-col a { padding: 10px 12px; font-size: .9rem; }
+  .np-cta { margin-top: 10px; padding: 13px 16px; }
+
+  /* Sobre el hero oscuro, el toggle blanco; el panel abierto siempre claro */
+  body:has(.heroe-cine) .barra:not(.scrolled) nav a:not(.cta) { color: var(--tinta) !important; }
+  body:has(.heroe-cine) .barra:not(.scrolled) .np-col a { color: var(--tinta) !important; }
+  body:has(.heroe-cine) .barra:not(.scrolled) .np-cta { color: #fff !important; }
+}
+
+/* v79 — Interacciones extendidas: tilt en planes, glow en pasos, hover en comunidad */
+.pk3-card { transform: perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(var(--lift,0px));
+  transition: transform .25s cubic-bezier(.2,.7,.2,1), box-shadow .25s; transform-style: preserve-3d; }
+.pk3-card:hover { --lift: -5px; }
+@media (prefers-reduced-motion: reduce) { .pk3-card { transform: none !important; } }
+
+/* Pasos (cómo funciona): usan reveal-mueve (transform bloqueado) → interacción por glow + ícono */
+.paso { transition: box-shadow .25s ease, border-color .25s ease; }
+.paso:hover { box-shadow: 0 26px 54px -30px rgba(47,98,240,.5); border-color: rgba(47,98,240,.35); }
+.paso .paso-ic { transition: transform .3s cubic-bezier(.34,1.4,.5,1); }
+.paso:hover .paso-ic { transform: scale(1.12) rotate(-4deg); }
+
+/* Comunidad: leve realce al pasar el cursor (las tarjetas flotan; sin romper la animación) */
+.com-card { transition: box-shadow .25s ease; }
+.com-card:hover { box-shadow: 0 30px 64px -24px rgba(18,31,55,.55); z-index: 4; }

@@ -76,8 +76,8 @@ export function ScriptsSitio() {
     };
     if (cine && motion && finePointer) cine.addEventListener("pointermove", onMoveCine, { passive: true });
 
-    // Tilt 3D sutil en las tarjetas del bento.
-    const cards = Array.from(document.querySelectorAll<HTMLElement>(".bento-card"));
+    // Tilt 3D sutil en tarjetas (bento + planes de precios).
+    const cards = Array.from(document.querySelectorAll<HTMLElement>(".bento-card, .pk3-card"));
     const onCardMove = (e: PointerEvent) => {
       const el = e.currentTarget as HTMLElement;
       const r = el.getBoundingClientRect();
