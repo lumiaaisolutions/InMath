@@ -89,6 +89,18 @@ descarta con *Continuar*).
   rotarlo: Google Cloud → Clientes → el cliente OAuth → generar secreto nuevo →
   reemplazar en el `.env` del VPS y `pm2 delete + start inmath-web`.
 - Redirect autorizado en Google: `https://inmath.lumiaaisolutions.com/api/portal/google/callback`.
+- **App publicada "En producción"** (21-ago) → cualquier cuenta de Google entra.
+- **Fix aplicado:** el callback redirigía a `0.0.0.0:3010` detrás de nginx; ahora
+  usa `APP_URL` como base. Verificado en vivo.
+
+### Pulido opcional (no urgente, requiere acción en Google Cloud)
+- **Logo y marca:** en Google Cloud → *Información de la marca* (Branding),
+  subir el logo de Inmath y color → la pantalla de "Continuar con Google" se ve
+  profesional. Cosmético.
+- **Aviso "app no verificada":** con permisos básicos (email/perfil) el usuario
+  puede continuar igual (*Configuración avanzada → Ir a Inmath*). Para quitar el
+  aviso del todo habría que **enviar la app a verificación de Google** (proceso
+  de días, opcional). No bloquea el login.
 
 Guía original de referencia (cómo se hizo), por si se recrea en otro entorno:
 

@@ -9,7 +9,11 @@ import { crearSesionAlumno } from "@/lib/portal/sesion";
 /** Callback de Google (login ÚNICO): valida state, canjea el code y abre la
  *  sesión correcta — staff → /panel, alumno (con pago) → /portal. */
 export async function GET(req: NextRequest) {
-  const login = (q: string) => NextResponse.redirect(new URL(`/panel/login?error=${q}`, req.url));
+  // Detrás de nginx, req.url resuelve al bind interno (0.0.0.0:3010) y las
+  // redirecciones absolutas saldrían rotas. Usamos APP_URL como base pública.
+  const base = (process.env.APP_URL ?? "").replace(/\/$/, "") || req.url;
+  const irA = (path: string) => NextResponse.redirect(new URL(path, base));
+  const login = (q: string) => irA(`/panel/login?error=${q}`);
   if (!googleConfigurado()) return login("google-no-config");
 
   const url = new URL(req.url);
@@ -30,13 +34,13 @@ export async function GET(req: NextRequest) {
     // continuar; no lo dejamos entrar hasta terminarlo.
     const q = new URLSearchParams({ correo: perfil.email, google: "1" });
     if (perfil.nombre) q.set("nombre", perfil.nombre);
-    return NextResponse.redirect(new URL(`/pago?${q.toString()}`, req.url));
+    return irA(`/pago?${q.toString()}`);
   }
 
   if (acceso.tipo === "staff") {
     await crearSesion(acceso.id);
-    return NextResponse.redirect(new URL("/panel", req.url));
+    return irA("/panel");
   }
   await crearSesionAlumno(acceso.id);
-  return NextResponse.redirect(new URL("/portal", req.url));
+  return irA("/portal");
 }

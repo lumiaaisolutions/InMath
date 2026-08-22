@@ -1,3 +1,35 @@
+# Correos rediseñados + registro seguro + fix login Google (21-ago-2026, v67-v68)
+
+Ajustes tras poner Google en producción y probar el flujo real:
+
+- **Fix login con Google (crítico):** el callback redirigía a `0.0.0.0:3010`
+  (el bind interno detrás de nginx) en vez del dominio. Ahora las
+  redirecciones de `api/portal/google/{callback,inicio}` y `portal/logout` se
+  arman con **`APP_URL`** como base, no con `req.url`. (Regla general: en Route
+  Handlers detrás de nginx, redirigir con APP_URL.)
+- **Login:** nuevo CTA **"¿Aún no tienes cuenta? Regístrate"** → manda al wizard
+  de `/pago` (`.login-registro` en panel.css).
+- **Registro (wizard) — contraseña segura:** el paso de contraseña ahora tiene
+  **checklist de requisitos en vivo** (8+ caracteres, mayúscula, minúscula,
+  número), **barra de fuerza**, **campo de confirmación** y **ojo para ver** lo
+  que se escribe. Reglas centralizadas en `src/lib/password.ts` (mismas en
+  cliente y servidor: `registrarAlumnoAccion` valida con `passwordSegura`).
+  Estilos `.wz-pass/.wz-fuerza/.wz-reqs/.wz-match` (inmath.css v67).
+- **Correos rediseñados (v68, `src/lib/correo.ts`):** plantilla de marca
+  renovada (cabecera con degradado + logo, tipografía clara, fondo azul suave)
+  y **componentes reutilizables opcionales**: `cta` (botón), `codigo` (caja OTP),
+  `destacado` (callout), `pasos` (lista numerada con círculos), `nota`,
+  `preheader` y `tono` (azul/verde/ámbar/coral). La versión de texto plano
+  también quedó completa (incluye código, pasos y enlace del CTA).
+  **Todos los envíos se enriquecieron** para que queden completos y con
+  instrucciones: 2FA (código en caja + vigencia), reset de contraseña (botón +
+  vigencia), registro/apartado/comprobante de pago (pasos + botón de pago),
+  inscripción activa (verde + credenciales + botón al portal), avisos de
+  vencimiento 24h/3h/cancelado (ámbar/coral + botón pagar), reporte semanal
+  (botón al portal) y recordatorio de disponibilidad (botón al panel).
+
+---
+
 # Portal del alumno — Fase B completa (21-ago-2026)
 
 Detalle modular en `docs/portal-fase-b.md`. Resumen de lo entregado y verificado

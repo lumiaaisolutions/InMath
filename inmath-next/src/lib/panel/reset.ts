@@ -56,11 +56,10 @@ export async function solicitarReset(email: string): Promise<void> {
     await enviarCorreo({
       para: [staff.email],
       asunto: "Restablece tu contraseña — Inmath CRM",
-      texto: `Hola ${staff.nombre},\n\n`
-        + `Recibimos una solicitud para restablecer tu contraseña del panel. `
-        + `Para crear una nueva, entra a este enlace (vence en 30 minutos):\n\n`
-        + `${base}/panel/login/restablecer?token=${token}\n\n`
-        + `Si tú no lo pediste, puedes ignorar este correo — tu contraseña sigue igual.`,
+      preheader: "Enlace para crear una nueva contraseña del panel (vence en 30 minutos).",
+      texto: `Hola ${staff.nombre},\n\nRecibimos una solicitud para restablecer tu contraseña del panel. Toca el botón para crear una nueva.`,
+      cta: { url: `${base}/panel/login/restablecer?token=${token}`, label: "Crear nueva contraseña" },
+      nota: "Este enlace vence en 30 minutos. Si tú no lo pediste, ignora este correo — tu contraseña sigue igual.",
     });
     return;
   }
@@ -71,11 +70,10 @@ export async function solicitarReset(email: string): Promise<void> {
     await enviarCorreo({
       para: [alumno.email!],
       asunto: "Restablece tu contraseña — Portal InMath",
-      texto: `Hola ${alumno.nombre},\n\n`
-        + `Recibimos una solicitud para restablecer la contraseña de tu portal de alumno. `
-        + `Para crear una nueva, entra a este enlace (vence en 30 minutos):\n\n`
-        + `${base}/panel/login/restablecer?token=${token}\n\n`
-        + `Si tú no lo pediste, puedes ignorar este correo — tu contraseña sigue igual.`,
+      preheader: "Enlace para crear una nueva contraseña de tu portal (vence en 30 minutos).",
+      texto: `Hola ${alumno.nombre},\n\nRecibimos una solicitud para restablecer la contraseña de tu portal de alumno. Toca el botón para crear una nueva.`,
+      cta: { url: `${base}/panel/login/restablecer?token=${token}`, label: "Crear nueva contraseña" },
+      nota: "Este enlace vence en 30 minutos. Si tú no lo pediste, ignora este correo — tu contraseña sigue igual.",
     });
     return;
   }

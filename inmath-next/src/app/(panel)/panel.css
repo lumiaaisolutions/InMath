@@ -2161,3 +2161,12 @@ body::before { animation: none !important; }
 @keyframes login2faEntra { from { opacity: 0; transform: translateY(10px) scale(.98); } }
 .login-2fa-cod { text-align: center; letter-spacing: .5em; font: 700 1.4rem/1 var(--display); text-indent: .5em; }
 @media (prefers-reduced-motion: reduce) { .login-2fa { animation: none; } }
+
+/* v67 — Login: CTA de registro para quien aún no tiene cuenta */
+.login-registro { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--linea, #E6ECF7);
+  display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; font-size: .92rem; color: var(--tinta-3, #6b7794); }
+.login-registro-btn { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; color: var(--azul, #2F62F0);
+  text-decoration: none; padding: 6px 12px; border-radius: 99px; transition: background .2s, transform .2s; }
+.login-registro-btn svg { width: 16px; height: 16px; transition: transform .25s cubic-bezier(.34,1.4,.5,1); }
+.login-registro-btn:hover { background: rgba(47,98,240,.09); }
+.login-registro-btn:hover svg { transform: translateX(3px); }

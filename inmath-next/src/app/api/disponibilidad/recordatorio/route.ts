@@ -23,12 +23,20 @@ export async function POST(req: NextRequest) {
     where: { rol: "admin", activo: true }, select: { email: true, nombre: true },
   });
   const para = admins.map((a) => a.email).filter(Boolean);
+  const base = (process.env.APP_URL ?? "https://inmath.lumiaaisolutions.com").replace(/\/$/, "");
   const envio = await enviarCorreo({
     para,
-    asunto: "Define la disponibilidad de la próxima semana — Inmath",
-    texto: `Hola,\n\nLa semana del ${proxLunes} aún no tiene horarios de asesoría definidos. `
-      + `Entra al panel (Disponibilidad) y confirma qué días y horas habrá citas.\n\n`
-      + `Mientras tanto, el sitio y Mathy usarán el horario base.`,
+    asunto: "Define la disponibilidad de la próxima semana",
+    tono: "ambar",
+    preheader: `La semana del ${proxLunes} aún no tiene horarios de asesoría definidos.`,
+    texto: [
+      "Hola,",
+      "",
+      `La semana del ${proxLunes} aún no tiene horarios de asesoría definidos.`,
+      "",
+      "Confirma qué días y horas habrá citas. Mientras tanto, el sitio y Mathy usarán el horario base.",
+    ].join("\n"),
+    cta: { url: `${base}/panel/disponibilidad`, label: "Definir disponibilidad" },
   });
 
   return NextResponse.json({ recordatorio: true, semana: proxLunes, admins: para.length, ...envio });

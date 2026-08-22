@@ -33,17 +33,16 @@ export async function POST(req: NextRequest) {
     if (!correo) { sinCorreo++; continue; }
     await enviarCorreo({
       para: [correo],
-      asunto: "Tu reporte de avance de la semana está listo — Cursos InMath",
+      asunto: "Tu reporte de avance de la semana está listo",
+      preheader: "Ya puedes ver y descargar tu reporte de avance de esta semana.",
       texto: [
         `Hola ${r.alumnos.nombre},`,
         "",
-        "Ya está listo tu reporte de avance de esta semana. Entra a tu portal para verlo y descargarlo:",
-        `${base}/portal`,
+        "Ya está listo tu reporte de avance de esta semana. Entra a tu portal para verlo y descargarlo.",
         "",
         "Ahí también encuentras tu avance del curso, tus asesorías y el material.",
-        "",
-        "— Cursos InMath",
       ].join("\n"),
+      cta: { url: `${base}/portal/reportes`, label: "Ver mi reporte" },
     });
     await prisma.reportes_generados.update({ where: { id: r.id }, data: { enviado_en: ahoraPared() } });
     enviados++;

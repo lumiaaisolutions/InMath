@@ -5,6 +5,7 @@ import { ahoraPared } from "@/lib/fechas";
 import { upsertPorTelefono, normalizaTelefono } from "@/lib/prospectos";
 import { pagoParaProspecto, tokenPago, tokenPagoValido, guardarComprobante } from "@/lib/pagos";
 import { enviarCorreo } from "@/lib/correo";
+import { passwordSegura } from "@/lib/password";
 
 export type EstadoRegistro = {
   error?: string;
@@ -28,7 +29,9 @@ export async function registrarAlumnoAccion(fd: FormData): Promise<EstadoRegistr
   if (digitos.length !== 10) return { error: "Tu WhatsApp debe tener 10 dígitos." };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return { error: "Escribe un correo válido." };
   // Las cuentas de Google no usan contraseña (entran con Google).
-  if (!esGoogle && password.length < 8) return { error: "Tu contraseña debe tener al menos 8 caracteres." };
+  if (!esGoogle && !passwordSegura(password)) {
+    return { error: "Tu contraseña debe tener al menos 8 caracteres, con mayúscula, minúscula y número." };
+  }
 
   const telefono = normalizaTelefono(digitos);
   if (!telefono) return { error: "Tu WhatsApp no es válido." };
@@ -51,15 +54,22 @@ export async function registrarAlumnoAccion(fd: FormData): Promise<EstadoRegistr
   }
 
   const pago = await pagoParaProspecto(prospecto.id, curso);
+  const sitio = (process.env.APP_URL ?? "https://inmath.lumiaaisolutions.com").replace(/\/$/, "");
   await enviarCorreo({
     para: [correo],
-    asunto: `Tu registro a ${curso.nombre} — Cursos InMath`,
+    asunto: `Tu cuenta para ${curso.nombre} está lista`,
+    preheader: `Entra con tu WhatsApp (${digitos}) y completa tu pago para desbloquear todo.`,
     texto: [
       `Hola ${nombre},`, "",
-      `Creamos tu cuenta para ${curso.nombre}. Ya puedes entrar a tu portal con tu WhatsApp (${digitos}) y la contraseña que elegiste.`,
-      "Para desbloquear todo el contenido, completa tu pago desde el portal o en la página de inscripción.", "",
-      "— Cursos InMath",
+      `Creamos tu cuenta para ${curso.nombre}. Ya puedes entrar a tu portal de alumno.`,
     ].join("\n"),
+    destacado: `Tus datos de acceso:\nUsuario: tu WhatsApp (${digitos})\nContraseña: la que elegiste al registrarte`,
+    pasos: [
+      "Entra a tu portal con tu WhatsApp y contraseña.",
+      "Completa tu pago desde el portal o en la página de inscripción.",
+      "Al confirmarse, se desbloquea todo el contenido, tus asesorías y el material.",
+    ],
+    cta: { url: `${sitio}/portal/login`, label: "Entrar a mi portal" },
   });
 
   return { ok: { pagoId: pago.id, token: tokenPago(pago.id), montoCentavos: pago.monto_centavos, moneda: pago.moneda, link: pago.link_pago } };
@@ -107,18 +117,20 @@ export async function iniciarPago(_prev: EstadoPago, fd: FormData): Promise<Esta
   // aún no está configurado, enviarCorreo lo omite y lo deja en el log.
   await enviarCorreo({
     para: [correo],
-    asunto: `Tu inscripción a ${curso.nombre}`,
+    asunto: `Apartamos tu lugar en ${curso.nombre}`,
+    preheader: `${curso.nombre} — $${formateaMonto(pago.monto_centavos)} ${pago.moneda}. Completa tu pago para asegurar tu lugar.`,
     texto: [
       `Hola ${nombre},`,
       "",
-      `Apartamos tu lugar en ${curso.nombre} — $${formateaMonto(pago.monto_centavos)} ${pago.moneda}.`,
-      pago.link_pago ? `Paga en línea de forma segura: ${pago.link_pago}` : "",
-      "También puedes pagar por transferencia y subir tu comprobante en la misma página de inscripción.",
-      "",
+      `Apartamos tu lugar en ${curso.nombre}. Solo falta completar tu pago para asegurarlo.`,
+    ].join("\n"),
+    destacado: `${curso.nombre}\nTotal: $${formateaMonto(pago.monto_centavos)} ${pago.moneda}`,
+    pasos: [
+      pago.link_pago ? "Paga en línea de forma segura con el botón de abajo." : "Realiza tu pago por transferencia (datos en la página de inscripción).",
+      "O paga por transferencia y sube tu comprobante en la misma página.",
       "Cuando confirmemos tu pago, tus datos de acceso te llegan por este correo.",
-      "",
-      "— Cursos InMath",
-    ].filter(Boolean).join("\n"),
+    ],
+    ...(pago.link_pago ? { cta: { url: pago.link_pago, label: "Pagar de forma segura" } } : {}),
   });
 
   return {
@@ -149,14 +161,15 @@ export async function subirComprobante(_prev: EstadoComprobante, fd: FormData): 
   if (pago?.prospectos?.correo) {
     await enviarCorreo({
       para: [pago.prospectos.correo],
-      asunto: "Recibimos tu comprobante — Cursos InMath",
+      asunto: "Recibimos tu comprobante",
+      tono: "verde",
+      preheader: "Estamos revisando tu comprobante. Te avisamos en cuanto se confirme.",
       texto: [
         `Hola ${pago.prospectos.nombre ?? ""},`.replace(" ,", ","),
         "",
-        "Recibimos tu comprobante de pago. Lo revisamos y, en cuanto se confirme, tus datos de acceso te llegan por este correo.",
-        "",
-        "— Cursos InMath",
+        "¡Gracias! Recibimos tu comprobante de pago y ya lo estamos revisando.",
       ].join("\n"),
+      destacado: "En cuanto lo confirmemos (normalmente el mismo día), tu portal se desbloquea y tus datos de acceso te llegan por este correo.",
     });
   }
   return { ok: true };

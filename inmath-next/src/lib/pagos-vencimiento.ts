@@ -18,6 +18,7 @@ type Meta = { avisos?: string[] };
 
 export async function procesarVencimientosPagos() {
   const ahora = ahoraPared();
+  const sitio = (process.env.APP_URL ?? "https://inmath.lumiaaisolutions.com").replace(/\/$/, "");
   const pendientes = await prisma.pagos.findMany({
     where: { estado: "pendiente", link_generado_en: { not: null } },
     include: {
@@ -42,8 +43,17 @@ export async function procesarVencimientosPagos() {
       if (correo) {
         await enviarCorreo({
           para: [correo],
-          asunto: "Tu registro de pago fue cancelado — Cursos InMath",
-          texto: `Hola ${nombre},\n\nNo detectamos tu pago dentro de las ${VIGENCIA_HORAS} horas y tu registro para ${pago.cursos.nombre} (${dinero(pago.monto_centavos, pago.moneda)}) quedó cancelado.\n\nSi ya pagaste o quieres intentarlo de nuevo, entra a la página y genera un nuevo enlace de pago; con gusto te ayudamos.`,
+          asunto: "Tu registro de pago fue cancelado",
+          tono: "coral",
+          preheader: `No detectamos tu pago de ${pago.cursos.nombre} a tiempo. Puedes intentarlo de nuevo.`,
+          texto: [
+            `Hola ${nombre},`,
+            "",
+            `No detectamos tu pago de ${pago.cursos.nombre} (${dinero(pago.monto_centavos, pago.moneda)}) dentro de las ${VIGENCIA_HORAS} horas, así que tu registro quedó cancelado.`,
+            "",
+            "No te preocupes: puedes volver a intentarlo cuando quieras. Si ya pagaste, escríbenos y lo resolvemos.",
+          ].join("\n"),
+          cta: { url: `${sitio}/pago`, label: "Intentar de nuevo" },
         });
       }
       continue;
@@ -59,8 +69,20 @@ export async function procesarVencimientosPagos() {
       if (correo) {
         await enviarCorreo({
           para: [correo],
-          asunto: "Quedan 3 horas para confirmar tu pago — Cursos InMath",
-          texto: `Hola ${nombre},\n\nAún no hemos verificado tu pago de ${pago.cursos.nombre} (${dinero(pago.monto_centavos, pago.moneda)}). Quedan aproximadamente 3 horas antes de que tu registro se cancele automáticamente.\n\nSi ya pagaste, sube tu comprobante en la misma página de inscripción; si tienes dudas, escríbenos.`,
+          asunto: "Quedan 3 horas para confirmar tu pago",
+          tono: "coral",
+          preheader: `Tu lugar en ${pago.cursos.nombre} se libera en ~3 horas si no confirmamos tu pago.`,
+          texto: [
+            `Hola ${nombre},`,
+            "",
+            `Aún no hemos verificado tu pago de ${pago.cursos.nombre} (${dinero(pago.monto_centavos, pago.moneda)}).`,
+          ].join("\n"),
+          destacado: "⏳ Quedan aproximadamente 3 horas antes de que tu registro se cancele automáticamente.",
+          pasos: [
+            "Si ya pagaste, sube tu comprobante en la página de inscripción.",
+            "Si aún no pagas, hazlo con el botón de abajo para asegurar tu lugar.",
+          ],
+          cta: { url: pago.link_pago ?? `${sitio}/pago`, label: "Completar mi pago" },
         });
       }
       continue;
@@ -76,8 +98,20 @@ export async function procesarVencimientosPagos() {
       if (correo) {
         await enviarCorreo({
           para: [correo],
-          asunto: "Aún no confirmamos tu pago — quedan 24 horas — Cursos InMath",
-          texto: `Hola ${nombre},\n\nAún no hemos verificado tu pago de ${pago.cursos.nombre} (${dinero(pago.monto_centavos, pago.moneda)}). Tu registro se cancelará en aproximadamente 24 horas si no lo confirmamos antes.\n\nSi ya pagaste, sube tu comprobante en la misma página de inscripción; si tienes dudas, escríbenos.`,
+          asunto: "Aún no confirmamos tu pago — quedan 24 horas",
+          tono: "ambar",
+          preheader: `Tu lugar en ${pago.cursos.nombre} se libera en ~24 horas si no confirmamos tu pago.`,
+          texto: [
+            `Hola ${nombre},`,
+            "",
+            `Aún no hemos verificado tu pago de ${pago.cursos.nombre} (${dinero(pago.monto_centavos, pago.moneda)}).`,
+          ].join("\n"),
+          destacado: "Tu registro se cancelará en aproximadamente 24 horas si no lo confirmamos antes.",
+          pasos: [
+            "Si ya pagaste, sube tu comprobante en la página de inscripción.",
+            "Si aún no pagas, hazlo con el botón de abajo para asegurar tu lugar.",
+          ],
+          cta: { url: pago.link_pago ?? `${sitio}/pago`, label: "Completar mi pago" },
         });
       }
     }

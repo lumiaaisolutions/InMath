@@ -54,7 +54,10 @@ export async function emitirCodigo2fa(alumnoId: number): Promise<boolean> {
   await enviarCorreo({
     para: [alumno.email],
     asunto: "Tu código para entrar — Portal InMath",
-    texto: `Hola ${alumno.nombre},\n\nTu código para entrar es: ${codigo}\n\nVence en 10 minutos. Si no intentaste entrar, ignora este correo.`,
+    preheader: `Tu código de acceso es ${codigo} (vence en 10 minutos).`,
+    texto: `Hola ${alumno.nombre},\n\nUsa este código para completar tu inicio de sesión en el portal. Escríbelo en la pantalla "Verifica que eres tú".`,
+    codigo,
+    nota: "El código vence en 10 minutos. Si tú no intentaste entrar, ignora este correo y tu cuenta seguirá protegida.",
   });
   return true;
 }

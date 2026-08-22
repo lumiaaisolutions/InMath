@@ -3134,3 +3134,28 @@ body::before { animation: none !important; }
 .wz-despues { display: block; text-align: center; margin-top: 16px; font: 600 .9rem var(--cuerpo); color: var(--tinta-2); }
 .wz-despues:hover { color: var(--azul); }
 @media (prefers-reduced-motion: reduce) { .wz-cuerpo { animation: none; } }
+
+/* ============ v67 — Wizard: contraseña con protocolos de seguridad ============ */
+.wz-pass { display: grid; gap: 6px; }
+.wz-pass .campo-pass { position: relative; display: flex; align-items: center; }
+.wz-pass .campo-pass input { width: 100%; padding-right: 46px; }
+.wz-pass .ver-pass { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px;
+  display: grid; place-items: center; border: 0; background: transparent; color: var(--tinta-3, #7b86a3); cursor: pointer; border-radius: 10px; }
+.wz-pass .ver-pass svg { width: 20px; height: 20px; }
+.wz-pass .ver-pass:hover { color: var(--azul, #2F62F0); background: rgba(47,98,240,.08); }
+.wz-fuerza { display: flex; align-items: center; gap: 10px; margin: 2px 0 2px; }
+.wz-fuerza-barra { flex: 1; height: 7px; border-radius: 99px; background: #E7EDFA; overflow: hidden; }
+.wz-fuerza-barra i { display: block; height: 100%; border-radius: 99px; transition: width .35s cubic-bezier(.34,1.2,.5,1), background .3s; }
+.wz-fuerza-barra i.n1 { background: #F0616C; } .wz-fuerza-barra i.n2 { background: #F6A62A; }
+.wz-fuerza-barra i.n3 { background: #4FB477; } .wz-fuerza-barra i.n4 { background: #23A26D; }
+.wz-fuerza-txt { font: 700 12px/1 var(--display, inherit); min-width: 62px; text-align: right; }
+.wz-fuerza-txt.n1 { color: #E0424E; } .wz-fuerza-txt.n2 { color: #C9820E; }
+.wz-fuerza-txt.n3, .wz-fuerza-txt.n4 { color: #1E8F5E; }
+.wz-reqs { list-style: none; margin: 4px 0 6px; padding: 0; display: grid; gap: 6px; }
+.wz-reqs li { display: flex; align-items: center; gap: 9px; font-size: .86rem; color: var(--tinta-3, #7b86a3); transition: color .25s; }
+.wz-reqs li.ok { color: #1E8F5E; }
+.wz-req-ic { width: 18px; height: 18px; display: grid; place-items: center; flex: 0 0 auto; }
+.wz-reqs li.ok .wz-req-ic svg { width: 16px; height: 16px; color: #23A26D; }
+.wz-req-punto { width: 7px; height: 7px; border-radius: 50%; background: #C4CEE2; }
+.wz-match { font-size: .82rem; font-weight: 600; margin-top: 4px; }
+.wz-match.ok { color: #1E8F5E; } .wz-match.no { color: #C9820E; }

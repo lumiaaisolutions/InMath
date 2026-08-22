@@ -84,29 +84,26 @@ export async function enviarBienvenidaAlumno(
 ): Promise<void> {
   if (!prospecto.correo) return;
   const url = (process.env.APP_URL ?? "").replace(/\/$/, "") + "/portal/login";
-  const bloqueCred = cred.passTmp
-    ? [
-        "Ya puedes entrar a tu portal de alumno:",
-        `• Usuario: ${cred.usuario}`,
-        `• Contraseña temporal: ${cred.passTmp}`,
-        `• Entra aquí: ${url}`,
-        "Por seguridad, cambia tu contraseña la primera vez que entres.",
-      ]
-    : [
-        "Ya puedes entrar a tu portal de alumno con tu usuario y contraseña:",
-        `• Entra aquí: ${url}`,
-      ];
+  const destacado = cred.passTmp
+    ? `Tus datos de acceso:\nUsuario: ${cred.usuario}\nContraseña temporal: ${cred.passTmp}`
+    : `Entra con tu usuario (${cred.usuario}) y la contraseña que elegiste.`;
+  const nota = cred.passTmp
+    ? "Por tu seguridad, cambia tu contraseña temporal la primera vez que entres."
+    : undefined;
   await enviarCorreo({
     para: [prospecto.correo],
-    asunto: "¡Tu inscripción está activa! — Cursos InMath",
+    asunto: "¡Tu inscripción está activa!",
+    tono: "verde",
+    preheader: `Confirmamos tu pago por ${cursoNombre}. Ya puedes entrar a tu portal.`,
     texto: [
       `Hola ${prospecto.nombre ?? ""},`.replace(" ,", ","),
       "",
-      `Confirmamos tu pago por ${cursoNombre}. Tu inscripción ya está activa.`,
+      `¡Excelente noticia! Confirmamos tu pago por ${cursoNombre} y tu inscripción ya está activa. 🎉`,
       "",
-      ...bloqueCred,
-      "",
-      "— Cursos InMath",
+      "Desde tu portal de alumno tienes tu avance del curso, tus asesorías, el material y tus reportes semanales.",
     ].join("\n"),
+    destacado,
+    cta: { url, label: "Entrar a mi portal" },
+    nota,
   });
 }

@@ -4,11 +4,12 @@ import Link from "next/link";
 import { Icono } from "@/components/Icono";
 import { registrarAlumnoAccion, subirComprobante, type EstadoComprobante } from "./actions";
 import { useActionState } from "react";
+import { REGLAS_PASSWORD, evaluaPassword, passwordSegura, fuerzaPassword } from "@/lib/password";
 
 const money = (c: number) => (c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 type Curso = { id: number; nombre: string; precioCentavos: number; moneda: string };
-type Datos = { nombre: string; whatsapp: string; correo: string; password: string; cursoId: number };
+type Datos = { nombre: string; whatsapp: string; correo: string; password: string; confirmar: string; cursoId: number };
 type Pago = { pagoId: number; token: string; montoCentavos: number; moneda: string; link: string | null };
 
 type Prefill = { nombre: string; correo: string; google: boolean };
@@ -24,7 +25,8 @@ export function InscripcionWizard({ curso, cursos, datosPago, prefill }: { curso
   const PASOS = CLAVES.map((c) => ETIQUETAS[c]);
   const [paso, setPaso] = useState(0);
   const clave = CLAVES[paso];
-  const [d, setD] = useState<Datos>({ nombre: prefill?.nombre ?? "", whatsapp: "", correo: prefill?.correo ?? "", password: "", cursoId: curso?.id ?? 0 });
+  const [d, setD] = useState<Datos>({ nombre: prefill?.nombre ?? "", whatsapp: "", correo: prefill?.correo ?? "", password: "", confirmar: "", cursoId: curso?.id ?? 0 });
+  const [verPass, setVerPass] = useState(false);
   const [error, setError] = useState<string>("");
   const [pago, setPago] = useState<Pago | null>(null);
   const [pendiente, start] = useTransition();
@@ -37,7 +39,10 @@ export function InscripcionWizard({ curso, cursos, datosPago, prefill }: { curso
     if (clave === "nombre" && d.nombre.trim().length < 2) return "Escribe tu nombre completo.";
     if (clave === "whatsapp" && d.whatsapp.replace(/\D+/g, "").length !== 10) return "Tu WhatsApp debe tener 10 dígitos.";
     if (clave === "correo" && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.correo.trim())) return "Escribe un correo válido.";
-    if (clave === "password" && d.password.length < 8) return "Tu contraseña debe tener al menos 8 caracteres.";
+    if (clave === "password") {
+      if (!passwordSegura(d.password)) return "Tu contraseña aún no cumple los requisitos de seguridad.";
+      if (d.password !== d.confirmar) return "Las contraseñas no coinciden.";
+    }
     return "";
   };
 
@@ -140,14 +145,57 @@ export function InscripcionWizard({ curso, cursos, datosPago, prefill }: { curso
             <small className="ayuda-campo">Ahí te damos el seguimiento y tus datos de acceso.</small>
           </div>
         )}
-        {clave === "password" && (
-          <div className="campo">
-            <label htmlFor="w-pass"><Icono n="lock" /> Crea tu contraseña</label>
-            <input id="w-pass" type="password" value={d.password} autoFocus placeholder="Mínimo 8 caracteres" autoComplete="new-password"
-              onChange={(e) => set("password", e.target.value)} onKeyDown={(e) => e.key === "Enter" && siguiente()} />
-            <small className="ayuda-campo">Con ella entras a tu portal de alumno.</small>
+        {clave === "password" && (() => {
+          const chk = evaluaPassword(d.password);
+          const fuerza = fuerzaPassword(d.password);
+          const NIVEL = ["", "Débil", "Aceptable", "Buena", "Fuerte"];
+          const coincide = d.confirmar.length > 0 && d.password === d.confirmar;
+          return (
+          <div className="wz-pass">
+            <div className="campo">
+              <label htmlFor="w-pass"><Icono n="lock" /> Crea tu contraseña</label>
+              <div className="campo-pass">
+                <input id="w-pass" type={verPass ? "text" : "password"} value={d.password} autoFocus placeholder="Tu contraseña segura" autoComplete="new-password"
+                  onChange={(e) => set("password", e.target.value)} />
+                <button type="button" className="ver-pass" aria-label={verPass ? "Ocultar contraseña" : "Mostrar contraseña"} aria-pressed={verPass} onClick={() => setVerPass((v) => !v)}>
+                  {!verPass ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.6 10.6 0 0 1 12 19c-6.5 0-10-7-10-7a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.6 9.6 0 0 1 12 4c6.5 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19" /><path d="m1 1 22 22" /></svg>
+                  )}
+                </button>
+              </div>
+            </div>
+            {d.password.length > 0 && (
+              <div className="wz-fuerza" aria-hidden="true">
+                <div className="wz-fuerza-barra"><i className={`n${fuerza}`} style={{ width: `${(fuerza / 4) * 100}%` }} /></div>
+                <span className={`wz-fuerza-txt n${fuerza}`}>{NIVEL[fuerza]}</span>
+              </div>
+            )}
+            <ul className="wz-reqs">
+              {REGLAS_PASSWORD.map((r) => (
+                <li key={r.clave} className={chk[r.clave] ? "ok" : ""}>
+                  <span className="wz-req-ic">{chk[r.clave] ? <Icono n="check" /> : <i className="wz-req-punto" />}</span>
+                  {r.etiqueta}
+                </li>
+              ))}
+            </ul>
+            <div className="campo">
+              <label htmlFor="w-pass2"><Icono n="lock" /> Confirma tu contraseña</label>
+              <div className="campo-pass">
+                <input id="w-pass2" type={verPass ? "text" : "password"} value={d.confirmar} placeholder="Repite tu contraseña" autoComplete="new-password"
+                  onChange={(e) => set("confirmar", e.target.value)} onKeyDown={(e) => e.key === "Enter" && siguiente()} />
+              </div>
+              {d.confirmar.length > 0 && (
+                <small className={`wz-match ${coincide ? "ok" : "no"}`}>
+                  {coincide ? "✓ Las contraseñas coinciden" : "Las contraseñas aún no coinciden"}
+                </small>
+              )}
+            </div>
+            <small className="ayuda-campo">Con ella entras a tu portal de alumno. No la compartas con nadie.</small>
           </div>
-        )}
+          );
+        })()}
         {clave === "resumen" && (
           <div className="wz-resumen">
             {cursos.length > 1 && (
