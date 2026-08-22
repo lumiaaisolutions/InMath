@@ -81,6 +81,37 @@ export async function linkParaProspecto(prospecto: ProspectoLink, cursoId: numbe
   return { ok: true as const, pago: actualizado };
 }
 
+/**
+ * Asegura que un pago pendiente tenga enlace de pago en línea SI hay un
+ * procesador activo (ej. MercadoPago). Genera el enlace sobre el MISMO pago
+ * (no crea duplicados) y lo guarda. Devuelve el enlace o null si no hay
+ * procesador configurado (entonces solo aplica la transferencia).
+ */
+export async function asegurarLinkDePago(pagoId: number): Promise<string | null> {
+  const pago = await prisma.pagos.findUnique({ where: { id: pagoId } });
+  if (!pago || pago.estado !== "pendiente") return pago?.link_pago ?? null;
+  if (pago.link_pago) return pago.link_pago;
+
+  let procesador;
+  try { procesador = await procesadorActivo(); } catch { return null; }
+
+  const prospecto = await prisma.prospectos.findUnique({ where: { id: pago.prospecto_id } });
+  const curso = await prisma.cursos.findFirst({ where: { id: pago.curso_id } });
+  if (!prospecto || !curso) return null;
+
+  try {
+    const link = await procesador.crearLink(pago, prospecto, curso);
+    const nombreProcesador = (await config("procesador_pago_activo", "")).trim() || null;
+    await prisma.pagos.update({
+      where: { id: pago.id },
+      data: { procesador: nombreProcesador, link_pago: link.link, referencia_externa: link.referencia_externa, link_generado_en: ahoraPared() },
+    });
+    return link.link;
+  } catch {
+    return null; // Si el procesador falla, se mantiene la transferencia.
+  }
+}
+
 /** Reemplazo del $_SESSION['pagos_propios'] del PHP: token HMAC por pago. */
 function secreto(): string {
   const s = process.env.APP_SECRET ?? "";

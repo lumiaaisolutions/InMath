@@ -6,7 +6,7 @@ import { InscripcionWizard } from "./InscripcionWizard";
 import { PantallaPago } from "./PantallaPago";
 import { alumnoActual } from "@/lib/portal/sesion";
 import { tienePagoConfirmado } from "@/lib/portal/auth";
-import { tokenPago } from "@/lib/pagos";
+import { tokenPago, asegurarLinkDePago } from "@/lib/pagos";
 
 export const metadata: Metadata = { title: "Inscripción — Cursos Inmath" };
 export const dynamic = "force-dynamic";
@@ -29,13 +29,15 @@ export default async function Pago({ searchParams }: { searchParams: Promise<{ c
       include: { cursos: { select: { nombre: true } } },
     });
     if (pendiente) {
+      // Si MercadoPago está activo y este pago aún no tiene enlace, lo generamos.
+      const link = pendiente.link_pago ?? (await asegurarLinkDePago(pendiente.id));
       return (
         <div className="pagina-form">
           <Link className="volver" href="/portal">← Volver a mi portal</Link>
           <h1>Completa tu pago</h1>
           <p className="sub">Elige cómo pagar. Al confirmarse, se desbloquea todo tu portal.</p>
           <PantallaPago
-            pago={{ pagoId: pendiente.id, token: tokenPago(pendiente.id), montoCentavos: pendiente.monto_centavos, moneda: pendiente.moneda, link: pendiente.link_pago }}
+            pago={{ pagoId: pendiente.id, token: tokenPago(pendiente.id), montoCentavos: pendiente.monto_centavos, moneda: pendiente.moneda, link }}
             cursoNombre={pendiente.cursos.nombre}
             nombre={alumno.nombre}
             datosPago={datosPago}

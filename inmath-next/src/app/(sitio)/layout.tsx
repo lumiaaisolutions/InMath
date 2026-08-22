@@ -68,6 +68,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/agenda">Agendar asesoría</Link>
               <Link href="/pago">Inscribirme</Link>
               <Link href="/panel/login">Entrar / Portal del alumno</Link>
+              <Link href="/privacidad">Aviso de privacidad</Link>
+              <Link href="/terminos">Términos y condiciones</Link>
             </nav>
             <a className="lumia-badge" href="https://lumiaaisolutions.com/" target="_blank" rel="noopener">
               <img src="/img/lumia.svg" alt="" width={18} height={18} />
