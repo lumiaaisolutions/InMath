@@ -163,10 +163,10 @@ export default async function Landing() {
             </div>
             {/* Imagen con image-sequence scrubbing (cambia al hacer scroll) */}
             <div className="bento-card bento-media reveal">
-              <div className="scrub bento-scrub" aria-label="Estudiantes avanzando en su curso">
-                <img className="scrub-frame f1" src="/img/fotos/acompana-1.jpg" alt="Escritorio de estudio" />
-                <img className="scrub-frame f2" src="/img/fotos/acompana-2.jpg" alt="Grupo repasando en una laptop" loading="lazy" />
-                <span className="bento-media-chip"><Icono n="check" /> Aprendes acompañado</span>
+              <div className="scrub bento-scrub" aria-label="Estudiando con acompañamiento por WhatsApp">
+                <img className="scrub-frame f1" src="/img/fotos/hero-1.jpg" alt="Persona estudiando y escribiendo por WhatsApp" />
+                <img className="scrub-frame f2" src="/img/fotos/agenda-1.jpg" alt="Asesoría por videollamada" loading="lazy" />
+                <span className="bento-media-chip"><Icono n="chat" /> Siempre acompañado</span>
               </div>
             </div>
             <div className="bento-card bento-c reveal">
@@ -196,10 +196,10 @@ export default async function Landing() {
             </div>
             {/* Segunda imagen con scrubbing */}
             <div className="bento-card bento-media bento-media2 reveal">
-              <div className="scrub bento-scrub" aria-label="Avance del alumno">
-                <img className="scrub-frame f1" src="/img/fotos/avance-2.jpg" alt="Cuaderno con notas" />
-                <img className="scrub-frame f2" src="/img/fotos/avance-1.jpg" alt="Persona celebrando su avance" loading="lazy" />
-                <span className="bento-media-chip"><Icono n="trend" /> Avance real</span>
+              <div className="scrub bento-scrub" aria-label="Estudiantes y su avance">
+                <img className="scrub-frame f1" src="/img/fotos/hero-2.jpg" alt="Estudiantes repasando frente a una laptop" />
+                <img className="scrub-frame f2" src="/img/fotos/agenda-2.jpg" alt="Sesión de asesoría" loading="lazy" />
+                <span className="bento-media-chip"><Icono n="trend" /> Avance real, cada semana</span>
               </div>
             </div>
           </div>

@@ -3566,3 +3566,26 @@ body:has(.heroe-cine) .barra:not(.scrolled) .nav-toggle { color:#fff; border-col
 /* v76 fix — la clase de PÁGINA .legal (min-height:100vh) colisionaba con la nota
    <p class="legal"> de los formularios, estirándola a 900px. Se resetea la nota. */
 p.legal { min-height: 0 !important; background: none !important; padding: 0 !important; }
+
+/* ============ v77 — Bento: azul marino más suave (sin saturar) + pulido ============ */
+/* Antes: #12203B→#1C3566 (casi negro, saturaba). Ahora slate azul más claro y aireado. */
+.bento-dark { background: linear-gradient(145deg, #3C5077, #4A6693) !important; }
+.bento-dark h3 { color: #fff; }
+.bento-dark p { color: #DCE6F5; }
+.bento-dark .bento-ic.ey-dark { color: #CFE0FF; }
+.bento-dark .bento-ic.ey-dark::before { background: radial-gradient(circle, rgba(207,224,255,.28), rgba(207,224,255,0) 68%); }
+.bento-dark .bento-chips span { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.26); color: #F0F5FF; }
+.bento-dark .bento-chips svg { color: #7FE6D3; }
+
+/* Pulido general del bento: más aire, tarjetas de imagen más altas y elegantes */
+.bento-grid { gap: 20px; }
+.bento-card { border-radius: 26px; padding: 30px; }
+.bento-media { min-height: 260px; }
+.bento-media .bento-scrub, .bento-media .bento-scrub { min-height: 260px; }
+.bento-card h3 { font-size: 1.3rem; }
+.bento-soft { background: linear-gradient(150deg, #EEF4FF, #E6F7F2) !important; }
+.bento-mini b { font-size: 2.2rem; color: #2F62F0; }
+@media (max-width: 860px) {
+  .bento-card { padding: 24px; }
+  .bento-media { min-height: 200px; }
+}
