@@ -37,9 +37,9 @@ explotables), la mayoría **ya corregidos** en esta ronda.
 | H3 | **Baja** | **Divulgación de versión:** cabecera `X-Powered-By: Next.js`. | ✅ **CORREGIDO** — `poweredByHeader: false`. |
 | H4 | **Baja** | **Costo de bcrypt = 10** (OWASP recomienda ≥12) en todos los puntos de hasheo. | ✅ **CORREGIDO** — subido a **12**. Los hashes existentes siguen validando; se re-hashean al próximo cambio de contraseña. |
 | H5 | **Baja** | **Webhook de MercadoPago sin ventana anti-replay** por timestamp (el control primario —re-consulta del pago a la API de MP— sí existe). | ✅ **CORREGIDO** — ventana de ±15 min robusta a segundos/ms (sin riesgo de rechazar webhooks legítimos). |
-| H6 | **Baja (privacidad)** | Las imágenes de perfil (`/portal/img/{id}-avatar.jpg`) son **enumerables por nombre** de archivo; un tercero podría ver la foto/portada de otro alumno adivinando el id. No expone datos sensibles (solo la imagen que el alumno subió). | ⚠️ **Aceptado / seguimiento** — bajo impacto. Recomendación futura: nombres con sufijo aleatorio o verificación de sesión. |
-| H7 | **Baja** | **Rate limiting de login en memoria** (Map por proceso): se reinicia con pm2 y no es distribuido; sin CAPTCHA tras N fallos. Cloudflare compensa en el borde. | ⚠️ **Aceptado / seguimiento** — suficiente para N2 con Cloudflare; endurecer con store en BD/Redis + CAPTCHA si crece el tráfico. |
-| H8 | **Media (recom.)** | **Sin Content-Security-Policy (CSP).** No se añadió una CSP estricta porque requiere pruebas por página (estilos/imagenes inline) y podría romper el render. React auto-escapa (riesgo XSS bajo), pero una CSP es defensa en profundidad valiosa. | ⚠️ **Recomendado (seguimiento)** — diseñar e ir endureciendo una CSP con `nonce` en modo report-only primero. |
+| H6 | **Baja (privacidad)** | Las imágenes de perfil (`/portal/img/{id}-avatar.jpg`) eran **enumerables por nombre**; un tercero podía ver la foto/portada de otro alumno adivinando el id. | ✅ **CORREGIDO** — la ruta exige sesión de alumno y solo sirve `{id}-avatar\|banner.jpg` del **propio** alumno. Verificado: avatar ajeno → 404. |
+| H7 | **Baja** | **Rate limiting de login en memoria** (Map por proceso): se reiniciaba con pm2 y no era multi-proceso. | ✅ **CORREGIDO** — store **persistente en BD** (`src/lib/rate-limit.ts`), castigo progresivo 1s→8s→60s→300s (caduca 15 min). Verificado: bloqueo tras 6 fallos. |
+| H8 | **Media** | **Sin Content-Security-Policy (CSP).** | ✅ **CORREGIDO** — CSP **enforcing** en todas las respuestas (`frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`; solo Google Fonts permitido). Verificado sin violaciones en el build de producción. |
 
 ## 3. Fortalezas verificadas (lo que está BIEN hecho)
 
@@ -73,22 +73,22 @@ explotables), la mayoría **ya corregidos** en esta ronda.
 
 ## 4. Recomendaciones de seguimiento (no bloqueantes)
 
-1. **CSP** (H8): implementar en `report-only`, iterar y pasar a enforcing.
-2. **Rate limiting distribuido** (H7): mover el contador de fallos a la BD/Redis
-   y añadir CAPTCHA (Cloudflare Turnstile) tras N intentos en login.
-3. **Imágenes de perfil** (H6): sufijo aleatorio en el nombre o gate por sesión.
-4. **MFA para staff/admin:** hoy el 2FA es opcional para alumnos; considerar
+Los hallazgos H1–H8 quedaron **corregidos**. Mejoras futuras opcionales:
+
+1. **CAPTCHA** (Cloudflare Turnstile) tras N intentos de login, además del
+   freno persistente ya implementado (H7).
+2. **MFA para staff/admin:** hoy el 2FA es opcional para alumnos; considerar
    TOTP obligatorio para cuentas de panel (admin).
-5. **Rotación de `APP_SECRET`/API_KEY** documentada y periódica.
-6. Al activar MercadoPago, **probar el webhook real** para confirmar la unidad
+3. **Rotación de `APP_SECRET`/API_KEY** documentada y periódica.
+4. Al activar MercadoPago, **probar el webhook real** para confirmar la unidad
    del `ts` y que la ventana anti-replay no genera falsos negativos.
+5. **CSP con `nonce`** (eliminar `'unsafe-inline'` de script-src) si a futuro se
+   monta infraestructura de nonce para los scripts de Next.
 
 ## 5. Conclusión
 
 No se hallaron vulnerabilidades **críticas ni de alta severidad explotables** en
-el análisis estático. Los hallazgos fueron de **hardening**; los de severidad
-media/baja accionables **ya se corrigieron y desplegaron** (H1–H5). Los
-residuales (H6–H8) son de bajo riesgo con Cloudflare al frente y quedan como
-seguimiento. El sitio **no es trivialmente "hackeable"** por los vectores
-comunes (OWASP Top 10) revisados; se recomienda repetir la auditoría tras
-activar MercadoPago y ante cambios grandes.
+el análisis estático. Los hallazgos fueron de **hardening** y **todos (H1–H8) se
+corrigieron y desplegaron en producción**, verificados en vivo. El sitio **no es
+trivialmente "hackeable"** por los vectores comunes (OWASP Top 10) revisados. Se
+recomienda repetir la auditoría tras activar MercadoPago y ante cambios grandes.
