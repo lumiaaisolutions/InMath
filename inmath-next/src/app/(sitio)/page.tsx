@@ -32,7 +32,7 @@ export default async function Landing() {
 
         {/* Contenido centrado con entrada escalonada (primeros segundos) */}
         <div className="hc-contenido">
-          <span className="eyebrow hc-eyebrow"><span className="hc-eyebrow-dot" /> Cursos con acompañamiento real</span>
+          <span className="eyebrow hc-eyebrow"><Icono n="check" cls="ic-ey" /> Cursos con acompañamiento real</span>
           <h1 className="hc-title">
             <span className="hc-line">Cursos en línea</span>
             <span className="hc-line">que <em>sí terminas</em>,</span>
@@ -174,20 +174,21 @@ export default async function Landing() {
               <h3>Material incluido</h3>
               <p>Guías y ejercicios descargables para reforzar cada tema.</p>
             </div>
-            <div className="bento-card bento-b bento-dark reveal">
-              <span className="bento-ic ey-ic ey-dark"><Icono n="user" /></span>
+            <div className="bento-card bento-b bento-feat reveal">
+              <span className="bento-ic ey-ic"><Icono n="user" /></span>
               <h3>Asesorías 1 a 1</h3>
               <p>Un asesor humano te guía por WhatsApp y videollamada, y ajusta tu plan.</p>
               <div className="bento-chips">
                 <span><Icono n="check" /> Cita agendada</span>
                 <span><Icono n="chat" /> Dudas al instante</span>
               </div>
+              <span className="bento-feat-glow" aria-hidden="true" />
             </div>
             <div className="bento-card bento-d bento-soft reveal">
               <span className="bento-ic ey-ic ey-menta"><Icono n="trend" /></span>
               <h3>Reporte de avance semanal</h3>
               <p>Cada semana ves lo que lograste y lo que sigue, para no perder el hilo.</p>
-              <div className="bento-mini"><b>70%</b><span>de avance promedio con acompañamiento</span></div>
+              <div className="bento-mini"><b className="bento-count" data-to="70">70%</b><span>de avance promedio con acompañamiento</span></div>
             </div>
             <div className="bento-card bento-e reveal">
               <span className="bento-ic ey-ic"><Icono n="chat" /></span>

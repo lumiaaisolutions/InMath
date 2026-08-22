@@ -3589,3 +3589,41 @@ p.legal { min-height: 0 !important; background: none !important; padding: 0 !imp
   .bento-card { padding: 24px; }
   .bento-media { min-height: 200px; }
 }
+
+/* ============ v78 — Pulido UX/UI: hero + bento interactivos, sin azul saturado ============ */
+/* Hero eyebrow: sin el punto; ícono limpio */
+.heroe-cine .eyebrow.hc-eyebrow { gap: 9px; }
+.heroe-cine .eyebrow.hc-eyebrow .ic-ey { width: 15px; height: 15px; color: #34E0C0; }
+
+/* Parallax de mouse en los glows del hero (variables las setea el JS) */
+.hc-glow-1 { transform: translate3d(calc(var(--mx,0) * 26px), calc(var(--my,0) * 26px), 0); }
+.hc-glow-2 { transform: translate3d(calc(var(--mx,0) * -30px), calc(var(--my,0) * -22px), 0); }
+.hc-contenido { transform: translate3d(calc(var(--mx,0) * 10px), calc(var(--my,0) * 8px), 0); transition: transform .18s ease-out; }
+@media (prefers-reduced-motion: reduce) { .hc-glow-1,.hc-glow-2,.hc-contenido { transform: none !important; } }
+
+/* Tarjeta "Asesorías 1a1" — versión CLARA premium (adiós azul saturado) */
+.bento-feat { position: relative; overflow: hidden;
+  background: linear-gradient(150deg, #F4F8FF 0%, #ECF6F3 100%) !important;
+  border: 1px solid #E1EBFA !important; }
+.bento-feat h3, .bento-feat p { color: var(--tinta) !important; }
+.bento-feat p { color: var(--tinta-2) !important; }
+.bento-feat .bento-ic.ey-ic { color: #2F62F0; }
+.bento-feat .bento-chips span { background: #fff; border: 1px solid #E1EBFA; color: var(--tinta); box-shadow: 0 6px 16px -10px rgba(18,31,55,.3); }
+.bento-feat .bento-chips svg { color: #12A594; }
+.bento-feat-glow { position: absolute; right: -60px; top: -60px; width: 240px; height: 240px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(47,98,240,.14), transparent 68%); pointer-events: none; }
+
+/* Zoom suave de las imágenes (bento + secciones) al pasar el cursor */
+.bento-media .bento-scrub .scrub-frame,
+.scrub .scrub-frame { transition: transform .5s cubic-bezier(.2,.7,.2,1); }
+.bento-media:hover .bento-scrub .scrub-frame { transform: scale(1.05) !important; }
+.demo-marco:hover .scrub-frame, .acompana-rej .scrub:hover .scrub-frame, .incluye-rej .scrub:hover .scrub-frame { transform: scale(1.04) !important; }
+
+/* Tarjetas del bento con leve tilt 3D al pasar el cursor (JS setea --rx/--ry) */
+.bento-card { transform: perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(var(--lift,0px));
+  transition: transform .25s cubic-bezier(.2,.7,.2,1), box-shadow .25s; transform-style: preserve-3d; }
+.bento-card:hover { --lift: -4px; }
+@media (prefers-reduced-motion: reduce) { .bento-card { transform: none !important; } }
+
+/* Contador animado del 70% (evita salto de layout) */
+.bento-count { display: inline-block; min-width: 2.4ch; }

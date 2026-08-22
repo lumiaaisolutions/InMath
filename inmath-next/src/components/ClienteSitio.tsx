@@ -66,6 +66,54 @@ export function ScriptsSitio() {
     onScrollCine();
     if (cine) window.addEventListener("scroll", onScrollCine, { passive: true });
 
+    // Parallax de mouse en el hero (glows + contenido) — solo con puntero fino.
+    const finePointer = matchMedia("(pointer: fine)").matches;
+    const onMoveCine = (e: PointerEvent) => {
+      if (!cine) return;
+      const r = cine.getBoundingClientRect();
+      cine.style.setProperty("--mx", String((e.clientX - r.left) / r.width - 0.5));
+      cine.style.setProperty("--my", String((e.clientY - r.top) / r.height - 0.5));
+    };
+    if (cine && motion && finePointer) cine.addEventListener("pointermove", onMoveCine, { passive: true });
+
+    // Tilt 3D sutil en las tarjetas del bento.
+    const cards = Array.from(document.querySelectorAll<HTMLElement>(".bento-card"));
+    const onCardMove = (e: PointerEvent) => {
+      const el = e.currentTarget as HTMLElement;
+      const r = el.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5, py = (e.clientY - r.top) / r.height - 0.5;
+      el.style.setProperty("--ry", `${px * 5}deg`);
+      el.style.setProperty("--rx", `${-py * 5}deg`);
+    };
+    const onCardLeave = (e: PointerEvent) => {
+      const el = e.currentTarget as HTMLElement;
+      el.style.setProperty("--ry", "0deg"); el.style.setProperty("--rx", "0deg");
+    };
+    if (motion && finePointer) cards.forEach((c) => {
+      c.addEventListener("pointermove", onCardMove as EventListener, { passive: true });
+      c.addEventListener("pointerleave", onCardLeave as EventListener);
+    });
+
+    // Contador animado (ej. 70%) al entrar en viewport.
+    const counters = Array.from(document.querySelectorAll<HTMLElement>(".bento-count"));
+    const obsCount = new IntersectionObserver((entradas) => {
+      entradas.forEach((en) => {
+        if (!en.isIntersecting) return;
+        const el = en.target as HTMLElement;
+        obsCount.unobserve(el);
+        const to = parseInt(el.dataset.to ?? "0", 10);
+        if (!motion) { el.textContent = `${to}%`; return; }
+        const ini = performance.now(), dur = 1200;
+        const paso = (t: number) => {
+          const p = Math.min(1, (t - ini) / dur);
+          el.textContent = `${Math.round(to * (1 - Math.pow(1 - p, 3)))}%`;
+          if (p < 1) requestAnimationFrame(paso);
+        };
+        requestAnimationFrame(paso);
+      });
+    }, { threshold: 0.6 });
+    counters.forEach((c) => obsCount.observe(c));
+
     let quitarScrub: (() => void) | undefined;
     // Scrubbing (crossfade + Ken Burns anclado al scroll desde la carga)
     if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
@@ -112,6 +160,9 @@ export function ScriptsSitio() {
       btn?.removeEventListener("click", toggle);
       window.removeEventListener("scroll", onScrollBarra);
       window.removeEventListener("scroll", onScrollCine);
+      cine?.removeEventListener("pointermove", onMoveCine);
+      cards.forEach((c) => { c.removeEventListener("pointermove", onCardMove as EventListener); c.removeEventListener("pointerleave", onCardLeave as EventListener); });
+      obsCount.disconnect();
       quitarScrub?.();
     };
   }, [pathname]);
