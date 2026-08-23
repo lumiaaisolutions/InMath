@@ -2414,6 +2414,6 @@ body::before { animation: none !important; }
 
 /* v86 — Mathy (panel): mismo efecto de "esconderse" cerca del final de la página. */
 .agente-btn { transition: transform .35s cubic-bezier(.2,.7,.2,1), opacity .3s; }
-.agente-btn.recogido { transform: translateX(58%); opacity: .55; }
+.agente-btn.recogido { transform: translateX(78%); opacity: .45; }
 .agente-btn.recogido:hover, .agente-btn.recogido:focus-visible { transform: translateX(0); opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .agente-btn { transition: opacity .2s; } .agente-btn.recogido { transform: none; } }

@@ -1,18 +1,20 @@
 import type { NextConfig } from "next";
 
 /** Content-Security-Policy (enforcing). Inventario real de recursos externos:
- *  solo Google Fonts (hoja de estilo + woff2) — no hay scripts de terceros.
+ *  Google Fonts (hoja de estilo + woff2) y el beacon de Cloudflare (que el
+ *  proxy de Cloudflare inyecta automáticamente en todo el sitio, fuera de
+ *  nuestro control — dominio oficial de Cloudflare, sin riesgo real).
  *  `unsafe-inline` en script-src es necesario para los scripts de hidratación
  *  de Next.js (sin infra de nonce); aún así la CSP bloquea TODA carga de
- *  scripts externos, iframes, objetos y form-actions a otros orígenes. */
+ *  scripts externos no listados, iframes, objetos y form-actions externos. */
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob:",
   "media-src 'self'",
-  "connect-src 'self'",
+  "connect-src 'self' https://cloudflareinsights.com",
   "object-src 'none'",
   "base-uri 'self'",
   "frame-ancestors 'none'",

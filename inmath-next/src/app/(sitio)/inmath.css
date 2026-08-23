@@ -3724,6 +3724,6 @@ p.legal { min-height: 0 !important; background: none !important; padding: 0 !imp
 /* v86 — Mathy: se "esconde" hacia el borde cerca del final de la página, para
    no tapar botones/enlaces del footer o del final del contenido. */
 .agente-btn { transition: transform .35s cubic-bezier(.2,.7,.2,1), opacity .3s; }
-.agente-btn.recogido { transform: translateX(58%); opacity: .55; }
+.agente-btn.recogido { transform: translateX(78%); opacity: .45; }
 .agente-btn.recogido:hover, .agente-btn.recogido:focus-visible { transform: translateX(0); opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .agente-btn { transition: opacity .2s; } .agente-btn.recogido { transform: none; } }
