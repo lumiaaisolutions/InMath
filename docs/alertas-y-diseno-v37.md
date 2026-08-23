@@ -834,3 +834,37 @@ interdependientes (auth + pago + wizard) y se hacen juntos. Ver `portal-fase-b.m
 - **Íconos eyebrow:** accesos del dashboard y la notificación flotante pasaron a
   la firma eyebrow (ícono en color sobre splash, sin caja).
 Ver plan modular completo en `portal-fase-b.md`.
+
+## v67 — Pantalla de pago con 3 métodos + recibo/ticket en PDF (23-ago-2026, EN VIVO)
+
+- **`/pago` con métodos separados:** "Pagar con tarjeta u OXXO" se dividió en
+  **dos tarjetas independientes** (Pagar con tarjeta / Pagar en efectivo OXXO),
+  cada una con su ícono propio y una **insignia "Mercado Pago"** (y "OXXO" en el
+  método de efectivo) — wordmarks propios dibujados en SVG, sin usar los
+  logotipos oficiales. Ambas usan el mismo `link` de Checkout Pro (MercadoPago
+  resuelve tarjeta vs. OXXO en su propia pantalla). Se agregó una línea de
+  confianza ("Pago seguro y encriptado…") al final. Cuando el link aún no existe
+  (MercadoPago inactivo), cada método cae a un estado deshabilitado con
+  "Disponible muy pronto" sin romper el layout.
+- **Recibo/ticket en PDF (`src/lib/recibo.ts`):** al confirmarse un pago (webhook
+  de MercadoPago o aprobación manual del panel, ambos vía `inscribirPorPago`) se
+  genera un recibo tipo ticket (folio, fecha, monto, alumno, curso, método,
+  código de barras decorativo) reutilizando el escritor de PDF sin dependencias
+  (`PdfLienzo`, mismo patrón que los reportes). Se cachea a disco
+  (`storage/recibos/recibo-{id}.pdf`) — se genera una sola vez.
+- **Distribución del recibo:**
+  - **Correo:** se adjunta al correo de bienvenida/confirmación (`enviarCorreo`
+    ahora acepta `adjuntos`).
+  - **Portal del alumno:** tarjeta "Tu comprobante de pago" en el dashboard →
+    `GET /portal/recibo/{id}` (verifica que el pago sea del alumno logueado).
+  - **Panel (staff):** link "Descargar recibo (PDF)" en la ficha de pago →
+    `GET /panel/recibo/{id}` (requiere el módulo "pagos").
+- **Fix de paso:** se encontraron y corrigieron dos usos de un ícono inexistente
+  (`Icono n="imagen"`, no está en el set de `Icono.tsx`) que dejaban una caja
+  vacía — en el método de transferencia de `/pago` y en el botón de foto de
+  perfil de `/portal/cuenta`. Ambos ahora usan `n="file"`.
+- **Verificado:** PDF generado y revisado visualmente (sin traslapes, línea
+  punteada y código de barras bien posicionados); pantalla de pago probada de
+  punta a punta con el wizard en local (3 métodos con link forzado para ver el
+  estado activo); build local y en VPS sin errores; rutas de recibo responden
+  401/403 sin sesión en producción.
