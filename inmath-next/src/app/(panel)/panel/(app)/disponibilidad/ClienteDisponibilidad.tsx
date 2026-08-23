@@ -1,19 +1,23 @@
 "use client";
 import { useActionState, useState } from "react";
 import Link from "next/link";
+import { IconoPanel } from "@/components/IconoPanel";
 import { guardarDisponibilidadAccion } from "./acciones";
 import { useToastResultado } from "../ClientePanel";
 import type { Resultado } from "../acciones";
 
-const DIAS: [string, string][] = [
-  ["1", "Lunes"], ["2", "Martes"], ["3", "Miércoles"], ["4", "Jueves"],
-  ["5", "Viernes"], ["6", "Sábado"], ["7", "Domingo"],
+const DIAS: [string, string, string][] = [
+  ["1", "Lunes", "L"], ["2", "Martes", "M"], ["3", "Miércoles", "M"], ["4", "Jueves", "J"],
+  ["5", "Viernes", "V"], ["6", "Sábado", "S"], ["7", "Domingo", "D"],
 ];
 const HORAS: string[] = (() => {
   const a: string[] = [];
   for (let h = 6; h <= 22; h++) for (const m of ["00", "30"]) a.push(`${String(h).padStart(2, "0")}:${m}`);
   return a;
 })();
+const PRESETS: [string, string, string][] = [
+  ["Mañana", "09:00", "13:00"], ["Tarde", "14:00", "19:00"], ["Todo el día", "08:00", "20:00"],
+];
 
 type Dias = Record<string, { on: boolean; horas: string[] }>;
 
@@ -25,11 +29,16 @@ function sumaDias(iso: string, n: number): string {
 function rangoLabel(lunes: string): string {
   const dom = sumaDias(lunes, 6);
   const dm = (iso: string) => { const [, mo, d] = iso.split("-"); return `${d}/${mo}`; };
-  return `${dm(lunes)} al ${dm(dom)} · ${lunes.slice(0, 4)}`;
+  return `${dm(lunes)} al ${dm(dom)}`;
+}
+/** Horas de `hi` a `hf` INCLUSIVE (ambos extremos quedan como horarios elegibles). */
+function rangoHoras(hi: string, hf: string): string[] {
+  const i = HORAS.indexOf(hi), f = HORAS.indexOf(hf);
+  return i === -1 || f === -1 || f < i ? [] : HORAS.slice(i, f + 1);
 }
 
-export function ClienteDisponibilidad({ lunes, lunesActual, dias: diasIni, definida }:
-  { lunes: string; lunesActual: string; dias: Dias; definida: boolean }) {
+export function ClienteDisponibilidad({ lunes, lunesActual, lunesProximo, actualDefinida, proximaDefinida, dias: diasIni, definida }:
+  { lunes: string; lunesActual: string; lunesProximo: string; actualDefinida: boolean; proximaDefinida: boolean; dias: Dias; definida: boolean }) {
   const toast = useToastResultado();
   const [dias, setDias] = useState<Dias>(diasIni);
   const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev, fd) => {
@@ -38,75 +47,132 @@ export function ClienteDisponibilidad({ lunes, lunesActual, dias: diasIni, defin
     return r;
   }, {});
 
-  const prev = sumaDias(lunes, -7);
-  const next = sumaDias(lunes, 7);
-  const hayPrev = prev >= lunesActual;
+  const esActual = lunes === lunesActual;
+  const esProxima = lunes === lunesProximo;
+  const etiquetaSemana = esActual ? "esta semana" : esProxima ? "la próxima semana" : `la semana del ${rangoLabel(lunes)}`;
 
-  const setOn = (k: string, on: boolean) =>
-    setDias((d) => ({ ...d, [k]: { ...d[k], on } }));
-  const agregaHora = (k: string, h: string) =>
-    setDias((d) => ({ ...d, [k]: { ...d[k], horas: [...new Set([...d[k].horas, h])].sort() } }));
-  const quitaHora = (k: string, h: string) =>
-    setDias((d) => ({ ...d, [k]: { ...d[k], horas: d[k].horas.filter((x) => x !== h) } }));
+  const setOn = (k: string, on: boolean) => setDias((d) => ({ ...d, [k]: { ...d[k], on } }));
+  const toggleHora = (k: string, h: string) =>
+    setDias((d) => {
+      const set = new Set(d[k].horas);
+      set.has(h) ? set.delete(h) : set.add(h);
+      return { ...d, [k]: { ...d[k], horas: [...set].sort() } };
+    });
+  const aplicarPreset = (k: string, hi: string, hf: string) =>
+    setDias((d) => ({ ...d, [k]: { ...d[k], on: true, horas: [...new Set([...d[k].horas, ...rangoHoras(hi, hf)])].sort() } }));
+  const limpiarDia = (k: string) => setDias((d) => ({ ...d, [k]: { ...d[k], horas: [] } }));
+  const copiarATodos = (k: string) =>
+    setDias((d) => {
+      const origen = d[k];
+      const out = { ...d };
+      for (const [dk] of DIAS) out[dk] = { on: true, horas: [...origen.horas] };
+      return out;
+    });
+
+  const diasActivos = DIAS.filter(([k]) => dias[k].on);
 
   return (
     <>
       <div className="cabecera">
         <div>
           <h1>Disponibilidad</h1>
-          <div className="sub">Elige las horas exactas en que das asesorías cada día (no un rango: hora por hora). Alimenta el agendado del sitio y a Mathy (la IA), que ofrecerá exactamente estos horarios.</div>
+          <div className="sub">Define en qué días y horas das asesorías. Esto alimenta el calendario de <Link href="/agenda" target="_blank">/agenda</Link> y a Mathy, que solo ofrecerá estos horarios.</div>
         </div>
       </div>
 
-      <div className="tarjeta disp-caja">
-        <div className="disp-nav">
-          {hayPrev
-            ? <Link className="boton mini" href={`/panel/disponibilidad?semana=${prev}`}>‹ Semana anterior</Link>
-            : <span className="boton mini disp-off">‹ Semana anterior</span>}
-          <div className="disp-semana">
-            <b>Semana {rangoLabel(lunes)}</b>
-            <i className={`disp-estado ${definida ? "ok" : "base"}`}>{definida ? "Ajustada" : "Usando horario base"}</i>
+      {/* Resumen de las próximas 2 semanas — para no confundir "esta semana" con "la próxima" */}
+      <div className="disp-resumen">
+        <Link href={`/panel/disponibilidad?semana=${lunesActual}`} className={`disp-resumen-card${esActual ? " activa" : ""}`}>
+          <span className="disp-resumen-tit"><IconoPanel n="reloj" cls="ic-sm" /> Esta semana</span>
+          <b>{rangoLabel(lunesActual)}</b>
+          <i className={`disp-estado ${actualDefinida ? "ok" : "base"}`}>{actualDefinida ? "✓ Ajustada" : "Usando horario base"}</i>
+        </Link>
+        <Link href={`/panel/disponibilidad?semana=${lunesProximo}`} className={`disp-resumen-card${esProxima ? " activa" : ""}${!proximaDefinida ? " pendiente" : ""}`}>
+          <span className="disp-resumen-tit"><IconoPanel n="reloj" cls="ic-sm" /> Próxima semana</span>
+          <b>{rangoLabel(lunesProximo)}</b>
+          <i className={`disp-estado ${proximaDefinida ? "ok" : "base"}`}>{proximaDefinida ? "✓ Ajustada" : "⚠ Pendiente"}</i>
+        </Link>
+      </div>
+      {!proximaDefinida && !esProxima && (
+        <Link href={`/panel/disponibilidad?semana=${lunesProximo}`} className="disp-aviso-prox">
+          <IconoPanel n="alerta" cls="ic-sm" /> Aún no defines la próxima semana ({rangoLabel(lunesProximo)}) — <b>defínela aquí</b> →
+        </Link>
+      )}
+
+      <form action={accion} className="disp-form-full">
+        <input type="hidden" name="lunes" value={lunes} />
+
+        {/* Paso 1 */}
+        <div className="tarjeta disp-caja">
+          <div className="disp-paso-tit"><span className="disp-paso-n">1</span> ¿Qué días das asesoría {etiquetaSemana}?</div>
+          <div className="disp-dias-fila">
+            {DIAS.map(([k, nombre, letra]) => (
+              <button key={k} type="button" className={`disp-dia-pill${dias[k].on ? " on" : ""}`}
+                onClick={() => setOn(k, !dias[k].on)} aria-pressed={dias[k].on} title={nombre}>
+                <span className="ddp-letra">{letra}</span>
+                <span className="ddp-nombre">{nombre}</span>
+                {dias[k].on && <IconoPanel n="check" cls="ic-sm" />}
+              </button>
+            ))}
           </div>
-          <Link className="boton mini" href={`/panel/disponibilidad?semana=${next}`}>Semana siguiente ›</Link>
         </div>
 
-        <form action={accion} className="disp-form">
-          <input type="hidden" name="lunes" value={lunes} />
-          {DIAS.map(([k, nombre]) => (
-            <div key={k} className={`disp-dia${dias[k].on ? " on" : ""}`}>
-              <label className="disp-toggle">
-                <input type="checkbox" name={`on_${k}`} value="1" checked={dias[k].on}
-                  onChange={(e) => setOn(k, e.target.checked)} />
-                <span className="disp-sw" aria-hidden="true" />
-                <b>{nombre}</b>
-              </label>
-              {dias[k].on ? (
-                <div className="disp-horas">
-                  <input type="hidden" name={`horas_${k}`} value={dias[k].horas.join(",")} />
-                  <div className="disp-chips">
-                    {dias[k].horas.map((h) => (
-                      <span key={h} className="disp-chip">
-                        {h}
-                        <button type="button" aria-label={`Quitar ${h}`} onClick={() => quitaHora(k, h)}>×</button>
-                      </span>
-                    ))}
-                    {!dias[k].horas.length && <span className="disp-cerrado">Agrega al menos una hora</span>}
+        {/* Paso 2 */}
+        <div className="tarjeta disp-caja">
+          <div className="disp-paso-tit"><span className="disp-paso-n">2</span> Elige las horas de cada día activo</div>
+          {diasActivos.length === 0 ? (
+            <p className="disp-vacio">Activa al menos un día arriba para elegir sus horas.</p>
+          ) : (
+            <div className="disp-dias-horas">
+              {diasActivos.map(([k, nombre]) => (
+                <div key={k} className="disp-dia-bloque">
+                  <div className="disp-dia-bloque-cab">
+                    <b>{nombre}</b>
+                    <span className="disp-dia-bloque-cont">{dias[k].horas.length} horario{dias[k].horas.length === 1 ? "" : "s"}</span>
                   </div>
-                  <select value="" onChange={(e) => { if (e.target.value) agregaHora(k, e.target.value); }}>
-                    <option value="">+ Agregar hora</option>
-                    {HORAS.filter((h) => !dias[k].horas.includes(h)).map((h) => <option key={h} value={h}>{h}</option>)}
-                  </select>
+                  <div className="disp-presets">
+                    {PRESETS.map(([nom, hi, hf]) => (
+                      <button key={nom} type="button" className="disp-preset" onClick={() => aplicarPreset(k, hi, hf)}>{nom}</button>
+                    ))}
+                    <button type="button" className="disp-preset ghost" onClick={() => limpiarDia(k)}>Limpiar</button>
+                    <button type="button" className="disp-preset ghost" onClick={() => copiarATodos(k)}>Copiar a todos los días →</button>
+                  </div>
+                  <input type="hidden" name={`horas_${k}`} value={dias[k].horas.join(",")} />
+                  <input type="hidden" name={`on_${k}`} value="1" />
+                  <div className="disp-grid-horas">
+                    {HORAS.map((h) => (
+                      <button key={h} type="button"
+                        className={`disp-hora-chip${dias[k].horas.includes(h) ? " on" : ""}`}
+                        onClick={() => toggleHora(k, h)} aria-pressed={dias[k].horas.includes(h)}>
+                        {h}
+                      </button>
+                    ))}
+                  </div>
+                  {!dias[k].horas.length && <small className="disp-cerrado">Elige al menos una hora o desactiva este día.</small>}
                 </div>
-              ) : (
-                <span className="disp-cerrado">Sin citas</span>
-              )}
+              ))}
             </div>
-          ))}
+          )}
+          {DIAS.filter(([k]) => !dias[k].on).map(([k]) => <input key={k} type="hidden" name={`on_${k}`} value="" />)}
+        </div>
+
+        {/* Paso 3 */}
+        <div className="tarjeta disp-caja disp-paso3">
+          <div className="disp-paso-tit"><span className="disp-paso-n">3</span> Guarda los cambios</div>
+          <p className="disp-vacio" style={{ marginBottom: 14 }}>
+            Vas a guardar la disponibilidad de <b>{etiquetaSemana}</b> ({rangoLabel(lunes)}).
+          </p>
           <div className="disp-pie">
-            <button className="boton" disabled={pendiente}>{pendiente ? "Guardando…" : "Guardar esta semana"}</button>
+            <div className="disp-pie-nav">
+              {lunes > lunesActual && (
+                <Link className="boton mini ghost" href={`/panel/disponibilidad?semana=${sumaDias(lunes, -7)}`}>‹ Semana anterior</Link>
+              )}
+              <Link className="boton mini ghost" href={`/panel/disponibilidad?semana=${sumaDias(lunes, 7)}`}>Semana siguiente ›</Link>
+            </div>
+            <button className="boton" disabled={pendiente}>{pendiente ? "Guardando…" : `Guardar ${etiquetaSemana}`}</button>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </>
   );
 }

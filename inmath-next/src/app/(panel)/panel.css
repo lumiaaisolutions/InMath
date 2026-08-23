@@ -58,13 +58,16 @@ button { font: inherit; cursor: pointer; }
 .app { display: flex; min-height: 100vh; }
 
 .sidebar {
+  /* FIX: había un `position: relative` duplicado más abajo en este mismo bloque
+     que anulaba el `sticky` de arriba (la última declaración gana) — el sidebar
+     se desplazaba junto con la página en vez de quedarse fijo. */
   width: 236px; flex-shrink: 0; position: sticky; top: 0; height: 100vh;
+  overflow-y: auto;
   display: flex; flex-direction: column; color: #CBD5EE;
   background:
     radial-gradient(360px 200px at -40px 108%, rgba(27,47,82,.16), transparent 70%),
     radial-gradient(300px 160px at 130% -10%, rgba(107,159,255,.5), transparent 70%),
     var(--pino-800);
-  position: relative;
 }
 /* retícula tenue = el motivo cartesiano de la marca */
 .sidebar::before {
@@ -2181,3 +2184,65 @@ body::before { animation: none !important; }
 .login-registro-btn svg { width: 16px; height: 16px; transition: transform .25s cubic-bezier(.34,1.4,.5,1); }
 .login-registro-btn:hover { background: rgba(47,98,240,.09); }
 .login-registro-btn:hover svg { transform: translateX(3px); }
+
+/* =========================================================================
+   v82 — Disponibilidad: paso a paso, resumen esta/próxima semana, grid de
+   horas sin <select>, presets rápidos. Reemplaza el editor de una sola semana.
+   ========================================================================= */
+.disp-resumen { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 12px; }
+.disp-resumen-card { display: block; text-decoration: none; padding: 16px 18px; border-radius: 18px;
+  background: #fff; border: 1.5px solid var(--linea); transition: border-color .2s, box-shadow .2s, transform .2s; }
+.disp-resumen-card:hover { transform: translateY(-2px); box-shadow: 0 16px 34px -20px rgba(27,47,82,.35); }
+.disp-resumen-card.activa { border-color: var(--pino); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pino) 16%, transparent); }
+.disp-resumen-card.pendiente:not(.activa) { border-color: color-mix(in srgb, var(--alerta) 55%, var(--linea)); }
+.disp-resumen-tit { display: flex; align-items: center; gap: 7px; font: 600 .78rem/1 var(--mono); color: var(--tinta-3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+.disp-resumen-card b { display: block; font: 700 1.1rem var(--display); color: var(--tinta); margin-bottom: 8px; }
+.disp-aviso-prox { display: flex; align-items: center; gap: 9px; text-decoration: none; margin-bottom: 20px;
+  background: var(--alerta-suave); color: var(--alerta); border: 1px solid color-mix(in srgb, var(--alerta) 30%, transparent);
+  padding: 12px 16px; border-radius: 14px; font: 600 .88rem/1.4 var(--cuerpo); }
+.disp-aviso-prox b { text-decoration: underline; }
+@media (max-width: 640px) { .disp-resumen { grid-template-columns: 1fr; } }
+
+.disp-form-full { display: grid; gap: 16px; max-width: 780px; }
+.disp-paso-tit { display: flex; align-items: center; gap: 10px; font: 700 1rem var(--display); color: var(--tinta); margin-bottom: 16px; }
+.disp-paso-n { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; flex: 0 0 auto;
+  background: var(--pino); color: #fff; font: 800 .82rem var(--display); }
+.disp-vacio { color: var(--tinta-3); font: 500 .88rem var(--cuerpo); }
+
+.disp-dias-fila { display: flex; gap: 8px; flex-wrap: wrap; }
+.disp-dia-pill { display: inline-flex; align-items: center; gap: 7px; padding: 10px 14px; border-radius: 999px;
+  background: var(--crema-2); border: 1.5px solid var(--linea); color: var(--tinta-2); font: 600 .86rem var(--cuerpo);
+  cursor: pointer; transition: background .2s, border-color .2s, color .2s; }
+.disp-dia-pill .ddp-letra { display: none; }
+.disp-dia-pill:hover { border-color: var(--pino); }
+.disp-dia-pill.on { background: var(--pino); border-color: var(--pino); color: #fff; }
+.disp-dia-pill svg { width: 15px; height: 15px; }
+@media (max-width: 560px) {
+  .disp-dia-pill .ddp-nombre { display: none; }
+  .disp-dia-pill .ddp-letra { display: inline; }
+  .disp-dia-pill { padding: 10px; }
+}
+
+.disp-dias-horas { display: grid; gap: 18px; }
+.disp-dia-bloque { border: 1px solid var(--linea); border-radius: 16px; padding: 16px; background: var(--crema-2); }
+.disp-dia-bloque-cab { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.disp-dia-bloque-cab b { font: 700 .96rem var(--display); color: var(--tinta); }
+.disp-dia-bloque-cont { font: 600 .76rem var(--mono); color: var(--tinta-3); }
+.disp-presets { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
+.disp-preset { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--linea-fuerte); background: #fff;
+  color: var(--tinta-2); font: 600 .78rem var(--cuerpo); cursor: pointer; transition: border-color .2s, color .2s, background .2s; }
+.disp-preset:hover { border-color: var(--pino); color: var(--pino); }
+.disp-preset.ghost { background: transparent; border-style: dashed; color: var(--tinta-3); }
+.disp-grid-horas { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 6px; }
+.disp-hora-chip { padding: 7px 4px; border-radius: 8px; border: 1px solid var(--linea-fuerte); background: #fff;
+  color: var(--tinta-2); font: 600 .74rem var(--mono); cursor: pointer; transition: background .15s, border-color .15s, color .15s, transform .1s; }
+.disp-hora-chip:hover { border-color: var(--pino); }
+.disp-hora-chip:active { transform: scale(.94); }
+.disp-hora-chip.on { background: var(--pino); border-color: var(--pino); color: #fff; }
+
+.disp-paso3 .disp-pie { display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; align-items: center; }
+.disp-paso3 .disp-pie-nav { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* v82 fix — .disp-caja ya no es una tarjeta única flotante (max-width:660px de
+   la versión anterior) sino uno de 3 pasos apilados en .disp-form-full (780px). */
+.disp-form-full .disp-caja { max-width: none; padding: 20px 22px; }
