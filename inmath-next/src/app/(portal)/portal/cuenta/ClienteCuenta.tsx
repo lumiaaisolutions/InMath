@@ -60,7 +60,7 @@ export function SubirFoto({ tipo, etiqueta }: { tipo: "avatar" | "banner"; etiqu
         onChange={() => { if (inputRef.current?.files?.length) formRef.current?.requestSubmit(); }} />
       <button type="button" className="pf-subir-btn" disabled={pendiente} onClick={() => inputRef.current?.click()}
         aria-label={etiqueta} title={etiqueta}>
-        <Icono n="imagen" /> <span>{pendiente ? "Subiendo…" : etiqueta}</span>
+        <Icono n="file" /> <span>{pendiente ? "Subiendo…" : etiqueta}</span>
       </button>
       {estado.error && <span className="pf-subir-msg error">{estado.error}</span>}
     </form>

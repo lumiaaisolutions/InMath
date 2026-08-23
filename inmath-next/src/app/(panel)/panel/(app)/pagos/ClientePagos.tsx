@@ -121,6 +121,11 @@ function PagoDetalle({ pago, onCerrar }: { pago: Pago; onCerrar: () => void }) {
                   <div className="pg-fila">Subido: {fecha(pago.comprobante_subido_en)}</div>
                 </>
               ) : <div className="pg-fila">Sin comprobante subido</div>}
+              {pago.estado === "pagado" && (
+                <a className="pg-fila pg-link" href={`/panel/recibo/${pago.id}`} target="_blank" rel="noopener">
+                  <IconoPanel n="pagos" cls="ic-sm" /> Descargar recibo (PDF)
+                </a>
+              )}
               {pago.link_pago && (
                 <a className="pg-fila pg-link" href={pago.link_pago} target="_blank" rel="noopener">
                   <IconoPanel n="pagos" cls="ic-sm" /> Ver enlace de pago

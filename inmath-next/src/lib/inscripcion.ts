@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { prisma } from "./db";
 import { ahoraPared } from "./fechas";
 import { enviarCorreo } from "./correo";
+import { generarOLeerRecibo } from "./recibo";
 
 type PagoBase = { id: number; prospecto_id: number; curso_id: number; monto_centavos?: number; moneda?: string };
 type ProspectoAcceso = { id: number; nombre: string | null; telefono_whatsapp: string; correo: string | null };
@@ -45,7 +46,11 @@ export async function inscribirPorPago(
   // webhook de tarjeta, así que las credenciales van por correo).
   const cred = await provisionarAccesoAlumno(alumnoId, prospecto);
   const curso = await prisma.cursos.findUnique({ where: { id: pago.curso_id }, select: { nombre: true } });
-  await enviarBienvenidaAlumno(prospecto, curso?.nombre ?? "tu curso", cred);
+  // Se re-consulta el pago completo (el `pago` recibido puede venir de ANTES
+  // de marcarlo "pagado") para que el recibo tenga pagado_en/procesador reales.
+  const pagoCompleto = await prisma.pagos.findUnique({ where: { id: pago.id } });
+  const alumnoNombre = prospecto.nombre ?? `Alumno ${prospecto.telefono_whatsapp}`;
+  await enviarBienvenidaAlumno(prospecto, curso?.nombre ?? "tu curso", cred, pagoCompleto, alumnoNombre);
   return { alumnoId, cred };
 }
 
@@ -78,11 +83,19 @@ export async function provisionarAccesoAlumno(
   return { usuario, passTmp };
 }
 
-/** Correo con las credenciales del portal (solo si el alumno dejó correo). */
+type PagoParaRecibo = {
+  id: number; monto_centavos: number; moneda: string; procesador: string | null;
+  pagado_en: Date | null; referencia_externa: string | null;
+} | null;
+
+/** Correo con las credenciales del portal (solo si el alumno dejó correo).
+ *  Si se pasa el pago, adjunta el recibo/ticket en PDF. */
 export async function enviarBienvenidaAlumno(
   prospecto: ProspectoAcceso,
   cursoNombre: string,
   cred: { usuario: string; passTmp: string | null },
+  pago?: PagoParaRecibo,
+  alumnoNombre?: string,
 ): Promise<void> {
   if (!prospecto.correo) return;
   const url = (process.env.APP_URL ?? "").replace(/\/$/, "") + "/portal/login";
@@ -92,6 +105,21 @@ export async function enviarBienvenidaAlumno(
   const nota = cred.passTmp
     ? "Por tu seguridad, cambia tu contraseña temporal la primera vez que entres."
     : undefined;
+
+  let adjuntos: { filename: string; content: Buffer }[] | undefined;
+  if (pago) {
+    try {
+      const recibo = await generarOLeerRecibo({
+        id: pago.id, monto_centavos: pago.monto_centavos, moneda: pago.moneda,
+        procesador: pago.procesador, pagado_en: pago.pagado_en, referencia_externa: pago.referencia_externa,
+        alumnoNombre: alumnoNombre ?? prospecto.nombre ?? "Alumno InMath", cursoNombre,
+      });
+      adjuntos = [{ filename: `recibo-inmath-${String(pago.id).padStart(6, "0")}.pdf`, content: recibo }];
+    } catch (e) {
+      console.error("[recibo] no se pudo generar el PDF del recibo:", e);
+    }
+  }
+
   await enviarCorreo({
     para: [prospecto.correo],
     asunto: "¡Tu inscripción está activa!",
@@ -103,9 +131,11 @@ export async function enviarBienvenidaAlumno(
       `¡Excelente noticia! Confirmamos tu pago por ${cursoNombre} y tu inscripción ya está activa. 🎉`,
       "",
       "Desde tu portal de alumno tienes tu avance del curso, tus asesorías, el material y tus reportes semanales.",
+      ...(adjuntos ? ["", "Adjuntamos tu recibo de pago en PDF — también puedes descargarlo desde tu portal, en Mi cuenta."] : []),
     ].join("\n"),
     destacado,
     cta: { url, label: "Entrar a mi portal" },
     nota,
+    adjuntos,
   });
 }

@@ -34,6 +34,8 @@ export type Correo = {
   nota?: string;
   /** Tono del acento: azul (default), verde (éxito), ámbar (aviso), coral (alerta). */
   tono?: "azul" | "verde" | "ambar" | "coral";
+  /** Adjuntos extra (ej. recibo en PDF), además del logo de marca. */
+  adjuntos?: { filename: string; content: Buffer }[];
 };
 
 /** Buzón real de contacto del negocio (dudas de usuarios). */
@@ -165,9 +167,10 @@ export async function enviarCorreo(c: Correo): Promise<{ enviado: boolean; motiv
       subject: c.asunto,
       text: plantillaTexto(c),
       html: plantillaHtml(c),
-      attachments: existsSync(logo)
-        ? [{ filename: "logo.png", path: logo, cid: "logoinmath" }]
-        : [],
+      attachments: [
+        ...(existsSync(logo) ? [{ filename: "logo.png", path: logo, cid: "logoinmath" }] : []),
+        ...(c.adjuntos ?? []),
+      ],
     });
     return { enviado: true };
   } catch (e) {

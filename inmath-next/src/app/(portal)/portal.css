@@ -462,3 +462,8 @@
 .pf-switch.on i { transform: translateX(20px); }
 .pf-switch:disabled { opacity: .6; cursor: default; }
 .pf-sep { height: 1px; background: var(--linea); margin: 18px 0; }
+
+/* v88 — Portal: acceso rápido "Tu comprobante de pago" (recibo PDF) */
+.pt-accesos { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.pt-acceso-pago { color: var(--azul-tinta, #2F62F0); }
+.pt-acceso-pago::before { background: radial-gradient(60% 84% at 34% 36%, rgba(107,159,255,.55), transparent 70%), radial-gradient(56% 78% at 68% 64%, rgba(124,92,255,.4), transparent 72%); }

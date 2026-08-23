@@ -62,7 +62,7 @@ export default async function PortalInicio() {
     );
   }
 
-  const [proximaCita, reportes, materiales, avances, curso, asesoriasTomadas] = await Promise.all([
+  const [proximaCita, reportes, materiales, avances, curso, asesoriasTomadas, pagoConfirmado] = await Promise.all([
     prisma.citas.findFirst({
       where: { prospecto_id: alumno.prospecto_id, estado: { in: ["agendada", "confirmada"] }, inicio: { gte: ahora } },
       orderBy: { inicio: "asc" },
@@ -80,6 +80,7 @@ export default async function PortalInicio() {
     }),
     prisma.cursos.findUnique({ where: { id: alumno.curso_id }, select: { duracion_semanas: true } }),
     prisma.citas.count({ where: { prospecto_id: alumno.prospecto_id, estado: "completada" } }),
+    prisma.pagos.findFirst({ where: { prospecto_id: alumno.prospecto_id, estado: "pagado" }, orderBy: { pagado_en: "desc" }, select: { id: true } }),
   ]);
 
   const primerNombre = alumno.nombre.split(" ")[0];
@@ -201,6 +202,13 @@ export default async function PortalInicio() {
             <span className="pt-acceso-tx"><b>Tus reportes de avance</b><span>{reportes.length === 0 ? "Aún sin reportes" : `${reportes.length} reporte${reportes.length === 1 ? "" : "s"}`}</span></span>
             <Icono n="arrow" />
           </Link>
+          {pagoConfirmado && (
+            <a className="pt-acceso" href={`/portal/recibo/${pagoConfirmado.id}`} target="_blank" rel="noopener">
+              <span className="pt-acceso-ic pt-acceso-pago"><Icono n="card" /></span>
+              <span className="pt-acceso-tx"><b>Tu comprobante de pago</b><span>Descarga el recibo en PDF</span></span>
+              <Icono n="arrow" />
+            </a>
+          )}
         </div>
 
         <footer className="pt-foot pt-rev" style={{ ["--d" as string]: "420ms" }}>
