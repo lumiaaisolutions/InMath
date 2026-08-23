@@ -5,7 +5,7 @@ import { lunesDe, lunesEnRango, overridesDe } from "./disponibilidad";
 export type Slot = { inicio: string; fin: string; etiqueta: string; asesores_libres: number[] };
 
 /** Port fiel de AgendaServicio::slotsDisponibles (misma semántica y límites). */
-export async function slotsDisponibles(desde: Date | null = null, dias = 7, asesorId: number | null = null, max = 30): Promise<Slot[]> {
+export async function slotsDisponibles(desde: Date | null = null, dias = 7, asesorId: number | null = null, max = 30, maxPorDia = 12): Promise<Slot[]> {
   const horario = JSON.parse(await config("horario_atencion", '{"dias":[1,2,3,4,5],"inicio":"09:00","fin":"19:00"}'));
   const duracionMin = parseInt(await config("duracion_cita_minutos", "30"), 10);
 
@@ -54,14 +54,18 @@ export async function slotsDisponibles(desde: Date | null = null, dias = 7, ases
         horasDia.push(new Date(t));
       }
     }
+    // Tope POR DÍA (además del tope global `max`): sin esto, un día con muchas
+    // horas definidas (ej. cada hora de 8am a 8pm) agota `max` por sí solo y
+    // los días siguientes —incluida la semana próxima— nunca llegan a mostrarse.
+    let contadorDia = 0;
     for (const t of horasDia) {
-      if (slots.length >= max) break;
+      if (slots.length >= max || contadorDia >= maxPorDia) break;
       if (t.getTime() < minimo) continue;
       const fin = new Date(t.getTime() + duracionMin * 60_000);
       const libres = asesores.filter((a) =>
         !ocupadas.some((c) => c.asesor_id === a && c.inicio < fin && c.fin > t)
       );
-      if (libres.length) slots.push({ inicio: isoMinuto(t), fin: isoMinuto(fin), etiqueta: etiqueta(t), asesores_libres: libres });
+      if (libres.length) { slots.push({ inicio: isoMinuto(t), fin: isoMinuto(fin), etiqueta: etiqueta(t), asesores_libres: libres }); contadorDia++; }
     }
   }
   return slots;

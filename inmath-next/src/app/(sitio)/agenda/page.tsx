@@ -14,7 +14,9 @@ const MESES = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio
 
 export default async function Agenda() {
   // Mismo calendario que usa el chatbot: la disponibilidad sale del mismo servicio.
-  const slots = await slotsDisponibles(null, 7, null, 12);
+  // max=90 (7 días × 12 slots/día vía maxPorDia) para que el calendario cubra
+  // TODA la semana visible, aunque algún día tenga muchas horas definidas.
+  const slots = await slotsDisponibles(null, 7, null, 90);
   const diasRango = 7;
 
   const grupos: GrupoDia[] = [];
