@@ -1,3 +1,54 @@
+# Mathy se recoge en el borde, sidebar con secciones desplegables, verificación agenda↔disponibilidad (22-ago-2026, v84-v86)
+
+## 1) Mathy se "esconde" en el borde cerca del final de la página
+
+**Bug reportado:** el botón flotante de Mathy (fijo en la esquina inferior
+derecha) tapaba botones/enlaces cuando el usuario llegaba al final de una
+página corta (ej. "Desarrollado por LUMIA" y los enlaces del footer en
+`/pago`, tanto en desktop como en móvil).
+
+**Fix:** cuando el scroll está a menos de 130px del final de la página (y el
+chat está cerrado), el botón se desplaza con `translateX` hacia el borde
+derecho (queda mayormente fuera de pantalla, con opacidad reducida) — el
+mismo efecto de "recogerse" que se pidió. Al pasar el cursor (o con foco)
+vuelve a su posición normal al instante. Aplicado tanto en el sitio público
+como en el panel. Verificado en producción real: tras el fix, el botón queda
+recogido y el badge "Desarrollado por LUMIA" es clicable de nuevo.
+
+## 2) Sidebar del panel: secciones desplegables (sin scroll)
+
+Los 10 ítems del sidebar (antes en lista plana) causaban que, en viewports
+cortos, el sidebar necesitara scroll interno y el widget de perfil quedara
+apretado/cortado. Se agruparon los ítems de administración en dos secciones
+**desplegables** ("Contenido y sitio", "Administración"), dejando solo los 4
+más frecuentes (Pipeline, Citas, Alumnos, Pagos) siempre visibles. El grupo
+que contiene la ruta activa se expande automáticamente. El sidebar ya no
+necesita scroll en la mayoría de los casos; si un grupo abierto no cupiera
+igual, sigue teniendo `overflow-y:auto` como red de seguridad (tal como se
+pidió: "si se despliega y sale de la pantalla, ahora sí debe tener scroll").
+Verificado en un viewport de 760px de alto: sin scroll, todos los ítems
+alcanzables.
+
+## 3) Verificación agenda ↔ disponibilidad: NO había bug de sincronización
+
+Se reportó que las horas de `/agenda` no coincidían con lo definido en
+`/panel/disponibilidad`. Verificado 1:1 contra los datos reales de
+producción: el domingo (dentro de la semana YA guardada) mostraba
+**exactamente** las horas configuradas (12:00, 12:30, 13:00). Los días que
+sí se veían "distintos" pertenecían a la **semana siguiente**, que aún no se
+había definido — por diseño, esos días usan el horario base hasta que
+también se ajuste esa semana (justo lo que la tarjeta "⚠ Pendiente" indica).
+
+Para que esto no vuelva a confundir:
+- El botón "Guardar" ahora se convierte en un indicador **"✓ Guardado"**
+  (deshabilitado) cuando no hay cambios sin guardar respecto a lo ya
+  persistido, en vez de seguir mostrando "Guardar" de forma genérica.
+- Se agregó una nota explicando que `/agenda` muestra 7 días **rotativos**
+  desde hoy, que pueden cruzar el límite entre "esta semana" y "la próxima"
+  del panel — por eso conviene definir ambas.
+
+---
+
 # Fix agenda/disponibilidad, sidebar fijo, y rediseño de alertas (22-ago-2026, v80-v83)
 
 ## 1) Fix crítico: /agenda ocultaba el resto de la semana
