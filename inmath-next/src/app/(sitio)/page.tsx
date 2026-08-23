@@ -55,7 +55,7 @@ export default async function Landing() {
         <span className="hc-scroll" aria-hidden="true"><i /></span>
       </section>
 
-      <AlertasLanding posicion="arriba" />
+      <AlertasLanding posicion="arriba" precio={precio} curso={curso?.nombre} />
 
       <section className="proceso" id="como">
         <div className="centrado">
@@ -146,7 +146,7 @@ export default async function Landing() {
         </div>
       </section>
 
-      <AlertasLanding posicion="precios" />
+      <AlertasLanding posicion="precios" precio={precio} curso={curso?.nombre} />
 
       {/* Bento: todo en un solo lugar */}
       <section className="bento" aria-label="Todo lo que incluye tu inscripción">
@@ -243,7 +243,7 @@ export default async function Landing() {
         </div>
       </section>
 
-      <AlertasLanding posicion="final" />
+      <AlertasLanding posicion="final" precio={precio} curso={curso?.nombre} />
 
       {/* Comunidad: tarjetas flotantes */}
       <section className="comunidad" aria-label="Cientos de estudiantes acompañados">

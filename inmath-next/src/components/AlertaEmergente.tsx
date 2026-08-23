@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Icono } from "./Icono";
 import { esVideo, varsDiseno, type Alerta } from "@/lib/alertas-tipos";
+import { CuentaRegresiva } from "./CuentaRegresiva";
 
 /** Ventana emergente a PANTALLA COMPLETA con TODO configurable desde el panel
  *  (textos, tipografías, tamaños, alineación, cuadrito del plan, marcador).
@@ -37,6 +38,7 @@ export function AlertaEmergente({ alerta, precio, curso }: { alerta: Alerta; pre
           {d.mostrar_kicker && d.kicker_texto && (
             <span className="am-kicker"><Icono n="clock" /> {d.kicker_texto}</span>
           )}
+          {d.mostrar_cuenta && d.fecha_limite && <CuentaRegresiva fecha={d.fecha_limite} className="alb-cuenta" />}
           {alerta.titulo && <h3>{alerta.titulo}</h3>}
           {alerta.texto && <p className="am-texto">{alerta.texto}</p>}
           {d.mostrar_plan && (

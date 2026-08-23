@@ -3680,3 +3680,43 @@ p.legal { min-height: 0 !important; background: none !important; padding: 0 !imp
 /* Comunidad: leve realce al pasar el cursor (las tarjetas flotan; sin romper la animación) */
 .com-card { transition: box-shadow .25s ease; }
 .com-card:hover { box-shadow: 0 30px 64px -24px rgba(18,31,55,.55); z-index: 4; }
+
+/* v83 — Banner de alertas rico (ver panel.css para la documentación completa). */
+.alb { position: relative; overflow: hidden; border-radius: var(--a-radio, 26px);
+  padding: clamp(22px, 4vw, 34px); display: flex; flex-direction: column; gap: 14px;
+  background: linear-gradient(135deg, var(--al-a), var(--al-b) 55%, var(--al-c));
+  color: #fff; box-shadow: 0 30px 60px -30px var(--al-sombra, rgba(0,0,0,.5)); text-align: var(--a-alin, left); }
+.alb-media { position: absolute; inset: 0; z-index: 0; }
+.alb-media img, .alb-media video { width: 100%; height: 100%; object-fit: cover; opacity: .28; }
+.alb-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, var(--al-a), transparent 70%); opacity: .75; }
+.alb > *:not(.alb-media) { position: relative; z-index: 1; }
+.alb-kicker { display: inline-flex; align-self: var(--a-just, flex-start); align-items: center; gap: 8px;
+  font: 700 .72rem/1 var(--cuerpo); letter-spacing: .06em; text-transform: uppercase; color: #fff;
+  background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28);
+  padding: 7px 14px; border-radius: 999px; width: max-content; }
+.alb-kicker svg { width: 14px; height: 14px; }
+.alb-cuenta { display: flex; gap: 10px; align-self: var(--a-just, flex-start); }
+.alb-cuenta b { font: 800 1.4rem/1 var(--display); background: rgba(0,0,0,.22); padding: 6px 10px; border-radius: 10px; min-width: 2ch; text-align: center; display: inline-block; }
+.alb-cuenta small { display: block; font: 600 .6rem/1.6 var(--cuerpo); text-align: center; color: rgba(255,255,255,.75); text-transform: uppercase; }
+.alb-titulo { font-family: var(--a-f-tit, var(--display)); font-size: var(--a-tam-tit-em, clamp(1.8rem,5vw,3rem)); font-weight: 800;
+  line-height: 1.05; letter-spacing: -.03em; color: #fff; text-shadow: 0 3px 20px rgba(0,0,0,.3); margin: 0; }
+.alb-texto { font-family: var(--a-f-tx, var(--cuerpo)); font-size: var(--a-tam-tx, 1rem); color: rgba(255,255,255,.92); margin: 0; max-width: 56ch; }
+.alb-plan { width: min(420px, 100%); background: var(--a-cuadro-bg, rgba(255,255,255,.94)); border-radius: calc(var(--a-radio, 26px) * .55);
+  padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left;
+  box-shadow: 0 14px 34px -14px rgba(0,0,0,.5); align-self: var(--a-just, flex-start); }
+.alb-plan-info b { display: block; font: 700 .92rem/1.25 var(--display); color: var(--a-cuadro-fg, var(--tinta)); }
+.alb-plan-info span { font: 500 .74rem/1.4 var(--cuerpo); color: var(--a-cuadro-sub, var(--tinta-2)); }
+.alb-plan-precio { display: flex; align-items: baseline; gap: 7px; }
+.alb-plan-precio b { font: 800 1.5rem/1 var(--display); color: var(--a-cuadro-fg, var(--tinta)); }
+.alb-plan-precio s { font: 600 .8rem/1 var(--cuerpo); color: var(--a-cuadro-sub, var(--tinta-3)); }
+.alb-marcador { display: inline-block; align-self: var(--a-just, flex-start); font: 800 .85rem/1.25 var(--display); color: #2b1a00;
+  background: linear-gradient(100deg, #FFD86B, #F6A62A); padding: 6px 13px; border-radius: 8px; transform: rotate(-1deg);
+  box-shadow: 0 8px 20px -6px rgba(244,166,42,.55); width: max-content; }
+.alb-cta { display: inline-flex; align-self: var(--a-just, flex-start); align-items: center; gap: 8px; text-decoration: none;
+  padding: 13px 26px; border-radius: 999px; font: 800 .94rem var(--cuerpo); background: #fff; color: var(--tinta);
+  box-shadow: 0 14px 30px -10px rgba(0,0,0,.5); transition: transform .2s, box-shadow .2s; margin-top: 2px; }
+.alb-cta:hover { transform: translateY(-2px); box-shadow: 0 20px 38px -10px rgba(0,0,0,.6); }
+.alerta-azul  { --al-a: #4D7FF0; --al-b: #6B9FFF; --al-c: #7C5CFF; --al-sombra: rgba(107,159,255,.65); }
+.alerta-menta { --al-a: #17A2B8; --al-b: #22C1A6; --al-c: #3ED9B0; --al-sombra: rgba(34,193,166,.6); }
+.alerta-ambar { --al-a: #E8590C; --al-b: #F6A62A; --al-c: #FFB84D; --al-sombra: rgba(232,89,12,.6); }
+.alerta-coral { --al-a: #E5568A; --al-b: #FF7A9C; --al-c: #9D6BFF; --al-sombra: rgba(229,86,138,.6); }

@@ -49,6 +49,7 @@ export type DisenoAlerta = {
   mostrar_kicker: boolean; kicker_texto: string;
   mostrar_plan: boolean; plan_titulo: string; plan_sub: string; plan_precio: string; plan_antes: string;
   mostrar_marcador: boolean; marcador_texto: string;
+  mostrar_cuenta: boolean; fecha_limite: string;
 };
 
 export const DISENO_DEFECTO: DisenoAlerta = {
@@ -58,6 +59,7 @@ export const DISENO_DEFECTO: DisenoAlerta = {
   mostrar_kicker: true, kicker_texto: "Oferta por tiempo limitado",
   mostrar_plan: true, plan_titulo: "", plan_sub: "Pago único · acceso inmediato · asesoría 1 a 1", plan_precio: "", plan_antes: "$4,500",
   mostrar_marcador: true, marcador_texto: "Ahorras $500 inscribiéndote hoy",
+  mostrar_cuenta: false, fecha_limite: "",
 };
 
 export function normalizaDiseno(x?: Partial<DisenoAlerta>): DisenoAlerta {

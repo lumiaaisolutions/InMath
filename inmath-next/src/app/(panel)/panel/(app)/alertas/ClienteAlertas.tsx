@@ -3,8 +3,9 @@ import { useActionState, useRef, useState } from "react";
 import { guardarAlertasAccion, alertaMediaSubirAccion, type ResultadoMedia } from "./acciones";
 import { useToastResultado } from "../ClientePanel";
 import { IconoPanel } from "@/components/IconoPanel";
+import { CuentaRegresiva } from "@/components/CuentaRegresiva";
 import {
-  ESTILOS, POSICIONES, FORMATOS, DESTINOS, esVideo, varsDiseno, DISENO_DEFECTO,
+  ESTILOS, POSICIONES, DESTINOS, esVideo, varsDiseno, DISENO_DEFECTO,
   type Alerta, type DisenoAlerta,
 } from "@/lib/alertas-tipos";
 import type { Resultado } from "../acciones";
@@ -20,56 +21,91 @@ const nueva = (): Alerta => ({
   formato: "banner", media: "", diseno: { ...DISENO_DEFECTO }, activo: true,
 });
 
+/* ---------------------------------------------------------------------------
+   Controles reutilizables (SIN <select> ni <input type="checkbox"> nativos).
+--------------------------------------------------------------------------- */
+
+/** Grupo de pastillas: reemplaza a <select> para elegir una entre pocas opciones. */
+function Segmentado<T extends string>({ opciones, valor, onChange }:
+  { opciones: { valor: T; nombre: string; icono?: string }[]; valor: T; onChange: (v: T) => void; columnas?: number }) {
+  return (
+    <div className="seg" role="radiogroup">
+      {opciones.map((o) => (
+        <button key={o.valor} type="button" role="radio" aria-checked={valor === o.valor}
+          className={`seg-op${valor === o.valor ? " on" : ""}`} onClick={() => onChange(o.valor)}>
+          {o.icono && <IconoPanel n={o.icono} cls="ic-sm" />} {o.nombre}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Interruptor custom: reemplaza a <input type="checkbox">. */
+function Interruptor({ activo, onChange, etiqueta, detalle }: { activo: boolean; onChange: (v: boolean) => void; etiqueta: string; detalle?: string }) {
+  return (
+    <button type="button" className={`interr${activo ? " on" : ""}`} role="switch" aria-checked={activo} onClick={() => onChange(!activo)}>
+      <span className="interr-sw" aria-hidden="true" />
+      <span className="interr-tx"><b>{etiqueta}</b>{detalle && <i>{detalle}</i>}</span>
+    </button>
+  );
+}
+
+/** Contenido rico compartido por el preview de banner y de emergente. */
+function ContenidoRico({ a, escala }: { a: Alerta; escala?: boolean }) {
+  const d = a.diseno;
+  return (
+    <>
+      {d.mostrar_kicker && d.kicker_texto && <span className={escala ? "am-kicker" : "alb-kicker"}><IconoPanel n="reloj" /> {d.kicker_texto}</span>}
+      {d.mostrar_cuenta && d.fecha_limite && <CuentaRegresiva fecha={d.fecha_limite} className="alb-cuenta" />}
+      {escala ? <h3>{a.titulo || "Escribe un título…"}</h3> : <h2 className="alb-titulo">{a.titulo || "Escribe un título…"}</h2>}
+      {a.texto && <p className={escala ? "am-texto" : "alb-texto"}>{a.texto}</p>}
+      {d.mostrar_plan && (
+        <div className={escala ? "am-plan" : "alb-plan"}>
+          <div className={escala ? "am-plan-info" : "alb-plan-info"}><b>{d.plan_titulo || "Curso Propedéutico InMath"}</b>{d.plan_sub && <span>{d.plan_sub}</span>}</div>
+          <div className={escala ? "am-plan-precio" : "alb-plan-precio"}><b>{d.plan_precio || "$4,000"}</b>{d.plan_antes && <s>{d.plan_antes}</s>}</div>
+        </div>
+      )}
+      {d.mostrar_marcador && d.marcador_texto && <span className={escala ? "am-marcador" : "alb-marcador"}>{d.marcador_texto}</span>}
+      <span className={escala ? "am-cta" : "alb-cta"}>{a.enlace_texto || "Inscribirme ahora"}</span>
+    </>
+  );
+}
+
 /** Preview del banner con el diseño configurado aplicado. */
 function PreviewBanner({ a }: { a: Alerta }) {
   return (
-    <div className={`alerta-frame alerta-${a.estilo}`} style={varsDiseno(a.diseno) as React.CSSProperties}>
-      {a.media && (esVideo(a.media)
-        ? <video className="alerta-media" src={a.media} muted loop autoPlay playsInline />
-        : <img className="alerta-media" src={a.media} alt="" />)}
-      <div className="alerta-cuerpo">
-        <b>{a.titulo || "Escribe un título…"}</b>
-        {a.texto && <p>{a.texto}</p>}
-      </div>
-      {a.enlace_texto && <span className="alerta-cta">{a.enlace_texto}</span>}
-      <span className="alerta-brillo" aria-hidden="true" />
+    <div className={`alb alerta-${a.estilo}`} style={varsDiseno(a.diseno) as React.CSSProperties}>
+      {a.media && (
+        <div className="alb-media">
+          {esVideo(a.media) ? <video src={a.media} muted loop autoPlay playsInline /> : <img src={a.media} alt="" />}
+        </div>
+      )}
+      <ContenidoRico a={a} />
     </div>
   );
 }
 
 /** Preview del emergente (pantalla completa, a escala) con todo aplicado. */
 function PreviewEmergente({ a }: { a: Alerta }) {
-  const d = a.diseno;
   return (
     <div className="al-em-marco">
-      <div className={`am-lienzo alerta-${a.estilo}`} style={varsDiseno(d) as React.CSSProperties}>
+      <div className={`am-lienzo alerta-${a.estilo}`} style={varsDiseno(a.diseno) as React.CSSProperties}>
         {a.media && (esVideo(a.media)
           ? <video className="am-fondo" src={a.media} muted loop autoPlay playsInline />
           : <img className="am-fondo" src={a.media} alt="" />)}
         <div className="am-velo-int" />
-        <div className="am-contenido">
-          {d.mostrar_kicker && d.kicker_texto && <span className="am-kicker"><IconoPanel n="reloj" /> {d.kicker_texto}</span>}
-          <h3>{a.titulo || "Escribe un título…"}</h3>
-          {a.texto && <p className="am-texto">{a.texto}</p>}
-          {d.mostrar_plan && (
-            <div className="am-plan">
-              <div className="am-plan-info"><b>{d.plan_titulo || "Curso Propedéutico InMath"}</b>{d.plan_sub && <span>{d.plan_sub}</span>}</div>
-              <div className="am-plan-precio"><b>{d.plan_precio || "$4,000"}</b>{d.plan_antes && <s>{d.plan_antes}</s>}</div>
-            </div>
-          )}
-          {d.mostrar_marcador && d.marcador_texto && <span className="am-marcador">{d.marcador_texto}</span>}
-          <span className="am-cta">{a.enlace_texto || "Inscribirme ahora"}</span>
-        </div>
+        <div className="am-contenido"><ContenidoRico a={a} escala /></div>
       </div>
     </div>
   );
 }
 
-/** Editor de alertas: tarjetas; al seleccionar, preview + configuración TOTAL. */
+/** Editor de alertas: tarjetas; al seleccionar, preview + configuración por pasos. */
 export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
   const toast = useToastResultado();
   const [alertas, setAlertas] = useState<Alerta[]>(iniciales);
   const [selId, setSelId] = useState<string | null>(iniciales[0]?.id ?? null);
+  const [avanzado, setAvanzado] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [subiendo, setSubiendo] = useState(false);
 
@@ -104,14 +140,14 @@ export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
     setSubiendo(false);
   }
 
-  const destinoActual = DESTINOS.some((d) => d.valor === sel?.enlace) ? sel?.enlace : "custom";
+  const destinoActual = DESTINOS.some((d) => d.valor === sel?.enlace) ? sel?.enlace! : "custom";
 
   return (
     <>
       <div className="cabecera">
         <div>
           <h1>Alertas de la página</h1>
-          <div className="sub">Avisos de la página pública. Selecciona una tarjeta: verás el preview en vivo y podrás personalizarlo TODO — textos, tipografías, tamaños, distribución y los cuadritos.</div>
+          <div className="sub">Avisos de la página pública. Elige una tarjeta para editarla — verás el preview en vivo mientras configuras.</div>
         </div>
         {alertas.length < 6 && (
           <button type="button" className="boton primario" onClick={agregar}>+ Agregar alerta</button>
@@ -120,13 +156,18 @@ export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
 
       {alertas.length === 0 ? (
         <div className="tarjeta al-vacio">
+          <IconoPanel n="alerta" />
           <p>Aún no hay alertas. Crea la primera con <b>+ Agregar alerta</b>.</p>
         </div>
       ) : (
         <div className="al-tarjetas">
           {alertas.map((a) => (
-            <button key={a.id} type="button" className={`al-tarj${a.id === selId ? " sel" : ""}`} onClick={() => setSelId(a.id)}>
-              <span className={`al-tarj-sw al-sw-${a.estilo}`} />
+            <button key={a.id} type="button" className={`al-tarj al-tarj-${a.estilo}${a.id === selId ? " sel" : ""}`} onClick={() => setSelId(a.id)}>
+              <span className="al-tarj-mini">
+                <span className="al-tarj-mini-kicker" />
+                <span className="al-tarj-mini-lineas"><i /><i /></span>
+                <span className="al-tarj-mini-boton" />
+              </span>
               <span className="al-tarj-tx">
                 <b>{a.titulo || "Sin título"}</b>
                 <i>{a.formato === "emergente" ? "Ventana emergente" : `Banner · ${POSICIONES.find((p) => p.valor === a.posicion)?.nombre ?? ""}`}</i>
@@ -145,182 +186,197 @@ export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
           </div>
 
           <div className="al-editor">
-            <div className="al-fila">
-              <label className="pl-campo">Formato
-                <select value={sel.formato} onChange={(e) => set("formato", e.target.value)}>
-                  {FORMATOS.map((f) => <option key={f.valor} value={f.valor}>{f.nombre}</option>)}
-                </select>
-              </label>
-              {sel.formato === "banner" ? (
-                <label className="pl-campo">Posición en la página
-                  <select value={sel.posicion} onChange={(e) => set("posicion", e.target.value)}>
-                    {POSICIONES.map((p) => <option key={p.valor} value={p.valor}>{p.nombre}</option>)}
-                  </select>
-                </label>
-              ) : (
-                <div className="pl-campo al-nota-em">Aparece al entrar, a pantalla completa. Se muestra una vez por visita y el visitante puede cerrarla.</div>
+            {/* Paso 1 — Tipo y dónde aparece */}
+            <div className="al-paso">
+              <div className="al-paso-tit"><span className="al-paso-n">1</span> ¿Qué tipo de aviso quieres?</div>
+              <div className="al-tipo-cards">
+                <button type="button" className={`al-tipo-card${sel.formato === "banner" ? " on" : ""}`} onClick={() => set("formato", "banner")}>
+                  <span className="al-tipo-mini al-tipo-mini-banner"><i /></span>
+                  <b>Banner en la página</b><small>Franja llamativa dentro del sitio, no interrumpe la navegación.</small>
+                </button>
+                <button type="button" className={`al-tipo-card${sel.formato === "emergente" ? " on" : ""}`} onClick={() => set("formato", "emergente")}>
+                  <span className="al-tipo-mini al-tipo-mini-em"><i /></span>
+                  <b>Ventana emergente</b><small>Aparece al entrar, a pantalla completa. Se puede cerrar.</small>
+                </button>
+              </div>
+              {sel.formato === "banner" && (
+                <div className="al-campo" style={{ marginTop: 14 }}>
+                  <label>¿Dónde de la página aparece?</label>
+                  <Segmentado opciones={POSICIONES.map((p) => ({ valor: p.valor, nombre: p.nombre }))}
+                    valor={sel.posicion} onChange={(v) => set("posicion", v)} />
+                </div>
               )}
             </div>
-            <label className="pl-campo">Título
-              <input type="text" value={sel.titulo} maxLength={80} placeholder="Ej. Inscripciones abiertas"
-                onChange={(e) => set("titulo", e.target.value)} />
-            </label>
-            <label className="pl-campo">Texto
-              <input type="text" value={sel.texto} maxLength={160} placeholder="Ej. Precio especial hasta agotar lugares"
-                onChange={(e) => set("texto", e.target.value)} />
-            </label>
-            <div className="al-fila">
-              <div className="pl-campo al-estilos-campo">Estilo de color
-                <div className="al-estilos" role="radiogroup" aria-label="Estilo de color">
-                  {ESTILOS.map((es) => (
-                    <button key={es} type="button" className={`al-sw al-sw-${es}${sel.estilo === es ? " activo" : ""}`}
-                      title={NOMBRE_ESTILO[es]} aria-label={NOMBRE_ESTILO[es]}
-                      onClick={() => set("estilo", es)} />
-                  ))}
-                </div>
-              </div>
-              <div className="pl-campo">Imagen o video
-                <div className="al-media-fila">
-                  <input ref={fileRef} type="file" accept=".jpg,.jpeg,.png,.webp,.mp4" hidden
-                    onChange={(e) => { const f = e.target.files?.[0]; if (f) subirMedia(f); e.target.value = ""; }} />
-                  <button type="button" className="boton mini" disabled={subiendo} onClick={() => fileRef.current?.click()}>
-                    {subiendo ? "Subiendo…" : sel.media ? "Cambiar" : "Subir archivo"}
-                  </button>
-                  {sel.media && <button type="button" className="boton mini al-quitar" onClick={() => set("media", "")}>Quitar</button>}
-                </div>
-              </div>
-            </div>
 
-            <div className="al-seccion">Tipografía y distribución</div>
-            <div className="al-fila">
-              <label className="pl-campo">Fuente del título
-                <select value={sel.diseno.fuente_titulo} onChange={(e) => setD("fuente_titulo", e.target.value)}>
-                  <option value="display">Sora (títulos de la página)</option>
-                  <option value="cuerpo">Figtree (texto de la página)</option>
-                </select>
-              </label>
-              <label className="pl-campo">Fuente del texto
-                <select value={sel.diseno.fuente_texto} onChange={(e) => setD("fuente_texto", e.target.value)}>
-                  <option value="cuerpo">Figtree (texto de la página)</option>
-                  <option value="display">Sora (títulos de la página)</option>
-                </select>
-              </label>
-            </div>
-            <div className="al-fila">
-              <label className="pl-campo">Tamaño del título
-                <select value={sel.diseno.tam_titulo} onChange={(e) => setD("tam_titulo", e.target.value)}>
-                  <option value="ch">Chico</option><option value="md">Normal</option>
-                  <option value="gd">Grande</option><option value="xg">Extra grande</option>
-                </select>
-              </label>
-              <label className="pl-campo">Tamaño del texto
-                <select value={sel.diseno.tam_texto} onChange={(e) => setD("tam_texto", e.target.value)}>
-                  <option value="ch">Chico</option><option value="md">Normal</option><option value="gd">Grande</option>
-                </select>
-              </label>
-            </div>
-            <div className="al-fila">
-              <label className="pl-campo">Alineación del contenido
-                <select value={sel.diseno.alineacion} onChange={(e) => setD("alineacion", e.target.value)}>
-                  <option value="izquierda">Izquierda</option><option value="centro">Centro</option><option value="derecha">Derecha</option>
-                </select>
-              </label>
-              {sel.formato === "banner" ? (
-                <label className="pl-campo">Lado de la imagen/video
-                  <select value={sel.diseno.media_lado} onChange={(e) => setD("media_lado", e.target.value)}>
-                    <option value="izquierda">Izquierda</option><option value="derecha">Derecha</option>
-                  </select>
-                </label>
-              ) : (
-                <label className="pl-campo">Diseño de los cuadritos
-                  <select value={sel.diseno.cuadro_estilo} onChange={(e) => setD("cuadro_estilo", e.target.value)}>
-                    <option value="claro">Claro (blanco)</option>
-                    <option value="vidrio">Vidrio (translúcido)</option>
-                    <option value="oscuro">Oscuro (tinta)</option>
-                  </select>
-                </label>
+            {/* Paso 2 — Contenido */}
+            <div className="al-paso">
+              <div className="al-paso-tit"><span className="al-paso-n">2</span> Escribe el contenido</div>
+              <div className="al-campo">
+                <label htmlFor="al-titulo">Título</label>
+                <input id="al-titulo" type="text" value={sel.titulo} maxLength={80} placeholder="Ej. Inscripciones abiertas"
+                  onChange={(e) => set("titulo", e.target.value)} />
+              </div>
+              <div className="al-campo">
+                <label htmlFor="al-texto">Texto</label>
+                <input id="al-texto" type="text" value={sel.texto} maxLength={160} placeholder="Ej. Precio especial hasta agotar lugares"
+                  onChange={(e) => set("texto", e.target.value)} />
+              </div>
+              <div className="al-fila2">
+                <div className="al-campo">
+                  <label>Color</label>
+                  <div className="al-estilos" role="radiogroup" aria-label="Estilo de color">
+                    {ESTILOS.map((es) => (
+                      <button key={es} type="button" className={`al-sw al-sw-${es}${sel.estilo === es ? " activo" : ""}`}
+                        title={NOMBRE_ESTILO[es]} aria-label={NOMBRE_ESTILO[es]} onClick={() => set("estilo", es)} />
+                    ))}
+                  </div>
+                </div>
+                <div className="al-campo">
+                  <label>Imagen o video (opcional)</label>
+                  <div className="al-media-fila">
+                    <input ref={fileRef} type="file" accept=".jpg,.jpeg,.png,.webp,.mp4" hidden
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) subirMedia(f); e.target.value = ""; }} />
+                    <button type="button" className="boton mini" disabled={subiendo} onClick={() => fileRef.current?.click()}>
+                      {subiendo ? "Subiendo…" : sel.media ? "Cambiar" : "Subir archivo"}
+                    </button>
+                    {sel.media && <button type="button" className="boton mini al-quitar" onClick={() => set("media", "")}>Quitar</button>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="al-subseccion">Destacados (opcionales)</div>
+              <Interruptor activo={sel.diseno.mostrar_kicker} onChange={(v) => setD("mostrar_kicker", v)}
+                etiqueta="Etiqueta superior" detalle='Ej. "Oferta por tiempo limitado"' />
+              {sel.diseno.mostrar_kicker && (
+                <div className="al-campo al-campo-anidado">
+                  <input type="text" value={sel.diseno.kicker_texto} maxLength={50} onChange={(e) => setD("kicker_texto", e.target.value)} />
+                </div>
+              )}
+
+              <Interruptor activo={sel.diseno.mostrar_cuenta} onChange={(v) => setD("mostrar_cuenta", v)}
+                etiqueta="Cuenta regresiva" detalle="Muestra días/horas/min/seg hasta una fecha límite" />
+              {sel.diseno.mostrar_cuenta && (
+                <div className="al-campo al-campo-anidado">
+                  <label>Fecha y hora límite</label>
+                  <input type="datetime-local" value={sel.diseno.fecha_limite} onChange={(e) => setD("fecha_limite", e.target.value)} />
+                </div>
+              )}
+
+              <Interruptor activo={sel.diseno.mostrar_plan} onChange={(v) => setD("mostrar_plan", v)}
+                etiqueta="Cuadrito del plan" detalle="Muestra el curso y su precio en una tarjeta" />
+              {sel.diseno.mostrar_plan && (
+                <div className="al-campo-anidado al-fila2">
+                  <div className="al-campo">
+                    <label>Título del plan</label>
+                    <input type="text" value={sel.diseno.plan_titulo} maxLength={60} placeholder="(vacío = nombre real del curso)" onChange={(e) => setD("plan_titulo", e.target.value)} />
+                  </div>
+                  <div className="al-campo">
+                    <label>Subtítulo</label>
+                    <input type="text" value={sel.diseno.plan_sub} maxLength={80} onChange={(e) => setD("plan_sub", e.target.value)} />
+                  </div>
+                  <div className="al-campo">
+                    <label>Precio</label>
+                    <input type="text" value={sel.diseno.plan_precio} maxLength={16} placeholder="(vacío = precio real)" onChange={(e) => setD("plan_precio", e.target.value)} />
+                  </div>
+                  <div className="al-campo">
+                    <label>Precio anterior (tachado)</label>
+                    <input type="text" value={sel.diseno.plan_antes} maxLength={16} placeholder="Vacío = no se muestra" onChange={(e) => setD("plan_antes", e.target.value)} />
+                  </div>
+                </div>
+              )}
+
+              <Interruptor activo={sel.diseno.mostrar_marcador} onChange={(v) => setD("mostrar_marcador", v)}
+                etiqueta="Marcador de ahorro" detalle='Ej. "Ahorras $500 inscribiéndote hoy"' />
+              {sel.diseno.mostrar_marcador && (
+                <div className="al-campo al-campo-anidado">
+                  <input type="text" value={sel.diseno.marcador_texto} maxLength={60} onChange={(e) => setD("marcador_texto", e.target.value)} />
+                </div>
               )}
             </div>
-            <label className="pl-campo">Bordes
-              <select value={sel.diseno.radio} onChange={(e) => setD("radio", e.target.value)}>
-                <option value="suave">Rectos suaves</option><option value="medio">Redondeados</option><option value="redondo">Muy redondeados</option>
-              </select>
-            </label>
 
-            {sel.formato === "emergente" && (
-              <>
-                <div className="al-seccion">Contenido de la ventana</div>
-                <div className="al-fila">
-                  <label className="us-toggle al-toggle">
-                    <input type="checkbox" checked={sel.diseno.mostrar_kicker} onChange={(e) => setD("mostrar_kicker", e.target.checked)} />
-                    <span className="us-toggle-tx"><b>Mostrar etiqueta superior</b></span>
-                  </label>
-                  <label className="pl-campo">Texto de la etiqueta
-                    <input type="text" value={sel.diseno.kicker_texto} maxLength={50} onChange={(e) => setD("kicker_texto", e.target.value)} />
-                  </label>
-                </div>
-                <div className="al-fila">
-                  <label className="us-toggle al-toggle">
-                    <input type="checkbox" checked={sel.diseno.mostrar_plan} onChange={(e) => setD("mostrar_plan", e.target.checked)} />
-                    <span className="us-toggle-tx"><b>Mostrar cuadrito del plan</b></span>
-                  </label>
-                  <label className="us-toggle al-toggle">
-                    <input type="checkbox" checked={sel.diseno.mostrar_marcador} onChange={(e) => setD("mostrar_marcador", e.target.checked)} />
-                    <span className="us-toggle-tx"><b>Mostrar marcador de ahorro</b></span>
-                  </label>
-                </div>
-                {sel.diseno.mostrar_plan && (
-                  <>
-                    <div className="al-fila">
-                      <label className="pl-campo">Título del plan
-                        <input type="text" value={sel.diseno.plan_titulo} maxLength={60} placeholder="(vacío = nombre real del curso)" onChange={(e) => setD("plan_titulo", e.target.value)} />
-                      </label>
-                      <label className="pl-campo">Subtítulo del plan
-                        <input type="text" value={sel.diseno.plan_sub} maxLength={80} onChange={(e) => setD("plan_sub", e.target.value)} />
-                      </label>
-                    </div>
-                    <div className="al-fila">
-                      <label className="pl-campo">Precio
-                        <input type="text" value={sel.diseno.plan_precio} maxLength={16} placeholder="(vacío = precio real)" onChange={(e) => setD("plan_precio", e.target.value)} />
-                      </label>
-                      <label className="pl-campo">Precio anterior (tachado)
-                        <input type="text" value={sel.diseno.plan_antes} maxLength={16} placeholder="Vacío = no se muestra" onChange={(e) => setD("plan_antes", e.target.value)} />
-                      </label>
-                    </div>
-                  </>
-                )}
-                {sel.diseno.mostrar_marcador && (
-                  <label className="pl-campo">Texto del marcador
-                    <input type="text" value={sel.diseno.marcador_texto} maxLength={60} onChange={(e) => setD("marcador_texto", e.target.value)} />
-                  </label>
-                )}
-              </>
-            )}
-
-            <div className="al-seccion">Botón</div>
-            <div className="al-fila">
-              <label className="pl-campo">El botón lleva a
-                <select value={destinoActual} onChange={(e) => set("enlace", e.target.value === "custom" ? "" : e.target.value)}>
-                  {DESTINOS.map((d) => <option key={d.valor} value={d.valor}>{d.nombre}</option>)}
-                </select>
+            {/* Paso 3 — Botón */}
+            <div className="al-paso">
+              <div className="al-paso-tit"><span className="al-paso-n">3</span> Configura el botón</div>
+              <div className="al-campo">
+                <label>El botón lleva a</label>
+                <Segmentado columnas={2} opciones={DESTINOS.map((d) => ({ valor: d.valor, nombre: d.nombre }))}
+                  valor={destinoActual} onChange={(v) => set("enlace", v === "custom" ? "" : v)} />
                 <small className="al-detalle">{DESTINOS.find((d) => d.valor === destinoActual)?.detalle}</small>
-              </label>
-              <label className="pl-campo">Texto del botón
-                <input type="text" value={sel.enlace_texto} maxLength={30} placeholder="Ej. Inscribirme"
-                  onChange={(e) => set("enlace_texto", e.target.value)} />
-              </label>
+              </div>
+              {destinoActual === "custom" && (
+                <div className="al-campo">
+                  <label>Link específico</label>
+                  <input type="text" value={sel.enlace} placeholder="https://… o /ruta" onChange={(e) => set("enlace", e.target.value)} />
+                </div>
+              )}
+              <div className="al-campo">
+                <label>Texto del botón</label>
+                <input type="text" value={sel.enlace_texto} maxLength={30} placeholder="Ej. Inscribirme" onChange={(e) => set("enlace_texto", e.target.value)} />
+              </div>
             </div>
-            {destinoActual === "custom" && (
-              <label className="pl-campo">Link específico
-                <input type="text" value={sel.enlace} placeholder="https://… o /ruta"
-                  onChange={(e) => set("enlace", e.target.value)} />
-              </label>
-            )}
+
+            {/* Paso 4 — Diseño avanzado (colapsable) */}
+            <div className="al-paso">
+              <button type="button" className="al-avanzado-tog" onClick={() => setAvanzado((v) => !v)}>
+                <span className="al-paso-tit" style={{ margin: 0 }}><span className="al-paso-n">4</span> Diseño avanzado</span>
+                <span className="al-avanzado-caret" aria-hidden="true">{avanzado ? "▲" : "▼"}</span>
+              </button>
+              {avanzado && (
+                <div className="al-avanzado-cuerpo">
+                  <div className="al-fila2">
+                    <div className="al-campo">
+                      <label>Fuente del título</label>
+                      <Segmentado opciones={[{ valor: "display", nombre: "Títulos" }, { valor: "cuerpo", nombre: "Texto" }]}
+                        valor={sel.diseno.fuente_titulo} onChange={(v) => setD("fuente_titulo", v)} />
+                    </div>
+                    <div className="al-campo">
+                      <label>Fuente del texto</label>
+                      <Segmentado opciones={[{ valor: "cuerpo", nombre: "Texto" }, { valor: "display", nombre: "Títulos" }]}
+                        valor={sel.diseno.fuente_texto} onChange={(v) => setD("fuente_texto", v)} />
+                    </div>
+                  </div>
+                  <div className="al-fila2">
+                    <div className="al-campo">
+                      <label>Tamaño del título</label>
+                      <Segmentado columnas={4} opciones={[{ valor: "ch", nombre: "Chico" }, { valor: "md", nombre: "Normal" }, { valor: "gd", nombre: "Grande" }, { valor: "xg", nombre: "XL" }]}
+                        valor={sel.diseno.tam_titulo} onChange={(v) => setD("tam_titulo", v)} />
+                    </div>
+                    <div className="al-campo">
+                      <label>Tamaño del texto</label>
+                      <Segmentado columnas={3} opciones={[{ valor: "ch", nombre: "Chico" }, { valor: "md", nombre: "Normal" }, { valor: "gd", nombre: "Grande" }]}
+                        valor={sel.diseno.tam_texto} onChange={(v) => setD("tam_texto", v)} />
+                    </div>
+                  </div>
+                  <div className="al-campo">
+                    <label>Alineación del contenido</label>
+                    <Segmentado columnas={3} opciones={[{ valor: "izquierda", nombre: "Izquierda" }, { valor: "centro", nombre: "Centro" }, { valor: "derecha", nombre: "Derecha" }]}
+                      valor={sel.diseno.alineacion} onChange={(v) => setD("alineacion", v)} />
+                  </div>
+                  {sel.formato === "banner" ? (
+                    <div className="al-campo">
+                      <label>Lado de la imagen/video</label>
+                      <Segmentado columnas={2} opciones={[{ valor: "izquierda", nombre: "Izquierda" }, { valor: "derecha", nombre: "Derecha" }]}
+                        valor={sel.diseno.media_lado} onChange={(v) => setD("media_lado", v)} />
+                    </div>
+                  ) : (
+                    <div className="al-campo">
+                      <label>Diseño de los cuadritos</label>
+                      <Segmentado columnas={3} opciones={[{ valor: "claro", nombre: "Claro" }, { valor: "vidrio", nombre: "Vidrio" }, { valor: "oscuro", nombre: "Oscuro" }]}
+                        valor={sel.diseno.cuadro_estilo} onChange={(v) => setD("cuadro_estilo", v)} />
+                    </div>
+                  )}
+                  <div className="al-campo">
+                    <label>Bordes</label>
+                    <Segmentado columnas={3} opciones={[{ valor: "suave", nombre: "Rectos" }, { valor: "medio", nombre: "Redondeados" }, { valor: "redondo", nombre: "Muy redondeados" }]}
+                      valor={sel.diseno.radio} onChange={(v) => setD("radio", v)} />
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="al-pie">
-              <label className="us-toggle al-toggle">
-                <input type="checkbox" checked={sel.activo} onChange={(e) => set("activo", e.target.checked)} />
-                <span className="us-toggle-tx"><b>{sel.activo ? "Visible en la página" : "Oculta"}</b></span>
-              </label>
+              <Interruptor activo={sel.activo} onChange={(v) => set("activo", v)}
+                etiqueta={sel.activo ? "Visible en la página" : "Oculta"} />
               <button type="button" className="boton mini al-quitar" onClick={() => quitar(sel.id)}>
                 <IconoPanel n="x" cls="ic-sm" /> Quitar alerta
               </button>

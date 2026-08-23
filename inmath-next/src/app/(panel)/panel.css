@@ -2246,3 +2246,127 @@ body::before { animation: none !important; }
 /* v82 fix — .disp-caja ya no es una tarjeta única flotante (max-width:660px de
    la versión anterior) sino uno de 3 pasos apilados en .disp-form-full (780px). */
 .disp-form-full .disp-caja { max-width: none; padding: 20px 22px; }
+
+/* =========================================================================
+   v83 — Banner de alertas RICO (estilo countdown/promo, referencia TripleTen):
+   fondo oscuro en degradado, kicker, título grande, cuenta regresiva opcional,
+   cuadrito de plan, marcador de ahorro y CTA — el mismo lenguaje visual que ya
+   tenía el emergente, ahora también disponible en el formato banner.
+   ========================================================================= */
+.alb { position: relative; overflow: hidden; border-radius: var(--a-radio, 26px);
+  padding: clamp(22px, 4vw, 34px); display: flex; flex-direction: column; gap: 14px;
+  background: linear-gradient(135deg, var(--al-a), var(--al-b) 55%, var(--al-c));
+  color: #fff; box-shadow: 0 30px 60px -30px var(--al-sombra, rgba(0,0,0,.5)); text-align: var(--a-alin, left); }
+.alb-media { position: absolute; inset: 0; z-index: 0; }
+.alb-media img, .alb-media video { width: 100%; height: 100%; object-fit: cover; opacity: .28; }
+.alb-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, var(--al-a), transparent 70%); opacity: .75; }
+.alb > *:not(.alb-media) { position: relative; z-index: 1; }
+.alb-kicker { display: inline-flex; align-self: var(--a-just, flex-start); align-items: center; gap: 8px;
+  font: 700 .72rem/1 var(--cuerpo); letter-spacing: .06em; text-transform: uppercase; color: #fff;
+  background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28);
+  padding: 7px 14px; border-radius: 999px; width: max-content; }
+.alb-kicker svg { width: 14px; height: 14px; }
+.alb-cuenta { display: flex; gap: 10px; align-self: var(--a-just, flex-start); }
+.alb-cuenta b { font: 800 1.4rem/1 var(--display); background: rgba(0,0,0,.22); padding: 6px 10px; border-radius: 10px; min-width: 2ch; text-align: center; display: inline-block; }
+.alb-cuenta small { display: block; font: 600 .6rem/1.6 var(--cuerpo); text-align: center; color: rgba(255,255,255,.75); text-transform: uppercase; }
+.alb-titulo { font-family: var(--a-f-tit, var(--display)); font-size: var(--a-tam-tit-em, clamp(1.8rem,5vw,3rem)); font-weight: 800;
+  line-height: 1.05; letter-spacing: -.03em; color: #fff; text-shadow: 0 3px 20px rgba(0,0,0,.3); margin: 0; }
+.alb-texto { font-family: var(--a-f-tx, var(--cuerpo)); font-size: var(--a-tam-tx, 1rem); color: rgba(255,255,255,.92); margin: 0; max-width: 56ch; }
+.alb-plan { width: min(420px, 100%); background: var(--a-cuadro-bg, rgba(255,255,255,.94)); border-radius: calc(var(--a-radio, 26px) * .55);
+  padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left;
+  box-shadow: 0 14px 34px -14px rgba(0,0,0,.5); align-self: var(--a-just, flex-start); }
+.alb-plan-info b { display: block; font: 700 .92rem/1.25 var(--display); color: var(--a-cuadro-fg, var(--tinta)); }
+.alb-plan-info span { font: 500 .74rem/1.4 var(--cuerpo); color: var(--a-cuadro-sub, var(--tinta-2)); }
+.alb-plan-precio { display: flex; align-items: baseline; gap: 7px; }
+.alb-plan-precio b { font: 800 1.5rem/1 var(--display); color: var(--a-cuadro-fg, var(--tinta)); }
+.alb-plan-precio s { font: 600 .8rem/1 var(--cuerpo); color: var(--a-cuadro-sub, var(--tinta-3)); }
+.alb-marcador { display: inline-block; align-self: var(--a-just, flex-start); font: 800 .85rem/1.25 var(--display); color: #2b1a00;
+  background: linear-gradient(100deg, #FFD86B, #F6A62A); padding: 6px 13px; border-radius: 8px; transform: rotate(-1deg);
+  box-shadow: 0 8px 20px -6px rgba(244,166,42,.55); width: max-content; }
+.alb-cta { display: inline-flex; align-self: var(--a-just, flex-start); align-items: center; gap: 8px; text-decoration: none;
+  padding: 13px 26px; border-radius: 999px; font: 800 .94rem var(--cuerpo); background: #fff; color: var(--tinta);
+  box-shadow: 0 14px 30px -10px rgba(0,0,0,.5); transition: transform .2s, box-shadow .2s; margin-top: 2px; }
+.alb-cta:hover { transform: translateY(-2px); box-shadow: 0 20px 38px -10px rgba(0,0,0,.6); }
+
+/* =========================================================================
+   v83 — Panel de alertas: rediseño paso a paso, controles custom (SIN
+   <select>/<checkbox> nativos), tarjetas de anuncios mejoradas.
+   ========================================================================= */
+
+/* ---- Segmentado: reemplaza <select> ---- */
+.seg { display: grid; grid-template-columns: repeat(auto-fit, minmax(76px, 1fr)); gap: 6px; margin-top: 6px; }
+.seg-op { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 8px; border-radius: 11px;
+  border: 1.5px solid var(--linea); background: #fff; color: var(--tinta-2); font: 600 .78rem/1.2 var(--cuerpo);
+  cursor: pointer; transition: border-color .18s, background .18s, color .18s; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seg-op:hover { border-color: var(--pino); }
+.seg-op.on { background: var(--pino); border-color: var(--pino); color: #fff; }
+.seg-op svg { width: 14px; height: 14px; flex: 0 0 auto; }
+
+/* ---- Interruptor custom: reemplaza <input type="checkbox"> ---- */
+.interr { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border-radius: 14px;
+  border: 1px solid var(--linea); background: #fff; cursor: pointer; text-align: left; margin-top: 8px; transition: border-color .18s, background .18s; }
+.interr:hover { border-color: var(--pino); }
+.interr.on { border-color: color-mix(in srgb, var(--pino) 45%, var(--linea)); background: color-mix(in srgb, var(--pino) 5%, #fff); }
+.interr-sw { width: 40px; height: 23px; border-radius: 999px; background: #CBD3E6; position: relative; flex: 0 0 auto; transition: background .2s; }
+.interr-sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 19px; height: 19px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
+.interr.on .interr-sw { background: var(--pino); }
+.interr.on .interr-sw::after { transform: translateX(17px); }
+.interr-tx { display: grid; gap: 1px; }
+.interr-tx b { font: 600 .88rem var(--cuerpo); color: var(--tinta); }
+.interr-tx i { font: 400 .76rem var(--cuerpo); color: var(--tinta-3); font-style: normal; }
+
+/* ---- Pasos del editor ---- */
+.al-editor { display: grid; gap: 22px; }
+.al-paso { border-top: 1px solid var(--linea); padding-top: 18px; }
+.al-paso:first-child { border-top: 0; padding-top: 0; }
+.al-paso-tit { display: flex; align-items: center; gap: 10px; font: 700 .96rem var(--display); color: var(--tinta); margin-bottom: 14px; }
+.al-paso-n { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; flex: 0 0 auto;
+  background: var(--pino); color: #fff; font: 800 .76rem var(--display); }
+.al-campo { display: grid; gap: 6px; margin-bottom: 12px; }
+.al-campo label { font: 600 .8rem var(--cuerpo); color: var(--tinta-2); }
+.al-campo input[type="text"], .al-campo input[type="datetime-local"] {
+  padding: 10px 12px; border-radius: 11px; border: 1.5px solid var(--linea-fuerte); font: 500 .9rem var(--cuerpo);
+  color: var(--tinta); background: #fff; }
+.al-campo input:focus-visible { outline: 2px solid var(--pino); outline-offset: 1px; }
+.al-fila2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 560px) { .al-fila2 { grid-template-columns: 1fr; } }
+.al-subseccion { font: 700 .7rem/1 var(--cuerpo); letter-spacing: .07em; text-transform: uppercase; color: var(--tinta-3); margin: 16px 0 4px; }
+.al-campo-anidado { margin: 6px 0 4px 14px; padding-left: 12px; border-left: 2px solid var(--linea); }
+
+/* ---- Paso 1: tarjetas de tipo (banner vs emergente) ---- */
+.al-tipo-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 560px) { .al-tipo-cards { grid-template-columns: 1fr; } }
+.al-tipo-card { display: grid; gap: 8px; padding: 16px; border-radius: 16px; border: 1.5px solid var(--linea);
+  background: #fff; cursor: pointer; text-align: left; transition: border-color .18s, box-shadow .18s; }
+.al-tipo-card:hover { border-color: var(--pino); }
+.al-tipo-card.on { border-color: var(--pino); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pino) 16%, transparent); }
+.al-tipo-card b { font: 700 .92rem var(--display); color: var(--tinta); }
+.al-tipo-card small { font: 400 .78rem/1.4 var(--cuerpo); color: var(--tinta-3); }
+.al-tipo-mini { display: block; height: 46px; border-radius: 10px; position: relative; overflow: hidden;
+  background: linear-gradient(135deg, #4D7FF0, #7C5CFF); }
+.al-tipo-mini-banner i { position: absolute; left: 8px; right: 8px; top: 50%; transform: translateY(-50%); height: 14px;
+  background: rgba(255,255,255,.9); border-radius: 4px; }
+.al-tipo-mini-em { display: grid; place-items: center; }
+.al-tipo-mini-em i { width: 26px; height: 18px; background: rgba(255,255,255,.9); border-radius: 4px; }
+
+/* ---- Diseño avanzado (colapsable) ---- */
+.al-avanzado-tog { display: flex; align-items: center; justify-content: space-between; width: 100%; background: none; border: 0; cursor: pointer; padding: 0; }
+.al-avanzado-caret { color: var(--tinta-3); font-size: .7rem; }
+.al-avanzado-cuerpo { display: grid; gap: 12px; margin-top: 14px; }
+
+/* ---- Tarjetas de anuncios creados: mini-preview en vez de solo un punto de color ---- */
+.al-tarj { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 18px; background: #fff;
+  border: 1.5px solid var(--linea); text-align: left; cursor: pointer; transition: transform .18s, box-shadow .18s, border-color .18s; }
+.al-tarj:hover { transform: translateY(-3px); box-shadow: 0 16px 34px -20px rgba(27,47,82,.35); }
+.al-tarj.sel { border-color: var(--pino); box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--pino) 30%, transparent); }
+.al-tarj-mini { position: relative; width: 64px; height: 46px; border-radius: 12px; flex: 0 0 auto; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 7px 8px; }
+.al-tarj-azul .al-tarj-mini  { background: linear-gradient(135deg, #4D7FF0, #7C5CFF); }
+.al-tarj-menta .al-tarj-mini { background: linear-gradient(135deg, #17A2B8, #3ED9B0); }
+.al-tarj-ambar .al-tarj-mini { background: linear-gradient(135deg, #E8590C, #FFB84D); }
+.al-tarj-coral .al-tarj-mini { background: linear-gradient(135deg, #E5568A, #9D6BFF); }
+.al-tarj-mini-kicker { width: 60%; height: 5px; border-radius: 3px; background: rgba(255,255,255,.55); }
+.al-tarj-mini-lineas { display: grid; gap: 3px; }
+.al-tarj-mini-lineas i { display: block; height: 5px; border-radius: 3px; background: rgba(255,255,255,.92); }
+.al-tarj-mini-lineas i:last-child { width: 65%; }
+.al-tarj-mini-boton { width: 34%; height: 8px; border-radius: 4px; background: #fff; align-self: flex-start; }
