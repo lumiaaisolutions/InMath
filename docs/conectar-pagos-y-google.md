@@ -1,9 +1,40 @@
 # Conectar MercadoPago (cobro automático) y Google Sign-In
 
-Guía operativa. Estado a 21-ago-2026: ambos **inactivos en producción** (degradan
-sin romper nada). El pago funciona hoy en **modo manual** (WhatsApp + subir
-comprobante, texto en config `datos_pago`). El login funciona con
-usuario/contraseña + wizard; el botón de Google se oculta solo si no hay credencial.
+Guía operativa. **Estado a 22-ago-2026: AMBOS ACTIVOS EN PRODUCCIÓN.**
+
+## MercadoPago — ✅ CONFIGURADO Y EN VIVO (22-ago-2026)
+
+El cliente compartió las credenciales de producción. Configurado en el VPS:
+- `MERCADOPAGO_ACCESS_TOKEN` y `MERCADOPAGO_WEBHOOK_SECRET` en `.env` (y su
+  copia `.next/standalone/.env`). **Los valores NO están en este repo ni en el
+  chat** — solo en el `.env` del servidor.
+- `procesador_pago_activo = mercadopago` en la tabla `configuraciones`.
+- `pm2 delete + start` para recargar el env.
+
+**Verificado (sin tocar datos reales ni completar ninguna compra):** llamada
+directa a la API de MercadoPago (`POST /checkout/preferences`) con el Access
+Token real → respondió `201` con un `init_point` válido de
+`mercadopago.com.mx` — confirma que el token es válido y la integración
+funciona de extremo a extremo.
+
+**Pagos reales que ya estaban pendientes** (creados en modo manual, antes de
+activar MercadoPago) recibirán su enlace de pago con tarjeta/OXXO
+**automáticamente la próxima vez que el alumno entre a su portal** — el botón
+"Pagar con tarjeta u OXXO" pasa de gris a activo solo, vía
+`asegurarLinkDePago()` (no hizo falta tocar esos registros a mano).
+
+**Pendiente de una prueba real de punta a punta:** por seguridad, no se
+completó ninguna compra real desde aquí (evita mover dinero real sin que el
+dueño lo presencie). Recomendado: el dueño hace una compra de bajo monto real
+(o con un alumno de prueba) para confirmar que el webhook marca el pago como
+confirmado y el portal se desbloquea solo.
+
+## Google Sign-In — ✅ activo desde el 21-ago-2026
+
+El pago funciona en **modo dual**: automático con MercadoPago (tarjeta/OXXO) o
+manual (WhatsApp + subir comprobante, texto en config `datos_pago`) — el
+alumno elige. El login funciona con usuario/contraseña + wizard; Google
+Sign-In está activo.
 
 Lo que el código espera (verificado en `src/lib/pagos-drivers.ts`,
 `src/lib/portal/google.ts`):
