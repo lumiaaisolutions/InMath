@@ -22,14 +22,28 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
   ] as const) {
     if (moduloPermitido(u, mod)) items.push({ href, texto, ic });
   }
+  // Los ítems de admin se agrupan en secciones DESPLEGABLES: así el sidebar no
+  // necesita scroll vertical (solo se expande la sección que se abre, y esa sí
+  // scrollea si el resultado no cabe en pantalla).
+  const grupos: { titulo: string; ic: string; items: { href: string; texto: string; ic: string }[] }[] = [];
   if (u.rol === "admin") {
-    items.push(
-      { href: "/panel/disponibilidad", texto: "Disponibilidad", ic: "reloj" },
-      { href: "/panel/materiales", texto: "Material del curso", ic: "prompts" },
-      { href: "/panel/alertas", texto: "Alertas de la página", ic: "alerta" },
-      { href: "/panel/usuarios", texto: "Usuarios", ic: "user" },
-      { href: "/panel/personalizar-login", texto: "Personalizar login", ic: "imagen" },
-      { href: "/panel/configuracion", texto: "Configuración", ic: "config" },
+    grupos.push(
+      {
+        titulo: "Contenido y sitio", ic: "imagen",
+        items: [
+          { href: "/panel/disponibilidad", texto: "Disponibilidad", ic: "reloj" },
+          { href: "/panel/materiales", texto: "Material del curso", ic: "prompts" },
+          { href: "/panel/alertas", texto: "Alertas de la página", ic: "alerta" },
+          { href: "/panel/personalizar-login", texto: "Personalizar login", ic: "imagen" },
+        ],
+      },
+      {
+        titulo: "Administración", ic: "config",
+        items: [
+          { href: "/panel/usuarios", texto: "Usuarios", ic: "user" },
+          { href: "/panel/configuracion", texto: "Configuración", ic: "config" },
+        ],
+      },
     );
   }
 
@@ -45,7 +59,7 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
           <img src="/img/inmath.svg" alt="" width={64} height={64} />
           <div><strong>Inmath CRM</strong><span>Cursos · Ventas</span></div>
         </div>
-        <NavPanel items={items} />
+        <NavPanel items={items} grupos={grupos} />
         <div className="pie perfil-widget">
           <span className="pw-avatar-lg">
             {foto ? <img src={foto} alt="" /> : u.nombre.charAt(0).toUpperCase()}

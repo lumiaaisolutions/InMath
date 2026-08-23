@@ -3720,3 +3720,10 @@ p.legal { min-height: 0 !important; background: none !important; padding: 0 !imp
 .alerta-menta { --al-a: #17A2B8; --al-b: #22C1A6; --al-c: #3ED9B0; --al-sombra: rgba(34,193,166,.6); }
 .alerta-ambar { --al-a: #E8590C; --al-b: #F6A62A; --al-c: #FFB84D; --al-sombra: rgba(232,89,12,.6); }
 .alerta-coral { --al-a: #E5568A; --al-b: #FF7A9C; --al-c: #9D6BFF; --al-sombra: rgba(229,86,138,.6); }
+
+/* v86 — Mathy: se "esconde" hacia el borde cerca del final de la página, para
+   no tapar botones/enlaces del footer o del final del contenido. */
+.agente-btn { transition: transform .35s cubic-bezier(.2,.7,.2,1), opacity .3s; }
+.agente-btn.recogido { transform: translateX(58%); opacity: .55; }
+.agente-btn.recogido:hover, .agente-btn.recogido:focus-visible { transform: translateX(0); opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .agente-btn { transition: opacity .2s; } .agente-btn.recogido { transform: none; } }

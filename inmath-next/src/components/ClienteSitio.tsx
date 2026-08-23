@@ -217,6 +217,21 @@ export function AgenteIA({ whatsappUrl = "", abrirInicial, sinBoton = false, sal
   useEffect(() => {
     if (abrirInicial === undefined) setAbierto(pathname === "/");
   }, [pathname, abrirInicial]);
+
+  // Cerca del final de la página (botones/footer que el botón flotante taparía):
+  // el botón se "esconde" hacia el borde derecho, dejando un filo visible/clicable.
+  const [cercaBorde, setCercaBorde] = useState(false);
+  useEffect(() => {
+    if (abierto) { setCercaBorde(false); return; }
+    const revisar = () => {
+      const restante = document.documentElement.scrollHeight - (window.scrollY + window.innerHeight);
+      setCercaBorde(restante < 130);
+    };
+    revisar();
+    window.addEventListener("scroll", revisar, { passive: true });
+    window.addEventListener("resize", revisar);
+    return () => { window.removeEventListener("scroll", revisar); window.removeEventListener("resize", revisar); };
+  }, [abierto, pathname]);
   const cerrar = () => {
     setCerrando(true);
     setTimeout(() => { setAbierto(false); setCerrando(false); setAmplio(false); }, 470);
@@ -270,7 +285,7 @@ export function AgenteIA({ whatsappUrl = "", abrirInicial, sinBoton = false, sal
   return (
     <div className={`agente-ia animo-${animo}${sinBoton ? " sin-boton" : ""}`}>
       {!sinBoton && (
-        <button type="button" className="agente-btn" aria-expanded={abierto} aria-label="Abrir a Mathy"
+        <button type="button" className={`agente-btn${cercaBorde ? " recogido" : ""}`} aria-expanded={abierto} aria-label="Abrir a Mathy"
           onClick={() => (abierto ? cerrar() : setAbierto(true))}>
           <MascotaMathy />
         </button>

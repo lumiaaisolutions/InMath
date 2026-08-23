@@ -22,13 +22,28 @@ export function EnBody({ children }: { children: React.ReactNode }) {
 }
 
 /** Nav del sidebar con estado activo por ruta (como _layout-inicio.php). */
-export function NavPanel({ items }: { items: { href: string; texto: string; ic: string }[] }) {
+type NavItem = { href: string; texto: string; ic: string };
+type NavGrupo = { titulo: string; ic: string; items: NavItem[] };
+
+const esActivo = (ruta: string, href: string) =>
+  href === "/panel" ? ruta === "/panel" || ruta.startsWith("/panel/prospectos") : ruta.startsWith(href);
+
+/** Sidebar: ítems frecuentes fijos + secciones DESPLEGABLES (admin) para que el
+ *  sidebar no necesite scroll vertical. Cada grupo se abre/cierra por su cuenta
+ *  y, si al abrirlo la lista no cabe en pantalla, esa lista sí puede scrollear. */
+export function NavPanel({ items, grupos = [] }: { items: NavItem[]; grupos?: NavGrupo[] }) {
   const ruta = usePathname();
   const [abierto, setAbierto] = useState(false);
-  // Cierra el menú (móvil) al cambiar de ruta.
+  const [grupoAbierto, setGrupoAbierto] = useState<string | null>(
+    () => grupos.find((g) => g.items.some((it) => esActivo(ruta, it.href)))?.titulo ?? null,
+  );
+  // Cierra el menú (móvil) al cambiar de ruta; mantiene abierto el grupo activo.
   useEffect(() => {
     setAbierto(false);
     document.querySelector(".sidebar")?.classList.remove("menu-abierto");
+    const activo = grupos.find((g) => g.items.some((it) => esActivo(ruta, it.href)));
+    if (activo) setGrupoAbierto(activo.titulo);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ruta]);
   const alternar = () => {
     const sb = document.querySelector(".sidebar");
@@ -42,16 +57,33 @@ export function NavPanel({ items }: { items: { href: string; texto: string; ic: 
         <IconoPanel n={abierto ? "x" : "menu"} />
       </button>
       <nav className="nav">
-      {items.map((it) => {
-        const activo = it.href === "/panel"
-          ? ruta === "/panel" || ruta.startsWith("/panel/prospectos")
-          : ruta.startsWith(it.href);
-        return (
-          <Link key={it.href} href={it.href} className={activo ? "activo" : ""}>
+        {items.map((it) => (
+          <Link key={it.href} href={it.href} className={esActivo(ruta, it.href) ? "activo" : ""}>
             <IconoPanel n={it.ic} />{it.texto}
           </Link>
-        );
-      })}
+        ))}
+        {grupos.map((g) => {
+          const activo = g.items.some((it) => esActivo(ruta, it.href));
+          const expandido = grupoAbierto === g.titulo;
+          return (
+            <div key={g.titulo} className={`nav-grupo${expandido ? " abierto" : ""}${activo ? " tiene-activo" : ""}`}>
+              <button type="button" className="nav-grupo-tit" aria-expanded={expandido}
+                onClick={() => setGrupoAbierto(expandido ? null : g.titulo)}>
+                <IconoPanel n={g.ic} />{g.titulo}
+                <span className="nav-grupo-caret" aria-hidden="true">▾</span>
+              </button>
+              <div className="nav-grupo-items">
+                <div className="nav-grupo-items-in">
+                  {g.items.map((it) => (
+                    <Link key={it.href} href={it.href} className={esActivo(ruta, it.href) ? "activo" : ""}>
+                      <IconoPanel n={it.ic} />{it.texto}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </nav>
     </>
   );
@@ -218,6 +250,21 @@ export function AgentePanelIA() {
   const lista = useRef<HTMLDivElement>(null);
   useEffect(() => { lista.current?.scrollTo(0, 1e6); }, [mensajes, abierto]);
 
+  // Cerca del final de la página: el botón se recoge hacia el borde para no
+  // tapar botones/enlaces (mismo comportamiento que en el sitio público).
+  const [cercaBorde, setCercaBorde] = useState(false);
+  useEffect(() => {
+    if (abierto) { setCercaBorde(false); return; }
+    const revisar = () => {
+      const restante = document.documentElement.scrollHeight - (window.scrollY + window.innerHeight);
+      setCercaBorde(restante < 130);
+    };
+    revisar();
+    window.addEventListener("scroll", revisar, { passive: true });
+    window.addEventListener("resize", revisar);
+    return () => { window.removeEventListener("scroll", revisar); window.removeEventListener("resize", revisar); };
+  }, [abierto]);
+
   async function enviar() {
     const m = texto.trim();
     if (!m || cargando) return;
@@ -234,7 +281,7 @@ export function AgentePanelIA() {
 
   return (
     <div className="agente-ia">
-      <button type="button" className="agente-btn" aria-expanded={abierto} aria-label="Abrir a Mathy, el asistente del panel"
+      <button type="button" className={`agente-btn${cercaBorde ? " recogido" : ""}`} aria-expanded={abierto} aria-label="Abrir a Mathy, el asistente del panel"
         onClick={() => setAbierto(!abierto)}>
         {libro}
       </button>

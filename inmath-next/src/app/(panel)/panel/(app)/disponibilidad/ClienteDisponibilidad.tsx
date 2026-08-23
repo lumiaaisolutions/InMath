@@ -41,9 +41,13 @@ export function ClienteDisponibilidad({ lunes, lunesActual, lunesProximo, actual
   { lunes: string; lunesActual: string; lunesProximo: string; actualDefinida: boolean; proximaDefinida: boolean; dias: Dias; definida: boolean }) {
   const toast = useToastResultado();
   const [dias, setDias] = useState<Dias>(diasIni);
+  // Referencia de lo YA GUARDADO (para saber si hay cambios sin guardar).
+  const [guardadoComo, setGuardadoComo] = useState(() => JSON.stringify(diasIni));
+  const sinCambios = JSON.stringify(dias) === guardadoComo;
   const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev, fd) => {
     const r = await guardarDisponibilidadAccion(prev, fd);
     toast(r);
+    if (r.ok) setGuardadoComo(JSON.stringify(dias));
     return r;
   }, {});
 
@@ -93,6 +97,11 @@ export function ClienteDisponibilidad({ lunes, lunesActual, lunesProximo, actual
           <i className={`disp-estado ${proximaDefinida ? "ok" : "base"}`}>{proximaDefinida ? "✓ Ajustada" : "⚠ Pendiente"}</i>
         </Link>
       </div>
+      <p className="disp-nota-rango">
+        <IconoPanel n="reloj" cls="ic-sm" /> <b>/agenda</b> siempre muestra los próximos 7 días desde hoy — si esos días
+        caen a caballo entre "esta semana" y "la próxima", verás el horario de ambas combinado. Por eso, si
+        solo ajustas una semana, los días de la otra usan el horario base hasta que también la definas.
+      </p>
       {!proximaDefinida && !esProxima && (
         <Link href={`/panel/disponibilidad?semana=${lunesProximo}`} className="disp-aviso-prox">
           <IconoPanel n="alerta" cls="ic-sm" /> Aún no defines la próxima semana ({rangoLabel(lunesProximo)}) — <b>defínela aquí</b> →
@@ -160,7 +169,9 @@ export function ClienteDisponibilidad({ lunes, lunesActual, lunesProximo, actual
         <div className="tarjeta disp-caja disp-paso3">
           <div className="disp-paso-tit"><span className="disp-paso-n">3</span> Guarda los cambios</div>
           <p className="disp-vacio" style={{ marginBottom: 14 }}>
-            Vas a guardar la disponibilidad de <b>{etiquetaSemana}</b> ({rangoLabel(lunes)}).
+            {sinCambios
+              ? <><IconoPanel n="check" cls="ic-sm" /> <b>{etiquetaSemana === "esta semana" ? "Esta semana" : etiquetaSemana === "la próxima semana" ? "La próxima semana" : "Esta semana"}</b> ya está guardada tal como se ve arriba ({rangoLabel(lunes)}). Puedes seguir editando y guardar de nuevo cuando quieras.</>
+              : <>Tienes cambios <b>sin guardar</b> para <b>{etiquetaSemana}</b> ({rangoLabel(lunes)}).</>}
           </p>
           <div className="disp-pie">
             <div className="disp-pie-nav">
@@ -169,7 +180,9 @@ export function ClienteDisponibilidad({ lunes, lunesActual, lunesProximo, actual
               )}
               <Link className="boton mini ghost" href={`/panel/disponibilidad?semana=${sumaDias(lunes, 7)}`}>Semana siguiente ›</Link>
             </div>
-            <button className="boton" disabled={pendiente}>{pendiente ? "Guardando…" : `Guardar ${etiquetaSemana}`}</button>
+            <button className={`boton${sinCambios ? " disp-guardado" : ""}`} disabled={pendiente || sinCambios}>
+              {pendiente ? "Guardando…" : sinCambios ? <><IconoPanel n="check" cls="ic-sm" /> Guardado</> : `Guardar ${etiquetaSemana}`}
+            </button>
           </div>
         </div>
       </form>

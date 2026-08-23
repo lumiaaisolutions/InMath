@@ -2370,3 +2370,50 @@ body::before { animation: none !important; }
 .al-tarj-mini-lineas i { display: block; height: 5px; border-radius: 3px; background: rgba(255,255,255,.92); }
 .al-tarj-mini-lineas i:last-child { width: 65%; }
 .al-tarj-mini-boton { width: 34%; height: 8px; border-radius: 4px; background: #fff; align-self: flex-start; }
+
+/* =========================================================================
+   v84 — Sidebar del panel: secciones DESPLEGABLES para que quepa sin scroll.
+   El sidebar mantiene overflow-y:auto como red de seguridad (solo scrollea
+   si de verdad no cabe, ej. viewport muy corto con un grupo abierto).
+   ========================================================================= */
+.nav-grupo { display: flex; flex-direction: column; }
+.nav-grupo-tit {
+  display: flex; align-items: center; gap: 11px; width: 100%; padding: 10px 12px; border-radius: var(--r-s);
+  background: none; border: 0; cursor: pointer; text-align: left;
+  font: 500 .87rem/1 var(--cuerpo); color: #AEBBDE; transition: background var(--transicion), color var(--transicion);
+}
+.nav-grupo-tit:hover { background: rgba(255,255,255,.08); color: #fff; }
+.nav-grupo-tit svg { width: 18px; height: 18px; flex: 0 0 auto; opacity: .8; }
+.nav-grupo-caret { margin-left: auto; font-size: .68rem; opacity: .7; transition: transform .2s ease; }
+.nav-grupo.abierto .nav-grupo-caret { transform: rotate(180deg); }
+.nav-grupo.tiene-activo .nav-grupo-tit { color: #fff; }
+.nav-grupo.tiene-activo .nav-grupo-tit svg { opacity: 1; }
+.nav-grupo-items {
+  display: grid; grid-template-rows: 0fr; overflow: hidden; padding-left: 14px;
+  transition: grid-template-rows .28s cubic-bezier(.2,.8,.2,1);
+}
+.nav-grupo-items > div, .nav-grupo-items { min-height: 0; }
+.nav-grupo.abierto .nav-grupo-items { grid-template-rows: 1fr; }
+.nav-grupo-items > * { min-height: 0; overflow: hidden; }
+.nav-grupo-items a {
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--r-s);
+  font: 500 .84rem/1 var(--cuerpo); color: #9DB0DE; border-left: 1.5px solid rgba(255,255,255,.12); margin-left: 8px;
+  transition: background var(--transicion), color var(--transicion);
+}
+.nav-grupo-items a:hover { background: rgba(255,255,255,.08); color: #fff; }
+.nav-grupo-items a.activo { background: rgba(107,159,255,.28); color: #fff; border-left-color: #D9E9FF; }
+.nav-grupo-items a svg { width: 16px; height: 16px; flex: 0 0 auto; opacity: .8; }
+
+/* v85 — Disponibilidad: indicador de "sin cambios / guardado" + nota de rango */
+.disp-guardado { background: var(--ok-suave) !important; color: var(--ok) !important; cursor: default; opacity: 1 !important;
+  display: inline-flex; align-items: center; gap: 7px; }
+.disp-guardado .ic-sm { width: 15px; height: 15px; }
+.disp-nota-rango { display: flex; align-items: flex-start; gap: 8px; font: 500 .82rem/1.5 var(--cuerpo); color: var(--tinta-3);
+  background: var(--crema-2); border-radius: 12px; padding: 10px 14px; margin: 0 0 20px; }
+.disp-nota-rango .ic-sm { width: 15px; height: 15px; flex: 0 0 auto; margin-top: 2px; color: var(--tinta-2); }
+
+/* v86 — Mathy (panel): mismo efecto de "esconderse" cerca del final de la página. */
+.agente-btn { transition: transform .35s cubic-bezier(.2,.7,.2,1), opacity .3s; }
+.agente-btn.recogido { transform: translateX(58%); opacity: .55; }
+.agente-btn.recogido:hover, .agente-btn.recogido:focus-visible { transform: translateX(0); opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .agente-btn { transition: opacity .2s; } .agente-btn.recogido { transform: none; } }
