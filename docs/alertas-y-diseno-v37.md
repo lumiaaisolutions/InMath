@@ -1,3 +1,79 @@
+# Fix agenda/disponibilidad, sidebar fijo, y rediseño de alertas (22-ago-2026, v80-v83)
+
+## 1) Fix crítico: /agenda ocultaba el resto de la semana
+
+**Síntoma reportado:** el admin definía horarios en `/panel/disponibilidad` pero
+no aparecían en `/agenda`, y el banner "Aún no defines la próxima semana"
+seguía apareciendo después de guardar.
+
+**Causa raíz real (verificada contra datos de producción):** `slotsDisponibles`
+se llamaba con un tope GLOBAL de slots (`max=12`) sin tope por día. Al definir
+horarios densos (cada hora de 8am a 8pm), el primer día (hoy) ya agotaba el
+`max` completo, y **el resto de la semana —incluida la semana próxima— nunca
+llegaba a evaluarse**, aunque sí estaba guardada correctamente en la BD.
+Confirmado con curl contra prod: con `max=12` solo aparecían slots de hoy y
+mañana; tras el fix, los 8 días del rango completo.
+
+**Fix (`src/lib/agenda.ts`, `src/app/(sitio)/agenda/page.tsx`):**
+`slotsDisponibles` ganó un tope **por día** (`maxPorDia=12`, independiente del
+`max` global) para que ningún día "se coma" el presupuesto de los siguientes.
+`/agenda` sube su `max` a 90 para cubrir la semana completa con el nuevo tope.
+
+**La segunda parte del reporte** (guardar "esta semana" y seguir viendo el
+banner de "próxima semana") **no era un bug** — el banner del dashboard es
+intencionalmente sobre la semana SIGUIENTE (para el recordatorio semanal), y el
+panel por defecto mostraba la semana ACTUAL. Confusión real de UX, resuelta en
+el punto 3.
+
+## 2) Fix: sidebar del panel se desplazaba con la página
+
+**Causa:** en `panel.css`, el bloque `.sidebar` declaraba `position: sticky`
+y, **más abajo en el mismo bloque**, `position: relative` lo anulaba (la
+última declaración gana). Se eliminó la duplicada. Auditado el resto de
+`panel.css`/`portal.css`/`inmath.css`: el patrón no se repite en otro lado.
+Los breakpoints móviles (v36, la regla vigente) ya usaban `sticky`
+explícitamente y no se vieron afectados por el bug (que era solo desktop).
+
+## 3) Rediseño paso a paso de /panel/disponibilidad
+
+- **Resumen "Esta semana" / "Próxima semana"** con estado (✓ Ajustada / ⚠
+  Pendiente) y navegación directa con un clic — resuelve la confusión del
+  punto 1: ahora se ve de inmediato cuál semana falta.
+- Aviso inline con enlace directo a definir la próxima semana si falta.
+- Flujo numerado: Paso 1 (días) → Paso 2 (horas) → Paso 3 (guardar).
+- El selector de horas dejó de ser un `<select>` con una hora a la vez: ahora
+  es un **grid de chips** (toggle) + **presets rápidos** (Mañana/Tarde/Todo el
+  día/Copiar a todos los días) — así se define un horario denso en 2 clics en
+  vez de ~20 selecciones manuales (la causa original del bug del punto 1).
+- Verificado E2E: definir la próxima semana hace desaparecer el banner del
+  dashboard; sin overflow horizontal en móvil.
+
+## 4) Rediseño de /panel/alertas: banner rico + controles custom + pasos
+
+- **Banner ("formato: banner") con diseño rico tipo countdown** (referencia
+  TripleTen): fondo en degradado oscuro por color, kicker, **cuenta regresiva
+  en vivo** (días/horas/min/seg hasta una fecha límite, nuevo campo
+  `mostrar_cuenta`/`fecha_limite`), cuadrito de plan con precio, marcador de
+  ahorro y CTA — el mismo lenguaje visual que ya tenía el formato "emergente",
+  ahora también en banner. Nuevas clases `.alb-*` (panel.css e inmath.css) y
+  componente `CuentaRegresiva.tsx`.
+- **Cero `<select>` y `<checkbox>` nativos** en el editor: nuevo componente
+  `Segmentado` (pastillas, reemplaza `<select>`) e `Interruptor` (switch
+  custom, reemplaza checkbox), usados en TODOS los campos.
+- **Flujo por pasos numerados**: 1) Tipo y dónde aparece (tarjetas visuales
+  banner vs. emergente), 2) Contenido, 3) Botón, 4) Diseño avanzado
+  (colapsable, oculto por defecto para no amontonar la vista).
+- **Tarjetas de anuncios creados** con mini-preview (gradiente del color +
+  líneas simuladas + botón) en vez de solo un punto de color.
+- Retrocompatible: `normalizaDiseno` autocompleta los campos nuevos en
+  alertas ya guardadas — verificado contra el dato real de producción
+  (alerta "emergente" existente siguió renderizando igual, sin cambios).
+- Verificado E2E en producción real: guardar → recargar → persiste; visible
+  en la landing pública (Playwright contra `inmath.lumiaaisolutions.com`,
+  sin errores de JS); sin overflow en móvil.
+
+---
+
 # Rediseño de la landing: hero cinematográfico, mega-menú, bento, comunidad, errores de marca (22-ago-2026, v71-v75)
 
 - **Header full-width sticky** (v71): la barra dejó de ser píldora flotante; ahora

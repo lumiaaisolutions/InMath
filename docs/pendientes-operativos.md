@@ -1,5 +1,33 @@
 # Operación: correos, MySQL y efectos — estado y pasos (17-ago-2026)
 
+## E4 — Agenda, disponibilidad, sidebar del panel y alertas (RESUELTO, 22-ago-2026)
+
+Ver el detalle técnico completo en `alertas-y-diseno-v37.md` (sección v80-v83).
+Resumen operativo:
+
+- **Fix crítico de agenda:** los horarios que el admin definía en
+  `/panel/disponibilidad` SÍ se guardaban bien, pero un límite técnico
+  (`max=12` slots sin tope por día) hacía que un solo día con horario denso
+  agotara el presupuesto y **ocultara el resto de la semana y toda la semana
+  siguiente** en `/agenda`. Corregido y verificado en producción: ahora
+  aparecen los 8 días del rango.
+- **`/panel/disponibilidad` rediseñada** paso a paso, con un resumen que
+  distingue claramente "Esta semana" vs. "Próxima semana" (la que importa
+  para el recordatorio) y un selector de horas por chips + presets rápidos
+  en vez de un `<select>` de una hora a la vez.
+- **Sidebar del panel** ya no se desplaza con la página (bug de CSS: una
+  declaración duplicada anulaba el `sticky`). Corregido y auditado en todo
+  el panel.
+- **`/panel/alertas` rediseñada:** el formato "banner" ahora tiene el mismo
+  diseño rico que "ventana emergente" (fondo en degradado, cuenta regresiva
+  en vivo opcional, cuadrito de plan, marcador de ahorro), el editor ya no
+  usa `<select>`/`checkbox` nativos, y quedó organizado en pasos numerados.
+
+**Todo desplegado y verificado en `inmath.lumiaaisolutions.com`** (no queda
+pendiente del dueño en este bloque).
+
+---
+
 Resumen de las fases E1–E3 y lo que queda en manos del dueño.
 
 ## E1 — Estabilidad de MySQL (RESUELTO, 17-ago-2026)
