@@ -868,3 +868,36 @@ Ver plan modular completo en `portal-fase-b.md`.
   punta a punta con el wizard en local (3 métodos con link forzado para ver el
   estado activo); build local y en VPS sin errores; rutas de recibo responden
   401/403 sin sesión en producción.
+
+## v68 — Logos reales en /pago + fix real de logout del portal (23-ago-2026, EN VIVO)
+
+- **Logos reales de marca:** las insignias "Mercado Pago" y "OXXO" en `/pago`
+  dejaron de ser wordmarks dibujados a mano y ahora usan los **logotipos
+  oficiales** — Mercado Pago vía simple-icons (librería open-source de iconos
+  de marca) y OXXO vía Wikimedia Commons (`File:Oxxo_Logo.svg`, dominio
+  público), ambos guardados como SVG propio en `public/img/pago/` y coloreados
+  con sus colores de marca. Verificado visualmente en el wizard local.
+- **Bug real de logout en el portal (encontrado y corregido):** el botón
+  "Salir" del portal del alumno regresaba al mismo lugar en vez de cerrar
+  sesión. Causa raíz: `res.cookies.delete({name, path})` en Next.js guarda por
+  **nombre** de cookie — dos llamadas al mismo nombre con distinto `path` se
+  **sobrescriben** entre sí en vez de sumarse, así que solo salía un
+  `Set-Cookie` (el del path de compatibilidad viejo, `/portal`) y nunca el del
+  path real de la cookie activa (`/`). El navegador nunca recibía la orden de
+  borrar la sesión real, y el login único (`/panel/login`) la seguía viendo
+  válida y rebotaba de regreso. Se corrigió el orden en
+  `src/lib/portal/sesion.ts` y `src/app/(portal)/portal/logout/route.ts` (la
+  llamada al path real va al final). Reproducido y verificado en local con
+  inspección directa de las peticiones de red — antes: `POST /portal/logout →
+  GET /panel/login 307 → GET /portal`; después: `POST /portal/logout → GET
+  /panel/login 200` (queda en el login, sesión cerrada de verdad).
+- **Correo con recibo PDF adjunto — verificado con envío real:** se disparó un
+  correo real de prueba (no simulado) a través del SMTP de producción con el
+  recibo/ticket en PDF adjunto — llegó correctamente.
+- **Precio de prueba temporal:** el curso "Curso Propedéutico InMath (Premium ·
+  8 meses)" (id 1, el que muestra `/pago` por defecto) se bajó a **$10 MXN** en
+  producción para que el dueño pueda hacer una compra real de bajo costo y
+  validar el flujo completo de Mercado Pago de punta a punta (pago → webhook →
+  inscripción → recibo). **Pendiente: regresar el precio a $4,000 MXN una vez
+  terminadas las pruebas** (`UPDATE cursos SET precio_centavos = 400000 WHERE
+  id = 1;`).
