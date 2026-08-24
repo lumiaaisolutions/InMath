@@ -10,18 +10,22 @@ export type DatosPagoPantalla = {
   pagoId: number; token: string; montoCentavos: number; moneda: string; link: string | null;
 };
 
-/** Insignia "Mercado Pago" (wordmark propio, sin usar el logotipo oficial). */
+/** Insignia "Mercado Pago" — logo oficial de marca (simple-icons, uso libre). */
 function InsigniaMercadoPago() {
   return (
-    <span className="pp-marca pp-marca-mp" aria-label="Mercado Pago">
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 1 1 9 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /><circle cx="12" cy="12" r="3" fill="currentColor" /></svg>
+    <span className="pp-marca pp-marca-mp">
+      <img src="/img/pago/mercadopago.svg" alt="" width={16} height={16} />
       Mercado Pago
     </span>
   );
 }
-/** Insignia "OXXO" (wordmark propio, sin usar el logotipo oficial). */
+/** Insignia "OXXO" — logo oficial de marca (Wikimedia Commons, dominio público). */
 function InsigniaOxxo() {
-  return <span className="pp-marca pp-marca-oxxo" aria-label="OXXO">OXXO</span>;
+  return (
+    <span className="pp-marca pp-marca-oxxo" aria-label="OXXO">
+      <img src="/img/pago/oxxo.svg" alt="" width={28} height={14} />
+    </span>
+  );
 }
 
 /** Pantalla para ELEGIR CÓMO PAGAR: tres métodos claramente separados — tarjeta

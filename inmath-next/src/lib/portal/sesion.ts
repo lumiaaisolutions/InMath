@@ -32,9 +32,11 @@ export async function crearSesionAlumno(alumnoId: number): Promise<void> {
 }
 
 export async function cerrarSesionAlumno(): Promise<void> {
+  // OJO: delete() guarda por NOMBRE — dos llamadas con el mismo nombre y
+  // distinto path se sobrescriben entre sí (solo sale un Set-Cookie). La
+  // cookie real vive en path "/", así que esa llamada va al final.
+  (await cookies()).delete({ name: COOKIE, path: "/portal" }); // compat: sesiones antiguas
   (await cookies()).delete({ name: COOKIE, path: "/" });
-  // Compat: limpia también sesiones antiguas emitidas con path /portal.
-  (await cookies()).delete({ name: COOKIE, path: "/portal" });
 }
 
 export type AlumnoPortal = {

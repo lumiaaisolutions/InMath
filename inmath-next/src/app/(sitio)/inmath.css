@@ -3738,10 +3738,10 @@ p.legal { min-height: 0 !important; background: none !important; padding: 0 !imp
 
 .pp-marca { display: inline-flex; align-items: center; gap: 5px; font: 800 .68rem/1 var(--cuerpo); letter-spacing: .01em;
   padding: 4px 9px 4px 7px; border-radius: 999px; width: max-content; }
-.pp-marca svg { width: 12px; height: 12px; }
+.pp-marca img { display: block; }
 .pp-marca-mp { background: #EAF7FF; color: #009EE3; }
-.pp-marca-oxxo { background: #FCE4E3; color: #D52B1E; font-weight: 800; letter-spacing: .04em; }
-.pp-marcas-fila { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 1px; }
+.pp-marca-oxxo { background: #fff; border: 1px solid rgba(213,43,30,.18); padding: 3px 8px; }
+.pp-marcas-fila { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 1px; }
 
 .pp-seguro { display: flex; align-items: center; gap: 7px; justify-content: center; margin-top: 14px;
   font: 500 .78rem/1.3 var(--cuerpo); color: var(--tinta-3); }
