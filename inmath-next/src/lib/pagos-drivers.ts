@@ -69,7 +69,11 @@ const driverMercadoPago: ProcesadorPago = {
     if (res.status !== 201 || !datos.init_point) {
       throw new Error(`MercadoPago respondió ${res.status} al crear la preferencia: ${datos.message ?? JSON.stringify(datos).slice(0, 300)}`);
     }
-    return { link: datos.init_point, referencia_externa: String(datos.id) };
+    // OJO: referencia_externa debe ser el MISMO string que `external_reference`
+    // ("pago-{id}") — es lo único que el webhook puede usar para encontrar este
+    // pago de vuelta (el id de la preferencia de MP no viaja en la notificación
+    // de pago, así que guardarlo aquí lo dejaba imposible de emparejar).
+    return { link: datos.init_point, referencia_externa: `pago-${pago.id}` };
   },
   async verificarWebhook(headers, cuerpoCrudo) {
     const secreto = process.env.MERCADOPAGO_WEBHOOK_SECRET ?? "";
@@ -113,7 +117,8 @@ const driverMercadoPago: ProcesadorPago = {
     const pago = await res.json().catch(() => ({}));
     if (!pago.external_reference) return null;
     return {
-      referencia_externa: String(pago.external_reference).replace("pago-", ""),
+      // Debe coincidir EXACTO con lo que crearLink() guarda en referencia_externa.
+      referencia_externa: String(pago.external_reference),
       estado: pago.status === "approved" ? "pagado" : "fallido",
       metadatos: { origen: "mercadopago", mp_payment_id: pagoId, mp_status: pago.status ?? null },
     };
