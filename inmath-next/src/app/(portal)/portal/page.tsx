@@ -62,7 +62,7 @@ export default async function PortalInicio() {
     );
   }
 
-  const [proximaCita, reportes, materiales, avances, curso, asesoriasTomadas, pagoConfirmado] = await Promise.all([
+  const [proximaCita, reportes, materiales, avances, curso, asesoriasTomadas, pagoConfirmado, intentosPractica] = await Promise.all([
     prisma.citas.findFirst({
       where: { prospecto_id: alumno.prospecto_id, estado: { in: ["agendada", "confirmada"] }, inicio: { gte: ahora } },
       orderBy: { inicio: "asc" },
@@ -81,6 +81,7 @@ export default async function PortalInicio() {
     prisma.cursos.findUnique({ where: { id: alumno.curso_id }, select: { duracion_semanas: true } }),
     prisma.citas.count({ where: { prospecto_id: alumno.prospecto_id, estado: "completada" } }),
     prisma.pagos.findFirst({ where: { prospecto_id: alumno.prospecto_id, estado: "pagado" }, orderBy: { pagado_en: "desc" }, select: { id: true } }),
+    prisma.intentos_practica.count({ where: { alumno_id: alumno.id } }),
   ]);
 
   const primerNombre = alumno.nombre.split(" ")[0];
@@ -195,6 +196,11 @@ export default async function PortalInicio() {
           <Link className="pt-acceso" href="/portal/material">
             <span className="pt-acceso-ic pt-acceso-mat"><Icono n="book" /></span>
             <span className="pt-acceso-tx"><b>Material de tu curso</b><span>{materiales.length} recurso{materiales.length === 1 ? "" : "s"} disponible{materiales.length === 1 ? "" : "s"}</span></span>
+            <Icono n="arrow" />
+          </Link>
+          <Link className="pt-acceso" href="/portal/practica">
+            <span className="pt-acceso-ic pt-acceso-prac"><Icono n="check" /></span>
+            <span className="pt-acceso-tx"><b>Práctica de reactivos</b><span>{intentosPractica === 0 ? "Aún sin practicar" : `${intentosPractica} intento${intentosPractica === 1 ? "" : "s"}`}</span></span>
             <Icono n="arrow" />
           </Link>
           <Link className="pt-acceso" href="/portal/reportes">

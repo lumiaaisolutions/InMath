@@ -7,6 +7,7 @@ import { Icono } from "@/components/Icono";
 const ITEMS = [
   { key: "inicio", label: "Inicio", href: "/portal", icon: "route" },
   { key: "material", label: "Material", href: "/portal/material", icon: "list" },
+  { key: "practica", label: "Práctica", href: "/portal/practica", icon: "check" },
   { key: "reportes", label: "Reportes", href: "/portal/reportes", icon: "trend" },
   { key: "cuenta", label: "Mi cuenta", href: "/portal/cuenta", icon: "user" },
 ];
@@ -18,6 +19,7 @@ export function NavPortalHeader() {
   const activo =
     pathname === "/portal" ? "inicio"
     : pathname.startsWith("/portal/material") ? "material"
+    : pathname.startsWith("/portal/practica") ? "practica"
     : pathname.startsWith("/portal/reportes") ? "reportes"
     : pathname.startsWith("/portal/cuenta") ? "cuenta"
     : "inicio";
