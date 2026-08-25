@@ -2,10 +2,18 @@
 import Link from "next/link";
 import { Icono } from "./Icono";
 
+type Promo = { precioOriginal: number; texto: string | null } | null;
+
+const dinero = (centavos: number) => Math.round(centavos / 100).toLocaleString("en-US");
+
 /** Paquetes v39 (referencia "partnership"): dos tarjetas claras arriba y el
  *  plan recomendado como banda OSCURA de ancho completo con disponibilidad
- *  limitada y el descuento resaltado tipo marcador. */
-export function Planes({ precio, semanas, nombre }: { precio: string; semanas: number; nombre: string }) {
+ *  limitada y el descuento resaltado tipo marcador. La promoción (precio
+ *  tachado + texto) viene de `cursos` — configurable en /panel/precios,
+ *  ya no está escrita a mano. */
+export function Planes({ precio, precioCentavos, semanas, nombre, promo, moneda }: {
+  precio: string; precioCentavos: number; semanas: number; nombre: string; promo?: Promo; moneda?: string;
+}) {
   return (
     <div className="pk3-zona">
       <div className="pk3-confianza" aria-label="Garantías">
@@ -43,15 +51,15 @@ export function Planes({ precio, semanas, nombre }: { precio: string; semanas: n
       </div>
 
       <article className="pk3-banda">
-        <span className="pk3-limitado"><i /> Oferta por tiempo limitado</span>
+        {promo && <span className="pk3-limitado"><i /> {promo.texto ?? "Oferta por tiempo limitado"}</span>}
         <div className="pk3-banda-izq">
           <h3>{nombre || "Curso completo"}</h3>
           <p className="pk3-sub">Todo el curso con acompañamiento real, en un solo pago.</p>
           <div className="pk3-precio-banda">
             <b>{precio}</b>
-            <span className="pk3-viejo"><s>$4,500</s> MXN</span>
+            {promo && <span className="pk3-viejo"><s>${dinero(promo.precioOriginal)}</s> {moneda}</span>}
           </div>
-          <span className="pk3-marcador">Ahorras $500 inscribiéndote hoy</span>
+          {promo && <span className="pk3-marcador">Ahorras ${dinero(promo.precioOriginal - precioCentavos)} inscribiéndote hoy</span>}
           <Link className="pk3-cta-banda" href="/pago">Inscribirme ahora <Icono n="arrow" /></Link>
         </div>
         <ul className="pk3-banda-puntos">

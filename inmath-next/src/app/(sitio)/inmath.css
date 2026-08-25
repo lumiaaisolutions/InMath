@@ -3060,17 +3060,17 @@ body::before { animation: none !important; }
 /* EL SPLASH: halo multirradial estilo eyebrow, contenido detrás de la mascota */
 .agente-btn::after {
   content: "" !important; position: absolute; z-index: -1; pointer-events: none;
-  inset: -24% !important; left: -24%; top: -24%; right: -24%; bottom: -24%;
+  inset: -30% !important; left: -30%; top: -30%; right: -30%; bottom: -30%;
   background:
-    radial-gradient(closest-side, rgba(255,255,255,.92) 0%, rgba(255,255,255,.55) 40%, transparent 66%),
-    radial-gradient(58% 84% at 30% 34%, rgba(62,217,176,.6), transparent 70%),
-    radial-gradient(56% 80% at 70% 64%, rgba(107,159,255,.5), transparent 72%),
-    radial-gradient(52% 70% at 50% 52%, rgba(124,92,255,.36), transparent 74%) !important;
+    radial-gradient(closest-side, rgba(255,255,255,.5) 0%, rgba(255,255,255,.2) 35%, transparent 62%),
+    radial-gradient(58% 84% at 30% 34%, rgba(34,217,166,.9), transparent 72%),
+    radial-gradient(56% 80% at 70% 64%, rgba(76,126,240,.82), transparent 74%),
+    radial-gradient(52% 70% at 50% 52%, rgba(124,92,255,.6), transparent 76%) !important;
   border-radius: 50% !important;
-  filter: blur(7px) !important; opacity: .96 !important;
+  filter: blur(6px) !important; opacity: 1 !important;
   animation: mathySplash 5.5s ease-in-out infinite !important;
 }
-@keyframes mathySplash { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes mathySplash { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 /* Mathy RESALTA: launcher grande, mascota protagonista con halo claro. */
 .agente-btn { width: 120px !important; height: 120px !important; }
 .agente-btn .agente-libro { width: 116px !important; height: 116px !important; }
@@ -3724,8 +3724,12 @@ p.legal { min-height: 0 !important; background: none !important; padding: 0 !imp
 /* v86 — Mathy: se "esconde" hacia el borde cerca del final de la página, para
    no tapar botones/enlaces del footer o del final del contenido. */
 .agente-btn { transition: transform .35s cubic-bezier(.2,.7,.2,1), opacity .3s; }
-.agente-btn.recogido { transform: translateX(78%); opacity: .45; }
-.agente-btn.recogido:hover, .agente-btn.recogido:focus-visible { transform: translateX(0); opacity: 1; }
+/* v98: además de correrse hacia el borde, se ENCOGE — así el área clickeable
+   real (que sigue del tamaño del botón, aunque casi no se vea) no le queda
+   encima a botones/enlaces cercanos. opacity no reduce el área de clic, solo
+   lo visual, por eso hacía falta el scale. */
+.agente-btn.recogido { transform: translateX(85%) scale(.5); transform-origin: right center; opacity: .4; }
+.agente-btn.recogido:hover, .agente-btn.recogido:focus-visible { transform: translateX(0) scale(1); opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .agente-btn { transition: opacity .2s; } .agente-btn.recogido { transform: none; } }
 
 /* ============ v87 — Pantalla de pago: 3 métodos separados + insignias de marca ============ */
@@ -3746,3 +3750,15 @@ p.legal { min-height: 0 !important; background: none !important; padding: 0 !imp
 .pp-seguro { display: flex; align-items: center; gap: 7px; justify-content: center; margin-top: 14px;
   font: 500 .78rem/1.3 var(--cuerpo); color: var(--tinta-3); }
 .pp-seguro svg { width: 14px; height: 14px; color: #1E8F5E; flex: 0 0 auto; }
+
+/* v93 — Cupón de descuento en /pago */
+.pp-cupon-abrir { background: none; border: none; padding: 0; margin-top: 2px; font: 600 .8rem var(--cuerpo);
+  color: var(--azul-tinta, #4C7EF0); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; align-self: flex-start; }
+.pp-cupon { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; }
+.pp-cupon input[type="text"] { flex: 1; min-width: 160px; padding: 9px 12px; border-radius: 10px; border: 1.5px solid var(--linea);
+  font: 600 .85rem var(--cuerpo); text-transform: uppercase; }
+.pp-cupon-msg { flex-basis: 100%; font: 600 .78rem var(--cuerpo); }
+.pp-cupon-msg.error { color: var(--error, #E0424E); }
+.pp-cupon-msg.ok { color: var(--ok, #1E9E5E); }
+.pp-descuento { display: flex; align-items: center; gap: 6px; font: 600 .82rem var(--cuerpo); color: var(--ok, #1E9E5E); margin-top: -6px; }
+.pp-descuento svg { width: 14px; height: 14px; }

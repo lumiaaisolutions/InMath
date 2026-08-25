@@ -3,9 +3,10 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { ahoraPared } from "@/lib/fechas";
 import { upsertPorTelefono, normalizaTelefono } from "@/lib/prospectos";
-import { pagoParaProspecto, tokenPago, tokenPagoValido, guardarComprobante } from "@/lib/pagos";
+import { pagoParaProspecto, tokenPago, tokenPagoValido, guardarComprobante, asegurarLinkDePago } from "@/lib/pagos";
 import { enviarCorreo } from "@/lib/correo";
 import { passwordSegura } from "@/lib/password";
+import { validarYCalcularCupon } from "@/lib/precios";
 
 export type EstadoRegistro = {
   error?: string;
@@ -139,6 +140,45 @@ export async function iniciarPago(_prev: EstadoPago, fd: FormData): Promise<Esta
       link: pago.link_pago, token: tokenPago(pago.id), nombre, yaPague,
     },
   };
+}
+
+export type EstadoCupon = {
+  error?: string;
+  ok?: { montoCentavos: number; moneda: string; descuentoCentavos: number; link: string | null };
+};
+
+/**
+ * Aplica un código de cupón a un pago pendiente: recalcula SIEMPRE contra el
+ * precio de lista del curso (no contra el monto actual del pago) para que
+ * volver a aplicar un cupón sea idempotente y no se puedan encimar descuentos.
+ * Si ya había un link de pago generado (monto viejo), se invalida para que se
+ * regenere con el monto correcto — MercadoPago no permite cambiar el importe
+ * de una preferencia ya creada.
+ */
+export async function aplicarCuponAccion(_prev: EstadoCupon, fd: FormData): Promise<EstadoCupon> {
+  const pagoId = parseInt(String(fd.get("pago_id") ?? "0"), 10);
+  const token = String(fd.get("token") ?? "");
+  const codigo = String(fd.get("codigo") ?? "");
+  if (!pagoId || !tokenPagoValido(pagoId, token)) return { error: "La sesión expiró, recarga la página." };
+
+  const pago = await prisma.pagos.findUnique({ where: { id: pagoId } });
+  if (!pago || pago.estado !== "pendiente") return { error: "Ese pago ya no admite cambios." };
+  const curso = await prisma.cursos.findUnique({ where: { id: pago.curso_id } });
+  if (!curso) return { error: "No encontramos el curso de este pago." };
+
+  const r = await validarYCalcularCupon(codigo, curso.id, curso.precio_centavos);
+  if (!r.ok) return { error: r.error };
+
+  await prisma.pagos.update({
+    where: { id: pagoId },
+    data: {
+      monto_centavos: r.montoFinalCentavos, descuento_centavos: r.descuentoCentavos, cupon_id: r.cuponId,
+      link_pago: null, referencia_externa: null, link_generado_en: null,
+    },
+  });
+  const link = await asegurarLinkDePago(pagoId);
+
+  return { ok: { montoCentavos: r.montoFinalCentavos, moneda: curso.moneda, descuentoCentavos: r.descuentoCentavos, link } };
 }
 
 /** Port del POST accion=comprobante de pago.php (el token sustituye a la sesión). */

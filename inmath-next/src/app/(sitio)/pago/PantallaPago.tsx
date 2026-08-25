@@ -1,8 +1,8 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { Icono } from "@/components/Icono";
-import { subirComprobante, type EstadoComprobante } from "./actions";
+import { subirComprobante, aplicarCuponAccion, type EstadoComprobante, type EstadoCupon } from "./actions";
 
 const money = (c: number) => (c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -28,6 +28,39 @@ function InsigniaOxxo() {
   );
 }
 
+/** Campo de código de cupón — recalcula el monto en el SERVIDOR y devuelve el
+ *  nuevo total + un link de pago regenerado (si aplica), nunca confía en un
+ *  descuento calculado en el navegador. */
+function CampoCupon({ pago, onAplicado }: {
+  pago: DatosPagoPantalla; onAplicado: (r: { montoCentavos: number; moneda: string; link: string | null; descuentoCentavos: number }) => void;
+}) {
+  const [abierto, setAbierto] = useState(false);
+  const [estado, accion, pendiente] = useActionState<EstadoCupon, FormData>(async (prev, fd) => {
+    const r = await aplicarCuponAccion(prev, fd);
+    if (r.ok) onAplicado(r.ok);
+    return r;
+  }, {});
+
+  if (!abierto) {
+    return (
+      <button type="button" className="pp-cupon-abrir" onClick={() => setAbierto(true)}>
+        ¿Tienes un código de cupón?
+      </button>
+    );
+  }
+
+  return (
+    <form action={accion} className="pp-cupon">
+      <input type="hidden" name="pago_id" value={pago.pagoId} />
+      <input type="hidden" name="token" value={pago.token} />
+      <input type="text" name="codigo" placeholder="Código de cupón" maxLength={40} autoCapitalize="characters" required />
+      <button type="submit" className="boton mini" disabled={pendiente}>{pendiente ? "Aplicando…" : "Aplicar"}</button>
+      {estado.error && <span className="pp-cupon-msg error">{estado.error}</span>}
+      {estado.ok && <span className="pp-cupon-msg ok">¡Cupón aplicado! Ahorraste ${money(estado.ok.descuentoCentavos)}.</span>}
+    </form>
+  );
+}
+
 /** Pantalla para ELEGIR CÓMO PAGAR: tres métodos claramente separados — tarjeta
  *  en línea, efectivo en OXXO (ambos vía Mercado Pago) y transferencia manual
  *  con comprobante. La usa el wizard tras crear la cuenta y el alumno ya
@@ -36,6 +69,8 @@ export function PantallaPago({ pago, cursoNombre, nombre, datosPago, saludoInici
   pago: DatosPagoPantalla; cursoNombre: string; nombre: string; datosPago: string; saludoInicial?: boolean;
 }) {
   const [comp, compAccion, compPend] = useActionState<EstadoComprobante, FormData>(subirComprobante, {});
+  const [pagoActual, setPagoActual] = useState(pago);
+  const [descuentoAplicado, setDescuentoAplicado] = useState<number | null>(null);
 
   if (comp.ok) {
     return (
@@ -56,15 +91,25 @@ export function PantallaPago({ pago, cursoNombre, nombre, datosPago, saludoInici
 
       <div className="pp-resumen">
         <span>{cursoNombre}</span>
-        <b>${money(pago.montoCentavos)} {pago.moneda}</b>
+        <b>${money(pagoActual.montoCentavos)} {pagoActual.moneda}</b>
       </div>
+      {descuentoAplicado !== null && (
+        <div className="pp-descuento"><Icono n="check" /> Cupón aplicado — ahorraste ${money(descuentoAplicado)} {pagoActual.moneda}</div>
+      )}
+      <CampoCupon
+        pago={pagoActual}
+        onAplicado={(r) => {
+          setPagoActual((p) => ({ ...p, montoCentavos: r.montoCentavos, moneda: r.moneda, link: r.link }));
+          setDescuentoAplicado(r.descuentoCentavos);
+        }}
+      />
 
       <p className="pp-titulo">Elige tu método de pago</p>
 
       <div className="pp-metodos">
         {/* Método 1: Tarjeta en línea, vía Mercado Pago */}
-        {pago.link ? (
-          <a className="pp-metodo pp-metodo-online" href={pago.link}>
+        {pagoActual.link ? (
+          <a className="pp-metodo pp-metodo-online" href={pagoActual.link}>
             <span className="pp-metodo-ic pp-ic-tarjeta"><Icono n="card" /></span>
             <span className="pp-metodo-tx">
               <b>Pagar con tarjeta</b>
@@ -81,8 +126,8 @@ export function PantallaPago({ pago, cursoNombre, nombre, datosPago, saludoInici
         )}
 
         {/* Método 2: Efectivo en tienda OXXO, vía Mercado Pago */}
-        {pago.link ? (
-          <a className="pp-metodo pp-metodo-online pp-metodo-oxxo" href={pago.link}>
+        {pagoActual.link ? (
+          <a className="pp-metodo pp-metodo-online pp-metodo-oxxo" href={pagoActual.link}>
             <span className="pp-metodo-ic pp-ic-oxxo"><Icono n="chat" /></span>
             <span className="pp-metodo-tx">
               <b>Pagar en efectivo (OXXO)</b>
@@ -109,8 +154,8 @@ export function PantallaPago({ pago, cursoNombre, nombre, datosPago, saludoInici
           </div>
           <p className="pp-datos">{datosPago}</p>
           <form action={compAccion} className="formulario pp-form">
-            <input type="hidden" name="pago_id" value={pago.pagoId} />
-            <input type="hidden" name="token" value={pago.token} />
+            <input type="hidden" name="pago_id" value={pagoActual.pagoId} />
+            <input type="hidden" name="token" value={pagoActual.token} />
             <div className="campo">
               <label htmlFor="comprobante">Sube tu comprobante (foto o PDF)</label>
               <input type="file" id="comprobante" name="comprobante" accept=".jpg,.jpeg,.png,.webp,.pdf" required />

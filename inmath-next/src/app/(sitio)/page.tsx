@@ -5,13 +5,15 @@ import { CtaForm } from "@/components/ClienteSitio";
 import { Planes } from "@/components/Planes";
 import { AlertasLanding, AlertaEmergenteLanding } from "@/components/AlertasLanding";
 import { Faq } from "@/components/Faq";
+import { promocionVigente } from "@/lib/precios";
 
 export const dynamic = "force-dynamic";
 
 export default async function Landing() {
-  const curso = await prisma.cursos.findFirst({ where: { activo: true }, orderBy: { id: "asc" } });
+  const curso = await prisma.cursos.findFirst({ where: { activo: true }, orderBy: [{ orden: "asc" }, { id: "asc" }] });
   const precio = curso ? `$${Math.round(curso.precio_centavos / 100).toLocaleString("en-US")}` : "";
   const semanas = curso?.duracion_semanas ?? 12;
+  const promo = curso ? promocionVigente(curso) : null;
 
   return (
     <>
@@ -213,7 +215,7 @@ export default async function Landing() {
           <span className="eyebrow"><Icono n="card" cls="ic-ey" /> Planes</span>
           <h2 style={{ font: "700 clamp(1.7rem,3.6vw,2.6rem)/1.08 var(--display)", letterSpacing: "-.025em", marginTop: 14 }}>Elige cómo quieres empezar.</h2>
         </div>
-        <Planes precio={precio} semanas={semanas} nombre={curso?.nombre ?? ""} />
+        <Planes precio={precio} precioCentavos={curso?.precio_centavos ?? 0} semanas={semanas} nombre={curso?.nombre ?? ""} promo={promo} moneda={curso?.moneda ?? "MXN"} />
       </section>
 
       <section style={{ paddingTop: 0 }}>

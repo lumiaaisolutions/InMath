@@ -19,6 +19,7 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
     ["/panel/citas", "Citas", "calendar", "citas"],
     ["/panel/alumnos", "Alumnos", "alumnos", "alumnos"],
     ["/panel/pagos", "Pagos", "pagos", "pagos"],
+    ["/panel/reactivos", "Reactivos", "check", "reactivos"],
   ] as const) {
     if (moduloPermitido(u, mod)) items.push({ href, texto, ic });
   }
@@ -40,6 +41,7 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
       {
         titulo: "Administración", ic: "config",
         items: [
+          { href: "/panel/precios", texto: "Precios y promociones", ic: "pagos" },
           { href: "/panel/usuarios", texto: "Usuarios", ic: "user" },
           { href: "/panel/configuracion", texto: "Configuración", ic: "config" },
         ],

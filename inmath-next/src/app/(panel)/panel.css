@@ -2113,17 +2113,17 @@ body::before { animation: none !important; }
 .agente-btn::before { display: none !important; content: none !important; animation: none !important; }
 .agente-btn::after {
   content: "" !important; position: absolute; z-index: -1; pointer-events: none;
-  inset: -24% !important; left: -24%; top: -24%; right: -24%; bottom: -24%;
+  inset: -30% !important; left: -30%; top: -30%; right: -30%; bottom: -30%;
   background:
-    radial-gradient(closest-side, rgba(255,255,255,.92) 0%, rgba(255,255,255,.55) 40%, transparent 66%),
-    radial-gradient(58% 84% at 30% 34%, rgba(62,217,176,.6), transparent 70%),
-    radial-gradient(56% 80% at 70% 64%, rgba(107,159,255,.5), transparent 72%),
-    radial-gradient(52% 70% at 50% 52%, rgba(124,92,255,.36), transparent 74%) !important;
+    radial-gradient(closest-side, rgba(255,255,255,.5) 0%, rgba(255,255,255,.2) 35%, transparent 62%),
+    radial-gradient(58% 84% at 30% 34%, rgba(34,217,166,.9), transparent 72%),
+    radial-gradient(56% 80% at 70% 64%, rgba(76,126,240,.82), transparent 74%),
+    radial-gradient(52% 70% at 50% 52%, rgba(124,92,255,.6), transparent 76%) !important;
   border-radius: 50% !important;
-  filter: blur(7px) !important; opacity: .96 !important;
+  filter: blur(6px) !important; opacity: 1 !important;
   animation: mathySplash 5.5s ease-in-out infinite !important;
 }
-@keyframes mathySplash { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes mathySplash { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 .agente-btn { width: 116px !important; height: 116px !important; }
 .agente-btn .agente-libro { width: 112px !important; height: 112px !important; }
 @media (min-width: 900px) {
@@ -2414,6 +2414,137 @@ body::before { animation: none !important; }
 
 /* v86 — Mathy (panel): mismo efecto de "esconderse" cerca del final de la página. */
 .agente-btn { transition: transform .35s cubic-bezier(.2,.7,.2,1), opacity .3s; }
-.agente-btn.recogido { transform: translateX(78%); opacity: .45; }
-.agente-btn.recogido:hover, .agente-btn.recogido:focus-visible { transform: translateX(0); opacity: 1; }
+/* v98: además de correrse hacia el borde, se ENCOGE — así el área clickeable
+   real (que sigue del tamaño del botón, aunque casi no se vea) no le queda
+   encima a botones/enlaces cercanos. opacity no reduce el área de clic, solo
+   lo visual, por eso hacía falta el scale. */
+.agente-btn.recogido { transform: translateX(85%) scale(.5); transform-origin: right center; opacity: .4; }
+.agente-btn.recogido:hover, .agente-btn.recogido:focus-visible { transform: translateX(0) scale(1); opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .agente-btn { transition: opacity .2s; } .agente-btn.recogido { transform: none; } }
+
+/* v91 — Reactivos de práctica (Fase 5): carga de preguntas en el panel. */
+.rx-cab { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+.rx-opcion { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.rx-opcion input[type="text"] { flex: 1; }
+.rx-opcion input[type="radio"] { width: 16px; height: 16px; accent-color: var(--acento, #4C7EF0); flex: 0 0 auto; }
+.rx-quitar { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: none;
+  background: rgba(224,66,78,.1); color: #C9333F; flex: 0 0 auto; cursor: pointer; }
+.rx-quitar svg { width: 12px; height: 12px; }
+.rx-quitar:hover { background: rgba(224,66,78,.18); }
+button.gaje { border: none; cursor: pointer; }
+button.gaje:disabled { opacity: .6; cursor: default; }
+
+/* v94 — Precios y promociones (panel) */
+.pl-sep { height: 1px; background: var(--linea); margin: 6px 0; }
+
+/* =========================================================================
+   v96 — Sidebar mucho más llamativo: los grupos desplegables ("Contenido y
+   sitio", "Administración") usaban los colores del tema oscuro original
+   sobre el sidebar de vidrio BLANCO (v?? lo cambió a claro) — por eso casi
+   no se veían. Se corrige el color base y se le agrega identidad propia:
+   iconos grandes, animación de resorte en hover, estado activo con
+   degradado que salta a la vista, y el grupo abierto queda evidentemente
+   distinto (tinte + borde) para saber en qué apartado estás de un vistazo.
+   ========================================================================= */
+
+.sidebar .nav a, .sidebar .nav-grupo-tit, .sidebar .nav-grupo-items a {
+  position: relative;
+  transition: transform .24s cubic-bezier(.34,1.56,.64,1), background .22s ease, color .2s ease, box-shadow .22s ease, border-color .22s ease;
+}
+
+/* ---- Ítems de primer nivel (Pipeline, Citas, Alumnos, Pagos, Reactivos) ---- */
+.sidebar .nav a { font: 700 .9rem/1.1 var(--cuerpo) !important; padding: 12px 15px !important; gap: 13px !important; }
+.sidebar .nav a .ic { width: 24px !important; height: 24px !important; }
+.sidebar .nav a:hover { transform: translateX(5px) scale(1.02); box-shadow: 0 8px 20px -10px rgba(76,126,240,.4); }
+.sidebar .nav a:hover .ic { transform: scale(1.22) rotate(-6deg); }
+.sidebar .nav a.activo { transform: scale(1.015); }
+.sidebar .nav a.activo .ic { transform: scale(1.1); filter: drop-shadow(0 2px 5px rgba(0,0,0,.25)); }
+.sidebar .nav a:active { transform: scale(.96); }
+
+/* ---- Encabezados de grupo: antes casi invisibles (color de tema oscuro
+   sobre fondo claro) — ahora con tinte, borde punteado y mayúsculas. ---- */
+.sidebar .nav-grupo { margin-top: 8px; }
+.sidebar .nav-grupo-tit {
+  color: var(--tinta-2, #565D72) !important; font: 800 .74rem/1 var(--cuerpo) !important;
+  text-transform: uppercase; letter-spacing: .06em; padding: 12px 14px !important; gap: 11px !important;
+  border-radius: 14px !important; background: rgba(107,159,255,.07) !important;
+  border: 1.5px dashed rgba(107,159,255,.3);
+}
+.sidebar .nav-grupo-tit svg { width: 22px !important; height: 22px !important; opacity: 1 !important; color: #6B9FFF; }
+.sidebar .nav-grupo-tit:hover {
+  background: linear-gradient(135deg, rgba(107,159,255,.16), rgba(124,92,255,.12)) !important;
+  border-color: #6B9FFF; border-style: solid; color: #2E56D8 !important;
+  transform: translateX(4px);
+}
+.sidebar .nav-grupo-tit:hover svg { transform: scale(1.2) rotate(8deg); }
+.sidebar .nav-grupo.tiene-activo .nav-grupo-tit {
+  background: linear-gradient(135deg, rgba(76,126,240,.18), rgba(124,92,255,.14)) !important;
+  border-color: #4C7EF0; border-style: solid; color: #2E56D8 !important;
+}
+.sidebar .nav-grupo-caret { color: #6B9FFF; font-size: .8rem !important; transition: transform .32s cubic-bezier(.34,1.56,.64,1) !important; }
+.sidebar .nav-grupo.abierto .nav-grupo-tit { background: linear-gradient(135deg, #4C7EF0, #7C5CFF) !important; border-color: transparent; color: #fff !important; }
+.sidebar .nav-grupo.abierto .nav-grupo-tit svg { color: #fff; }
+.sidebar .nav-grupo.abierto .nav-grupo-caret { transform: rotate(180deg) scale(1.15); color: #fff; }
+
+/* ---- Ítems dentro del grupo: mismo problema de contraste, mismo arreglo. ---- */
+.sidebar .nav-grupo-items a { color: var(--tinta-2, #565D72) !important; border-left-color: rgba(107,159,255,.25) !important; font: 600 .84rem/1 var(--cuerpo) !important; }
+.sidebar .nav-grupo-items a svg { width: 18px !important; height: 18px !important; opacity: 1 !important; }
+.sidebar .nav-grupo-items a:hover { background: rgba(107,159,255,.12) !important; color: #2E56D8 !important; transform: translateX(4px); }
+.sidebar .nav-grupo-items a:hover svg { transform: scale(1.15); }
+.sidebar .nav-grupo-items a.activo { background: linear-gradient(135deg, #6B9FFF, #AFCFFF) !important; color: #fff !important; border-left-color: #fff !important; box-shadow: 0 6px 16px -6px rgba(107,159,255,.5); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar .nav a, .sidebar .nav-grupo-tit, .sidebar .nav-grupo-items a,
+  .sidebar .nav a .ic, .sidebar .nav-grupo-tit svg, .sidebar .nav-grupo-items a svg, .sidebar .nav-grupo-caret {
+    transition: none !important; transform: none !important;
+  }
+}
+
+/* =========================================================================
+   v97 — Precios y promociones: espaciado real (la tarjeta de curso heredaba
+   el layout horizontal de .al-tarj, pensado para otra cosa, y quedaba todo
+   pegado en una sola línea; el switch de Mercado Pago no tenía su propio
+   ancho/wrap y el texto se encimaba en pantallas angostas).
+   ========================================================================= */
+
+.pp-cursos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.pp-curso-tarj {
+  display: flex !important; flex-direction: column !important; align-items: stretch !important;
+  gap: 12px; padding: 18px; text-align: left; width: 100%;
+}
+.pp-curso-tarj-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pp-curso-tarj-cab b { font: 700 .96rem/1.35 var(--display); color: var(--tinta); }
+.pp-curso-tarj-precio { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+.pp-curso-tarj-precio b { font: 800 1.4rem var(--display); color: var(--tinta); letter-spacing: -.01em; }
+.pp-curso-tarj-precio s { font: 600 .82rem var(--cuerpo); color: var(--tinta-3); }
+.pp-curso-tarj-pie { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font: 600 .78rem var(--cuerpo); color: var(--tinta-2); }
+
+/* ---- Interruptores: texto con su propio espacio, sin encimarse con el switch ---- */
+.interr-tx { flex: 1 1 auto; min-width: 0; }
+.interr-tx i { display: block; margin-top: 2px; font: 400 .78rem/1.4 var(--cuerpo); color: var(--tinta-3); font-style: normal; }
+.pp-interr-ancho { width: 100%; padding: 16px 18px; gap: 16px; }
+.pp-interr-ancho .interr-sw { flex: 0 0 auto; }
+
+@media (max-width: 480px) {
+  .interr { flex-wrap: wrap; }
+  .interr-tx { flex-basis: 100%; }
+}
+
+/* Cupones: la tabla queda dentro de un <div> (no hijo directo de .tarjeta),
+   así que la regla `:has(> table.lista)` no la alcanza — se agrega scroll
+   horizontal explícito para que no rompa el layout en móvil. */
+.pp-cupones-scroll { overflow-x: auto; }
+
+/* v99 — Precios y promociones: .tarjeta NO trae padding propio (las otras
+   páginas del panel se ven bien porque usan tablas, y las celdas sí tienen su
+   propio padding) — aquí el contenido (títulos, switch, tarjetas de curso)
+   iba pegado al borde. Se agrega un padding real a esta sección. */
+.pp-panel { padding: 22px 24px 26px; }
+.pp-panel + .pp-panel { margin-top: 18px; }
+.pp-panel .pl-titulo { margin-bottom: 2px; }
+.pp-panel .pl-ayuda { margin-bottom: 16px; }
+.pp-cupones-scroll { margin: 0 -24px; padding: 0 24px; }
+@media (max-width: 560px) {
+  .pp-panel { padding: 18px 16px 20px; }
+  .pp-cupones-scroll { margin: 0 -16px; padding: 0 16px; }
+}
