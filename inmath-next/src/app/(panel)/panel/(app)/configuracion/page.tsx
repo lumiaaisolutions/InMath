@@ -1,50 +1,42 @@
 import type { Metadata } from "next";
-import { prisma } from "@/lib/db";
-import { requiereAdmin } from "@/lib/panel/sesion";
-import { AjusteFila } from "./ClienteConfiguracion";
+import { requiereSesion } from "@/lib/panel/sesion";
+import { avatarUrl } from "@/lib/panel/media";
+import { IconoPanel } from "@/components/IconoPanel";
+import { PerfilFotoForm, PerfilDatosForm, SalirPerfilBoton } from "../perfil/ClientePerfil";
 
 export const metadata: Metadata = { title: "Configuración — Inmath CRM" };
 export const dynamic = "force-dynamic";
 
-// Solo los ajustes que le sirven al cliente, en lenguaje claro (como el PHP).
-const AJUSTES: Record<string, [string, string]> = {
-  duracion_cita_minutos: ["Duración de la asesoría", "Minutos que dura cada cita agendada."],
-  horario_atencion: ["Horario de atención", "Días y horas en que se ofrecen citas para asesorías."],
-  max_slots_ofrecidos: ["Horarios que ofrece el bot", "Cuántas opciones de horario propone el asistente en cada mensaje."],
-  recordatorio_cita_horas: ["Recordatorio de cita", "Horas antes de la cita para enviar el recordatorio por WhatsApp."],
-  recuperacion_carrito_horas: ["Recordatorio de pago", "Horas de espera tras generar el link de pago antes de recordar al alumno."],
-};
-
 export default async function Configuracion() {
-  await requiereAdmin();
-  const configuraciones = await prisma.configuraciones.findMany({ orderBy: { clave: "asc" } });
-  const visibles = configuraciones.filter((c) => AJUSTES[c.clave]);
+  const yo = await requiereSesion();
+  const foto = await avatarUrl(yo.id);
 
   return (
     <>
       <div className="cabecera">
         <div>
           <h1>Configuración</h1>
-          <div className="sub">Los cambios aplican de inmediato</div>
+          <div className="sub">Tu cuenta — los cambios aplican de inmediato</div>
         </div>
       </div>
-      <div className="tarjeta">
-        <table className="lista">
-          <thead><tr><th style={{ width: 260 }}>Ajuste</th><th>Valor</th><th style={{ width: 90 }}></th></tr></thead>
-          <tbody>
-            {visibles.map((c) => (
-              <tr key={c.clave}>
-                <td>
-                  <div style={{ fontWeight: 600 }}>{AJUSTES[c.clave][0]}</div>
-                  <div style={{ font: "var(--t-mini)", color: "var(--tinta-3)", marginTop: 3 }}>{AJUSTES[c.clave][1]}</div>
-                </td>
-                <td colSpan={2}>
-                  <AjusteFila clave={c.clave} valor={c.valor} esHorario={c.clave === "horario_atencion"} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      <div className="perfil-rejilla">
+        <div className="tarjeta perfil-carta">
+          <div className="pc-banner" />
+          <PerfilFotoForm foto={foto} inicial={yo.nombre.charAt(0).toUpperCase()} />
+          <div className="pc-nombre">{yo.nombre}</div>
+          <div className="pc-chips">
+            <span className={`pw-chip ${yo.rol === "admin" ? "admin" : ""}`}>{yo.rol === "admin" ? "Administrador" : "Asesor"}</span>
+            <span className="pw-chip suave">{yo.email}</span>
+          </div>
+          <p className="pc-nota">Tu foto se recorta automáticamente en círculo. JPG, PNG o WebP de hasta 8 MB.</p>
+          <SalirPerfilBoton><IconoPanel n="logout" /> Cerrar sesión</SalirPerfilBoton>
+        </div>
+
+        <div className="tarjeta pl-tarjeta">
+          <h2 className="pl-titulo"><IconoPanel n="user" /> Mi cuenta</h2>
+          <PerfilDatosForm nombre={yo.nombre} telefono={yo.telefono ?? ""} />
+        </div>
       </div>
     </>
   );

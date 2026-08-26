@@ -12,6 +12,7 @@ export function AgendaForm({ rangoDias, grupos }: { rangoDias: DiaRango[]; grupo
   const [estado, accion, pendiente] = useActionState<EstadoAgenda, FormData>(agendarAccion, {});
   const primerDisponible = grupos[0]?.dia ?? "";
   const [diaActivo, setDiaActivo] = useState(primerDisponible);
+  const [slot, setSlot] = useState("");
   // El PHP solo anima la cabecera/slots al hacer clic, no en el primer render.
   const [interactuo, setInteractuo] = useState(false);
   const activo = rangoDias.find((r) => r.dia === diaActivo);
@@ -59,7 +60,7 @@ export function AgendaForm({ rangoDias, grupos }: { rangoDias: DiaRango[]; grupo
                     className={`cal-dia${r.disp ? " disp" : ""}${r.dia === diaActivo ? " activo" : ""}`}
                     disabled={!r.disp} aria-disabled={!r.disp || undefined}
                     aria-selected={r.dia === diaActivo}
-                    onClick={() => { setDiaActivo(r.dia); setInteractuo(true); }}>
+                    onClick={() => { setDiaActivo(r.dia); setInteractuo(true); setSlot(""); }}>
                     <span className="cd-sem">{r.sem}</span>
                     <b className="cd-num">{r.num}</b>
                   </button>
@@ -70,18 +71,19 @@ export function AgendaForm({ rangoDias, grupos }: { rangoDias: DiaRango[]; grupo
                   <div key={grupo.dia} className={`cal-grupo${interactuo ? " anima" : ""}`} data-dia={grupo.dia}>
                     <div className="slots">
                       {grupo.horas.map((h) => (
-                        <label key={h.inicio} className="slot">
-                          <input type="radio" name="slot" value={h.inicio} required />
+                        <button key={h.inicio} type="button" role="radio" aria-checked={slot === h.inicio}
+                          className={`slot${slot === h.inicio ? " on" : ""}`} onClick={() => setSlot(h.inicio)}>
                           <span>{h.hora}</span>
-                        </label>
+                        </button>
                       ))}
                     </div>
+                    <input type="hidden" name="slot" value={slot} />
                   </div>
                 )}
               </div>
             </div>
           </div>
-          <button type="submit" className="boton glow glow-halo bloque grande" disabled={pendiente}>
+          <button type="submit" className="boton glow glow-halo bloque grande" disabled={pendiente || !slot}>
             {pendiente ? "Agendando…" : "Confirmar mi cita"} <span className="flecha"><Icono n="arrow" /></span>
           </button>
         </form>

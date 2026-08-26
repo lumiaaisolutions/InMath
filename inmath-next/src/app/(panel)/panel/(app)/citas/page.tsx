@@ -67,7 +67,18 @@ export default async function Citas({ searchParams }: { searchParams: Promise<{ 
         <NuevaCitaBoton asesores={asesores} hoy={isoDia(ahoraPared())} />
       </div>
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
+      <div className="stat-fila">
+        <div className="stat-tarjeta" style={{ "--stat-col": "var(--pino)" } as React.CSSProperties}>
+          <span className="st-etq">Esta semana</span>
+          <span className="st-num">{citas.length}</span>
+        </div>
+        <div className="stat-tarjeta" style={{ "--stat-col": "var(--ok)" } as React.CSSProperties}>
+          <span className="st-etq">Con Meet</span>
+          <span className="st-num">{citas.filter((c) => c.meet_link).length}</span>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
         {asesores.map((a) => (
           <span key={a.id} className="gaje neutro">
             <span style={{ width: 9, height: 9, borderRadius: "50%", background: mapaColor.get(a.id), display: "inline-block" }} /> {a.nombre}
@@ -79,10 +90,10 @@ export default async function Citas({ searchParams }: { searchParams: Promise<{ 
         <div className="calendario" style={{ minWidth: 820 }}>
           <div />
           {dias.map((d) => (
-            <div key={isoDia(d)} className="dia-cab">{DIAS_SEM[d.getUTCDay()]} {fmt(d)}</div>
+            <div key={isoDia(d)} className={`dia-cab${isoDia(d) === isoDia(ahoraPared()) ? " hoy" : ""}`}>{DIAS_SEM[d.getUTCDay()]} {fmt(d)}</div>
           ))}
           {horas.map((h) => (
-            <FilaHora key={h} h={h} dias={dias} porCelda={porCelda} mapaColor={mapaColor} />
+            <FilaHora key={h} h={h} dias={dias} porCelda={porCelda} mapaColor={mapaColor} hoyIso={isoDia(ahoraPared())} />
           ))}
         </div>
       </div>
@@ -90,10 +101,11 @@ export default async function Citas({ searchParams }: { searchParams: Promise<{ 
   );
 }
 
-function FilaHora({ h, dias, porCelda, mapaColor }: {
+function FilaHora({ h, dias, porCelda, mapaColor, hoyIso }: {
   h: number; dias: Date[];
   porCelda: Map<string, { id: number; inicio: Date; estado: string; asesor_id: number; meet_link: string | null; prospectos: { id: number; nombre: string | null; telefono_whatsapp: string }; usuarios: { nombre: string } }[]>;
   mapaColor: Map<number, string>;
+  hoyIso: string;
 }) {
   return (
     <>
@@ -101,12 +113,15 @@ function FilaHora({ h, dias, porCelda, mapaColor }: {
       {dias.map((d) => {
         const clave = `${isoDia(d)} ${String(h).padStart(2, "0")}`;
         return (
-          <div key={clave} className="celda">
+          <div key={clave} className={`celda${isoDia(d) === hoyIso ? " hoy" : ""}`}>
             {(porCelda.get(clave) ?? []).map((c) => (
               <Link key={c.id} className="cita-bloque"
                 style={{ "--asesor-color": mapaColor.get(c.asesor_id) ?? "#3B6FF5" } as React.CSSProperties}
                 href={`/panel/prospectos/${c.prospectos.id}`} title={c.estado}>
-                {String(c.inicio.getUTCHours()).padStart(2, "0")}:{String(c.inicio.getUTCMinutes()).padStart(2, "0")} · {c.prospectos.nombre ?? c.prospectos.telefono_whatsapp}
+                <span className="cb-fila">
+                  <span className="cb-avatar">{c.usuarios.nombre.charAt(0).toUpperCase()}</span>
+                  {String(c.inicio.getUTCHours()).padStart(2, "0")}:{String(c.inicio.getUTCMinutes()).padStart(2, "0")} · {c.prospectos.nombre ?? c.prospectos.telefono_whatsapp}
+                </span>
                 <small>{c.usuarios.nombre}{c.meet_link ? " · Meet" : ""}</small>
               </Link>
             ))}

@@ -1,8 +1,9 @@
 "use client";
-import { useActionState, useRef, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { IconoPanel } from "@/components/IconoPanel";
-import { loginMediaSubirAccion, loginMediaMetaAccion, loginMediaBorrarAccion, type Resultado } from "../acciones";
-import { Velo, ConfirmarDialogo, useToastResultado } from "../ClientePanel";
+import { loginMediaSubirAccion, loginMediaMetaAccion, loginMediaBorrarAccion, loginMediaRecortarAccion, type Resultado } from "../acciones";
+import { Velo, ConfirmarDialogo, SelectorNumero, useToastResultado } from "../ClientePanel";
 
 export type SlideAdmin = {
   archivo: string; src: string; esVideo: boolean;
@@ -79,20 +80,12 @@ export function PersonalizarLogin({ slides, tituloDefecto, textoDefecto }: {
   );
 }
 
-/** Dropzone + ajuste de encuadre 4:5 con canvas (pan + zoom) — port del JS del PHP. */
-function SubirMedia() {
-  const toast = useToastResultado();
-  const [, accion] = useActionState<Resultado, FormData>(async (prev, fd) => {
-    const r = await loginMediaSubirAccion(prev, fd);
-    toast(r);
-    return r;
-  }, {});
-
-  const form = useRef<HTMLFormElement>(null);
-  const file = useRef<HTMLInputElement>(null);
+/**
+ * Encuadre 4:5 con canvas (pan + zoom) — reutilizable tanto para una foto recién
+ * elegida como para volver a recortar una ya guardada del carrusel.
+ */
+function EncuadreEditor({ archivo, onCancelar, onListo }: { archivo: File; onCancelar: () => void; onListo: (blob: Blob) => void }) {
   const lienzo = useRef<HTMLCanvasElement>(null);
-  const [activa, setActiva] = useState(false);
-  const [ajustando, setAjustando] = useState(false);
   const img = useRef<HTMLImageElement | null>(null);
   const est = useRef({ escBase: 1, z: 1, ox: 0, oy: 0 });
   const arrastre = useRef<{ x: number; y: number } | null>(null);
@@ -110,7 +103,7 @@ function SubirMedia() {
     ctx.drawImage(im, e.ox, e.oy, w, h);
   }
 
-  function abrirAjuste(archivo: File) {
+  useEffect(() => {
     const im = new Image();
     im.onload = () => {
       const c = lienzo.current!;
@@ -120,23 +113,11 @@ function SubirMedia() {
       e.ox = (c.width - im.naturalWidth * e.escBase) / 2;
       e.oy = (c.height - im.naturalHeight * e.escBase) / 2;
       img.current = im;
-      setAjustando(true);
       requestAnimationFrame(pintar);
     };
     im.src = URL.createObjectURL(archivo);
-  }
-
-  function alElegir() {
-    const f = file.current?.files?.[0];
-    if (!f) return;
-    if (/\.mp4$/i.test(f.name) || f.type === "video/mp4") { form.current?.requestSubmit(); return; }
-    abrirAjuste(f);
-  }
-
-  function cerrarAjuste() {
-    setAjustando(false); img.current = null;
-    if (file.current) file.current.value = "";
-  }
+    return () => URL.revokeObjectURL(im.src);
+  }, [archivo]);
 
   function usarFoto() {
     const im = img.current, c = lienzo.current;
@@ -147,20 +128,86 @@ function SubirMedia() {
     const e = est.current;
     const s = e.escBase * e.z * f;
     salida.getContext("2d")!.drawImage(im, e.ox * f, e.oy * f, im.naturalWidth * s, im.naturalHeight * s);
-    salida.toBlob((blob) => {
-      if (!blob || !file.current) return;
-      const dt = new DataTransfer();
-      dt.items.add(new File([blob], "encuadre.jpg", { type: "image/jpeg" }));
-      file.current.files = dt.files;
-      form.current?.requestSubmit();
-      cerrarAjuste();
-    }, "image/jpeg", 0.9);
+    salida.toBlob((blob) => { if (blob) onListo(blob); }, "image/jpeg", 0.9);
+  }
+
+  return (
+    <div className="aj-caja">
+      <canvas className="aj-lienzo" ref={lienzo} width={432} height={540}
+        onPointerDown={(e) => { arrastre.current = { x: e.clientX, y: e.clientY }; (e.target as HTMLElement).setPointerCapture(e.pointerId); }}
+        onPointerMove={(e) => {
+          if (!arrastre.current || !lienzo.current) return;
+          const r = lienzo.current.getBoundingClientRect(), f = lienzo.current.width / r.width;
+          est.current.ox += (e.clientX - arrastre.current.x) * f;
+          est.current.oy += (e.clientY - arrastre.current.y) * f;
+          arrastre.current = { x: e.clientX, y: e.clientY };
+          pintar();
+        }}
+        onPointerUp={() => { arrastre.current = null; }}
+        onPointerCancel={() => { arrastre.current = null; }}
+      />
+      <div className="aj-controles">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3M8 11h6" /></svg>
+        <input type="range" className="aj-zoom" min={100} max={250} value={zoom} aria-label="Acercar o alejar la foto"
+          onChange={(e) => {
+            const zNuevo = parseInt(e.target.value, 10) / 100;
+            const c = lienzo.current!, es = est.current;
+            const cx = c.width / 2, cy = c.height / 2;
+            es.ox = cx - (cx - es.ox) * (zNuevo / es.z);
+            es.oy = cy - (cy - es.oy) * (zNuevo / es.z);
+            es.z = zNuevo; setZoom(parseInt(e.target.value, 10));
+            pintar();
+          }} />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3M8 11h6M11 8v6" /></svg>
+      </div>
+      <p className="aj-nota">Arrastra la foto para encuadrarla y usa el control para acercar — así se verá en el login.</p>
+      <div className="aj-botones">
+        <button type="button" className="boton fantasma" onClick={onCancelar}>Cancelar</button>
+        <button type="button" className="boton primario" onClick={usarFoto}>Usar esta foto</button>
+      </div>
+    </div>
+  );
+}
+
+/** Dropzone + encuadre 4:5 para agregar fotos/videos nuevos al carrusel. */
+function SubirMedia() {
+  const toast = useToastResultado();
+  const [, accion] = useActionState<Resultado, FormData>(async (prev, fd) => {
+    const r = await loginMediaSubirAccion(prev, fd);
+    toast(r);
+    return r;
+  }, {});
+
+  const form = useRef<HTMLFormElement>(null);
+  const file = useRef<HTMLInputElement>(null);
+  const [activa, setActiva] = useState(false);
+  const [pendiente, setPendiente] = useState<File | null>(null);
+
+  function alElegir() {
+    const f = file.current?.files?.[0];
+    if (!f) return;
+    if (/\.mp4$/i.test(f.name) || f.type === "video/mp4") { form.current?.requestSubmit(); return; }
+    setPendiente(f);
+  }
+
+  function cancelarAjuste() {
+    setPendiente(null);
+    if (file.current) file.current.value = "";
+  }
+
+  function usarFoto(blob: Blob) {
+    if (!file.current) return;
+    const dt = new DataTransfer();
+    dt.items.add(new File([blob], "encuadre.jpg", { type: "image/jpeg" }));
+    file.current.files = dt.files;
+    form.current?.requestSubmit();
+    cancelarAjuste();
   }
 
   return (
     <>
       <form action={accion} ref={form}>
-        <label className={`pl-dropzone${activa ? " activa" : ""}`} style={{ display: ajustando ? "none" : undefined }}
+        <label className={`pl-dropzone${activa ? " activa" : ""}`} style={{ display: pendiente ? "none" : undefined }}
           onDragEnter={(e) => { e.preventDefault(); setActiva(true); }}
           onDragOver={(e) => { e.preventDefault(); setActiva(true); }}
           onDragLeave={(e) => { e.preventDefault(); setActiva(false); }}
@@ -174,49 +221,21 @@ function SubirMedia() {
           <span>o haz clic para elegir un archivo</span>
         </label>
       </form>
-      <div className="aj-caja" hidden={!ajustando}>
-        <canvas className="aj-lienzo" ref={lienzo} width={432} height={540}
-          onPointerDown={(e) => { arrastre.current = { x: e.clientX, y: e.clientY }; (e.target as HTMLElement).setPointerCapture(e.pointerId); }}
-          onPointerMove={(e) => {
-            if (!arrastre.current || !lienzo.current) return;
-            const r = lienzo.current.getBoundingClientRect(), f = lienzo.current.width / r.width;
-            est.current.ox += (e.clientX - arrastre.current.x) * f;
-            est.current.oy += (e.clientY - arrastre.current.y) * f;
-            arrastre.current = { x: e.clientX, y: e.clientY };
-            pintar();
-          }}
-          onPointerUp={() => { arrastre.current = null; }}
-          onPointerCancel={() => { arrastre.current = null; }}
-        />
-        <div className="aj-controles">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3M8 11h6" /></svg>
-          <input type="range" className="aj-zoom" min={100} max={250} value={zoom} aria-label="Acercar o alejar la foto"
-            onChange={(e) => {
-              const zNuevo = parseInt(e.target.value, 10) / 100;
-              const c = lienzo.current!, es = est.current;
-              const cx = c.width / 2, cy = c.height / 2;
-              es.ox = cx - (cx - es.ox) * (zNuevo / es.z);
-              es.oy = cy - (cy - es.oy) * (zNuevo / es.z);
-              es.z = zNuevo; setZoom(parseInt(e.target.value, 10));
-              pintar();
-            }} />
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3M8 11h6M11 8v6" /></svg>
-        </div>
-        <p className="aj-nota">Arrastra la foto para encuadrarla y usa el control para acercar — así se verá en el login.</p>
-        <div className="aj-botones">
-          <button type="button" className="boton fantasma" onClick={cerrarAjuste}>Cancelar</button>
-          <button type="button" className="boton primario" onClick={usarFoto}>Usar esta foto</button>
-        </div>
-      </div>
+      {pendiente && <EncuadreEditor archivo={pendiente} onCancelar={cancelarAjuste} onListo={usarFoto} />}
     </>
   );
 }
 
 /** Frame de edición por slide (texto en vivo + orden + borrar) — port del slideModal. */
 function EditarSlideModal({ slide, abierto, onCerrar }: { slide: SlideAdmin; abierto: boolean; onCerrar: () => void }) {
+  const router = useRouter();
   const [titulo, setTitulo] = useState(slide.titulo);
   const [texto, setTexto] = useState(slide.texto);
+  const [orden, setOrden] = useState(slide.orden);
   const [confirmar, setConfirmar] = useState(false);
+  const [recortando, setRecortando] = useState<File | null>(null);
+  const [cargandoRecorte, setCargandoRecorte] = useState(false);
+  const [guardandoRecorte, setGuardandoRecorte] = useState(false);
   const [, startBorrar] = useTransition();
   const toast = useToastResultado();
   const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev, fd) => {
@@ -226,6 +245,30 @@ function EditarSlideModal({ slide, abierto, onCerrar }: { slide: SlideAdmin; abi
     return r;
   }, {});
 
+  async function abrirRecorte() {
+    setCargandoRecorte(true);
+    try {
+      const res = await fetch(slide.src);
+      const blob = await res.blob();
+      setRecortando(new File([blob], slide.archivo, { type: blob.type || "image/jpeg" }));
+    } catch {
+      toast({ error: "No pudimos cargar la foto para recortarla" });
+    }
+    setCargandoRecorte(false);
+  }
+
+  async function guardarRecorte(blob: Blob) {
+    setGuardandoRecorte(true);
+    const fd = new FormData();
+    fd.set("archivo", slide.archivo);
+    fd.set("media", new File([blob], "encuadre.jpg", { type: "image/jpeg" }));
+    const r = await loginMediaRecortarAccion({}, fd);
+    toast(r);
+    setGuardandoRecorte(false);
+    setRecortando(null);
+    if (r.ok) { router.refresh(); onCerrar(); }
+  }
+
   return (
     <Velo abierto={abierto} onCerrar={onCerrar}>
       <div className="us-frame" role="dialog" aria-modal="true">
@@ -233,30 +276,44 @@ function EditarSlideModal({ slide, abierto, onCerrar }: { slide: SlideAdmin; abi
           <div className="us-quien"><b>Editar slide</b><span>Así se verá en el login</span></div>
           <button type="button" className="toast-x us-cerrar" aria-label="Cerrar" onClick={onCerrar}><IconoPanel n="x" /></button>
         </div>
-        <div className="plp-media slide-preview">
-          {slide.esVideo ? (
-            <video src={slide.src} autoPlay muted loop playsInline />
-          ) : (
-            <img src={slide.src} alt="" />
-          )}
-          <div className="plp-overlay">
-            <b className="sp-titulo">{titulo}</b>
-            <i className="sp-texto">{texto}</i>
-          </div>
-        </div>
-        <form action={accion} className="pl-form" style={{ marginTop: 14 }}>
-          <input type="hidden" name="archivo" value={slide.archivo} />
-          <label className="pl-campo">Título sobre la imagen
-            <input type="text" name="titulo" maxLength={60} value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Aprende a tu ritmo" /></label>
-          <label className="pl-campo">Texto de apoyo
-            <input type="text" name="texto" maxLength={120} value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Cursos con acompañamiento real." /></label>
-          <label className="pl-campo">Orden en el carrusel (1 = primero)
-            <input type="number" name="orden" min={1} max={99} defaultValue={slide.orden} style={{ width: 110 }} /></label>
-          <div className="us-pie"><button className="boton primario" disabled={pendiente}>{pendiente ? "Guardando…" : "Guardar slide"}</button></div>
-        </form>
-        <div className="us-eliminar-form">
-          <button className="boton peligro" onClick={() => setConfirmar(true)}>Eliminar del carrusel</button>
-        </div>
+
+        {recortando ? (
+          <EncuadreEditor archivo={recortando} onCancelar={() => setRecortando(null)} onListo={guardarRecorte} />
+        ) : (
+          <>
+            <div className="plp-media slide-preview">
+              {slide.esVideo ? (
+                <video src={slide.src} autoPlay muted loop playsInline />
+              ) : (
+                <img src={slide.src} alt="" />
+              )}
+              <div className="plp-overlay">
+                <b className="sp-titulo">{titulo}</b>
+                <i className="sp-texto">{texto}</i>
+              </div>
+            </div>
+            {!slide.esVideo && (
+              <button type="button" className="boton mini fantasma" style={{ marginTop: 10 }} disabled={cargandoRecorte || guardandoRecorte} onClick={abrirRecorte}>
+                {cargandoRecorte ? "Cargando…" : guardandoRecorte ? "Guardando recorte…" : "Editar recorte"}
+              </button>
+            )}
+            <form action={accion} className="pl-form" style={{ marginTop: 14 }}>
+              <input type="hidden" name="archivo" value={slide.archivo} />
+              <input type="hidden" name="orden" value={orden} />
+              <label className="pl-campo">Título sobre la imagen
+                <input type="text" name="titulo" maxLength={60} value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Aprende a tu ritmo" /></label>
+              <label className="pl-campo">Texto de apoyo
+                <input type="text" name="texto" maxLength={120} value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Cursos con acompañamiento real." /></label>
+              <label className="pl-campo">Orden en el carrusel (1 = primero)
+                <SelectorNumero valor={orden} onChange={setOrden} min={1} max={99} /></label>
+              <div className="us-pie"><button className="boton primario" disabled={pendiente}>{pendiente ? "Guardando…" : "Guardar slide"}</button></div>
+            </form>
+            <div className="us-eliminar-form">
+              <button className="boton peligro" onClick={() => setConfirmar(true)}>Eliminar del carrusel</button>
+            </div>
+          </>
+        )}
+
         <ConfirmarDialogo
           abierto={confirmar}
           texto="El archivo se quitará del carrusel del login."

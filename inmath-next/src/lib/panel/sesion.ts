@@ -78,6 +78,6 @@ export function moduloPermitido(u: UsuarioPanel | null, modulo: string): boolean
 
 export async function requiereModulo(modulo: string): Promise<UsuarioPanel> {
   const u = await requiereSesion();
-  if (!moduloPermitido(u, modulo)) redirect("/panel/perfil");
+  if (!moduloPermitido(u, modulo)) redirect("/panel/configuracion");
   return u;
 }

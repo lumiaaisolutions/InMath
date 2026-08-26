@@ -33,14 +33,29 @@ export default async function MaterialPage() {
         ) : (
           <div className="pt-mat-grid pt-rev" style={{ ["--d" as string]: "80ms" }}>
             {materiales.map((m) => (
-              <a className={`pt-mat pt-mat-${m.tipo}`} key={m.id} href={m.url} target="_blank" rel="noopener">
-                <span className="pt-mat-ic">
-                  <Icono n={m.tipo === "video" ? "video" : m.tipo === "documento" ? "file" : "route"} />
-                </span>
+              <article className={`pt-mat pt-mat-${m.tipo}`} key={m.id}>
+                {m.portada ? (
+                  <span className="pt-mat-portada"><img src={m.portada} alt="" /></span>
+                ) : (
+                  <span className="pt-mat-ic">
+                    <Icono n={m.tipo === "video" ? "video" : m.tipo === "documento" ? "file" : "route"} />
+                  </span>
+                )}
                 <span className="pt-mat-tipo">{TIPO_ETIQUETA[m.tipo]}</span>
                 <b className="pt-mat-titulo">{m.titulo}</b>
-                <span className="pt-mat-abrir">Abrir <Icono n="arrow" /></span>
-              </a>
+                {m.descripcion && <p className="pt-mat-desc">{m.descripcion}</p>}
+                {m.tipo === "enlace" ? (
+                  <a className="pt-mat-abrir" href={m.url} target="_blank" rel="noopener">Abrir <Icono n="arrow" /></a>
+                ) : (
+                  <div className="pt-mat-archivos">
+                    {m.archivos.map((a) => (
+                      <a key={a.url} className="pt-mat-archivo" href={a.url} target="_blank" rel="noopener">
+                        <Icono n="download" /> {a.nombre}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </article>
             ))}
           </div>
         )}

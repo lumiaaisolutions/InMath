@@ -3,7 +3,7 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { IconoPanel } from "@/components/IconoPanel";
 import { guardarDisponibilidadAccion } from "./acciones";
-import { useToastResultado } from "../ClientePanel";
+import { useToastResultado, SelectorDesplegable } from "../ClientePanel";
 import type { Resultado } from "../acciones";
 
 const DIAS: [string, string, string][] = [
@@ -74,6 +74,8 @@ export function ClienteDisponibilidad({ lunes, lunesActual, lunesProximo, actual
     });
 
   const diasActivos = DIAS.filter(([k]) => dias[k].on);
+  const [diaEditando, setDiaEditando] = useState<string | null>(null);
+  const diaActual = diasActivos.find(([k]) => k === diaEditando) ?? diasActivos[0] ?? null;
 
   return (
     <>
@@ -84,12 +86,23 @@ export function ClienteDisponibilidad({ lunes, lunesActual, lunesProximo, actual
         </div>
       </div>
 
+      <div className="stat-fila">
+        <div className="stat-tarjeta" style={{ "--stat-col": "var(--pino)" } as React.CSSProperties}>
+          <span className="st-etq">Días activos</span>
+          <span className="st-num">{diasActivos.length}</span>
+        </div>
+        <div className="stat-tarjeta" style={{ "--stat-col": "var(--ok)" } as React.CSSProperties}>
+          <span className="st-etq">Horarios abiertos</span>
+          <span className="st-num">{diasActivos.reduce((n, [k]) => n + dias[k].horas.length, 0)}</span>
+        </div>
+      </div>
+
       {/* Resumen de las próximas 2 semanas — para no confundir "esta semana" con "la próxima" */}
       <div className="disp-resumen">
-        <Link href={`/panel/disponibilidad?semana=${lunesActual}`} className={`disp-resumen-card${esActual ? " activa" : ""}`}>
+        <Link href={`/panel/disponibilidad?semana=${lunesActual}`} className={`disp-resumen-card${esActual ? " activa" : ""}${!actualDefinida ? " pendiente" : ""}`}>
           <span className="disp-resumen-tit"><IconoPanel n="reloj" cls="ic-sm" /> Esta semana</span>
           <b>{rangoLabel(lunesActual)}</b>
-          <i className={`disp-estado ${actualDefinida ? "ok" : "base"}`}>{actualDefinida ? "✓ Ajustada" : "Usando horario base"}</i>
+          <i className={`disp-estado ${actualDefinida ? "ok" : "base"}`}>{actualDefinida ? "✓ Ajustada" : "⚠ Sin horarios definidos"}</i>
         </Link>
         <Link href={`/panel/disponibilidad?semana=${lunesProximo}`} className={`disp-resumen-card${esProxima ? " activa" : ""}${!proximaDefinida ? " pendiente" : ""}`}>
           <span className="disp-resumen-tit"><IconoPanel n="reloj" cls="ic-sm" /> Próxima semana</span>
@@ -98,9 +111,10 @@ export function ClienteDisponibilidad({ lunes, lunesActual, lunesProximo, actual
         </Link>
       </div>
       <p className="disp-nota-rango">
-        <IconoPanel n="reloj" cls="ic-sm" /> <b>/agenda</b> siempre muestra los próximos 7 días desde hoy — si esos días
+        <IconoPanel n="reloj" cls="ic-sm" />
+        <span><b>/agenda</b> siempre muestra los próximos 7 días desde hoy — si esos días
         caen a caballo entre "esta semana" y "la próxima", verás el horario de ambas combinado. Por eso, si
-        solo ajustas una semana, los días de la otra usan el horario base hasta que también la definas.
+        solo ajustas una semana, los días de la otra semana <b>no ofrecerán ningún horario</b> hasta que también la definas.</span>
       </p>
       {!proximaDefinida && !esProxima && (
         <Link href={`/panel/disponibilidad?semana=${lunesProximo}`} className="disp-aviso-prox">
@@ -131,10 +145,25 @@ export function ClienteDisponibilidad({ lunes, lunesActual, lunesProximo, actual
           <div className="disp-paso-tit"><span className="disp-paso-n">2</span> Elige las horas de cada día activo</div>
           {diasActivos.length === 0 ? (
             <p className="disp-vacio">Activa al menos un día arriba para elegir sus horas.</p>
-          ) : (
-            <div className="disp-dias-horas">
+          ) : diaActual ? (
+            <>
+              <div className="disp-dia-selector">
+                <SelectorDesplegable sinVacio
+                  valor={diaActual[0]}
+                  onChange={setDiaEditando}
+                  opciones={diasActivos.map(([k, nombre]) => ({ valor: k, nombre: `${nombre} — ${dias[k].horas.length} horario${dias[k].horas.length === 1 ? "" : "s"}` }))}
+                />
+                <div className="disp-dia-chips">
+                  {diasActivos.map(([k, , letra]) => (
+                    <button key={k} type="button" className={`disp-dia-chip${k === diaActual[0] ? " on" : ""}${!dias[k].horas.length ? " vacio" : ""}`}
+                      onClick={() => setDiaEditando(k)} title={`${dias[k].horas.length} horarios`}>
+                      {letra}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {diasActivos.map(([k, nombre]) => (
-                <div key={k} className="disp-dia-bloque">
+                <div key={k} className="disp-dia-bloque" hidden={k !== diaActual[0]}>
                   <div className="disp-dia-bloque-cab">
                     <b>{nombre}</b>
                     <span className="disp-dia-bloque-cont">{dias[k].horas.length} horario{dias[k].horas.length === 1 ? "" : "s"}</span>
@@ -160,8 +189,8 @@ export function ClienteDisponibilidad({ lunes, lunesActual, lunesProximo, actual
                   {!dias[k].horas.length && <small className="disp-cerrado">Elige al menos una hora o desactiva este día.</small>}
                 </div>
               ))}
-            </div>
-          )}
+            </>
+          ) : null}
           {DIAS.filter(([k]) => !dias[k].on).map(([k]) => <input key={k} type="hidden" name={`on_${k}`} value="" />)}
         </div>
 
@@ -180,9 +209,9 @@ export function ClienteDisponibilidad({ lunes, lunesActual, lunesProximo, actual
               )}
               <Link className="boton mini ghost" href={`/panel/disponibilidad?semana=${sumaDias(lunes, 7)}`}>Semana siguiente ›</Link>
             </div>
-            <button className={`boton${sinCambios ? " disp-guardado" : ""}`} disabled={pendiente || sinCambios}>
-              {pendiente ? "Guardando…" : sinCambios ? <><IconoPanel n="check" cls="ic-sm" /> Guardado</> : `Guardar ${etiquetaSemana}`}
-            </button>
+            {sinCambios
+              ? <span className="disp-guardado-etq"><IconoPanel n="check" cls="ic-sm" /> Guardado</span>
+              : <button className="boton" disabled={pendiente}>{pendiente ? "Guardando…" : `Guardar ${etiquetaSemana}`}</button>}
           </div>
         </div>
       </form>

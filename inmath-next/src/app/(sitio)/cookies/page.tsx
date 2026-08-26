@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { GestionCookies } from "./GestionCookies";
 
-export const metadata: Metadata = { title: "Gestionar Cookies — Cursos InMath" };
+export const metadata: Metadata = { title: "Gestionar Cookies — Cursos InMath", alternates: { canonical: "/cookies" } };
 const CONTACTO = "cursosinmath@gmail.com";
 
 export default function Cookies() {

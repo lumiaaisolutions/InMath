@@ -8,7 +8,7 @@ import { alumnoActual } from "@/lib/portal/sesion";
 import { tienePagoConfirmado } from "@/lib/portal/auth";
 import { tokenPago, asegurarLinkDePago } from "@/lib/pagos";
 
-export const metadata: Metadata = { title: "Inscripción — Cursos Inmath" };
+export const metadata: Metadata = { title: "Inscripción — Cursos Inmath", alternates: { canonical: "/pago" } };
 export const dynamic = "force-dynamic";
 
 export default async function Pago({ searchParams }: { searchParams: Promise<{ correo?: string; nombre?: string; google?: string }> }) {

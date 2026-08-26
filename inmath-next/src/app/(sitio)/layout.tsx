@@ -9,7 +9,8 @@ const SITE = "https://inmath.lumiaaisolutions.com";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: "Cursos InMath — Aprende en línea a tu ritmo",
-  description: "Curso Propedéutico InMath: 100% en línea con asesorías 1 a 1 por videollamada, material incluido y reporte de tu avance cada semana. Oferta de inscripción por tiempo limitado.",
+  description: "Curso Propedéutico InMath: 100% en línea, asesorías 1 a 1 por videollamada, material incluido y reporte semanal de tu avance. Inscripción por tiempo limitado.",
+  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     url: SITE,

@@ -14,7 +14,7 @@ export default async function MaterialesPage() {
       <div className="cabecera">
         <div>
           <h1>Material del curso</h1>
-          <div className="sub">Enlaces (Drive, video, documento) que el alumno ve en su portal. Se guardan al dar clic en Guardar.</div>
+          <div className="sub">Sube archivos, agrega enlaces (Drive, YouTube) o ambos — esto es lo que el alumno ve en su portal. Se guarda al dar clic en Guardar.</div>
         </div>
       </div>
       <ClienteMateriales inicial={materiales} />

@@ -224,8 +224,12 @@ export function AgenteIA({ whatsappUrl = "", abrirInicial, sinBoton = false, sal
   useEffect(() => {
     if (abierto) { setCercaBorde(false); return; }
     const revisar = () => {
+      // Si la página completa cabe en la pantalla (sin nada que scrollear),
+      // "lo que falta" da ~0 y Mathy se recogía SIEMPRE, aunque el usuario
+      // nunca haya scrolleado — por eso "desaparecía" en páginas cortas.
+      const hayScroll = document.documentElement.scrollHeight > window.innerHeight + 40;
       const restante = document.documentElement.scrollHeight - (window.scrollY + window.innerHeight);
-      setCercaBorde(restante < 130);
+      setCercaBorde(hayScroll && restante < 130);
     };
     revisar();
     window.addEventListener("scroll", revisar, { passive: true });

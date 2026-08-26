@@ -5,7 +5,7 @@ import { ahoraPared, isoDia, diaSemanaN } from "@/lib/fechas";
 import { Icono, Malla } from "@/components/Icono";
 import { AgendaForm, type DiaRango, type GrupoDia } from "./AgendaForm";
 
-export const metadata: Metadata = { title: "Agendar asesoría — Cursos Inmath" };
+export const metadata: Metadata = { title: "Agendar asesoría — Cursos Inmath", alternates: { canonical: "/agenda" } };
 export const dynamic = "force-dynamic";
 
 const SEM_CORTA = ["", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];

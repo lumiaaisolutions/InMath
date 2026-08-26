@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Aviso de Privacidad — Cursos InMath",
   description: "Aviso de privacidad de Cursos InMath: qué datos recabamos, para qué los usamos y cómo ejercer tus derechos ARCO.",
+  alternates: { canonical: "/privacidad" },
 };
 
 const CONTACTO = "cursosinmath@gmail.com";

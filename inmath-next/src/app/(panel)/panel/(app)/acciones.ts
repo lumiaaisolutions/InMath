@@ -15,6 +15,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { cerrarSesion, requiereSesion, requiereAdmin, requiereModulo } from "@/lib/panel/sesion";
 import { dirImgPanel } from "@/lib/panel/media";
 import { inscribirPorPago } from "@/lib/inscripcion";
+import { enviarCorreo } from "@/lib/correo";
 
 export type Resultado = { ok?: string; error?: string };
 
@@ -135,7 +136,7 @@ export async function citaCrearAccion(_prev: Resultado, fd: FormData): Promise<R
   if (!nombre || !telefono || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(inicio)) {
     return { error: "Nombre, WhatsApp válido, fecha y hora son obligatorios" };
   }
-  const { prospecto } = await upsertPorTelefono(telefono, { nombre, fuente: "manual" });
+  const { prospecto } = await upsertPorTelefono(telefono, { nombre, fuente: "otro" });
   const asesorId = fd.get("asesor_id") ? parseInt(String(fd.get("asesor_id")), 10) : null;
   const meetLink = String(fd.get("meet_link") ?? "").trim();
   if (meetLink && !/^https?:\/\//i.test(meetLink)) {
@@ -157,7 +158,7 @@ export async function alumnoCrearAccion(_prev: Resultado, fd: FormData): Promise
   const telefono = normalizaTelefono(String(fd.get("telefono") ?? ""));
   const cursoId = parseInt(String(fd.get("curso_id") ?? "0"), 10);
   if (!nombre || !telefono || cursoId < 1) return { error: "Nombre, WhatsApp válido y curso son obligatorios" };
-  const { prospecto } = await upsertPorTelefono(telefono, { nombre, fuente: "manual" });
+  const { prospecto } = await upsertPorTelefono(telefono, { nombre, fuente: "otro" });
   await prisma.prospectos.update({ where: { id: prospecto.id }, data: { nombre, etapa: "inscrito" } });
   const ya = await prisma.alumnos.findUnique({ where: { prospecto_id: prospecto.id } });
   if (ya) return { error: "Ese teléfono ya está inscrito como alumno" };
@@ -176,7 +177,7 @@ export async function pagoCancelarAccion(pagoId: number): Promise<Resultado> {
     data: { estado: "cancelado" },
   });
   if (n.count === 0) return { error: "Ese pago ya no está pendiente" };
-  revalidatePath("/panel/pagos");
+  revalidatePath("/panel/alumnos");
   return { ok: "Pago cancelado" };
 }
 
@@ -202,21 +203,62 @@ export async function pagoAprobarAccion(pagoId: number): Promise<Resultado> {
   if (cred.passTmp) {
     aviso += ` Usuario: ${cred.usuario} · Contraseña temporal: ${cred.passTmp} — compártela por WhatsApp si no dejó correo.`;
   }
-  revalidatePath("/panel/pagos"); revalidatePath("/panel/alumnos"); revalidatePath("/panel");
+  revalidatePath("/panel/alumnos"); revalidatePath("/panel");
+  return { ok: aviso };
+}
+
+/**
+ * Dar de baja a un alumno: SOLO si nunca completó su pago y su pago más
+ * reciente quedó cancelado, o si ya se cumplió el periodo de su curso. Se
+ * revalida la elegibilidad en el servidor (nunca se confía en el botón del
+ * cliente) y se le avisa por correo, siempre.
+ */
+export async function alumnoBajaAccion(alumnoId: number): Promise<Resultado> {
+  await requiereModulo("alumnos");
+  const alumno = await prisma.alumnos.findUnique({
+    where: { id: alumnoId },
+    include: { cursos: { select: { nombre: true, duracion_semanas: true } }, prospectos: { select: { correo: true } } },
+  });
+  if (!alumno) return { error: "Alumno no encontrado" };
+  if (alumno.estado === "baja") return { error: "Ese alumno ya está dado de baja" };
+
+  const pagos = await prisma.pagos.findMany({ where: { prospecto_id: alumno.prospecto_id }, orderBy: { creado_en: "desc" } });
+  const algunPagoPagado = pagos.some((p) => p.estado === "pagado");
+  const masRecienteCancelado = pagos[0]?.estado === "cancelado";
+  const cursoTerminado = !!alumno.cursos.duracion_semanas
+    && ahoraPared().getTime() >= alumno.inscrito_en.getTime() + alumno.cursos.duracion_semanas * 7 * 86400_000;
+  const elegible = (!algunPagoPagado && masRecienteCancelado) || cursoTerminado;
+  if (!elegible) {
+    return { error: "Solo se puede dar de baja a un alumno sin pago completado (cancelado) o que ya terminó su curso." };
+  }
+
+  await prisma.alumnos.update({ where: { id: alumnoId }, data: { estado: "baja" } });
+
+  const correo = alumno.email ?? alumno.prospectos.correo;
+  let aviso = "Alumno dado de baja.";
+  if (correo) {
+    await enviarCorreo({
+      para: [correo],
+      asunto: "Tu inscripción en Cursos InMath fue dada de baja",
+      tono: "coral",
+      preheader: `Tu acceso a ${alumno.cursos.nombre} fue desactivado.`,
+      texto: [
+        `Hola ${alumno.nombre},`.replace(" ,", ","), "",
+        `Te informamos que tu inscripción a ${alumno.cursos.nombre} fue dada de baja` +
+          (cursoTerminado ? " porque el periodo de tu curso ya concluyó." : " porque no llegamos a confirmar tu pago."),
+      ].join("\n"),
+      destacado: "Si crees que esto es un error o quieres reinscribirte, contáctanos y con gusto te ayudamos.",
+    });
+    aviso += " Se le avisó por correo.";
+  } else {
+    aviso += " No tenía correo registrado, así que no se le pudo avisar por ese medio.";
+  }
+
+  revalidatePath("/panel/alumnos");
   return { ok: aviso };
 }
 
 /** Port de /accion/config (solo admin). */
-export async function configGuardarAccion(_prev: Resultado, fd: FormData): Promise<Resultado> {
-  const u = await requiereAdmin();
-  await prisma.configuraciones.update({
-    where: { clave: String(fd.get("clave") ?? "") },
-    data: { valor: String(fd.get("valor") ?? ""), actualizado_por: u.id },
-  });
-  revalidatePath("/panel/configuracion");
-  return { ok: "Configuración guardada" };
-}
-
 /** Port de /accion/usuario-crear. */
 export async function usuarioCrearAccion(_prev: Resultado, fd: FormData): Promise<Resultado> {
   await requiereAdmin();
@@ -246,14 +288,15 @@ export async function usuarioGuardarAccion(_prev: Resultado, fd: FormData): Prom
   const activo = fd.get("activo") != null;
   if (!nombre || !/.+@.+\..+/.test(email)) return { error: "Nombre y correo válidos son obligatorios" };
   if (uid === yo.id && (rol !== "admin" || !activo)) return { error: "No puedes quitarte el acceso a ti mismo" };
-  const modulosValidos = ["pipeline", "citas", "alumnos", "pagos"];
-  const modulos = fd.getAll("modulos").map(String).filter((m) => modulosValidos.includes(m));
+  const modulosValidos = ["pipeline", "citas", "alumnos", "pagos", "reactivos", "precios"];
+  const seleccionados = fd.getAll("modulos").map(String).filter((m) => modulosValidos.includes(m));
+  const modulos = seleccionados.length === modulosValidos.length ? Prisma.DbNull : seleccionados;
   await prisma.usuarios.update({
     where: { id: uid },
     data: {
       nombre, email, telefono: String(fd.get("telefono") ?? "").trim() || null,
       rol, activo, es_asesor: fd.get("es_asesor") != null,
-      modulos: modulos.length === modulosValidos.length ? Prisma.DbNull : modulos,
+      modulos,
     },
   });
   const password = String(fd.get("password") ?? "");
@@ -289,7 +332,7 @@ export async function perfilGuardarAccion(_prev: Resultado, fd: FormData): Promi
     if (p1 !== String(fd.get("password2") ?? "")) return { error: "Las contraseñas no coinciden" };
     await prisma.usuarios.update({ where: { id: yo.id }, data: { password_hash: await bcrypt.hash(p1, 12) } });
   }
-  revalidatePath("/panel/perfil");
+  revalidatePath("/panel/configuracion");
   return { ok: "Perfil actualizado" };
 }
 
@@ -306,7 +349,7 @@ export async function perfilFotoAccion(_prev: Resultado, fd: FormData): Promise<
       .resize(512, 512, { fit: "cover" }).jpeg({ quality: 88 })
       .toFile(path.join(dir, `${yo.id}.jpg`));
   } catch { return { error: "No pudimos procesar esa imagen" }; }
-  revalidatePath("/panel/perfil");
+  revalidatePath("/panel/configuracion");
   return { ok: "Foto de perfil actualizada" };
 }
 
@@ -408,6 +451,40 @@ export async function loginMediaSubirAccion(_prev: Resultado, fd: FormData): Pro
   }
   revalidatePath("/panel/personalizar-login"); revalidatePath("/panel/login");
   return { ok: "Archivo agregado al carrusel del login" };
+}
+
+/** Vuelve a encuadrar una imagen YA guardada del carrusel: guarda el nuevo recorte con nombre
+ *  nuevo (evita caché de navegador con la URL vieja), migra su título/texto/orden y borra la anterior. */
+export async function loginMediaRecortarAccion(_prev: Resultado, fd: FormData): Promise<Resultado> {
+  const u = await requiereAdmin();
+  const archivoAnterior = path.basename(String(fd.get("archivo") ?? ""));
+  const media = fd.get("media");
+  if (!archivoAnterior) return { error: "Archivo no encontrado" };
+  if (!(media instanceof File) || media.size === 0) return { error: "Elige un archivo válido" };
+  if (media.size > 25 * 1024 * 1024) return { error: "El archivo no puede pesar más de 25 MB" };
+
+  const dir = path.join(dirImgPanel(), "login");
+  await mkdir(dir, { recursive: true });
+  const ahora = ahoraPared();
+  const base = `${ahora.toISOString().slice(0, 10).replace(/-/g, "")}-${ahora.toISOString().slice(11, 19).replace(/:/g, "")}-${randomBytes(4).toString("hex")}`;
+  const archivoNuevo = `${base}.jpg`;
+  try {
+    await sharp(Buffer.from(await media.arrayBuffer())).resize(1080, 1350, { fit: "cover" }).jpeg({ quality: 88 }).toFile(path.join(dir, archivoNuevo));
+  } catch { return { error: "No pudimos procesar esa imagen, intenta con otra" }; }
+
+  const fila = await prisma.configuraciones.findUnique({ where: { clave: "login_media_meta" } });
+  let meta: Record<string, unknown> = {};
+  try { meta = JSON.parse(fila?.valor ?? "{}") || {}; } catch { /* json corrupto → se regenera */ }
+  if (meta[archivoAnterior]) { meta[archivoNuevo] = meta[archivoAnterior]; delete meta[archivoAnterior]; }
+  await prisma.configuraciones.upsert({
+    where: { clave: "login_media_meta" },
+    create: { clave: "login_media_meta", valor: JSON.stringify(meta), tipo: "json", descripcion: "Título, texto y orden por imagen del carrusel del login." },
+    update: { valor: JSON.stringify(meta), actualizado_por: u.id },
+  });
+
+  try { await unlink(path.join(dir, archivoAnterior)); } catch { /* ya no existe */ }
+  revalidatePath("/panel/personalizar-login"); revalidatePath("/panel/login");
+  return { ok: "Recorte actualizado" };
 }
 
 /** Port de /accion/login-media-borrar. */

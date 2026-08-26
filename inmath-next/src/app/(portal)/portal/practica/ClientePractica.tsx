@@ -9,6 +9,35 @@ type ResultadoIntento = EstadoCalificar["resultado"];
 
 const CANTIDADES = [5, 10, 15, 20];
 
+/** Desplegable propio (reemplaza <select>): botón + lista flotante. */
+function PtDesplegable({ opciones, valor, onChange, placeholder }: {
+  opciones: { valor: string; nombre: string }[]; valor: string; onChange: (v: string) => void; placeholder: string;
+}) {
+  const [abierto, setAbierto] = useState(false);
+  const actual = opciones.find((o) => o.valor === valor)?.nombre ?? placeholder;
+  return (
+    <div className="pt-desp" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setAbierto(false); }}>
+      <button type="button" className="pt-desp-btn" onClick={() => setAbierto((a) => !a)} aria-haspopup="listbox" aria-expanded={abierto}>
+        <span>{actual}</span>
+        <Icono n="chevron" />
+      </button>
+      {abierto && (
+        <div className="pt-desp-lista" role="listbox">
+          <button type="button" role="option" aria-selected={valor === ""} className={`pt-desp-op${valor === "" ? " on" : ""}`}
+            onClick={() => { onChange(""); setAbierto(false); }}>{placeholder}</button>
+          {opciones.map((o) => (
+            <button key={o.valor} type="button" role="option" aria-selected={valor === o.valor}
+              className={`pt-desp-op${valor === o.valor ? " on" : ""}`}
+              onClick={() => { onChange(o.valor); setAbierto(false); }}>
+              {o.nombre}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function fechaCorta(d: Date): string {
   const f = new Date(d);
   return `${String(f.getUTCDate()).padStart(2, "0")}/${String(f.getUTCMonth() + 1).padStart(2, "0")}/${f.getUTCFullYear()}`;
@@ -18,6 +47,8 @@ function fechaCorta(d: Date): string {
 function PantallaElegir({ temas, onListo }: { temas: string[]; onListo: (r: ReactivoParaAlumno[], tema: string | null) => void }) {
   const [estado, setEstado] = useState<EstadoIniciar>({});
   const [pendiente, setPendiente] = useState(false);
+  const [tema, setTema] = useState("");
+  const [cantidad, setCantidad] = useState("10");
 
   return (
     <form
@@ -32,16 +63,20 @@ function PantallaElegir({ temas, onListo }: { temas: string[]; onListo: (r: Reac
     >
       <label className="pt-practica-campo">
         <span>Tema</span>
-        <select name="tema" defaultValue="">
-          <option value="">Todos los temas</option>
-          {temas.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
+        <PtDesplegable placeholder="Todos los temas" valor={tema} onChange={setTema}
+          opciones={temas.map((t) => ({ valor: t, nombre: t }))} />
+        <input type="hidden" name="tema" value={tema} />
       </label>
       <label className="pt-practica-campo">
         <span>Número de preguntas</span>
-        <select name="cantidad" defaultValue={10}>
-          {CANTIDADES.map((n) => <option key={n} value={n}>{n} preguntas</option>)}
-        </select>
+        <div className="pt-cant-seg">
+          {CANTIDADES.map((n) => (
+            <button key={n} type="button" className={`pt-cant-op${cantidad === String(n) ? " on" : ""}`} onClick={() => setCantidad(String(n))}>
+              {n}
+            </button>
+          ))}
+        </div>
+        <input type="hidden" name="cantidad" value={cantidad} />
       </label>
       <button className="boton glow bloque grande" type="submit" disabled={pendiente}>
         {pendiente ? "Preparando…" : "Comenzar práctica"} <Icono n="arrow" />
@@ -79,11 +114,12 @@ function PantallaResolver({ reactivos, tema, onCalificado, onCancelar }: {
           <b>{i + 1}. {r.enunciado}</b>
           <div className="pt-practica-opciones">
             {r.opciones.map((op, oi) => (
-              <label key={oi} className={`pt-practica-opcion${respuestas[r.id] === oi ? " sel" : ""}`}>
-                <input type="radio" name={`r-${r.id}`} checked={respuestas[r.id] === oi}
-                  onChange={() => setRespuestas((prev) => ({ ...prev, [r.id]: oi }))} />
+              <button key={oi} type="button" role="radio" aria-checked={respuestas[r.id] === oi}
+                className={`pt-practica-opcion${respuestas[r.id] === oi ? " sel" : ""}`}
+                onClick={() => setRespuestas((prev) => ({ ...prev, [r.id]: oi }))}>
+                <span className="pt-practica-punto" aria-hidden="true" />
                 {op}
-              </label>
+              </button>
             ))}
           </div>
         </div>

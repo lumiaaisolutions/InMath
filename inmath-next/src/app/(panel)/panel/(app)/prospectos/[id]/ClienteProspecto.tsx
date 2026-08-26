@@ -5,7 +5,7 @@ import {
   cambiarEtapaAccion, asignarAccion, reasignarAccion, generarLinkAccion,
   conversacionAccion, mensajeAsesorAccion,
 } from "../../acciones";
-import { useToastResultado } from "../../ClientePanel";
+import { useToastResultado, SelectorDesplegable } from "../../ClientePanel";
 
 const ETAPAS = ["prospecto", "calificado", "cita_agendada", "pago_pendiente", "inscrito", "descartado"];
 
@@ -73,9 +73,11 @@ export function AccionesProspecto({ prospectoId, etapa, asesorId, asesores }: {
   return (
     <div className="acciones-rapidas">
       <form className="form-inline" onSubmit={(e) => { e.preventDefault(); start(async () => toast(await cambiarEtapaAccion(prospectoId, etapaSel))); }}>
-        <select value={etapaSel} onChange={(e) => setEtapaSel(e.target.value)}>
-          {ETAPAS.map((et) => <option key={et} value={et}>{etiquetaEtapa(et)}</option>)}
-        </select>
+        <SelectorDesplegable sinVacio
+          valor={etapaSel}
+          opciones={ETAPAS.map((et) => ({ valor: et, nombre: etiquetaEtapa(et) }))}
+          onChange={setEtapaSel}
+        />
         <button className="boton mini" disabled={pendiente}>Mover</button>
       </form>
       <form
@@ -87,10 +89,12 @@ export function AccionesProspecto({ prospectoId, etapa, asesorId, asesores }: {
             : await asignarAccion(prospectoId, asesorSel ? parseInt(asesorSel, 10) : null)));
         }}
       >
-        <select value={asesorSel} onChange={(e) => setAsesorSel(e.target.value)}>
-          {!asesorId && <option value="">Auto (menor carga)</option>}
-          {asesores.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
-        </select>
+        <SelectorDesplegable sinVacio={!!asesorId}
+          placeholder="Auto (menor carga)"
+          valor={asesorSel}
+          opciones={asesores.map((a) => ({ valor: String(a.id), nombre: a.nombre }))}
+          onChange={setAsesorSel}
+        />
         <button className="boton mini fantasma" disabled={pendiente}>{asesorId ? "Reasignar" : "Asignar"}</button>
       </form>
       <form onSubmit={(e) => { e.preventDefault(); start(async () => toast(await generarLinkAccion(prospectoId))); }}>

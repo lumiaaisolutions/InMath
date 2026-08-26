@@ -2,14 +2,28 @@
 import { useActionState, useState, useTransition } from "react";
 import { IconoPanel } from "@/components/IconoPanel";
 import { usuarioCrearAccion, usuarioGuardarAccion, usuarioEliminarAccion, type Resultado } from "../acciones";
-import { Velo, ConfirmarDialogo, useToastResultado } from "../ClientePanel";
+import { Velo, ConfirmarDialogo, useToastResultado, Segmentado, BotonMagnetico } from "../ClientePanel";
 
 export type UsuarioFicha = {
   id: number; nombre: string; email: string; rol: string; telefono: string | null;
   activo: boolean; esAsesor: boolean; modulos: string[] | null; foto: string | null;
 };
 
-const MODULOS: [string, string][] = [["pipeline", "Pipeline"], ["citas", "Citas"], ["alumnos", "Alumnos"], ["pagos", "Pagos"]];
+const MODULOS: [string, string][] = [
+  ["pipeline", "Pipeline"], ["citas", "Citas"], ["alumnos", "Alumnos y pagos"], ["pagos", "Aprobar/cancelar pagos"],
+  ["reactivos", "Reactivos"], ["precios", "Precios y promociones"],
+];
+
+/* ── Controles propios (sin <select> ni <input type="checkbox"> nativos) ─ */
+
+function Interruptor({ activo, onChange, etiqueta, detalle }: { activo: boolean; onChange: (v: boolean) => void; etiqueta: string; detalle?: string }) {
+  return (
+    <button type="button" className={`interr${activo ? " on" : ""}`} role="switch" aria-checked={activo} onClick={() => onChange(!activo)}>
+      <span className="interr-sw" aria-hidden="true" />
+      <span className="interr-tx"><b>{etiqueta}</b>{detalle && <i>{detalle}</i>}</span>
+    </button>
+  );
+}
 
 function Avatar({ u }: { u: UsuarioFicha }) {
   return (
@@ -34,7 +48,7 @@ export function UsuariosRejilla({ usuarios, yoId }: { usuarios: UsuarioFicha[]; 
         ))}
       </div>
       <div className="us-rejilla">
-        {usuarios.map((u) => (
+        {[...usuarios].sort((a, b) => Number(b.activo) - Number(a.activo)).map((u) => (
           <button key={u.id} type="button" hidden={filtro !== "todos" && u.rol !== filtro}
             className={`tarjeta us-mini ${u.activo ? "" : "bloqueado"}`} onClick={() => setAbierto(u.id)}>
             <Avatar u={u} />
@@ -62,6 +76,16 @@ function EditarUsuarioModal({ u, yoId, abierto, onCerrar }: {
   const toast = useToastResultado();
   const esYo = u.id === yoId;
   const modulosU = u.modulos ?? MODULOS.map(([k]) => k);
+  const [rol, setRol] = useState(u.rol);
+  const [esAsesor, setEsAsesor] = useState(u.esAsesor);
+  const [activo, setActivo] = useState(u.activo);
+  const [modulosSel, setModulosSel] = useState<Set<string>>(new Set(modulosU));
+  const alternarModulo = (clave: string) =>
+    setModulosSel((prev) => {
+      const siguiente = new Set(prev);
+      siguiente.has(clave) ? siguiente.delete(clave) : siguiente.add(clave);
+      return siguiente;
+    });
   const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev, fd) => {
     const r = await usuarioGuardarAccion(prev, fd);
     toast(r);
@@ -84,41 +108,44 @@ function EditarUsuarioModal({ u, yoId, abierto, onCerrar }: {
             <label className="pl-campo">Correo<input type="email" name="email" required maxLength={190} defaultValue={u.email} /></label>
             <label className="pl-campo">Teléfono<input type="tel" name="telefono" maxLength={20} defaultValue={u.telefono ?? ""} /></label>
             <label className="pl-campo">Rol
-              <select name="rol" defaultValue={u.rol} disabled={esYo}>
-                <option value="asesor">Asesor</option>
-                <option value="admin">Administrador</option>
-              </select>
-              {esYo && <input type="hidden" name="rol" value="admin" />}
+              <Segmentado
+                opciones={[{ valor: "asesor", nombre: "Asesor" }, { valor: "admin", nombre: "Administrador" }]}
+                valor={esYo ? "admin" : rol}
+                onChange={setRol}
+              />
+              <input type="hidden" name="rol" value={esYo ? "admin" : rol} />
             </label>
             <label className="pl-campo" style={{ gridColumn: "1 / -1" }}>Contraseña nueva <small>(opcional)</small>
               <input type="password" name="password" minLength={8} autoComplete="new-password" placeholder="Déjalo vacío para no cambiarla" />
             </label>
           </div>
           <div className="us-toggles">
-            <label className="us-toggle">
-              <input type="checkbox" name="es_asesor" defaultChecked={u.esAsesor} />
-              <span className="us-toggle-tx"><b>Atiende citas y prospectos</b><i>Entra al reparto de prospectos y al calendario de asesores</i></span>
-            </label>
-            <label className="us-toggle">
-              <input type="checkbox" name="activo" defaultChecked={u.activo} disabled={esYo} />
-              <span className="us-toggle-tx"><b>Acceso activo</b><i>{esYo ? "No puedes desactivar tu propia cuenta" : "Puede iniciar sesión en el panel"}</i></span>
-            </label>
-            {esYo && <input type="hidden" name="activo" value="1" />}
+            <Interruptor activo={esAsesor} onChange={setEsAsesor} etiqueta="Atiende citas y prospectos" detalle="Entra al reparto de prospectos y al calendario de asesores" />
+            {esAsesor && <input type="hidden" name="es_asesor" value="on" />}
+            <Interruptor
+              activo={esYo ? true : activo}
+              onChange={esYo ? () => {} : setActivo}
+              etiqueta="Acceso activo"
+              detalle={esYo ? "No puedes desactivar tu propia cuenta" : "Puede iniciar sesión en el panel"}
+            />
+            {(esYo || activo) && <input type="hidden" name="activo" value="on" />}
           </div>
           <div className="us-modulos">
-            <span className="us-etiqueta">Módulos permitidos{u.rol === "admin" ? " (los administradores ven todo)" : ""}</span>
+            <span className="us-etiqueta">Módulos permitidos{rol === "admin" ? " (los administradores ven todo)" : ""}</span>
             <div className="us-chips">
               {MODULOS.map(([clave, nombre]) => (
-                <label key={clave} className="chip-modulo">
-                  <input type="checkbox" name="modulos" value={clave} defaultChecked={modulosU.includes(clave)} disabled={u.rol === "admin"} />
-                  <span>{nombre}</span>
-                </label>
+                <div key={clave} className="chip-modulo">
+                  <Interruptor activo={rol === "admin" ? true : modulosSel.has(clave)} onChange={rol === "admin" ? () => {} : () => alternarModulo(clave)} etiqueta={nombre} />
+                  {(rol === "admin" || modulosSel.has(clave)) && <input type="hidden" name="modulos" value={clave} />}
+                </div>
               ))}
             </div>
           </div>
           <div className="us-pie">
             {!esYo && (
-              <button type="button" className="boton peligro" disabled={borrando} onClick={() => setConfirmar(true)}>Eliminar</button>
+              <button type="button" className="boton peligro" disabled={borrando || !u.activo} onClick={() => setConfirmar(true)}>
+                {u.activo ? "Bloquear acceso" : "Ya está bloqueado"}
+              </button>
             )}
             <button className="boton primario" style={{ marginLeft: "auto" }} disabled={pendiente}>{pendiente ? "Guardando…" : "Guardar cambios"}</button>
           </div>
@@ -126,7 +153,7 @@ function EditarUsuarioModal({ u, yoId, abierto, onCerrar }: {
         {!esYo && (
           <ConfirmarDialogo
             abierto={confirmar}
-            texto="El usuario perderá el acceso al panel. Sus registros históricos se conservan."
+            texto="No se borra nada — el usuario sigue apareciendo en la lista marcado como Bloqueado, y todo su historial (citas, prospectos, etc.) se conserva. Simplemente ya no podrá iniciar sesión en el panel."
             onNo={() => setConfirmar(false)}
             onSi={() => {
               setConfirmar(false);
@@ -142,6 +169,7 @@ function EditarUsuarioModal({ u, yoId, abierto, onCerrar }: {
 /** Modal "+ Agregar usuario" — port del usModalNuevo. */
 export function NuevoUsuarioBoton() {
   const [abierto, setAbierto] = useState(false);
+  const [rol, setRol] = useState<"asesor" | "admin">("asesor");
   const toast = useToastResultado();
   const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev, fd) => {
     const r = await usuarioCrearAccion(prev, fd);
@@ -151,7 +179,7 @@ export function NuevoUsuarioBoton() {
   }, {});
   return (
     <>
-      <button type="button" className="boton primario" onClick={() => setAbierto(true)}>+ Agregar usuario</button>
+      <BotonMagnetico className="boton primario boton-magnetico" onClick={() => setAbierto(true)}>+ Agregar usuario</BotonMagnetico>
       <Velo abierto={abierto} onCerrar={() => setAbierto(false)}>
         <div className="us-frame" role="dialog" aria-modal="true">
           <div className="us-frame-cab">
@@ -164,7 +192,12 @@ export function NuevoUsuarioBoton() {
               <label className="pl-campo">Correo<input type="email" name="email" required maxLength={190} /></label>
               <label className="pl-campo">Contraseña<input type="password" name="password" required minLength={8} autoComplete="new-password" placeholder="Mínimo 8 caracteres" /></label>
               <label className="pl-campo">Rol
-                <select name="rol" defaultValue="asesor"><option value="asesor">Asesor</option><option value="admin">Administrador</option></select>
+                <Segmentado
+                  opciones={[{ valor: "asesor", nombre: "Asesor" }, { valor: "admin", nombre: "Administrador" }]}
+                  valor={rol}
+                  onChange={setRol}
+                />
+                <input type="hidden" name="rol" value={rol} />
               </label>
             </div>
             <div className="us-pie"><button className="boton primario" disabled={pendiente}>{pendiente ? "Creando…" : "Crear usuario"}</button></div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Términos y Condiciones — Cursos InMath",
   description: "Términos y condiciones de uso de Cursos InMath: inscripción, pagos, acceso al portal y responsabilidades.",
+  alternates: { canonical: "/terminos" },
 };
 
 const CONTACTO = "cursosinmath@gmail.com";

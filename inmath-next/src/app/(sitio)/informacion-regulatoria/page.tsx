@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Información Regulatoria — Cursos InMath" };
+export const metadata: Metadata = { title: "Información Regulatoria — Cursos InMath", alternates: { canonical: "/informacion-regulatoria" } };
 const CONTACTO = "cursosinmath@gmail.com";
 
 export default function InformacionRegulatoria() {

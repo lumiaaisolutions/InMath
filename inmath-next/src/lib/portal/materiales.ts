@@ -3,10 +3,18 @@ import { prisma, config } from "@/lib/db";
 /**
  * Material del curso que ve el alumno en su portal. Se guarda como JSON (en
  * texto) en `configuraciones` (clave `materiales_curso`) para no migrar el
- * esquema — el admin lo gestiona desde /panel/materiales. Son enlaces (Drive,
- * video, documento) con título; no se suben archivos al servidor.
+ * esquema — el admin lo gestiona desde /panel/materiales. Cada material
+ * puede ser un enlace externo (Drive, YouTube) O uno o varios archivos
+ * subidos y guardados en el servidor (dirImgPanel()/materiales).
  */
-export type Material = { id: string; titulo: string; tipo: "documento" | "video" | "enlace"; url: string; orden: number };
+export type ArchivoMaterial = { nombre: string; url: string; tamanoBytes: number };
+export type Material = {
+  id: string; titulo: string; descripcion: string; tipo: "documento" | "video" | "enlace";
+  portada: string | null;
+  url: string; // solo aplica si tipo === "enlace"
+  archivos: ArchivoMaterial[]; // solo aplica si tipo !== "enlace"
+  orden: number;
+};
 
 const CLAVE = "materiales_curso";
 
@@ -19,12 +27,17 @@ export async function leerMateriales(): Promise<Material[]> {
     if (Array.isArray(parsed)) lista = parsed;
   } catch { lista = []; }
   return lista
-    .filter((m): m is MaterialCrudo => !!m && typeof m.url === "string" && typeof m.titulo === "string")
+    .filter((m): m is MaterialCrudo => !!m && typeof m.titulo === "string")
     .map((m, i): Material => ({
       id: String(m.id ?? i),
       titulo: String(m.titulo),
+      descripcion: typeof m.descripcion === "string" ? m.descripcion : "",
       tipo: m.tipo === "video" || m.tipo === "documento" ? m.tipo : "enlace",
-      url: String(m.url),
+      portada: typeof m.portada === "string" && m.portada ? m.portada : null,
+      url: typeof m.url === "string" ? m.url : "",
+      archivos: Array.isArray(m.archivos)
+        ? m.archivos.filter((a): a is ArchivoMaterial => !!a && typeof a.url === "string" && typeof a.nombre === "string")
+        : [],
       orden: Number.isFinite(m.orden) ? Number(m.orden) : i,
     }))
     .sort((a, b) => a.orden - b.orden);

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Programa de Referidos — Cursos InMath" };
+export const metadata: Metadata = { title: "Programa de Referidos — Cursos InMath", alternates: { canonical: "/referidos" } };
 const CONTACTO = "cursosinmath@gmail.com";
 
 export default function Referidos() {

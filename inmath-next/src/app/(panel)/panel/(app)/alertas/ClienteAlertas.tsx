@@ -1,7 +1,7 @@
 "use client";
 import { useActionState, useRef, useState } from "react";
 import { guardarAlertasAccion, alertaMediaSubirAccion, type ResultadoMedia } from "./acciones";
-import { useToastResultado } from "../ClientePanel";
+import { useToastResultado, Segmentado, ConfirmarDialogo } from "../ClientePanel";
 import { IconoPanel } from "@/components/IconoPanel";
 import { CuentaRegresiva } from "@/components/CuentaRegresiva";
 import {
@@ -21,24 +21,6 @@ const nueva = (): Alerta => ({
   formato: "banner", media: "", diseno: { ...DISENO_DEFECTO }, activo: true,
 });
 
-/* ---------------------------------------------------------------------------
-   Controles reutilizables (SIN <select> ni <input type="checkbox"> nativos).
---------------------------------------------------------------------------- */
-
-/** Grupo de pastillas: reemplaza a <select> para elegir una entre pocas opciones. */
-function Segmentado<T extends string>({ opciones, valor, onChange }:
-  { opciones: { valor: T; nombre: string; icono?: string }[]; valor: T; onChange: (v: T) => void; columnas?: number }) {
-  return (
-    <div className="seg" role="radiogroup">
-      {opciones.map((o) => (
-        <button key={o.valor} type="button" role="radio" aria-checked={valor === o.valor}
-          className={`seg-op${valor === o.valor ? " on" : ""}`} onClick={() => onChange(o.valor)}>
-          {o.icono && <IconoPanel n={o.icono} cls="ic-sm" />} {o.nombre}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 /** Interruptor custom: reemplaza a <input type="checkbox">. */
 function Interruptor({ activo, onChange, etiqueta, detalle }: { activo: boolean; onChange: (v: boolean) => void; etiqueta: string; detalle?: string }) {
@@ -108,6 +90,7 @@ export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
   const [avanzado, setAvanzado] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [subiendo, setSubiendo] = useState(false);
+  const [confirmarQuitar, setConfirmarQuitar] = useState(false);
 
   const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev, fd) => {
     const r = await guardarAlertasAccion(prev, fd);
@@ -299,7 +282,7 @@ export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
               <div className="al-paso-tit"><span className="al-paso-n">3</span> Configura el botón</div>
               <div className="al-campo">
                 <label>El botón lleva a</label>
-                <Segmentado columnas={2} opciones={DESTINOS.map((d) => ({ valor: d.valor, nombre: d.nombre }))}
+                <Segmentado opciones={DESTINOS.map((d) => ({ valor: d.valor, nombre: d.nombre }))}
                   valor={destinoActual} onChange={(v) => set("enlace", v === "custom" ? "" : v)} />
                 <small className="al-detalle">{DESTINOS.find((d) => d.valor === destinoActual)?.detalle}</small>
               </div>
@@ -338,36 +321,36 @@ export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
                   <div className="al-fila2">
                     <div className="al-campo">
                       <label>Tamaño del título</label>
-                      <Segmentado columnas={4} opciones={[{ valor: "ch", nombre: "Chico" }, { valor: "md", nombre: "Normal" }, { valor: "gd", nombre: "Grande" }, { valor: "xg", nombre: "XL" }]}
+                      <Segmentado opciones={[{ valor: "ch", nombre: "Chico" }, { valor: "md", nombre: "Normal" }, { valor: "gd", nombre: "Grande" }, { valor: "xg", nombre: "XL" }]}
                         valor={sel.diseno.tam_titulo} onChange={(v) => setD("tam_titulo", v)} />
                     </div>
                     <div className="al-campo">
                       <label>Tamaño del texto</label>
-                      <Segmentado columnas={3} opciones={[{ valor: "ch", nombre: "Chico" }, { valor: "md", nombre: "Normal" }, { valor: "gd", nombre: "Grande" }]}
+                      <Segmentado opciones={[{ valor: "ch", nombre: "Chico" }, { valor: "md", nombre: "Normal" }, { valor: "gd", nombre: "Grande" }]}
                         valor={sel.diseno.tam_texto} onChange={(v) => setD("tam_texto", v)} />
                     </div>
                   </div>
                   <div className="al-campo">
                     <label>Alineación del contenido</label>
-                    <Segmentado columnas={3} opciones={[{ valor: "izquierda", nombre: "Izquierda" }, { valor: "centro", nombre: "Centro" }, { valor: "derecha", nombre: "Derecha" }]}
+                    <Segmentado opciones={[{ valor: "izquierda", nombre: "Izquierda" }, { valor: "centro", nombre: "Centro" }, { valor: "derecha", nombre: "Derecha" }]}
                       valor={sel.diseno.alineacion} onChange={(v) => setD("alineacion", v)} />
                   </div>
                   {sel.formato === "banner" ? (
                     <div className="al-campo">
                       <label>Lado de la imagen/video</label>
-                      <Segmentado columnas={2} opciones={[{ valor: "izquierda", nombre: "Izquierda" }, { valor: "derecha", nombre: "Derecha" }]}
+                      <Segmentado opciones={[{ valor: "izquierda", nombre: "Izquierda" }, { valor: "derecha", nombre: "Derecha" }]}
                         valor={sel.diseno.media_lado} onChange={(v) => setD("media_lado", v)} />
                     </div>
                   ) : (
                     <div className="al-campo">
                       <label>Diseño de los cuadritos</label>
-                      <Segmentado columnas={3} opciones={[{ valor: "claro", nombre: "Claro" }, { valor: "vidrio", nombre: "Vidrio" }, { valor: "oscuro", nombre: "Oscuro" }]}
+                      <Segmentado opciones={[{ valor: "claro", nombre: "Claro" }, { valor: "vidrio", nombre: "Vidrio" }, { valor: "oscuro", nombre: "Oscuro" }]}
                         valor={sel.diseno.cuadro_estilo} onChange={(v) => setD("cuadro_estilo", v)} />
                     </div>
                   )}
                   <div className="al-campo">
                     <label>Bordes</label>
-                    <Segmentado columnas={3} opciones={[{ valor: "suave", nombre: "Rectos" }, { valor: "medio", nombre: "Redondeados" }, { valor: "redondo", nombre: "Muy redondeados" }]}
+                    <Segmentado opciones={[{ valor: "suave", nombre: "Rectos" }, { valor: "medio", nombre: "Redondeados" }, { valor: "redondo", nombre: "Muy redondeados" }]}
                       valor={sel.diseno.radio} onChange={(v) => setD("radio", v)} />
                   </div>
                 </div>
@@ -377,13 +360,20 @@ export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
             <div className="al-pie">
               <Interruptor activo={sel.activo} onChange={(v) => set("activo", v)}
                 etiqueta={sel.activo ? "Visible en la página" : "Oculta"} />
-              <button type="button" className="boton mini al-quitar" onClick={() => quitar(sel.id)}>
+              <button type="button" className="boton mini al-quitar" onClick={() => setConfirmarQuitar(true)}>
                 <IconoPanel n="x" cls="ic-sm" /> Quitar alerta
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmarDialogo
+        abierto={confirmarQuitar}
+        texto={`Se quitará "${sel?.titulo || "esta alerta"}" del editor — no se borra de la página hasta que des clic en Guardar cambios.`}
+        onNo={() => setConfirmarQuitar(false)}
+        onSi={() => { if (sel) quitar(sel.id); setConfirmarQuitar(false); }}
+      />
 
       {alertas.length > 0 && (
         <form action={accion} className="al-guardar">

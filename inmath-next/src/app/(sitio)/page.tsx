@@ -10,7 +10,7 @@ import { promocionVigente } from "@/lib/precios";
 export const dynamic = "force-dynamic";
 
 export default async function Landing() {
-  const curso = await prisma.cursos.findFirst({ where: { activo: true }, orderBy: [{ orden: "asc" }, { id: "asc" }] });
+  const curso = await prisma.cursos.findFirst({ where: { activo: true }, orderBy: [{ destacado: "desc" }, { orden: "asc" }, { id: "asc" }] });
   const precio = curso ? `$${Math.round(curso.precio_centavos / 100).toLocaleString("en-US")}` : "";
   const semanas = curso?.duracion_semanas ?? 12;
   const promo = curso ? promocionVigente(curso) : null;
@@ -249,7 +249,6 @@ export default async function Landing() {
 
       {/* Comunidad: tarjetas flotantes */}
       <section className="comunidad" aria-label="Cientos de estudiantes acompañados">
-        <span className="com-tex" aria-hidden="true">01001100 00110101 10 0100111 000 110 0101 000111 100 010 000101</span>
         <div className="com-centro reveal">
           <span className="eyebrow"><Icono n="user" cls="ic-ey" /> Comunidad InMath</span>
           <h2>Cientos de estudiantes <span className="resalte">avanzando acompañados</span>.</h2>

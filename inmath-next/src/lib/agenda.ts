@@ -6,7 +6,6 @@ export type Slot = { inicio: string; fin: string; etiqueta: string; asesores_lib
 
 /** Port fiel de AgendaServicio::slotsDisponibles (misma semántica y límites). */
 export async function slotsDisponibles(desde: Date | null = null, dias = 7, asesorId: number | null = null, max = 30, maxPorDia = 12): Promise<Slot[]> {
-  const horario = JSON.parse(await config("horario_atencion", '{"dias":[1,2,3,4,5],"inicio":"09:00","fin":"19:00"}'));
   const duracionMin = parseInt(await config("duracion_cita_minutos", "30"), 10);
 
   const asesores = (
@@ -30,30 +29,16 @@ export async function slotsDisponibles(desde: Date | null = null, dias = 7, ases
   for (let dia = new Date(dia0); dia < finRango && slots.length < max; dia = new Date(dia.getTime() + 86400_000)) {
     const dow = diaSemanaN(dia);
     const ov = overrides[isoDia(lunesDe(dia))];
-    // Horas puntuales del día: las del override si existe; si no, el rango
-    // base expandido cada duracionMin (comportamiento histórico).
-    let horasDia: Date[];
-    if (ov) {
-      const dd = ov.dias[String(dow)];
-      if (!dd || !dd.on || !dd.horas.length) continue;
-      horasDia = dd.horas.map((hhmm) => {
-        const [h, m] = hhmm.split(":").map(Number);
-        const t = new Date(dia); t.setUTCHours(h, m, 0, 0);
-        return t;
-      });
-    } else {
-      if (!(horario.dias ?? [1, 2, 3, 4, 5]).includes(dow)) continue;
-      const [hi, mi] = String(horario.inicio ?? "09:00").split(":").map(Number);
-      const [hf, mf] = String(horario.fin ?? "19:00").split(":").map(Number);
-      const cierre = new Date(dia); cierre.setUTCHours(hf, mf, 0, 0);
-      horasDia = [];
-      // OJO: no usar `for (let t = new Date(dia), _ = t.setUTCHours(...))` — el
-      // minificador de Turbopack lo compila mal (llama setUTCHours sobre otra var).
-      const apertura = new Date(dia); apertura.setUTCHours(hi, mi, 0, 0);
-      for (let t = apertura; t.getTime() + duracionMin * 60_000 <= cierre.getTime(); t = new Date(t.getTime() + duracionMin * 60_000)) {
-        horasDia.push(new Date(t));
-      }
-    }
+    // Sin horario de respaldo: si la semana de este día no tiene override
+    // definido a mano, ese día simplemente no ofrece horarios.
+    if (!ov) continue;
+    const dd = ov.dias[String(dow)];
+    if (!dd || !dd.on || !dd.horas.length) continue;
+    const horasDia: Date[] = dd.horas.map((hhmm) => {
+      const [h, m] = hhmm.split(":").map(Number);
+      const t = new Date(dia); t.setUTCHours(h, m, 0, 0);
+      return t;
+    });
     // Tope POR DÍA (además del tope global `max`): sin esto, un día con muchas
     // horas definidas (ej. cada hora de 8am a 8pm) agota `max` por sí solo y
     // los días siguientes —incluida la semana próxima— nunca llegan a mostrarse.

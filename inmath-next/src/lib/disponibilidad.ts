@@ -1,4 +1,4 @@
-import { prisma, config } from "./db";
+import { prisma } from "./db";
 import { isoDia, diaSemanaN } from "./fechas";
 
 /** Día de la semana: activo + horas puntuales en que hay asesorías ("10:00"). */
@@ -13,16 +13,6 @@ export function lunesDe(d: Date): Date {
   return new Date(base.getTime() - (diaSemanaN(base) - 1) * 86400_000);
 }
 export const claveSemana = (lunesISO: string) => `disponibilidad_${lunesISO}`;
-
-/** Horario recurrente base (el de "Configuración"). */
-export async function horarioBase(): Promise<{ dias: number[]; inicio: string; fin: string }> {
-  try {
-    const h = JSON.parse(await config("horario_atencion", '{"dias":[1,2,3,4,5],"inicio":"09:00","fin":"19:00"}'));
-    return { dias: h.dias ?? [1, 2, 3, 4, 5], inicio: h.inicio ?? "09:00", fin: h.fin ?? "19:00" };
-  } catch {
-    return { dias: [1, 2, 3, 4, 5], inicio: "09:00", fin: "19:00" };
-  }
-}
 
 const HORA_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -59,14 +49,13 @@ export async function leerSemana(lunesISO: string): Promise<SemanaDisp | null> {
   }
 }
 
-/** Datos para editar una semana: el override si existe; si no, derivado del base. */
+/** Datos para editar una semana: el override si existe; si no, arranca vacía
+ *  (sin horario de respaldo — el admin define cada semana desde cero). */
 export async function semanaParaEditar(lunesISO: string): Promise<{ dias: Record<string, DiaDisp>; definida: boolean }> {
   const ov = await leerSemana(lunesISO);
   if (ov) return { dias: ov.dias, definida: true };
-  const base = await horarioBase();
-  const horasBase = expandeRango(base.inicio, base.fin);
   const dias: Record<string, DiaDisp> = {};
-  for (const k of DOW) dias[k] = { on: base.dias.includes(+k), horas: horasBase };
+  for (const k of DOW) dias[k] = { on: false, horas: [] };
   return { dias, definida: false };
 }
 

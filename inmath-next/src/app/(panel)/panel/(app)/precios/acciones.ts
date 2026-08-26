@@ -3,6 +3,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requiereModulo } from "@/lib/panel/sesion";
 import { ahoraPared } from "@/lib/fechas";
+import { enviarCorreo } from "@/lib/correo";
+import { dinero as formatoDinero } from "@/lib/panel/formato";
 
 export type Resultado = { ok?: string; error?: string };
 
@@ -15,13 +17,13 @@ function centavos(fd: FormData, campo: string): number | null {
   return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
-/** Fase 8/10 — precio, modalidad, duración y promoción del curso (cada curso
- *  YA es un paquete vendible independiente, no se agrega una entidad nueva). */
-export async function cursoActualizarAccion(_prev: Resultado, fd: FormData): Promise<Resultado> {
-  await requiereModulo("precios");
-  const id = parseInt(String(fd.get("id") ?? "0"), 10);
-  if (id < 1) return { error: "Curso inválido" };
+type CamposCurso = {
+  nombre: string; precio: number; precioOriginal: number | null; semanas: number | null;
+  modalidad: typeof MODALIDADES[number]; promocionActiva: boolean; promocionTexto: string | null;
+  expiraEn: Date | null; destacado: boolean; activo: boolean; orden: number;
+};
 
+function leerCamposCurso(fd: FormData): { error: string } | CamposCurso {
   const nombre = String(fd.get("nombre") ?? "").trim();
   const precio = centavos(fd, "precio");
   const precioOriginal = centavos(fd, "precio_original");
@@ -41,20 +43,112 @@ export async function cursoActualizarAccion(_prev: Resultado, fd: FormData): Pro
   if (!(MODALIDADES as readonly string[]).includes(modalidad)) return { error: "Modalidad inválida" };
   if (promocionActiva && !precioOriginal) return { error: "Para activar la promoción, define el precio tachado" };
 
+  return {
+    nombre, precio, precioOriginal, semanas, modalidad: modalidad as typeof MODALIDADES[number],
+    promocionActiva, promocionTexto, expiraEn: expiraRaw ? new Date(expiraRaw) : null,
+    destacado, activo, orden: Number.isFinite(parseInt(ordenRaw, 10)) ? parseInt(ordenRaw, 10) : 0,
+  };
+}
+
+/** Avisa por correo a los alumnos con pago YA CONFIRMADO de este curso que su precio cambió — solo
+ *  se llama cuando un curso EXISTENTE cambia de precio (nunca al crear uno nuevo). */
+async function avisarCambioDePrecio(cursoId: number, nombreCurso: string, precioAnterior: number, precioNuevo: number, moneda: string) {
+  const pagos = await prisma.pagos.findMany({
+    where: { curso_id: cursoId, estado: "pagado" },
+    include: { alumnos: { select: { nombre: true, email: true } }, prospectos: { select: { nombre: true, correo: true } } },
+  });
+  const sitio = (process.env.APP_URL ?? "https://inmath.lumiaaisolutions.com").replace(/\/$/, "");
+  const vistos = new Set<string>();
+  const subio = precioNuevo > precioAnterior;
+
+  for (const pago of pagos) {
+    const correo = (pago.alumnos?.email || pago.prospectos.correo || "").trim().toLowerCase();
+    if (!correo || vistos.has(correo)) continue;
+    vistos.add(correo);
+    const nombre = pago.alumnos?.nombre || pago.prospectos.nombre || "Hola";
+    await enviarCorreo({
+      para: [correo],
+      asunto: `Actualizamos el precio de ${nombreCurso}`,
+      tono: "azul",
+      preheader: `El precio de ${nombreCurso} cambió de ${formatoDinero(precioAnterior, moneda)} a ${formatoDinero(precioNuevo, moneda)}.`,
+      texto: [
+        `Hola ${nombre},`,
+        "",
+        `Te avisamos que el precio de "${nombreCurso}" cambió de ${formatoDinero(precioAnterior, moneda)} a ${formatoDinero(precioNuevo, moneda)}.`,
+        "",
+        subio
+          ? "Tu inscripción ya está pagada y confirmada, así que este cambio NO te afecta — tu acceso sigue igual, sin ningún cobro adicional."
+          : "Tu inscripción ya está pagada y confirmada — este cambio es solo para nuevas inscripciones y no representa ningún cobro ni reembolso.",
+      ].join("\n"),
+      cta: { url: `${sitio}/portal`, label: "Ir a mi portal" },
+    });
+  }
+}
+
+/** Fase 8/10 — precio, modalidad, duración y promoción del curso (cada curso
+ *  YA es un paquete vendible independiente, no se agrega una entidad nueva). */
+export async function cursoActualizarAccion(_prev: Resultado, fd: FormData): Promise<Resultado> {
+  await requiereModulo("precios");
+  const id = parseInt(String(fd.get("id") ?? "0"), 10);
+  if (id < 1) return { error: "Curso inválido" };
+
+  const v = leerCamposCurso(fd);
+  if ("error" in v) return v;
+
+  const anterior = await prisma.cursos.findUnique({ where: { id }, select: { precio_centavos: true, moneda: true, nombre: true } });
+
   await prisma.cursos.update({
     where: { id },
     data: {
-      nombre, precio_centavos: precio, precio_original_centavos: precioOriginal,
-      duracion_semanas: semanas, modalidad: modalidad as typeof MODALIDADES[number],
-      promocion_activa: promocionActiva, promocion_texto: promocionTexto,
-      promocion_expira_en: expiraRaw ? new Date(expiraRaw) : null,
-      destacado, activo, orden: Number.isFinite(parseInt(ordenRaw, 10)) ? parseInt(ordenRaw, 10) : 0,
+      nombre: v.nombre, precio_centavos: v.precio, precio_original_centavos: v.precioOriginal,
+      duracion_semanas: v.semanas, modalidad: v.modalidad,
+      promocion_activa: v.promocionActiva, promocion_texto: v.promocionTexto,
+      promocion_expira_en: v.expiraEn,
+      destacado: v.destacado, activo: v.activo, orden: v.orden,
+    },
+  });
+
+  if (anterior && anterior.precio_centavos !== v.precio) {
+    await avisarCambioDePrecio(id, v.nombre, anterior.precio_centavos, v.precio, anterior.moneda);
+  }
+
+  revalidatePath("/panel/precios");
+  revalidatePath("/");
+  revalidatePath("/pago");
+  return { ok: "Curso actualizado" };
+}
+
+/** Agrega un paquete/curso nuevo — visible en /pago y, si se marca "destacado", en la portada. */
+export async function cursoCrearAccion(_prev: Resultado, fd: FormData): Promise<Resultado> {
+  await requiereModulo("precios");
+  const v = leerCamposCurso(fd);
+  if ("error" in v) return v;
+
+  await prisma.cursos.create({
+    data: {
+      nombre: v.nombre, precio_centavos: v.precio, precio_original_centavos: v.precioOriginal,
+      duracion_semanas: v.semanas, modalidad: v.modalidad,
+      promocion_activa: v.promocionActiva, promocion_texto: v.promocionTexto,
+      promocion_expira_en: v.expiraEn,
+      destacado: v.destacado, activo: v.activo, orden: v.orden,
     },
   });
   revalidatePath("/panel/precios");
   revalidatePath("/");
   revalidatePath("/pago");
-  return { ok: "Curso actualizado" };
+  return { ok: "Curso agregado" };
+}
+
+/** Elimina un curso — solo si nunca recibió pagos (si ya tiene historial, se debe desactivar en vez de borrar). */
+export async function cursoEliminarAccion(id: number): Promise<Resultado> {
+  await requiereModulo("precios");
+  const pagos = await prisma.pagos.count({ where: { curso_id: id } });
+  if (pagos > 0) return { error: "Este curso ya tiene pagos registrados — desactívalo en vez de eliminarlo para no perder el historial." };
+  await prisma.cursos.delete({ where: { id } });
+  revalidatePath("/panel/precios");
+  revalidatePath("/");
+  revalidatePath("/pago");
+  return { ok: "Curso eliminado" };
 }
 
 const TIPOS_CUPON = ["porcentaje", "monto_fijo"] as const;
