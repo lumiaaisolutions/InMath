@@ -78,10 +78,11 @@ export default async function Citas({ searchParams }: { searchParams: Promise<{ 
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
+      <div className="citas-leyenda">
         {asesores.map((a) => (
-          <span key={a.id} className="gaje neutro">
-            <span style={{ width: 9, height: 9, borderRadius: "50%", background: mapaColor.get(a.id), display: "inline-block" }} /> {a.nombre}
+          <span key={a.id} className="citas-leyenda-item" style={{ "--asesor-color": mapaColor.get(a.id) } as React.CSSProperties}>
+            <span className="citas-leyenda-punto" />
+            {a.nombre}
           </span>
         ))}
       </div>

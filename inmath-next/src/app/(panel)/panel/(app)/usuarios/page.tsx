@@ -20,6 +20,10 @@ export default async function Usuarios() {
     foto: await avatarUrl(u.id),
   })));
 
+  const admins = fichas.filter((f) => f.rol === "admin").length;
+  const asesores = fichas.filter((f) => f.esAsesor).length;
+  const bloqueados = fichas.filter((f) => !f.activo).length;
+
   return (
     <>
       <div className="cabecera">
@@ -28,6 +32,24 @@ export default async function Usuarios() {
           <div className="sub">Quién entra al panel, con qué rol y a qué módulos</div>
         </div>
         <NuevoUsuarioBoton />
+      </div>
+      <div className="stat-fila">
+        <div className="stat-tarjeta" style={{ "--stat-col": "var(--pino)" } as React.CSSProperties}>
+          <span className="st-etq">Usuarios totales</span>
+          <span className="st-num">{fichas.length}</span>
+        </div>
+        <div className="stat-tarjeta" style={{ "--stat-col": "var(--sol-600)" } as React.CSSProperties}>
+          <span className="st-etq">Administradores</span>
+          <span className="st-num">{admins}</span>
+        </div>
+        <div className="stat-tarjeta" style={{ "--stat-col": "var(--ok)" } as React.CSSProperties}>
+          <span className="st-etq">Asesores</span>
+          <span className="st-num">{asesores}</span>
+        </div>
+        <div className="stat-tarjeta" style={{ "--stat-col": "var(--error)" } as React.CSSProperties}>
+          <span className="st-etq">Bloqueados</span>
+          <span className="st-num">{bloqueados}</span>
+        </div>
       </div>
       <UsuariosRejilla usuarios={fichas} yoId={yo.id} />
     </>

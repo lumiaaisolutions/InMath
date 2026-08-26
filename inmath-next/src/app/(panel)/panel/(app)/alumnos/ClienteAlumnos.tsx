@@ -309,14 +309,25 @@ export function ListaAlumnos({ inicial, cursos }: { inicial: Fila[]; cursos: Cur
               const restantes = pagoReciente ? horasRestantes(pagoReciente) : null;
               return (
                 <tr key={f.prospectoId} className="pg-fila-clic" onClick={() => setSelId(f.prospectoId)}>
-                  <td style={{ fontWeight: 600, color: "var(--pino)" }}>{f.nombre}</td>
+                  <td>
+                    <span className="al-quien">
+                      <span className="pw-avatar-sm">{(f.nombre || "?").charAt(0).toUpperCase()}</span>
+                      <b style={{ color: "var(--pino)" }}>{f.nombre}</b>
+                    </span>
+                  </td>
                   <td>{f.cursoNombre ?? "—"}</td>
                   <td><GajeEstadoAlumno estado={f.alumno?.estado ?? null} /></td>
                   <td>
                     <GajeEstadoPago estado={pagoReciente?.estado ?? null} />
                     {restantes !== null && <span className={`pg-vence-mini${restantes <= 24 ? " pg-vence" : ""}`}> · {restantes}h</span>}
                   </td>
-                  <td>{pagoReciente ? dinero(pagoReciente.montoCentavos, pagoReciente.moneda) : "—"}</td>
+                  <td>
+                    {pagoReciente ? (
+                      <b className={`pg-monto pg-monto-${pagoReciente.estado === "pagado" ? "ok" : pagoReciente.estado === "pendiente" ? "alerta" : "neutro"}`}>
+                        {dinero(pagoReciente.montoCentavos, pagoReciente.moneda)}
+                      </b>
+                    ) : "—"}
+                  </td>
                   <td onClick={(e) => e.stopPropagation()}>
                     {f.alumno?.puedeDarBaja && <span className="gaje alerta" title="Se puede dar de baja">elegible p/baja</span>}
                   </td>

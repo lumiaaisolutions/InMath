@@ -1,7 +1,7 @@
 "use client";
 import { useActionState, useState } from "react";
 import { IconoPanel } from "@/components/IconoPanel";
-import { Velo, ConfirmarDialogo, useToastResultado, Segmentado, BotonMagnetico } from "../ClientePanel";
+import { Velo, ConfirmarDialogo, useToastResultado, Segmentado, BotonMagnetico, SelectorFechaHora } from "../ClientePanel";
 import {
   cursoActualizarAccion, cursoCrearAccion, cursoEliminarAccion,
   cuponCrearAccion, cuponActivoAccion, procesadorPagoAccion, type Resultado,
@@ -126,11 +126,13 @@ function FormularioCurso({ curso, onListo, onCerrar }: { curso: Curso | null; on
   const [duracionSemanas, setDuracionSemanas] = useState(base.duracion_semanas ?? 1);
   const [confirmarBorrar, setConfirmarBorrar] = useState(false);
   const [borrando, setBorrando] = useState(false);
+  const [promocionExpira, setPromocionExpira] = useState(base.promocion_expira_en ?? "");
   const duracionMostrada = unidadDuracion === "semanas" ? duracionSemanas : Math.round((duracionSemanas / SEMANAS_POR_MES) * 10) / 10;
 
   const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev, fd) => {
     fd.set("modalidad", modalidad);
     fd.set("duracion_semanas", String(duracionSemanas));
+    fd.set("promocion_expira_en", promocionExpira);
     if (destacado) fd.set("destacado", "on"); else fd.delete("destacado");
     if (activo) fd.set("activo", "on"); else fd.delete("activo");
     if (promoActiva) fd.set("promocion_activa", "on"); else fd.delete("promocion_activa");
@@ -209,7 +211,7 @@ function FormularioCurso({ curso, onListo, onCerrar }: { curso: Curso | null; on
             </div>
             <div className="al-campo">
               <label>Se apaga sola el (opcional)</label>
-              <input type="datetime-local" name="promocion_expira_en" defaultValue={base.promocion_expira_en ?? ""} />
+              <SelectorFechaHora valor={promocionExpira} onChange={setPromocionExpira} />
             </div>
           </div>
         )}
@@ -305,9 +307,11 @@ function FormularioCupon({ cursos, onListo, onCerrar }: { cursos: CursoLigero[];
   const toast = useToastResultado();
   const [tipo, setTipo] = useState<"porcentaje" | "monto_fijo">("porcentaje");
   const [cursoId, setCursoId] = useState<string>("");
+  const [expiraEn, setExpiraEn] = useState("");
   const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev, fd) => {
     fd.set("tipo", tipo);
     fd.set("curso_id", cursoId);
+    fd.set("expira_en", expiraEn);
     const r = await cuponCrearAccion(prev, fd);
     toast(r);
     if (r.ok) onListo();
@@ -352,7 +356,7 @@ function FormularioCupon({ cursos, onListo, onCerrar }: { cursos: CursoLigero[];
           </div>
           <div className="al-campo">
             <label>Deja de funcionar el</label>
-            <input type="datetime-local" name="expira_en" />
+            <SelectorFechaHora valor={expiraEn} onChange={setExpiraEn} />
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 import { useActionState, useRef, useState } from "react";
 import { guardarAlertasAccion, alertaMediaSubirAccion, type ResultadoMedia } from "./acciones";
-import { useToastResultado, Segmentado, ConfirmarDialogo } from "../ClientePanel";
+import { useToastResultado, Segmentado, ConfirmarDialogo, SelectorFechaHora } from "../ClientePanel";
 import { IconoPanel } from "@/components/IconoPanel";
 import { CuentaRegresiva } from "@/components/CuentaRegresiva";
 import {
@@ -241,7 +241,7 @@ export function ClienteAlertas({ iniciales }: { iniciales: Alerta[] }) {
               {sel.diseno.mostrar_cuenta && (
                 <div className="al-campo al-campo-anidado">
                   <label>Fecha y hora límite</label>
-                  <input type="datetime-local" value={sel.diseno.fecha_limite} onChange={(e) => setD("fecha_limite", e.target.value)} />
+                  <SelectorFechaHora valor={sel.diseno.fecha_limite} onChange={(v) => setD("fecha_limite", v)} />
                 </div>
               )}
 

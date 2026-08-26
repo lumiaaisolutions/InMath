@@ -54,12 +54,34 @@ export default async function Alumnos() {
     };
   });
 
+  const alumnosActivos = filas.filter((f) => f.alumno?.estado === "activo").length;
+  const pagosPendientes = filas.flatMap((f) => f.pagos).filter((pg) => pg.estado === "pendiente");
+  const montoPendienteCentavos = pagosPendientes.reduce((s, pg) => s + pg.montoCentavos, 0);
+
   return (
     <>
       <div className="cabecera">
         <div>
           <h1>Alumnos y pagos</h1>
           <div className="sub">{filas.length} en total — cuentas, su pago más reciente y de qué curso</div>
+        </div>
+      </div>
+      <div className="stat-fila">
+        <div className="stat-tarjeta" style={{ "--stat-col": "var(--pino)" } as React.CSSProperties}>
+          <span className="st-etq">Alumnos activos</span>
+          <span className="st-num">{alumnosActivos}</span>
+        </div>
+        <div className="stat-tarjeta" style={{ "--stat-col": "var(--ok)" } as React.CSSProperties}>
+          <span className="st-etq">Cuentas totales</span>
+          <span className="st-num">{filas.length}</span>
+        </div>
+        <div className="stat-tarjeta" style={{ "--stat-col": "var(--alerta)" } as React.CSSProperties}>
+          <span className="st-etq">Pagos por confirmar</span>
+          <span className="st-num">{pagosPendientes.length}</span>
+        </div>
+        <div className="stat-tarjeta" style={{ "--stat-col": "var(--sol-600)" } as React.CSSProperties}>
+          <span className="st-etq">Monto pendiente</span>
+          <span className="st-num">${(montoPendienteCentavos / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span>
         </div>
       </div>
       <ListaAlumnos inicial={filas} cursos={cursos} />

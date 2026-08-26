@@ -175,6 +175,19 @@ export function SelectorFecha({ valor, onChange, min }: { valor: string; onChang
   );
 }
 
+/** Fecha + hora combinadas — reemplaza a <input type="datetime-local">. Valor/salida en
+ *  formato "YYYY-MM-DDTHH:MM", igual al que espera un <input type="datetime-local"> nativo. */
+export function SelectorFechaHora({ valor, onChange, min }: { valor: string; onChange: (v: string) => void; min?: string }) {
+  const [fecha, hora] = valor ? valor.split("T") : ["", ""];
+  const cambiar = (f: string, h: string) => onChange(f && h ? `${f}T${h}` : "");
+  return (
+    <div className="sel-fecha-hora">
+      <SelectorFecha valor={fecha ?? ""} onChange={(f) => cambiar(f, hora || "12:00")} min={min?.split("T")[0]} />
+      <SelectorHora valor={hora ?? ""} onChange={(h) => cambiar(fecha, h)} />
+    </div>
+  );
+}
+
 /** Contador +/- — reemplaza a <input type="number">. */
 export function SelectorNumero({ valor, onChange, min = 1, max = 99 }: { valor: number; onChange: (v: number) => void; min?: number; max?: number }) {
   return (

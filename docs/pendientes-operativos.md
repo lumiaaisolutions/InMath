@@ -210,14 +210,32 @@ Todo construido y verificado EN LOCAL (Playwright: desktop + iPhone 13);
 4. **Mathy SIN FONDO** (sitio y panel): botón transparente, solo la mascota
    sobre un splash de color estilo `.eyebrow` (con núcleo claro para legibilidad).
 
-**Sigue pendiente (igual que antes — nada nuevo se destrabó):**
-- Cambio de contraseña del alumno en el portal + recuperación de contraseña
-  para alumnos (los recomendé; el dueño aún no dio el OK para hacerlos).
-- Credenciales del dueño: Google (login), MercadoPago (tarjeta), WhatsApp
-  Business (Meta), y las tareas interactivas de n8n (Calendar OAuth + SMTP).
-- **Desplegar a producción** todo lo de Fases 3–4 + rediseño (a la espera del OK).
-- Los 3 usuarios reales del panel siguen con contraseña temporal por cambiar.
-- Fase 5 (práctica/reactivos) sigue fuera del MVP.
+**Actualización 26-ago-2026 — todo lo de abajo ya se resolvió:**
+- ✅ Cambio de contraseña del alumno en el portal (`/portal/cuenta`, pide
+  contraseña actual) y recuperación por correo unificada staff+alumno
+  (`/panel/login/recuperar` → `/panel/login/restablecer`, token de un solo
+  uso a 30 min) — construido y en producción (commit `85cd67b`).
+- ✅ Credenciales del dueño ya cargadas en el `.env` del VPS: Google
+  (`GOOGLE_CLIENT_ID`/`SECRET`, login del portal), MercadoPago
+  (`MERCADOPAGO_ACCESS_TOKEN`/`WEBHOOK_SECRET`, webhook verificado con pago
+  real), SMTP (Hostinger).
+- ✅ Fases 3–4 + rediseño desplegados a producción.
+- ✅ Fase 5 (práctica/reactivos) construida y en producción
+  (`/panel/reactivos`, `/portal/practica`).
+
+**Sigue pendiente de verdad (depende del dueño, no de código):**
+- **n8n**: el contenedor corre en el VPS (`http://2.24.123.93:5678`), pero
+  los 5 workflows siguen inactivos — les falta **WhatsApp Business Cloud API
+  de Meta** (token/phone-id, pospuesto por decisión del cliente; hoy se usa
+  wa.me directo) y, dentro de la UI de n8n, la credencial **Google Calendar
+  OAuth2** (flujo 03, crea evento + link de Meet) y la credencial **SMTP**
+  del flujo 08 — ambas son pasos interactivos que solo el dueño puede hacer
+  (login en la UI de n8n). Ver `n8n-conexion.md`.
+- **Google Calendar** en sí: el login con Google (portal) ya funciona, pero
+  la integración de **Calendar** (crear el evento real + Meet al agendar)
+  vive en el workflow 03 de n8n de arriba — mismo bloqueo.
+- Los 3 usuarios reales del panel siguen con contraseña temporal por cambiar
+  (ya pueden hacerlo solos desde "Mi perfil" o `/panel/login/recuperar`).
 
 **Nota:** las skills de diseño se instalaron en `inmath-next/.agents/skills/`
 (y crearon `.claude/`, `skills-lock.json`); se agregaron al `.gitignore` para no

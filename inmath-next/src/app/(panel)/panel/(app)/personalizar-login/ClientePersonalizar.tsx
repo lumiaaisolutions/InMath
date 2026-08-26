@@ -123,7 +123,7 @@ function EncuadreEditor({ archivo, onCancelar, onListo }: { archivo: File; onCan
     const im = img.current, c = lienzo.current;
     if (!im || !c) return;
     const salida = document.createElement("canvas");
-    salida.width = 1080; salida.height = 1350;
+    salida.width = 1080; salida.height = 1200;
     const f = salida.width / c.width;
     const e = est.current;
     const s = e.escBase * e.z * f;
@@ -133,7 +133,7 @@ function EncuadreEditor({ archivo, onCancelar, onListo }: { archivo: File; onCan
 
   return (
     <div className="aj-caja">
-      <canvas className="aj-lienzo" ref={lienzo} width={432} height={540}
+      <canvas className="aj-lienzo" ref={lienzo} width={450} height={500}
         onPointerDown={(e) => { arrastre.current = { x: e.clientX, y: e.clientY }; (e.target as HTMLElement).setPointerCapture(e.pointerId); }}
         onPointerMove={(e) => {
           if (!arrastre.current || !lienzo.current) return;

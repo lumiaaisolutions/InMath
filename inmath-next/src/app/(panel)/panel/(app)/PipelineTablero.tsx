@@ -45,28 +45,58 @@ function MoverBoton({ etapaActual, onMover }: { etapaActual: string; onMover: (d
   );
 }
 
-/** Anillo de dona (SVG): reparto del embudo por etapa, con el total al centro. */
+/** Anillo de dona interactivo: pasar el cursor por un segmento o la leyenda resalta
+ *  ambos a la vez y muestra su detalle al centro — reparto del embudo por etapa. */
 function DonaEtapas({ columnas, total }: { columnas: Record<string, { id: number }[]>; total: number }) {
+  const [activa, setActiva] = useState<string | null>(null);
   const r = 54;
   const c = 2 * Math.PI * r;
-  let acumulado = 0;
-  const segmentos = ETAPAS_ORDEN.map((et) => {
+  const segmentos = ETAPAS_ORDEN.reduce<{ etapa: string; n: number; frac: number; dash: string; offset: number }[]>((acc, et) => {
     const n = columnas[et]?.length ?? 0;
     const frac = total > 0 ? n / total : 0;
-    const seg = { etapa: et, n, dash: `${frac * c} ${c}`, offset: -acumulado * c };
-    acumulado += frac;
-    return seg;
-  });
+    const acumulado = acc.reduce((s, seg) => s + seg.frac, 0);
+    acc.push({ etapa: et, n, frac, dash: `${frac * c} ${c}`, offset: -acumulado * c });
+    return acc;
+  }, []);
+  const enFoco = segmentos.find((s) => s.etapa === activa) ?? null;
+
   return (
-    <div className="dona-envoltura">
-      <svg viewBox="0 0 140 140" className="dona-svg" role="img" aria-label="Reparto del pipeline por etapa">
-        <circle cx="70" cy="70" r={r} fill="none" stroke="var(--linea)" strokeWidth="16" />
-        {segmentos.filter((s) => s.n > 0).map((s) => (
-          <circle key={s.etapa} cx="70" cy="70" r={r} fill="none" stroke={HEX[s.etapa]} strokeWidth="16"
-            strokeDasharray={s.dash} strokeDashoffset={s.offset} strokeLinecap="round" transform="rotate(-90 70 70)" />
+    <div className="dona-cuerpo">
+      <div className="dona-envoltura">
+        <svg viewBox="0 0 140 140" className="dona-svg" role="img" aria-label="Reparto del pipeline por etapa">
+          <circle cx="70" cy="70" r={r} fill="none" stroke="var(--linea)" strokeWidth="16" />
+          {segmentos.filter((s) => s.n > 0).map((s) => (
+            <circle key={s.etapa} cx="70" cy="70" r={r} fill="none" stroke={HEX[s.etapa]}
+              strokeWidth={activa === s.etapa ? 20 : activa ? 12 : 16}
+              opacity={activa && activa !== s.etapa ? 0.35 : 1}
+              strokeDasharray={s.dash} strokeDashoffset={s.offset} strokeLinecap="round" transform="rotate(-90 70 70)"
+              className="dona-seg"
+              onMouseEnter={() => setActiva(s.etapa)} onMouseLeave={() => setActiva(null)}
+              style={{ cursor: "pointer", color: HEX[s.etapa] }}
+            />
+          ))}
+        </svg>
+        <div className="dona-centro">
+          {enFoco ? (
+            <>
+              <b style={{ color: HEX[enFoco.etapa] }}>{enFoco.n}</b>
+              <span>{etiquetaEtapa(enFoco.etapa)}</span>
+            </>
+          ) : (
+            <><b>{total}</b><span>en total</span></>
+          )}
+        </div>
+      </div>
+      <ul className="dona-leyenda">
+        {segmentos.map((s) => (
+          <li key={s.etapa} className={activa === s.etapa ? "activa" : ""}
+            onMouseEnter={() => setActiva(s.etapa)} onMouseLeave={() => setActiva(null)}>
+            <i style={{ background: HEX[s.etapa] }} />
+            <span className="dona-leyenda-nombre">{etiquetaEtapa(s.etapa)}</span>
+            <b>{s.n}</b>
+          </li>
         ))}
-      </svg>
-      <div className="dona-centro"><b>{total}</b><span>en total</span></div>
+      </ul>
     </div>
   );
 }
@@ -155,14 +185,7 @@ export function PipelineTablero({ columnas: inicial, asesores, filtroAsesor }: {
         </div>
         <div className="tarjeta dona-tarjeta">
           <span className="dona-tit">Reparto por etapa</span>
-          <div className="dona-cuerpo">
-            <DonaEtapas columnas={columnas} total={total} />
-            <ul className="dona-leyenda">
-              {ETAPAS_ORDEN.map((et) => (
-                <li key={et}><i style={{ background: HEX[et] }} />{etiquetaEtapa(et)} <b>{columnas[et]?.length ?? 0}</b></li>
-              ))}
-            </ul>
-          </div>
+          <DonaEtapas columnas={columnas} total={total} />
         </div>
         <div className="tarjeta asesores-tarjeta">
           <span className="dona-tit">Asesores activos</span>

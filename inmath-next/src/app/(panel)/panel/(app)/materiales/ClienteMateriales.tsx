@@ -22,12 +22,17 @@ function PortadaMaterial({ portada, onSubida }: { portada: string | null; onSubi
 
   const subir = async (f: File) => {
     setSubiendo(true);
-    const fd = new FormData();
-    fd.set("imagen", f);
-    const r = await materialPortadaSubirAccion(fd);
-    if (r.error) toast({ error: r.error });
-    else if (r.ok) onSubida(r.ok);
-    setSubiendo(false);
+    try {
+      const fd = new FormData();
+      fd.set("imagen", f);
+      const r = await materialPortadaSubirAccion(fd);
+      if (r.error) toast({ error: r.error });
+      else if (r.ok) onSubida(r.ok);
+    } catch {
+      toast({ error: "No pudimos subir la imagen — intenta de nuevo" });
+    } finally {
+      setSubiendo(false);
+    }
   };
 
   return (
@@ -58,14 +63,21 @@ function ArchivosMaterial({ archivos, onAgregar, onQuitar }: {
 
   const subirTodos = async (files: FileList) => {
     setSubiendo(true);
-    for (const f of Array.from(files)) {
-      const fd = new FormData();
-      fd.set("archivo", f);
-      const r = await materialArchivoSubirAccion(fd);
-      if (r.error) toast({ error: r.error });
-      else if (r.ok) onAgregar(r.ok);
+    try {
+      for (const f of Array.from(files)) {
+        try {
+          const fd = new FormData();
+          fd.set("archivo", f);
+          const r = await materialArchivoSubirAccion(fd);
+          if (r.error) toast({ error: `"${f.name}": ${r.error}` });
+          else if (r.ok) onAgregar(r.ok);
+        } catch {
+          toast({ error: `No pudimos subir "${f.name}" — intenta de nuevo` });
+        }
+      }
+    } finally {
+      setSubiendo(false);
     }
-    setSubiendo(false);
   };
 
   return (
@@ -87,6 +99,7 @@ function ArchivosMaterial({ archivos, onAgregar, onQuitar }: {
               <IconoPanel n="prompts" cls="ic-sm" />
               <span className="mat-archivo-nombre">{a.nombre}</span>
               <span className="mat-archivo-peso">{dinero(a.tamanoBytes)}</span>
+              <a href={a.url} target="_blank" rel="noopener" className="mat-ver" aria-label={`Ver ${a.nombre}`}>Ver</a>
               <button type="button" className="mat-quitar" aria-label="Quitar archivo" onClick={() => onQuitar(i)}><IconoPanel n="x" cls="ic-sm" /></button>
             </li>
           ))}
@@ -109,6 +122,13 @@ export function ClienteMateriales({ inicial }: { inicial: Material[] }) {
 
   const set = <K extends keyof Material>(id: string, campo: K, valor: Material[K]) =>
     setLista((l) => l.map((m) => (m.id === id ? { ...m, [campo]: valor } : m)));
+  // Actualiza archivos leyendo el estado MÁS RECIENTE dentro del updater — no desde un
+  // snapshot capturado en el closure. Necesario porque varias subidas seguidas (varios
+  // archivos elegidos a la vez) llaman a esto en el mismo ciclo, antes de que React
+  // vuelva a renderizar; usar `m.archivos` de afuera pisaba el archivo anterior en vez
+  // de agregarlo.
+  const agregarArchivo = (id: string, archivo: Material["archivos"][number]) =>
+    setLista((l) => l.map((m) => (m.id === id ? { ...m, archivos: [...m.archivos, archivo] } : m)));
   const quitar = (id: string) => setLista((l) => l.filter((m) => m.id !== id));
   const mover = (id: string, dir: -1 | 1) =>
     setLista((l) => {
@@ -134,7 +154,7 @@ export function ClienteMateriales({ inicial }: { inicial: Material[] }) {
               <button type="button" className="mat-mini" disabled={i === lista.length - 1} onClick={() => mover(m.id, 1)} aria-label="Bajar">↓</button>
             </div>
             <span className="mat-item-num">Material {i + 1}</span>
-            <button type="button" className="mat-quitar mat-item-borrar" aria-label="Quitar material" onClick={() => quitar(m.id)}>
+            <button type="button" className="mat-item-borrar" aria-label="Quitar material" onClick={() => quitar(m.id)}>
               <IconoPanel n="x" cls="ic-sm" /> Quitar
             </button>
           </div>
@@ -153,7 +173,7 @@ export function ClienteMateriales({ inicial }: { inicial: Material[] }) {
               ) : (
                 <ArchivosMaterial
                   archivos={m.archivos}
-                  onAgregar={(a) => set(m.id, "archivos", [...m.archivos, a])}
+                  onAgregar={(a) => agregarArchivo(m.id, a)}
                   onQuitar={(idx) => set(m.id, "archivos", m.archivos.filter((_, ix) => ix !== idx))}
                 />
               )}

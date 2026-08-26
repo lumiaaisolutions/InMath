@@ -53,14 +53,19 @@ function PreguntaFrame({ n, pregunta, onCambiar, onQuitar, permiteQuitar }: {
   };
   const explicarConIA = async () => {
     setExplicando(true);
-    const fd = new FormData();
-    fd.set("enunciado", pregunta.enunciado);
-    pregunta.opciones.forEach((o, i) => fd.set(`opcion_${i}`, o));
-    fd.set("respuesta_correcta", String(pregunta.correcta));
-    const r = await reactivoExplicarIAAccion(fd);
-    if (r.error) toast(r);
-    else if (r.ok) { onCambiar({ ...pregunta, explicacion: r.ok }); toast({ ok: "Sugerencia de la IA lista — revísala antes de guardar." }); }
-    setExplicando(false);
+    try {
+      const fd = new FormData();
+      fd.set("enunciado", pregunta.enunciado);
+      pregunta.opciones.forEach((o, i) => fd.set(`opcion_${i}`, o));
+      fd.set("respuesta_correcta", String(pregunta.correcta));
+      const r = await reactivoExplicarIAAccion(fd);
+      if (r.error) toast(r);
+      else if (r.ok) { onCambiar({ ...pregunta, explicacion: r.ok }); toast({ ok: "Sugerencia de la IA lista — revísala antes de guardar." }); }
+    } catch {
+      toast({ error: "No pudimos contactar a la IA. Intenta de nuevo en unos segundos." });
+    } finally {
+      setExplicando(false);
+    }
   };
 
   return (
@@ -68,7 +73,7 @@ function PreguntaFrame({ n, pregunta, onCambiar, onQuitar, permiteQuitar }: {
       <div className="mat-item-cab">
         <span className="mat-item-num">Pregunta {n}</span>
         {permiteQuitar && (
-          <button type="button" className="mat-quitar mat-item-borrar" onClick={onQuitar}><IconoPanel n="x" cls="ic-sm" /> Quitar</button>
+          <button type="button" className="mat-item-borrar" onClick={onQuitar}><IconoPanel n="x" cls="ic-sm" /> Quitar</button>
         )}
       </div>
       <label className="pl-campo">Enunciado
@@ -113,18 +118,27 @@ function AdjuntosExamen({ totalPreguntas, adjuntos, onAgregar, onQuitar }: {
   const [subiendo, setSubiendo] = useState(false);
   const opcionesPregunta = Array.from({ length: totalPreguntas }, (_, i) => ({ valor: String(i + 1), nombre: `Pregunta ${i + 1}` }));
 
-  const subir = async (f: File) => {
+  const subirTodos = async (files: FileList) => {
     setSubiendo(true);
-    const fd = new FormData();
-    fd.set("archivo", f);
-    const r = await reactivoAdjuntoSubirAccion(fd);
-    if (r.error) toast({ error: r.error });
-    else if (r.ok) {
-      const d = Math.min(parseInt(desde, 10) || 1, totalPreguntas);
-      const h = Math.max(parseInt(hasta, 10) || 1, d);
-      onAgregar({ cid: nuevoId(), desde: d, hasta: h, tipo: r.ok.tipo as AdjuntoEditable["tipo"], nombre: r.ok.nombre, url: r.ok.url });
+    try {
+      for (const f of Array.from(files)) {
+        try {
+          const fd = new FormData();
+          fd.set("archivo", f);
+          const r = await reactivoAdjuntoSubirAccion(fd);
+          if (r.error) toast({ error: `"${f.name}": ${r.error}` });
+          else if (r.ok) {
+            const d = Math.min(parseInt(desde, 10) || 1, totalPreguntas);
+            const h = Math.max(parseInt(hasta, 10) || 1, d);
+            onAgregar({ cid: nuevoId(), desde: d, hasta: h, tipo: r.ok.tipo as AdjuntoEditable["tipo"], nombre: r.ok.nombre, url: r.ok.url });
+          }
+        } catch {
+          toast({ error: `No pudimos subir "${f.name}" — intenta de nuevo` });
+        }
+      }
+    } finally {
+      setSubiendo(false);
     }
-    setSubiendo(false);
   };
 
   return (
@@ -147,10 +161,10 @@ function AdjuntosExamen({ totalPreguntas, adjuntos, onAgregar, onQuitar }: {
         <SelectorDesplegable sinVacio placeholder="Hasta" valor={hasta} opciones={opcionesPregunta} onChange={setHasta} />
       </div>
       <label className="mat-dropzone">
-        <input type="file" hidden accept=".jpg,.jpeg,.png,.webp,.mp4,.pdf"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) subir(f); e.target.value = ""; }} />
+        <input type="file" multiple hidden accept=".jpg,.jpeg,.png,.webp,.mp4,.pdf"
+          onChange={(e) => { if (e.target.files?.length) subirTodos(e.target.files); e.target.value = ""; }} />
         <IconoPanel n="prompts" cls="ic-sm" />
-        <span>{subiendo ? "Subiendo…" : "Elige el archivo para ese rango"}</span>
+        <span>{subiendo ? "Subiendo…" : "Elige uno o varios archivos para ese rango"}</span>
       </label>
     </div>
   );
@@ -256,7 +270,7 @@ function ListaExamenes({ examenes, cursos }: { examenes: Examen[]; cursos: Curso
   const [abierto, setAbierto] = useState<"crear" | Examen | null>(null);
 
   return (
-    <div className="tarjeta" style={{ marginBottom: 20 }}>
+    <div className="tarjeta rx-panel" style={{ marginBottom: 20 }}>
       <div className="stat-fila" style={{ marginTop: 0, marginBottom: 16 }}>
         <div className="stat-tarjeta" style={{ "--stat-col": "var(--pino)" } as React.CSSProperties}>
           <span className="st-etq">Exámenes</span>
@@ -388,7 +402,7 @@ function ListaReactivosSueltos({ inicial, cursos }: { inicial: Reactivo[]; curso
   const [abierto, setAbierto] = useState<"crear" | Reactivo | null>(null);
 
   return (
-    <div className="tarjeta">
+    <div className="tarjeta rx-panel">
       <div className="rx-cab rx-cab-espaciada">
         <div>
           <b>Reactivos sueltos</b>

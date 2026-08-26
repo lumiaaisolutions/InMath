@@ -428,7 +428,8 @@ export async function loginMediaMetaAccion(_prev: Resultado, fd: FormData): Prom
   return { ok: "Slide actualizado" };
 }
 
-/** Port de /accion/login-media-subir: MP4 directo; imágenes a 1080×1350 JPG. */
+/** Port de /accion/login-media-subir: MP4 directo; imágenes a 1080×1200 JPG (9:10, misma
+ *  proporción que el panel de medios real del login — ver .login-media/.pl-preview). */
 export async function loginMediaSubirAccion(_prev: Resultado, fd: FormData): Promise<Resultado> {
   await requiereAdmin();
   const archivo = fd.get("media");
@@ -446,7 +447,7 @@ export async function loginMediaSubirAccion(_prev: Resultado, fd: FormData): Pro
     await writeFile(path.join(dir, `${base}.mp4`), buf);
   } else {
     try {
-      await sharp(buf).resize(1080, 1350, { fit: "cover" }).jpeg({ quality: 88 }).toFile(path.join(dir, `${base}.jpg`));
+      await sharp(buf).resize(1080, 1200, { fit: "cover" }).jpeg({ quality: 88 }).toFile(path.join(dir, `${base}.jpg`));
     } catch { return { error: "No pudimos procesar esa imagen, intenta con otra" }; }
   }
   revalidatePath("/panel/personalizar-login"); revalidatePath("/panel/login");
@@ -469,7 +470,7 @@ export async function loginMediaRecortarAccion(_prev: Resultado, fd: FormData): 
   const base = `${ahora.toISOString().slice(0, 10).replace(/-/g, "")}-${ahora.toISOString().slice(11, 19).replace(/:/g, "")}-${randomBytes(4).toString("hex")}`;
   const archivoNuevo = `${base}.jpg`;
   try {
-    await sharp(Buffer.from(await media.arrayBuffer())).resize(1080, 1350, { fit: "cover" }).jpeg({ quality: 88 }).toFile(path.join(dir, archivoNuevo));
+    await sharp(Buffer.from(await media.arrayBuffer())).resize(1080, 1200, { fit: "cover" }).jpeg({ quality: 88 }).toFile(path.join(dir, archivoNuevo));
   } catch { return { error: "No pudimos procesar esa imagen, intenta con otra" }; }
 
   const fila = await prisma.configuraciones.findUnique({ where: { clave: "login_media_meta" } });

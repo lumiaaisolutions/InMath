@@ -41,8 +41,12 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   experimental: {
     serverActions: {
-      // El comprobante de /pago acepta hasta 8 MB + sobrecarga multipart.
-      bodySizeLimit: "9mb",
+      // El límite real más grande hoy es Materiales (documento/video hasta 60MB,
+      // ver MAX_ARCHIVO en materiales/acciones.ts) — antes este límite estaba en
+      // 9mb (pensado solo para el comprobante de /pago de 8MB) y rechazaba en
+      // silencio cualquier archivo mayor ANTES de que el código de la app
+      // pudiera dar un mensaje de error claro (se veía como un 403 genérico).
+      bodySizeLimit: "65mb",
     },
   },
   async headers() {

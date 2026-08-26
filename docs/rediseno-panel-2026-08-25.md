@@ -573,3 +573,248 @@ Los 10 módulos ya están **en vivo** en `inmath.lumiaaisolutions.com`.
   por `rsync` directo, independiente de git en este proyecto. Los archivos
   siguen como cambios sin commitear en el working tree local, tal como
   estaban el resto de módulos de sesiones anteriores.
+
+(Nota: ese primer lote de cambios sí se comprometió a git poco después —
+commit `837b067` — antes de empezar la ronda de correcciones de abajo.)
+
+## 🔧 Ronda de correcciones post-lanzamiento — 26-ago-2026 (tarde)
+
+El cliente probó el sistema ya en producción y reportó una serie de bugs y
+pulido pendiente en 8 módulos, con capturas de pantalla y de consola. Se
+corrigió todo, se verificó en local y se volvió a desplegar. Detalle por
+módulo:
+
+### Pipeline
+
+- **Bug real:** el desplegable "Todos los asesores" se pintaba DETRÁS de las
+  tarjetas "Reparto por etapa"/"Asesores activos". Causa: el mismo patrón ya
+  documentado antes (`.cabecera > *` le da `z-index:1` a su hijo directo —
+  el desplegable — pero `.cabecera` en sí no tenía z-index propio, así que
+  perdía contra `.resumen-fila`, que viene después en el DOM). Se le puso
+  `z-index:2` a `.cabecera` — mismo arreglo que ya había funcionado en
+  Alumnos.
+- **"Reparto por etapa" rediseñado para ser interactivo:** ahora al pasar el
+  cursor por un segmento del anillo O por su renglón en la leyenda, ambos se
+  resaltan a la vez (el otro segmento se atenúa) y el número al centro
+  cambia de "total" a la cifra y nombre de esa etapa específica, con su
+  color. Antes era un donut estático sin ninguna interacción.
+
+### Disponibilidad
+
+- **Mismo bug de z-index**, esta vez entre el desplegable de "elige el día"
+  (paso 2) y el bloque de horarios que aparece justo debajo, dentro de la
+  MISMA tarjeta — arreglado con el mismo patrón (`z-index:2` en
+  `.disp-dia-selector`).
+
+### Citas
+
+- Los "gaje neutro" (nombre del asesor + punto de color, arriba del
+  calendario) eran una etiqueta genérica sin ninguna personalidad. Se
+  rediseñaron como chips propios (`.citas-leyenda-item`) que toman el color
+  real de cada asesor como fondo tenue y borde, con hover (se levantan
+  ligeramente y el punto de color crece) — mucho más claros e
+  interactivos.
+
+### Material del curso
+
+- **Bug real de subida múltiple:** al elegir varios archivos a la vez, solo
+  se subía el primero y el resto se quedaba en "Subiendo…" para siempre —
+  en consola se veía un 403 y un "Unhandled Promise Rejection". Causa: el
+  ciclo `for` que sube archivo por archivo no tenía `try/catch`, así que si
+  UNA subida fallaba (ej. por una referencia de acción vieja justo después
+  de un reinicio del servidor), el ciclo se rompía a media función y
+  `setSubiendo(false)` nunca se ejecutaba — el spinner se quedaba pegado
+  para siempre sin importar la causa real del fallo. Se envolvió cada
+  subida en su propio `try/catch` con `finally`, así que un archivo que
+  falla no traba a los demás y siempre se libera el estado de "subiendo".
+  Se aplicó el mismo arreglo defensivo en la portada y en los adjuntos de
+  Reactivos.
+- Botón "Quitar" (de cada archivo y de cada material completo) rediseñado:
+  círculo/píldora con fondo rojo tenue siempre visible (antes era
+  transparente, solo aparecía al pasar el cursor) — más fácil de encontrar.
+
+### Reactivos
+
+- **Distribución muy pegada a los bordes:** la causa real era que
+  `.pl-form` (la clase base del formulario) trae `max-width:480px` de
+  fábrica — al usarla dentro del modal ancho nuevo (760px) del examen, el
+  contenido editable quedaba encogido en una columna angosta con poco
+  padding, aunque el modal alrededor fuera ancho. Se le quitó ese límite
+  específicamente al formulario de examen y se aumentó el padding del
+  modal y de cada tarjeta de pregunta.
+- **"Explicar con IA" se quedaba en "Pensando…" para siempre + error "no se
+  puede conectar":** tres causas combinadas, las tres corregidas:
+  1. El mismo bug de falta de `try/catch` que en Materiales — si la
+     llamada fallaba, el botón se quedaba pegado en "Pensando…" sin fin.
+  2. **Ollama en el VPS tarda ~20-30 segundos en cargar el modelo desde
+     disco** cuando lleva rato sin usarse (medido en vivo: 21-27s solo de
+     carga, antes de generar una sola palabra) — el tiempo de espera del
+     código (45s) a veces no alcanzaba. Se subió a 90s y se agregó
+     `keep_alive: "30m"` a la petición para que el modelo no se descargue
+     de memoria entre usos seguidos.
+  3. **nginx del VPS cortaba la conexión a los 60 segundos**
+     (`proxy_read_timeout`), sin importar que la app ya esperara 90 — así
+     que aunque Ollama sí iba a responder, nginx tronaba la conexión
+     antes. Se subió a 120s, solo en el bloque de servidor de
+     `inmath.lumiaaisolutions.com` (autorizado explícitamente, con
+     respaldo del archivo de configuración antes de tocarlo).
+  4. Las alertas (toasts) se quedaban visualmente DETRÁS del fondo
+     borroso de cualquier modal abierto — `.toast` tenía `z-index:300` y
+     `.us-velo` (el fondo borroso) tenía `z-index:380`. Se subió el toast
+     a `z-index:400` para que siempre gane.
+- **Ahora se puede elegir más de un archivo a la vez** para el material de
+  apoyo de un rango de preguntas (antes el selector de archivo solo
+  aceptaba uno; había que repetir la acción una por una).
+
+### Alertas de la página
+
+- **Bug real de texto cortado:** el botón "Agendar asesoría gratis" (en
+  "El botón lleva a") se veía como "gendar asesoría grati" — sin puntos
+  suspensivos, cortado de ambos lados. Causa: `text-align:center` combinado
+  con `white-space:nowrap + text-overflow:ellipsis` no muestra el "…"
+  cuando el texto está centrado y no cabe — simplemente lo recorta por
+  ambos lados en silencio. Se cambió para que las etiquetas largas se
+  envuelvan a 2 líneas en vez de recortarse — nunca más se pierde texto.
+
+### Personalizar login
+
+- **Bug real de fondo (no solo visual):** la vista previa, el recorte y el
+  login real usaban 3 proporciones distintas para la misma imagen:
+  - Herramienta de recorte y archivo guardado: 4:5 (1080×1350).
+  - Panel "Vista previa" del admin: la celda de la imagen mide ~0.93:1
+    (calculado desde su propio CSS: `grid 1.1fr/.9fr` + `aspect-ratio
+    16/9.5`).
+  - Login real (`.login-media`): ~0.86-0.96:1 en pantallas de escritorio
+    típicas (mide 54% del ancho de la ventana × 100% del alto).
+  
+  El recorte (4:5 = 0.8) era más angosto/alto que las otras dos (~0.9), así
+  que el login real y la vista previa SIEMPRE recortaban los lados de la
+  imagen de forma distinta a como se veía en el editor. Se unificaron las
+  3 a 9:10 (0.9, la proporción real del panel de vista previa, la más
+  cercana a como se ve en el login real): el lienzo de recorte, el archivo
+  que se guarda en el servidor (`sharp.resize`), la miniatura de la
+  galería y el preview del modal de edición.
+
+### Sistema — inputs nativos
+
+- Se reemplazaron los 3 `<input type="datetime-local">` que quedaban
+  (fecha límite de Alertas, vencimiento de promoción y de cupón en
+  Precios) por un componente nuevo compartido `SelectorFechaHora`
+  (combina el `SelectorFecha` y `SelectorHora` que ya existían) — cero
+  controles nativos del navegador en esos 3 formularios.
+
+## Segundo despliegue a producción — 26-ago-2026 (tarde)
+
+- Sin cambios de esquema esta vez (no se tocó `prisma/schema.prisma` ni
+  `package.json`) — despliegue más simple: solo `rsync` de `src/`, build
+  en el VPS, reinicio de `pm2`.
+- Se encontró y limpió, antes de sincronizar, un archivo de prueba
+  (`guia-prueba-...pdf`) que había quedado en `panel/public/img/materiales/`
+  de pruebas anteriores en esta misma sesión — no se sube contenido de
+  prueba a producción.
+- Cambio de infraestructura autorizado explícitamente por el cliente:
+  `proxy_read_timeout` de nginx subido de 60s a 120s, solo para
+  `inmath.lumiaaisolutions.com`, con respaldo del archivo antes de
+  tocarlo y `nginx -t` antes de recargar.
+
+## 🔧 Segunda ronda de correcciones — 26-ago-2026 (misma tarde)
+
+El cliente volvió a probar en producción y encontró que algunos arreglos de
+la ronda anterior no habían quedado del todo bien, más pulido adicional.
+
+### Pipeline — "Reparto por etapa" (arreglo real, no solo visual)
+
+- El centro del donut (número + "en total") se veía encimado, sobre todo al
+  pasar el cursor por una etapa con nombre largo ("Pago pendiente"). Causa:
+  el círculo central para el texto era muy chico (~46px de diámetro
+  efectivo) para caber un número grande + una etiqueta. Se agrandó el
+  donut completo (108px → 138px) y se le puso un círculo blanco de fondo
+  con borde propio al centro, separándolo visualmente del anillo de
+  colores — ya no se ve apretado ni se encima nada.
+
+### Citas / Disponibilidad — espaciado
+
+- Aumentado el espacio entre los chips de asesores en Citas y entre los
+  botones (días, horas, presets) en Disponibilidad — se veían pegados
+  entre sí.
+
+### Material del curso — bug real de fondo en la subida múltiple
+
+- **Encontrado el verdadero motivo por el que solo se subía un archivo de
+  varios elegidos a la vez** (el arreglo de la ronda anterior solo evitaba
+  que se quedara pegado en "Subiendo…", pero no arreglaba por qué se
+  perdían archivos): un bug de "closure viejo" de React. Cada archivo
+  subido llamaba a `set(m.id, "archivos", [...m.archivos, nuevoArchivo])`,
+  pero `m.archivos` venía de una fotografía vieja del estado (capturada
+  antes de que empezara la subida) — al subir el segundo archivo en la
+  misma tanda, se usaba esa misma fotografía vieja (sin el primer
+  archivo) y lo pisaba en vez de agregarlo. Se corrigió leyendo el estado
+  más reciente DENTRO de la función que actualiza la lista, no desde
+  afuera — ahora se pueden subir varios archivos de un jalón sin perder
+  ninguno. Verificado en local subiendo 3 archivos a la vez.
+- **También se encontró y arregló la causa real de "no pudimos subir la
+  imagen" (403) en la portada:** el límite de tamaño de las Server Actions
+  de Next.js (`next.config.ts`) estaba en 9 MB — pensado solo para el
+  comprobante de pago de 8 MB — pero el código de Materiales ya permite
+  archivos de hasta 60 MB. Cualquier foto o documento de más de 9 MB
+  (una foto de celular normal fácilmente pesa eso) se rechazaba ANTES de
+  llegar al código de la app, como un error genérico sin explicación. Se
+  subió el límite a 65 MB para que coincida con lo que la app ya promete.
+  **Pendiente de autorización:** el nginx del VPS también tiene su propio
+  límite (`client_max_body_size 25M`) que hay que subir a la par, si no,
+  seguiría rechazando archivos grandes antes de llegar a Next.js.
+- Se agregó un botón "Ver" junto a cada archivo ya subido, para abrirlo y
+  confirmar visualmente que se subió correctamente.
+- El botón "Quitar" de cada material (el de arriba de la tarjeta) tenía
+  DOS clases CSS con estilos que competían entre sí (`.mat-quitar` —
+  pensada para un botón circular solo-ícono — y `.mat-item-borrar` —
+  pensada para una píldora con ícono y texto). Como ambas estaban en el
+  mismo botón, el ícono "×" y la palabra "Quitar" se apretujaban dentro de
+  un círculo de 28px. Se dejó solo la clase que ya tenía el diseño
+  completo. El mismo bug exacto estaba también en el botón "Quitar" de
+  cada pregunta en el examen de Reactivos — mismo arreglo ahí también.
+
+### Reactivos — la tarjeta raíz no tenía padding
+
+- La causa real de "todo pegado a los bordes": la tarjeta blanca que
+  envuelve toda la sección de "Exámenes" y toda la de "Reactivos sueltos"
+  no tenía NINGUNA clase de padding (`.tarjeta` sola, sin padding propio)
+  — todo el contenido de adentro quedaba pegado literalmente al borde de
+  la tarjeta. Se agregó una clase `.rx-panel` (mismo padding que ya usan
+  Precios y otras secciones) a ambas tarjetas raíz.
+
+## 🎨 Pasada de interactividad/diseño en todo el panel — 26-ago-2026
+
+Pedido del cliente: que todo el panel y cada apartado sea interactivo,
+llamativo y visualmente atractivo, agregando complementos donde haga falta.
+Se hizo un inventario primero (con un agente de exploración) para encontrar
+qué módulos se habían quedado planos frente a los que ya se rediseñaron
+antes (Pipeline, Citas, Disponibilidad, Materiales, Reactivos, Alertas,
+Precios, Personalizar login). Resultado: **Alumnos y pagos** era el más
+plano (sin fila de estadísticas, nombres sin avatar, tabla de texto puro) y
+**Usuarios** le faltaba la fila de estadísticas que ya tienen los demás.
+
+- **Alumnos y pagos**: se agregó una fila de 4 tarjetas de estadística
+  (alumnos activos, cuentas totales, pagos por confirmar, monto pendiente
+  total) igual que en Citas/Reactivos/Disponibilidad; cada alumno en la
+  tabla ahora tiene un círculo con su inicial (mismo estilo que los
+  avatares de Usuarios, en versión chica); la columna de Monto se colorea
+  según el estado del pago (verde si ya pagó, ámbar si está pendiente); las
+  tarjetas de información dentro de la ficha de detalle (Contacto, Cuenta,
+  Pago, Fechas, Comprobante) ahora tienen una animación sutil al pasar el
+  cursor.
+- **Usuarios**: se agregó la misma fila de estadísticas (usuarios totales,
+  administradores, asesores, bloqueados) que ya tienen los demás módulos.
+- **Todo el panel**: las tarjetas de estadística (`.stat-tarjeta`) — que ya
+  se usan en Pipeline, Citas, Disponibilidad, Reactivos y ahora también
+  Alumnos y Usuarios — ganaron una animación de elevación al pasar el
+  cursor (con su color de acento propio en la sombra), dando el mismo
+  toque interactivo en TODOS los módulos que las usan de un solo cambio.
+- Se revisó que las tarjetas verdaderamente clicables (Precios, Alertas,
+  Usuarios, Pipeline) ya tuvieran su propio hover de elevación (sí lo
+  tenían, de rondas anteriores) y que las tarjetas puramente informativas
+  (calendario, formularios) NO lo tuvieran — un hover en un contenedor que
+  no hace nada al hacer clic se ve como un bug, no como pulido.
+
+Verificado en local con datos de prueba (un alumno con pago pendiente
+sembrado a mano). Build de producción limpio.
