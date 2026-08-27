@@ -223,17 +223,25 @@ Todo construido y verificado EN LOCAL (Playwright: desktop + iPhone 13);
 - ✅ Fase 5 (práctica/reactivos) construida y en producción
   (`/panel/reactivos`, `/portal/practica`).
 
+**Actualización 27-ago-2026 — n8n con dominio HTTPS + 2 de 3 credenciales resueltas:**
+- ✅ n8n ahora tiene un subdominio real con HTTPS (`n8n.lumiaaisolutions.com`,
+  DNS en Cloudflare + nginx + certificado Let's Encrypt) — la IP vieja se
+  dejó funcionando en paralelo, no rompe nada existente.
+- ✅ Credencial **Google Calendar OAuth2** creada y conectada en n8n
+  ("Account connected") — proyecto de Google Cloud publicado a producción.
+- ✅ Credencial **SMTP** creada y probada en n8n ("Connection tested
+  successfully"), reutilizando la cuenta de correo que ya usa el sitio.
+- Detalle técnico completo de los tres puntos anteriores en `n8n-conexion.md`
+  (incluye una nota de seguridad: se recomienda rotar la contraseña de correo
+  de Hostinger porque quedó expuesta sin querer en el chat de esta sesión).
+
 **Sigue pendiente de verdad (depende del dueño, no de código):**
-- **n8n**: el contenedor corre en el VPS (`http://2.24.123.93:5678`), pero
-  los 5 workflows siguen inactivos — les falta **WhatsApp Business Cloud API
-  de Meta** (token/phone-id, pospuesto por decisión del cliente; hoy se usa
-  wa.me directo) y, dentro de la UI de n8n, la credencial **Google Calendar
-  OAuth2** (flujo 03, crea evento + link de Meet) y la credencial **SMTP**
-  del flujo 08 — ambas son pasos interactivos que solo el dueño puede hacer
-  (login en la UI de n8n). Ver `n8n-conexion.md`.
-- **Google Calendar** en sí: el login con Google (portal) ya funciona, pero
-  la integración de **Calendar** (crear el evento real + Meet al agendar)
-  vive en el workflow 03 de n8n de arriba — mismo bloqueo.
+- **WhatsApp Business Cloud API de Meta** (token/phone-id/verify token) —
+  pospuesto por decisión explícita del cliente; hoy el sitio usa wa.me
+  directo. Sin esto, los workflows 01/04/07/08 de n8n (los que envían por
+  WhatsApp) no se pueden activar, aunque ya tengan sus otras credenciales
+  listas. El workflow 03 (Google Calendar) ya podría activarse si se decide
+  usar n8n para eso en vez del flujo actual dentro del Next.
 - Los 3 usuarios reales del panel siguen con contraseña temporal por cambiar
   (ya pueden hacerlo solos desde "Mi perfil" o `/panel/login/recuperar`).
 

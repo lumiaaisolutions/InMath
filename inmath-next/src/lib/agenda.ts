@@ -56,12 +56,30 @@ export async function slotsDisponibles(desde: Date | null = null, dias = 7, ases
   return slots;
 }
 
+/** Avisa a n8n (workflow 03) para que cree el evento real en Google Calendar + Meet.
+ *  Best-effort: si n8n no responde o no está configurado, la cita ya quedó
+ *  agendada de todos modos (el admin puede pegar el link a mano como respaldo). */
+function notificarCitaCreada(cita: { id: number; asesor_id: number; inicio: Date; fin: Date }, telefono: string | null, prospectoNombre: string | null) {
+  const base = process.env.N8N_BASE_URL;
+  if (!base) return;
+  fetch(`${base.replace(/\/$/, "")}/webhook/cita-creada`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      cita: { id: cita.id, asesor_id: cita.asesor_id, inicio: isoMinuto(cita.inicio), fin: isoMinuto(cita.fin) },
+      telefono,
+      prospecto_nombre: prospectoNombre,
+    }),
+    signal: AbortSignal.timeout(8000),
+  }).catch((e) => console.error("notificarCitaCreada: no se pudo avisar a n8n", e));
+}
+
 /** Port fiel de crearCita: transacción con FOR UPDATE + UNIQUE como última defensa. */
 async function crearCita(prospectoId: number, asesorId: number, inicio: Date, fin: Date) {
-  const prospecto = await prisma.prospectos.findUnique({ where: { id: prospectoId }, select: { id: true, etapa: true } });
+  const prospecto = await prisma.prospectos.findUnique({ where: { id: prospectoId }, select: { id: true, etapa: true, nombre: true, telefono_whatsapp: true } });
   if (!prospecto) return { error: "Prospecto no encontrado", codigo: 404 } as const;
   try {
-    return await prisma.$transaction(async (tx) => {
+    const r = await prisma.$transaction(async (tx) => {
       const traslape = await tx.$queryRaw<{ id: number }[]>`
         SELECT id FROM citas
         WHERE asesor_id = ${asesorId} AND estado IN ('agendada','confirmada')
@@ -77,6 +95,8 @@ async function crearCita(prospectoId: number, asesorId: number, inicio: Date, fi
       }
       return { cita } as const;
     });
+    if (!("error" in r)) notificarCitaCreada(r.cita, prospecto.telefono_whatsapp, prospecto.nombre);
+    return r;
   } catch (e: unknown) {
     const err = e as { code?: string };
     if (err.code === "P2002") return { error: "El asesor ya tiene una cita que inicia exactamente a esa hora", codigo: 409 } as const;

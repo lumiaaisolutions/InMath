@@ -108,6 +108,16 @@ pm2 delete inmath-web
 cd /var/www/inmath/web/.next/standalone && PORT=3010 pm2 start server.js --name inmath-web --update-env && pm2 save
 ```
 
+**`PORT=3010` es OBLIGATORIO en ese comando** — no vive en ningún `.env` (ni
+el fuente ni el de `.next/standalone`), solo en este comando. Si se omite,
+Next arranca en su puerto por defecto (3000, que además ya usa otro proyecto
+del VPS) y nginx (que apunta a `127.0.0.1:3010`) devuelve **502** aunque pm2
+muestre el proceso "online" sin reinicios — el síntoma engañoso es que todo
+*parece* sano salvo por el 502. Pasó en vivo el 27-ago-2026 (deploy de la
+integración de n8n) y se resolvió recreando el proceso con `PORT=3010`
+explícito. Verificar siempre con
+`ss -tlnp | grep 3010` en el VPS tras cada deploy, no solo `pm2 list`.
+
 ## ⚠️ rsync incremental: NO pisar src/generated (motor Prisma Linux)
 
 Al re-desplegar con `rsync src/ …:/…/web/src/`, el patrón de exclusión relativo
