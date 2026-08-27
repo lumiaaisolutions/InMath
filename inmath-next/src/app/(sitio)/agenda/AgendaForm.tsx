@@ -23,7 +23,7 @@ export function AgendaForm({ rangoDias, grupos }: { rangoDias: DiaRango[]; grupo
       <div className="tarjeta-form">
         <div className="aviso ok" style={{ marginBottom: 0 }}>
           ¡Cita confirmada! Te esperamos el <strong>{estado.ok}</strong>.
-          En breve recibirás la confirmación con el enlace de la videollamada en tu WhatsApp.
+          En breve recibirás la confirmación con el enlace de la videollamada en tu correo.
         </div>
         <Link className="boton ghost grande" href="/" style={{ marginTop: 20 }}>← Volver al inicio</Link>
       </div>
@@ -43,6 +43,11 @@ export function AgendaForm({ rangoDias, grupos }: { rangoDias: DiaRango[]; grupo
           <div className="campo">
             <label htmlFor="telefono"><Icono n="chat" /> WhatsApp (10 dígitos)</label>
             <input type="tel" id="telefono" name="telefono" required inputMode="numeric" placeholder="55 1234 5678" />
+          </div>
+          <div className="campo">
+            <label htmlFor="correo"><Icono n="mail" /> Correo</label>
+            <input type="email" id="correo" name="correo" required placeholder="tucorreo@ejemplo.com" />
+            <small>Aquí te llega el enlace de tu videollamada.</small>
           </div>
           <div className="campo">
             <label><Icono n="calendar" /> Fechas disponibles</label>

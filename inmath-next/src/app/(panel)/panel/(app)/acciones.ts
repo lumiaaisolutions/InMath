@@ -132,17 +132,24 @@ export async function citaCrearAccion(_prev: Resultado, fd: FormData): Promise<R
   await requiereModulo("citas");
   const nombre = String(fd.get("nombre") ?? "").trim();
   const telefono = normalizaTelefono(String(fd.get("telefono") ?? ""));
+  const correo = String(fd.get("correo") ?? "").trim();
   const inicio = `${fd.get("fecha") ?? ""} ${fd.get("hora") ?? ""}`.trim();
   if (!nombre || !telefono || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(inicio)) {
     return { error: "Nombre, WhatsApp válido, fecha y hora son obligatorios" };
   }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) {
+    return { error: "Escribe un correo válido — ahí le llega el enlace de la videollamada" };
+  }
   const { prospecto } = await upsertPorTelefono(telefono, { nombre, fuente: "otro" });
+  if (prospecto.correo !== correo.toLowerCase()) {
+    await prisma.prospectos.update({ where: { id: prospecto.id }, data: { correo: correo.toLowerCase() } });
+  }
   const asesorId = fd.get("asesor_id") ? parseInt(String(fd.get("asesor_id")), 10) : null;
   const meetLink = String(fd.get("meet_link") ?? "").trim();
   if (meetLink && !/^https?:\/\//i.test(meetLink)) {
     return { error: "El enlace de videollamada debe empezar con http:// o https://" };
   }
-  const r = await agendar(prospecto.id, inicio, asesorId);
+  const r = await agendar(prospecto.id, inicio, correo, asesorId);
   if ("error" in r) return { error: r.error };
   // Enlace de videollamada manual (Zoom/Meet): el alumno lo ve en su portal.
   // Evita depender del flujo de Google Calendar de n8n para tener el enlace.

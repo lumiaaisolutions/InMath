@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { slotsDisponibles, agendar } from "@/lib/agenda";
 import { upsertPorTelefono, normalizaTelefono } from "@/lib/prospectos";
 import { responderGemini, type Turno } from "@/lib/gemini";
-import { enviarCorreo } from "@/lib/correo";
 import { CONOCIMIENTO_EXANI } from "@/lib/conocimiento-exani";
 
 // Rate limit en memoria por IP: 20 mensajes / 10 min (port del PHP por sesión).
@@ -41,8 +40,8 @@ export async function POST(req: NextRequest) {
     "\n\nHORARIOS DISPONIBLES REALES para asesoría gratuita (única fuente válida):\n" + slotsTexto +
     "\n\nREGLAS PARA AGENDAR (obligatorias):" +
     "\n1. Solo ofrece horarios de la lista. Si piden uno que no está, dilo y ofrece los 2-3 más cercanos." +
-    "\n2. Para agendar necesitas: nombre, WhatsApp de 10 dígitos, su CORREO y UN horario exacto de la lista. Avísale: \"tu confirmación se enviará por correo\"; si no te ha dado el correo, pídeselo. Si no quiere darlo, agenda sin correo." +
-    '\n3. Con los datos confirmados responde ÚNICAMENTE: <agendar>{"nombre":"NOMBRE","telefono":"10DIGITOS","correo":"CORREO_O_VACIO","inicio":"YYYY-MM-DD HH:MM"}</agendar>' +
+    "\n2. Para agendar necesitas los 4 datos, SIN EXCEPCIÓN: nombre, WhatsApp de 10 dígitos, su CORREO (ahí llega el enlace de la videollamada, es obligatorio) y UN horario exacto de la lista. Si no te ha dado el correo, pídeselo antes de agendar — no agendes sin él." +
+    '\n3. Con los 4 datos confirmados responde ÚNICAMENTE: <agendar>{"nombre":"NOMBRE","telefono":"10DIGITOS","correo":"CORREO","inicio":"YYYY-MM-DD HH:MM"}</agendar>' +
     "\n4. NUNCA digas que la cita quedó agendada tú mismo: el sistema la agenda al recibir el comando. Sin comando, la cita NO existe." +
     "\n\nCONTACTO HUMANO: si el usuario pide hablar con una persona/asesor humano, está molesto, o su caso necesita atención personal, dile con calidez que puede escribirle directo a un asesor y TERMINA tu respuesta con la etiqueta exacta [CONTACTO_HUMANO] (el sitio la convierte en un botón de WhatsApp). No inventes números ni links. El correo de contacto del negocio es cursosinmath@gmail.com (compártelo solo si piden un correo)." +
     "\n\nINTERACTIVIDAD (el sitio convierte estas etiquetas en botones; úsalas siempre que apliquen):" +
@@ -61,29 +60,20 @@ export async function POST(req: NextRequest) {
       const inicio = String(datos.inicio ?? "").trim();
       const correo = String(datos.correo ?? "").trim().toLowerCase();
       const correoOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo);
-      if (!nombre || !telefono || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(inicio) || !lista.has(inicio)) {
-        return NextResponse.json({ respuesta: "Me falta confirmar bien tus datos: dime tu nombre, tu WhatsApp de 10 dígitos y elige uno de los horarios disponibles que te compartí." });
+      if (!nombre || !telefono || !correoOk || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(inicio) || !lista.has(inicio)) {
+        return NextResponse.json({ respuesta: "Me falta confirmar bien tus datos: dime tu nombre, tu WhatsApp de 10 dígitos, tu correo (ahí te llega el enlace de la videollamada) y elige uno de los horarios disponibles que te compartí." });
       }
       const { prospecto } = await upsertPorTelefono(telefono, { nombre, fuente: "organico" });
       const cambios: { nombre?: string; correo?: string } = {};
       if (!prospecto.nombre) cambios.nombre = nombre;
-      if (correoOk && prospecto.correo !== correo) cambios.correo = correo;
+      if (prospecto.correo !== correo) cambios.correo = correo;
       if (Object.keys(cambios).length) await prisma.prospectos.update({ where: { id: prospecto.id }, data: cambios });
-      const r = await agendar(prospecto.id, inicio);
+      const r = await agendar(prospecto.id, inicio, correo);
       if ("error" in r) {
         return NextResponse.json({ respuesta: `Ese horario se acaba de ocupar. ¿Te late alguno de estos? ${[...lista.values()].slice(0, 3).join(" · ")}` });
       }
-      let porCorreo = false;
-      if (correoOk) {
-        const envio = await enviarCorreo({
-          para: [correo],
-          asunto: "Tu asesoría gratuita está confirmada — Cursos InMath",
-          texto: `Hola ${nombre},\n\nTu asesoría gratuita quedó agendada para el ${lista.get(inicio)}.\nUn asesor te contactará por WhatsApp con el enlace de la videollamada.\n\n¡Nos vemos!`,
-        });
-        porCorreo = envio.enviado;
-      }
       return NextResponse.json({
-        respuesta: `¡Listo, ${nombre}! Tu asesoría gratuita quedó agendada para el ${lista.get(inicio)}. Te llegará la confirmación por WhatsApp${porCorreo ? " y ya te enviamos la confirmación a tu correo" : ""}. ¡Nos vemos!`,
+        respuesta: `¡Listo, ${nombre}! Tu asesoría gratuita quedó agendada para el ${lista.get(inicio)}. Te llegará la confirmación con el enlace de la videollamada a tu correo. ¡Nos vemos!`,
         agendado: true,
       });
     }

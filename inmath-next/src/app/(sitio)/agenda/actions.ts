@@ -10,15 +10,18 @@ export async function agendarAccion(_prev: EstadoAgenda, fd: FormData): Promise<
   if (String(fd.get("sitio_web") ?? "") !== "") return { error: "No pudimos procesar tu solicitud." };
   const nombre = String(fd.get("nombre") ?? "").trim();
   const telefono = normalizaTelefono(String(fd.get("telefono") ?? ""));
+  const correo = String(fd.get("correo") ?? "").trim();
   const inicio = String(fd.get("slot") ?? "");
   if (!nombre || !telefono) return { error: "Escribe tu nombre y un teléfono de WhatsApp válido (10 dígitos)." };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return { error: "Escribe un correo válido — ahí te llega el enlace de la videollamada." };
   if (!/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(inicio)) return { error: "Elige uno de los horarios disponibles." };
 
   const { prospecto } = await upsertPorTelefono(telefono, { nombre, fuente: "organico" });
-  if (!prospecto.nombre && nombre) {
-    await prisma.prospectos.update({ where: { id: prospecto.id }, data: { nombre } });
-  }
-  const r = await agendar(prospecto.id, inicio);
+  const cambios: { nombre?: string; correo?: string } = {};
+  if (!prospecto.nombre && nombre) cambios.nombre = nombre;
+  if (prospecto.correo !== correo.toLowerCase()) cambios.correo = correo.toLowerCase();
+  if (Object.keys(cambios).length) await prisma.prospectos.update({ where: { id: prospecto.id }, data: cambios });
+  const r = await agendar(prospecto.id, inicio, correo);
   if ("error" in r) return { error: "Ese horario acaba de ocuparse. Elige otro, por favor." };
   return { ok: etiqueta(r.cita.inicio) };
 }

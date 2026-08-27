@@ -1,6 +1,9 @@
 import { prisma, config } from "./db";
 import { etiqueta, isoMinuto, diaSemanaN, isoDia, ahoraPared, paredDesde } from "./fechas";
 import { lunesDe, lunesEnRango, overridesDe } from "./disponibilidad";
+import { enviarCorreo } from "./correo";
+
+const CORREO_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export type Slot = { inicio: string; fin: string; etiqueta: string; asesores_libres: number[] };
 
@@ -56,27 +59,54 @@ export async function slotsDisponibles(desde: Date | null = null, dias = 7, ases
   return slots;
 }
 
-/** Avisa a n8n (workflow 03) para que cree el evento real en Google Calendar + Meet.
- *  Best-effort: si n8n no responde o no está configurado, la cita ya quedó
- *  agendada de todos modos (el admin puede pegar el link a mano como respaldo). */
-function notificarCitaCreada(cita: { id: number; asesor_id: number; inicio: Date; fin: Date }, telefono: string | null, prospectoNombre: string | null) {
+/** Avisa a n8n (workflow 03) y espera a que cree el evento real en Google
+ *  Calendar + Meet (responde solo cuando termina). Si n8n no está
+ *  configurado, no responde o falla, regresa null — la cita ya quedó
+ *  agendada de todos modos, solo falta el link (el admin puede pegarlo a
+ *  mano desde /panel/citas como respaldo). */
+async function crearEventoCalendar(cita: { id: number; asesor_id: number; inicio: Date; fin: Date }, prospectoNombre: string | null): Promise<string | null> {
   const base = process.env.N8N_BASE_URL;
-  if (!base) return;
-  fetch(`${base.replace(/\/$/, "")}/webhook/cita-creada`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      cita: { id: cita.id, asesor_id: cita.asesor_id, inicio: isoMinuto(cita.inicio), fin: isoMinuto(cita.fin) },
-      telefono,
-      prospecto_nombre: prospectoNombre,
-    }),
-    signal: AbortSignal.timeout(8000),
-  }).catch((e) => console.error("notificarCitaCreada: no se pudo avisar a n8n", e));
+  if (!base) return null;
+  try {
+    const res = await fetch(`${base.replace(/\/$/, "")}/webhook/cita-creada`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cita: { id: cita.id, asesor_id: cita.asesor_id, inicio: isoMinuto(cita.inicio), fin: isoMinuto(cita.fin) },
+        prospecto_nombre: prospectoNombre,
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!res.ok) return null;
+    const datos = await res.json().catch(() => null);
+    return datos?.meet_link ?? null;
+  } catch (e) {
+    console.error("crearEventoCalendar: n8n no respondió", e);
+    return null;
+  }
+}
+
+/** Manda la única confirmación de la cita: por correo, con el link de Meet si
+ *  ya se generó (espera a n8n antes de mandarla), o con aviso de que llega
+ *  en breve si no. */
+async function confirmarCitaPorCorreo(cita: { id: number; asesor_id: number; inicio: Date; fin: Date }, correo: string, nombre: string | null) {
+  const meetLink = await crearEventoCalendar(cita, nombre);
+  if (meetLink) await prisma.citas.update({ where: { id: cita.id }, data: { meet_link: meetLink } });
+  const cuando = etiqueta(cita.inicio);
+  await enviarCorreo({
+    para: [correo],
+    asunto: "Tu asesoría está confirmada — Cursos InMath",
+    preheader: meetLink ? "Aquí está el enlace de tu videollamada." : "Tu cita quedó agendada, en breve te compartimos el enlace.",
+    texto: meetLink
+      ? `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. Toca el botón para unirte a la videollamada en ese horario.`
+      : `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. En breve te compartimos el enlace de la videollamada — si no llega, un asesor te lo comparte antes de tu cita.`,
+    ...(meetLink ? { cta: { url: meetLink, label: "Unirme a la videollamada" } } : {}),
+  }).catch((e) => console.error("confirmarCitaPorCorreo: no se pudo enviar el correo", e));
 }
 
 /** Port fiel de crearCita: transacción con FOR UPDATE + UNIQUE como última defensa. */
-async function crearCita(prospectoId: number, asesorId: number, inicio: Date, fin: Date) {
-  const prospecto = await prisma.prospectos.findUnique({ where: { id: prospectoId }, select: { id: true, etapa: true, nombre: true, telefono_whatsapp: true } });
+async function crearCita(prospectoId: number, asesorId: number, inicio: Date, fin: Date, correo: string) {
+  const prospecto = await prisma.prospectos.findUnique({ where: { id: prospectoId }, select: { id: true, etapa: true, nombre: true } });
   if (!prospecto) return { error: "Prospecto no encontrado", codigo: 404 } as const;
   try {
     const r = await prisma.$transaction(async (tx) => {
@@ -95,7 +125,7 @@ async function crearCita(prospectoId: number, asesorId: number, inicio: Date, fi
       }
       return { cita } as const;
     });
-    if (!("error" in r)) notificarCitaCreada(r.cita, prospecto.telefono_whatsapp, prospecto.nombre);
+    if (!("error" in r)) await confirmarCitaPorCorreo(r.cita, correo, prospecto.nombre);
     return r;
   } catch (e: unknown) {
     const err = e as { code?: string };
@@ -104,14 +134,17 @@ async function crearCita(prospectoId: number, asesorId: number, inicio: Date, fi
   }
 }
 
-/** Port fiel de agendar: valida, elige asesor de menor carga y reintenta en carrera. */
-export async function agendar(prospectoId: number, inicioStr: string, asesorId: number | null = null) {
+/** Port fiel de agendar: valida, elige asesor de menor carga y reintenta en carrera.
+ *  `correo` es obligatorio — ahí llega el enlace real de la videollamada. */
+export async function agendar(prospectoId: number, inicioStr: string, correo: string, asesorId: number | null = null) {
   const inicio = paredDesde(inicioStr);
   if (!inicio || inicio.getTime() < ahoraPared().getTime()) return { error: "Horario inválido o en el pasado", codigo: 422 } as const;
+  const correoLimpio = correo.trim().toLowerCase();
+  if (!CORREO_RE.test(correoLimpio)) return { error: "Escribe un correo válido — ahí te llega el enlace de la videollamada", codigo: 422 } as const;
   const duracionMin = parseInt(await config("duracion_cita_minutos", "30"), 10);
   const fin = new Date(inicio.getTime() + duracionMin * 60_000);
 
-  if (asesorId !== null) return crearCita(prospectoId, asesorId, inicio, fin);
+  if (asesorId !== null) return crearCita(prospectoId, asesorId, inicio, fin, correoLimpio);
 
   const candidatos = await prisma.$queryRaw<{ id: number }[]>`
     SELECT u.id FROM usuarios u
@@ -119,7 +152,7 @@ export async function agendar(prospectoId: number, inicioStr: string, asesorId: 
     WHERE u.es_asesor = 1 AND u.activo = 1
     GROUP BY u.id ORDER BY COUNT(c.id) ASC, u.id ASC`;
   for (const cand of candidatos) {
-    const r = await crearCita(prospectoId, Number(cand.id), inicio, fin);
+    const r = await crearCita(prospectoId, Number(cand.id), inicio, fin, correoLimpio);
     if (!("error" in r) || r.codigo !== 409) return r;
   }
   return { error: "Ningún asesor tiene libre ese horario", codigo: 409 } as const;

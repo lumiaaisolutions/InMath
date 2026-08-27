@@ -45,6 +45,10 @@ export function NuevaCitaBoton({ asesores, hoy }: { asesores: { id: number; nomb
           <form action={accion} className="pl-form">
             <label className="pl-campo">Nombre del prospecto<input type="text" name="nombre" required maxLength={120} /></label>
             <label className="pl-campo">WhatsApp (10 dígitos)<input type="tel" name="telefono" required inputMode="numeric" maxLength={15} placeholder="55 1234 5678" /></label>
+            <label className="pl-campo">Correo
+              <input type="email" name="correo" required placeholder="correo@ejemplo.com" />
+              <small style={{ color: "var(--tinta-3)" }}>Ahí le llega el enlace de la videollamada.</small>
+            </label>
             <div className="us-campos">
               <label className="pl-campo">Fecha
                 <SelectorFecha valor={fecha} onChange={setFecha} min={hoy} />

@@ -145,3 +145,30 @@ Variable nueva en el `.env` del VPS: `N8N_BASE_URL=https://n8n.lumiaaisolutions.
 **Pendiente de verificar**: falta una prueba end-to-end real (agendar una
 cita de verdad y confirmar que aparece el evento en el Google Calendar
 conectado, con el link de Meet guardado en `citas.meet_link`).
+
+## Actualización 27-ago-2026 (más tarde) — correo reemplaza a WhatsApp como confirmación
+
+A petición del cliente, la confirmación de cita (con el link de Meet) ahora
+se manda **solo por correo**, nunca por WhatsApp. Cambios:
+
+- **Workflow 03**: el webhook ahora responde en modo `lastNode` (espera a que
+  termine todo el flujo, incluida la creación del evento, antes de responder)
+  y se eliminó el nodo "Confirmación por WhatsApp" — ya no hace falta, el
+  correo lo manda el propio sitio.
+- **`src/lib/agenda.ts`**: `agendar()` ahora exige un `correo` válido como
+  parámetro obligatorio. Tras crear la cita, llama a n8n **de forma síncrona**
+  (espera la respuesta, hasta 20s) y manda **un solo correo** de confirmación
+  con el link de Meet si n8n respondió a tiempo, o un aviso de "en breve te
+  lo compartimos" si no. Firma nueva: `agendar(prospectoId, inicioStr, correo, asesorId?)`.
+- **Los 4 puntos de entrada** (formulario `/agenda`, Mathy, bot de WhatsApp,
+  panel) ahora piden correo y no agendan sin uno válido. El prompt del bot de
+  WhatsApp (`prompts.sistema_bot`, tabla `prompts`) se actualizó a una nueva
+  versión (v5) con esta instrucción.
+- Toda la redacción del sitio que decía "confirmación por WhatsApp" se
+  cambió a "confirmación por correo".
+- WhatsApp se mantiene como dato de contacto (formulario, panel) pero ya no
+  se usa para entregar el link de la videollamada.
+
+Desplegado y verificado (200 en homepage y `/agenda`). **Sigue pendiente la
+prueba end-to-end real** de agendar una cita y confirmar que el correo llega
+con el link correcto.

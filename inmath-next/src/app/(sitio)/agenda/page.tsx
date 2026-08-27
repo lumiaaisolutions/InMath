@@ -48,7 +48,7 @@ export default async function Agenda() {
             <div className="cab-seccion reveal-mueve" style={{ marginBottom: 22 }}>
               <span className="eyebrow"><Icono n="calendar" cls="ic-ey" /> Asesoría gratis</span>
               <h1>Agenda tu asesoría, sin costo.</h1>
-              <p>Una videollamada breve con un asesor real para resolver tus dudas y armar tu plan de estudio. Te llega la confirmación con el enlace por WhatsApp.</p>
+              <p>Una videollamada breve con un asesor real para resolver tus dudas y armar tu plan de estudio. Te llega la confirmación con el enlace a tu correo.</p>
             </div>
             <div className="scrub scrub-agenda" aria-label="Asesor sonriendo en videollamada, y una agenda donde se marca la fecha de la cita">
               <img className="scrub-frame f1" src="/img/fotos/agenda-1.jpg" alt="Persona sonriendo durante una videollamada de trabajo" loading="lazy" />
@@ -58,7 +58,7 @@ export default async function Agenda() {
             <div className="agenda-respaldo">
               <span><Icono n="clock" /> 20–30 minutos</span>
               <span><Icono n="user" /> Con un asesor, no un bot</span>
-              <span><Icono n="chat" /> Confirmación por WhatsApp</span>
+              <span><Icono n="mail" /> Confirmación por correo</span>
             </div>
           </div>
 

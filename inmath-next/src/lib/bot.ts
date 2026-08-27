@@ -19,7 +19,10 @@ type Decision = {
   accion: "continuar" | "ofrecer_cita" | "agendar_cita" | "pasar_asesor" | "listo_para_pago";
   calificacion: Record<string, unknown> | null;
   cita: { inicio?: string } | null;
+  correo: string | null;
 };
+
+const CORREO_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export type Extras = { nombre?: string; fuente?: string; curso_interes_id?: number; wa_message_id?: string; tipo?: string };
 
@@ -65,15 +68,24 @@ export async function procesarMensajeBot(telefono: string, contenido: string, ex
       extraSalida.slots = slots;
     }
   } else if (accion === "agendar_cita") {
-    const r = await agendar(prospecto.id, decision.cita?.inicio ?? "");
-    if ("error" in r) {
-      respuestas.push("Ese horario acaba de ocuparse, una disculpa. Te comparto los horarios que siguen disponibles:");
-      accion = "ofrecer_cita";
-      const slots = await slotsDisponibles(null, 7, null, parseInt(await config("max_slots_ofrecidos", "6"), 10));
-      if (slots.length) { respuestas.push(listarSlots(slots)); extraSalida.slots = slots; }
+    const correo = (decision.correo ?? "").trim().toLowerCase();
+    if (!CORREO_RE.test(correo)) {
+      respuestas.push("Para agendarte me falta tu correo — ahí te llega el enlace real de la videollamada. ¿Me lo compartes?");
+      accion = "continuar";
     } else {
-      respuestas.push(`¡Listo! Tu cita quedó agendada para el ${etiqueta(r.cita.inicio)}. Te llegará la confirmación con el enlace de la videollamada por aquí.`);
-      extraSalida.cita = r.cita;
+      if (prospecto.correo !== correo) {
+        await prisma.prospectos.update({ where: { id: prospecto.id }, data: { correo } });
+      }
+      const r = await agendar(prospecto.id, decision.cita?.inicio ?? "", correo);
+      if ("error" in r) {
+        respuestas.push("Ese horario acaba de ocuparse, una disculpa. Te comparto los horarios que siguen disponibles:");
+        accion = "ofrecer_cita";
+        const slots = await slotsDisponibles(null, 7, null, parseInt(await config("max_slots_ofrecidos", "6"), 10));
+        if (slots.length) { respuestas.push(listarSlots(slots)); extraSalida.slots = slots; }
+      } else {
+        respuestas.push(`¡Listo! Tu cita quedó agendada para el ${etiqueta(r.cita.inicio)}. Te llegará la confirmación con el enlace de la videollamada a tu correo.`);
+        extraSalida.cita = r.cita;
+      }
       prospecto = (await prisma.prospectos.findUnique({ where: { id: prospecto.id } }))!;
     }
   } else if (accion === "listo_para_pago") {
@@ -206,7 +218,7 @@ function respuestaSimulada(mensajes: Turno[]): string {
       const mm = [...mensajes[i].content.matchAll(/\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\)/g)];
       if (mm.length) {
         const inicio = mm[indice]?.[1] ?? mm[0][1];
-        return j({ respuesta: "Perfecto, agendo tu cita en ese horario.", accion: "agendar_cita", cita: { inicio }, calificacion: null });
+        return j({ respuesta: "Perfecto, agendo tu cita en ese horario.", accion: "agendar_cita", cita: { inicio }, correo: "prueba@example.com", calificacion: null });
       }
     }
   }
@@ -234,7 +246,7 @@ function interpretar(crudo: string): Decision {
     try { json = JSON.parse(texto.slice(inicio, fin + 1)); } catch { /* sin JSON */ }
   }
   if (!json || typeof json.respuesta !== "string") {
-    return { respuesta: texto, accion: "continuar", calificacion: null, cita: null };
+    return { respuesta: texto, accion: "continuar", calificacion: null, cita: null, correo: null };
   }
   const acciones = ["continuar", "ofrecer_cita", "agendar_cita", "pasar_asesor", "listo_para_pago"];
   let accion = acciones.includes(String(json.accion)) ? (json.accion as Decision["accion"]) : "continuar";
@@ -243,6 +255,7 @@ function interpretar(crudo: string): Decision {
   return {
     respuesta: json.respuesta,
     accion,
+    correo: typeof json.correo === "string" ? json.correo : null,
     calificacion: json.calificacion && typeof json.calificacion === "object" ? (json.calificacion as Record<string, unknown>) : null,
     cita,
   };
