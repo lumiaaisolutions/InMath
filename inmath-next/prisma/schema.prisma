@@ -132,6 +132,7 @@ model cursos {
   intentos_practica        intentos_practica[]
   cupones                  cupones[]
   examenes                 examenes[]
+  fases                    fases[]
 }
 
 model cupones {
@@ -200,8 +201,58 @@ model examenes {
   usuarios       usuarios?         @relation(fields: [creado_por], references: [id], onUpdate: NoAction, map: "fk_examenes_usuario")
   reactivos      reactivos[]
   adjuntos       examen_adjuntos[]
+  fase_examenes  fase_examenes[]
+  intentos_practica intentos_practica[]
 
   @@index([curso_id, activo], map: "idx_examenes_curso")
+}
+
+/// Fase de la ruta de aprendizaje (estilo Udemy): videos/materiales + uno o
+/// varios exámenes que hay que aprobar para desbloquear la siguiente fase.
+model fases {
+  id                Int                 @id @default(autoincrement()) @db.UnsignedInt
+  curso_id          Int                 @db.UnsignedInt
+  titulo            String              @db.VarChar(160)
+  descripcion       String?             @db.Text
+  orden             Int                 @default(0) @db.UnsignedSmallInt
+  porcentaje_minimo Int                 @default(70) @db.UnsignedTinyInt
+  activo            Boolean             @default(true)
+  creado_por        Int?                @db.UnsignedInt
+  creado_en         DateTime            @default(now()) @db.Timestamp(0)
+  actualizado_en    DateTime            @default(now()) @db.Timestamp(0)
+  cursos            cursos              @relation(fields: [curso_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_fases_curso")
+  usuarios          usuarios?           @relation(fields: [creado_por], references: [id], onUpdate: NoAction, map: "fk_fases_usuario")
+  recursos          fase_recursos[]
+  fase_examenes     fase_examenes[]
+  intentos_practica intentos_practica[]
+
+  @@index([curso_id, activo, orden], map: "idx_fases_curso")
+}
+
+/// Video (link o archivo subido) o documento de apoyo dentro de una fase.
+model fase_recursos {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  fase_id   Int      @db.UnsignedInt
+  tipo      String   @db.VarChar(20)
+  titulo    String   @db.VarChar(160)
+  url       String   @db.VarChar(500)
+  orden     Int      @default(0) @db.UnsignedSmallInt
+  creado_en DateTime @default(now()) @db.Timestamp(0)
+  fases     fases    @relation(fields: [fase_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_fase_recursos_fase")
+
+  @@index([fase_id, orden], map: "idx_fase_recursos_fase")
+}
+
+/// Relación N:M — qué exámenes (del banco de reactivos) hay que aprobar para pasar una fase.
+model fase_examenes {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  fase_id   Int      @db.UnsignedInt
+  examen_id Int      @db.UnsignedInt
+  orden     Int      @default(0) @db.UnsignedSmallInt
+  fases     fases    @relation(fields: [fase_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_fase_examenes_fase")
+  examenes  examenes @relation(fields: [examen_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_fase_examenes_examen")
+
+  @@unique([fase_id, examen_id], map: "uq_fase_examenes")
 }
 
 /// Imagen/video/documento de apoyo para un rango de preguntas (desde_orden..hasta_orden) dentro de un examen.
@@ -220,19 +271,24 @@ model examen_adjuntos {
 }
 
 model intentos_practica {
-  id              Int      @id @default(autoincrement()) @db.UnsignedInt
-  alumno_id       Int      @db.UnsignedInt
-  curso_id        Int      @db.UnsignedInt
-  tema            String?  @db.VarChar(120)
-  total_preguntas Int      @db.UnsignedSmallInt
-  correctas       Int      @db.UnsignedSmallInt
-  porcentaje      Int      @db.UnsignedTinyInt
+  id              Int       @id @default(autoincrement()) @db.UnsignedInt
+  alumno_id       Int       @db.UnsignedInt
+  curso_id        Int       @db.UnsignedInt
+  tema            String?   @db.VarChar(120)
+  examen_id       Int?      @db.UnsignedInt
+  fase_id         Int?      @db.UnsignedInt
+  total_preguntas Int       @db.UnsignedSmallInt
+  correctas       Int       @db.UnsignedSmallInt
+  porcentaje      Int       @db.UnsignedTinyInt
   respuestas      Json
-  creado_en       DateTime @default(now()) @db.Timestamp(0)
-  alumnos         alumnos  @relation(fields: [alumno_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_intentos_alumno")
-  cursos          cursos   @relation(fields: [curso_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_intentos_curso")
+  creado_en       DateTime  @default(now()) @db.Timestamp(0)
+  alumnos         alumnos   @relation(fields: [alumno_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_intentos_alumno")
+  cursos          cursos    @relation(fields: [curso_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_intentos_curso")
+  examenes        examenes? @relation(fields: [examen_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_intentos_examen")
+  fases           fases?    @relation(fields: [fase_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_intentos_fase")
 
   @@index([alumno_id, creado_en], map: "idx_intentos_alumno")
+  @@index([fase_id, examen_id], map: "idx_intentos_fase_examen")
 }
 
 model mensajes {
@@ -370,6 +426,7 @@ model usuarios {
   reactivos          reactivos[]
   cupones            cupones[]
   examenes           examenes[]
+  fases              fases[]
 }
 
 enum configuraciones_tipo {

@@ -34,6 +34,7 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
           { href: "/panel/disponibilidad", texto: "Disponibilidad", ic: "reloj" },
           { href: "/panel/materiales", texto: "Material del curso", ic: "prompts" },
           { href: "/panel/reactivos", texto: "Reactivos", ic: "check" },
+          { href: "/panel/fases", texto: "Fases del curso", ic: "route" },
           { href: "/panel/alertas", texto: "Alertas de la página", ic: "alerta" },
           { href: "/panel/personalizar-login", texto: "Personalizar login", ic: "imagen" },
         ],
