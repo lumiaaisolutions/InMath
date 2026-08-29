@@ -112,6 +112,7 @@ model cursos {
   id                       Int              @id @default(autoincrement()) @db.UnsignedInt
   nombre                   String           @db.VarChar(190)
   descripcion              String?          @db.Text
+  imagen                   String?          @db.VarChar(255)
   precio_centavos          Int              @db.UnsignedInt
   precio_original_centavos Int?             @db.UnsignedInt
   moneda                   String           @default("MXN") @db.Char(3)
@@ -131,8 +132,8 @@ model cursos {
   reactivos                reactivos[]
   intentos_practica        intentos_practica[]
   cupones                  cupones[]
-  examenes                 examenes[]
   fases                    fases[]
+  examen_cursos            examen_cursos[]
 }
 
 model cupones {
@@ -164,9 +165,13 @@ enum cupones_tipo {
   monto_fijo
 }
 
+/// `curso_id` solo aplica a reactivos SUELTOS (sin examen, práctica libre por
+/// tema): ahí sigue siendo 1 curso fijo. Un reactivo agrupado en un examen
+/// (examen_id no nulo) tiene curso_id NULL — su visibilidad la da
+/// `examen_cursos` del examen al que pertenece, no esta columna.
 model reactivos {
   id                 Int       @id @default(autoincrement()) @db.UnsignedInt
-  curso_id           Int       @db.UnsignedInt
+  curso_id           Int?      @db.UnsignedInt
   examen_id          Int?      @db.UnsignedInt
   orden              Int?      @db.UnsignedSmallInt
   tema               String?   @db.VarChar(120)
@@ -178,7 +183,7 @@ model reactivos {
   creado_por         Int?      @db.UnsignedInt
   creado_en          DateTime  @default(now()) @db.Timestamp(0)
   actualizado_en     DateTime  @default(now()) @db.Timestamp(0)
-  cursos             cursos    @relation(fields: [curso_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_reactivos_curso")
+  cursos             cursos?   @relation(fields: [curso_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_reactivos_curso")
   usuarios           usuarios? @relation(fields: [creado_por], references: [id], onUpdate: NoAction, map: "fk_reactivos_usuario")
   examenes           examenes? @relation(fields: [examen_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_reactivos_examen")
 
@@ -188,23 +193,37 @@ model reactivos {
 }
 
 /// Agrupa varios reactivos como "examen" (además de seguir sirviendo para práctica libre por curso/tema).
+/// El examen ya NO pertenece a un solo curso: es genérico, y `examen_cursos`
+/// dice en qué modalidad(es) el admin decidió mostrarlo (evita duplicar
+/// preguntas por curso — antes cada modalidad necesitaba su propia copia).
 model examenes {
-  id             Int               @id @default(autoincrement()) @db.UnsignedInt
-  curso_id       Int               @db.UnsignedInt
-  titulo         String            @db.VarChar(160)
-  tema           String?           @db.VarChar(120)
-  activo         Boolean           @default(true)
-  creado_por     Int?              @db.UnsignedInt
-  creado_en      DateTime          @default(now()) @db.Timestamp(0)
-  actualizado_en DateTime          @default(now()) @db.Timestamp(0)
-  cursos         cursos            @relation(fields: [curso_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_examenes_curso")
-  usuarios       usuarios?         @relation(fields: [creado_por], references: [id], onUpdate: NoAction, map: "fk_examenes_usuario")
-  reactivos      reactivos[]
-  adjuntos       examen_adjuntos[]
-  fase_examenes  fase_examenes[]
+  id                Int                  @id @default(autoincrement()) @db.UnsignedInt
+  titulo            String               @db.VarChar(160)
+  tema              String?              @db.VarChar(120)
+  activo            Boolean              @default(true)
+  creado_por        Int?                 @db.UnsignedInt
+  creado_en         DateTime             @default(now()) @db.Timestamp(0)
+  actualizado_en    DateTime             @default(now()) @db.Timestamp(0)
+  usuarios          usuarios?            @relation(fields: [creado_por], references: [id], onUpdate: NoAction, map: "fk_examenes_usuario")
+  reactivos         reactivos[]
+  adjuntos          examen_adjuntos[]
+  fase_examenes     fase_examenes[]
   intentos_practica intentos_practica[]
+  examen_cursos     examen_cursos[]
 
-  @@index([curso_id, activo], map: "idx_examenes_curso")
+  @@index([activo], map: "idx_examenes_activo")
+}
+
+/// Relación N:M — en qué modalidad(es)/curso(s) aparece un examen genérico.
+model examen_cursos {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  examen_id Int      @db.UnsignedInt
+  curso_id  Int      @db.UnsignedInt
+  examenes  examenes @relation(fields: [examen_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_examen_cursos_examen")
+  cursos    cursos   @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_examen_cursos_curso")
+
+  @@unique([examen_id, curso_id], map: "uq_examen_cursos")
+  @@index([curso_id], map: "idx_examen_cursos_curso")
 }
 
 /// Fase de la ruta de aprendizaje (estilo Udemy): videos/materiales + uno o

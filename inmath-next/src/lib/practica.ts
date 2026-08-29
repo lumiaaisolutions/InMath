@@ -18,7 +18,14 @@ export async function elegirReactivos(
   cantidad: number,
 ): Promise<ReactivoParaAlumno[]> {
   const filas = await prisma.reactivos.findMany({
-    where: { curso_id: cursoId, activo: true, ...(tema ? { tema } : {}) },
+    where: {
+      activo: true,
+      ...(tema ? { tema } : {}),
+      OR: [
+        { examen_id: null, curso_id: cursoId },
+        { examenes: { examen_cursos: { some: { curso_id: cursoId } } } },
+      ],
+    },
     select: { id: true, tema: true, enunciado: true, opciones: true },
   });
   // Fisher-Yates: orden aleatorio sin sesgo, luego se recorta a `cantidad`.
@@ -34,7 +41,13 @@ export async function elegirReactivos(
 /** Lista de temas distintos con reactivos activos en el curso (para el filtro). */
 export async function temasDisponibles(cursoId: number): Promise<string[]> {
   const filas = await prisma.reactivos.findMany({
-    where: { curso_id: cursoId, activo: true, tema: { not: null } },
+    where: {
+      activo: true, tema: { not: null },
+      OR: [
+        { examen_id: null, curso_id: cursoId },
+        { examenes: { examen_cursos: { some: { curso_id: cursoId } } } },
+      ],
+    },
     select: { tema: true }, distinct: ["tema"],
   });
   return filas.map((f) => f.tema!).sort((a, b) => a.localeCompare(b, "es"));
@@ -70,7 +83,15 @@ export async function calificarIntento(
   respuestas: { reactivo_id: number; respuesta_dada: number | null }[],
 ): Promise<ResultadoIntento> {
   const ids = respuestas.map((r) => r.reactivo_id);
-  const reactivos = await prisma.reactivos.findMany({ where: { id: { in: ids }, curso_id: cursoId } });
+  const reactivos = await prisma.reactivos.findMany({
+    where: {
+      id: { in: ids },
+      OR: [
+        { examen_id: null, curso_id: cursoId },
+        { examenes: { examen_cursos: { some: { curso_id: cursoId } } } },
+      ],
+    },
+  });
   const porId = new Map(reactivos.map((r) => [r.id, r]));
 
   const detalle: RespuestaDetalle[] = [];

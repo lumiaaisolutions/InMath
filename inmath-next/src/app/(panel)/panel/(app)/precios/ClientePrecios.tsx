@@ -3,7 +3,7 @@ import { useActionState, useState } from "react";
 import { IconoPanel } from "@/components/IconoPanel";
 import { Velo, ConfirmarDialogo, useToastResultado, Segmentado, BotonMagnetico, SelectorFechaHora } from "../ClientePanel";
 import {
-  cursoActualizarAccion, cursoCrearAccion, cursoEliminarAccion,
+  cursoActualizarAccion, cursoCrearAccion, cursoEliminarAccion, cursoImagenSubirAccion,
   cuponCrearAccion, cuponActivoAccion, procesadorPagoAccion, type Resultado,
 } from "./acciones";
 
@@ -54,6 +54,7 @@ type Curso = {
   moneda: string; duracion_semanas: number | null; modalidad: string;
   promocion_activa: boolean; promocion_texto: string | null; promocion_expira_en: string | null;
   destacado: boolean; activo: boolean; orden: number;
+  descripcion?: string | null; imagen?: string | null;
 };
 
 const MODALIDADES = [
@@ -107,7 +108,7 @@ function VistaPreviaCurso({ nombre, moneda, precio, precioOriginal, promoActiva,
 const CURSO_VACIO: Curso = {
   id: 0, nombre: "", precio_centavos: 0, precio_original_centavos: null, moneda: "MXN",
   duracion_semanas: 8, modalidad: "asesorias", promocion_activa: false, promocion_texto: null,
-  promocion_expira_en: null, destacado: false, activo: true, orden: 0,
+  promocion_expira_en: null, destacado: false, activo: true, orden: 0, descripcion: null, imagen: null,
 };
 
 function FormularioCurso({ curso, onListo, onCerrar }: { curso: Curso | null; onListo: () => void; onCerrar: () => void }) {
@@ -127,12 +128,17 @@ function FormularioCurso({ curso, onListo, onCerrar }: { curso: Curso | null; on
   const [confirmarBorrar, setConfirmarBorrar] = useState(false);
   const [borrando, setBorrando] = useState(false);
   const [promocionExpira, setPromocionExpira] = useState(base.promocion_expira_en ?? "");
+  const [descripcion, setDescripcion] = useState(base.descripcion ?? "");
+  const [imagen, setImagen] = useState(base.imagen ?? "");
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
   const duracionMostrada = unidadDuracion === "semanas" ? duracionSemanas : Math.round((duracionSemanas / SEMANAS_POR_MES) * 10) / 10;
 
   const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev, fd) => {
     fd.set("modalidad", modalidad);
     fd.set("duracion_semanas", String(duracionSemanas));
     fd.set("promocion_expira_en", promocionExpira);
+    fd.set("descripcion", descripcion);
+    fd.set("imagen", imagen);
     if (destacado) fd.set("destacado", "on"); else fd.delete("destacado");
     if (activo) fd.set("activo", "on"); else fd.delete("activo");
     if (promoActiva) fd.set("promocion_activa", "on"); else fd.delete("promocion_activa");
@@ -215,6 +221,34 @@ function FormularioCurso({ curso, onListo, onCerrar }: { curso: Curso | null; on
             </div>
           </div>
         )}
+      </div>
+
+      <div className="al-paso">
+        <div className="al-paso-tit"><span className="al-paso-n">6</span> Fases (portal del alumno)</div>
+        <div className="al-campo">
+          <label>Descripción <small>(el alumno la ve como tarjeta de su curso en "Fases")</small></label>
+          <textarea rows={2} maxLength={500} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} placeholder="Ej. Domina el EXANI-II a tu ritmo, con asesorías 1 a 1 y reporte semanal de avance." />
+        </div>
+        <div className="al-campo">
+          <label>Imagen de la tarjeta <small>(opcional, 1000×560 recomendado)</small></label>
+          {imagen && <img src={imagen} alt="" style={{ width: "100%", maxWidth: 320, borderRadius: 12, marginBottom: 8, display: "block" }} />}
+          <label className="mat-dropzone">
+            <input type="file" hidden accept=".jpg,.jpeg,.png,.webp"
+              onChange={async (e) => {
+                const archivo = e.target.files?.[0];
+                e.target.value = "";
+                if (!archivo) return;
+                setSubiendoImagen(true);
+                const fdImg = new FormData();
+                fdImg.set("imagen", archivo);
+                const r = await cursoImagenSubirAccion(fdImg);
+                setSubiendoImagen(false);
+                if (r.ok) setImagen(r.ok);
+              }} />
+            <IconoPanel n="imagen" cls="ic-sm" />
+            <span>{subiendoImagen ? "Subiendo…" : imagen ? "Cambiar imagen" : "Subir imagen"}</span>
+          </label>
+        </div>
       </div>
 
       {!esNuevo && (

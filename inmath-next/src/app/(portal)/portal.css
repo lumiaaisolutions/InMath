@@ -202,6 +202,19 @@
 .pt-mat-archivo svg { width: 15px; height: 15px; flex: 0 0 auto; opacity: .7; }
 
 /* ---- Fases (ruta de aprendizaje) ---- */
+.fase-curso-hero {
+  display: flex; align-items: center; gap: 18px; margin-bottom: 20px;
+  border-radius: 20px; background: var(--blanco); border: 1px solid var(--linea);
+  box-shadow: var(--sombra-s); overflow: hidden;
+}
+.fase-curso-hero img { width: 180px; height: 130px; object-fit: cover; flex: 0 0 auto; }
+.fase-curso-hero > div { padding: 16px 20px 16px 0; }
+.fase-curso-hero img + div { padding-left: 0; }
+.fase-curso-hero b { display: block; font: 700 1.15rem/1.3 var(--display); color: var(--tinta); }
+.fase-curso-hero p { font: 400 .88rem/1.5 var(--cuerpo); color: var(--tinta-2); margin: 6px 0; }
+.fase-curso-hero span { font: 600 .78rem/1 var(--cuerpo); color: var(--tinta-3); }
+@media (max-width: 560px) { .fase-curso-hero { flex-direction: column; } .fase-curso-hero img { width: 100%; height: 140px; } .fase-curso-hero > div { padding: 4px 16px 16px; } }
+
 .fase-lista { display: flex; flex-direction: column; gap: 14px; }
 .fase-tarjeta {
   border-radius: 20px; background: var(--blanco); border: 1px solid var(--linea);

@@ -14,7 +14,7 @@ type Fase = {
   orden: number; porcentaje_minimo: number; activo: boolean;
   recursos: RecursoFicha[]; examenes: ExamenFicha[];
 };
-type ExamenDisponible = { id: number; titulo: string; curso_id: number };
+type ExamenDisponible = { id: number; titulo: string; cursoIds: number[] };
 type Curso = { id: number; nombre: string };
 
 let contador = 0;
@@ -161,7 +161,7 @@ function FaseFrame({ cursos, examenes, editar, onListo, onCerrar }: {
   );
   const [examenesSel, setExamenesSel] = useState<number[]>(editar?.examenes.map((e) => e.examenId) ?? []);
 
-  const examenesDelCurso = examenes.filter((e) => String(e.curso_id) === cursoId);
+  const examenesDelCurso = examenes.filter((e) => e.cursoIds.includes(Number(cursoId)));
 
   const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev) => {
     const fd = new FormData();

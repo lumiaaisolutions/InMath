@@ -17,7 +17,10 @@ export default async function FasesPage() {
         fase_examenes: { include: { examenes: { select: { id: true, titulo: true } } }, orderBy: { orden: "asc" } },
       },
     }),
-    prisma.examenes.findMany({ where: { activo: true }, orderBy: { id: "desc" }, select: { id: true, titulo: true, curso_id: true } }),
+    prisma.examenes.findMany({
+      where: { activo: true }, orderBy: { id: "desc" },
+      select: { id: true, titulo: true, examen_cursos: { select: { curso_id: true } } },
+    }),
     prisma.cursos.findMany({ where: { activo: true }, select: { id: true, nombre: true }, orderBy: { id: "asc" } }),
   ]);
 
@@ -36,7 +39,7 @@ export default async function FasesPage() {
           recursos: f.recursos.map((r) => ({ id: r.id, tipo: r.tipo, titulo: r.titulo, url: r.url })),
           examenes: f.fase_examenes.map((fe) => ({ examenId: fe.examen_id, titulo: fe.examenes.titulo })),
         }))}
-        examenes={examenes}
+        examenes={examenes.map((e) => ({ id: e.id, titulo: e.titulo, cursoIds: e.examen_cursos.map((ec) => ec.curso_id) }))}
         cursos={cursos}
       />
     </>

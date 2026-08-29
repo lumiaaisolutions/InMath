@@ -11,7 +11,7 @@ import {
 type PreguntaFicha = { id: number; enunciado: string; opciones: string[]; correcta: number; explicacion: string };
 type AdjuntoFicha = { id: number; desde: number; hasta: number; tipo: string; nombre: string; url: string };
 type Examen = {
-  id: number; curso_id: number; curso_nombre: string; titulo: string; tema: string | null; activo: boolean;
+  id: number; cursoIds: number[]; cursoNombres: string[]; titulo: string; tema: string | null; activo: boolean;
   preguntas: PreguntaFicha[]; adjuntos: AdjuntoFicha[];
 };
 type Reactivo = {
@@ -173,7 +173,7 @@ function AdjuntosExamen({ totalPreguntas, adjuntos, onAgregar, onQuitar }: {
 /** Formulario completo de un examen — datos generales + lista de preguntas + adjuntos. */
 function ExamenFrame({ cursos, editar, onListo, onCerrar }: { cursos: Curso[]; editar: Examen | null; onListo: () => void; onCerrar: () => void }) {
   const toast = useToastResultado();
-  const [cursoId, setCursoId] = useState(String(editar?.curso_id ?? cursos[0]?.id ?? ""));
+  const [cursoIds, setCursoIds] = useState<number[]>(editar?.cursoIds ?? (cursos[0] ? [cursos[0].id] : []));
   const [titulo, setTitulo] = useState(editar?.titulo ?? "");
   const [tema, setTema] = useState(editar?.tema ?? "");
   const [preguntas, setPreguntas] = useState<PreguntaEditable[]>(
@@ -187,7 +187,7 @@ function ExamenFrame({ cursos, editar, onListo, onCerrar }: { cursos: Curso[]; e
 
   const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev) => {
     const fd = new FormData();
-    fd.set("curso_id", cursoId);
+    fd.set("curso_ids", JSON.stringify(cursoIds));
     fd.set("titulo", titulo);
     fd.set("tema", tema);
     if (editar) fd.set("examen_id", String(editar.id));
@@ -204,9 +204,18 @@ function ExamenFrame({ cursos, editar, onListo, onCerrar }: { cursos: Curso[]; e
 
   return (
     <form action={accion} className="pl-form rx-examen-form">
-      <label className="pl-campo">Curso
-        <SelectorDesplegable placeholder="Elige un curso" valor={cursoId} opciones={cursos.map((c) => ({ valor: String(c.id), nombre: c.nombre }))} onChange={setCursoId} />
-      </label>
+      <div className="pl-campo">
+        <span>Modalidad(es) donde aparece <small>(el mismo examen, sin duplicar preguntas)</small></span>
+        <div className="us-chips">
+          {cursos.map((c) => (
+            <label key={c.id} className="chip-modulo">
+              <input type="checkbox" checked={cursoIds.includes(c.id)}
+                onChange={() => setCursoIds((ids) => ids.includes(c.id) ? ids.filter((x) => x !== c.id) : [...ids, c.id])} />
+              <span>{c.nombre}</span>
+            </label>
+          ))}
+        </div>
+      </div>
       <label className="pl-campo">Título del examen
         <input type="text" value={titulo} placeholder="Ej. Simulacro Álgebra — bloque 1" onChange={(e) => setTitulo(e.target.value)} />
       </label>
@@ -246,7 +255,7 @@ function ExamenTarjeta({ examen, onEditar }: { examen: Examen; onEditar: () => v
       <div className="rx-examen-cab">
         <div>
           <b>{examen.titulo}</b>
-          <span className="rx-examen-meta">{examen.curso_nombre}{examen.tema ? ` · ${examen.tema}` : ""} · {examen.preguntas.length} preguntas{examen.adjuntos.length > 0 ? ` · ${examen.adjuntos.length} adjuntos` : ""}</span>
+          <span className="rx-examen-meta">{examen.cursoNombres.join(" + ") || "Sin modalidad asignada"}{examen.tema ? ` · ${examen.tema}` : ""} · {examen.preguntas.length} preguntas{examen.adjuntos.length > 0 ? ` · ${examen.adjuntos.length} adjuntos` : ""}</span>
         </div>
         <button type="button" className={`gaje-punto ${examen.activo ? "ok" : "neutro"}`} disabled={ocupado}
           onClick={async () => { setOcupado(true); toast(await examenActivoAccion(examen.id, !examen.activo)); setOcupado(false); }}

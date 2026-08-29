@@ -16,7 +16,7 @@ export async function iniciarExamenFaseAccion(_prev: EstadoIniciarFase, fd: Form
   const examenId = parseInt(String(fd.get("examen_id") ?? "0"), 10);
   if (faseId < 1 || examenId < 1) return { error: "Examen inválido." };
 
-  const reactivos = await reactivosDeFaseExamen(alumno.curso_id, faseId, examenId);
+  const reactivos = await reactivosDeFaseExamen(faseId, examenId);
   if (reactivos === null) return { error: "Ese examen no pertenece a esta fase." };
   if (reactivos.length === 0) return { error: "Este examen todavía no tiene preguntas." };
   return { reactivos };

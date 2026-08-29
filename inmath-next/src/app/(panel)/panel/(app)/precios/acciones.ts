@@ -1,7 +1,12 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { mkdir } from "node:fs/promises";
+import { randomBytes } from "node:crypto";
+import path from "node:path";
+import sharp from "sharp";
 import { prisma } from "@/lib/db";
 import { requiereModulo } from "@/lib/panel/sesion";
+import { dirImgPanel } from "@/lib/panel/media";
 import { ahoraPared } from "@/lib/fechas";
 import { enviarCorreo } from "@/lib/correo";
 import { dinero as formatoDinero } from "@/lib/panel/formato";
@@ -21,6 +26,7 @@ type CamposCurso = {
   nombre: string; precio: number; precioOriginal: number | null; semanas: number | null;
   modalidad: typeof MODALIDADES[number]; promocionActiva: boolean; promocionTexto: string | null;
   expiraEn: Date | null; destacado: boolean; activo: boolean; orden: number;
+  descripcion: string | null; imagen: string | null;
 };
 
 function leerCamposCurso(fd: FormData): { error: string } | CamposCurso {
@@ -36,6 +42,8 @@ function leerCamposCurso(fd: FormData): { error: string } | CamposCurso {
   const destacado = fd.get("destacado") === "on";
   const activo = fd.get("activo") === "on";
   const ordenRaw = String(fd.get("orden") ?? "0").trim();
+  const descripcion = String(fd.get("descripcion") ?? "").trim() || null;
+  const imagen = String(fd.get("imagen") ?? "").trim() || null;
 
   if (!nombre) return { error: "El nombre es obligatorio" };
   if (precio === null || precio < 100) return { error: "El precio debe ser un número válido (mínimo $1.00)" };
@@ -47,7 +55,25 @@ function leerCamposCurso(fd: FormData): { error: string } | CamposCurso {
     nombre, precio, precioOriginal, semanas, modalidad: modalidad as typeof MODALIDADES[number],
     promocionActiva, promocionTexto, expiraEn: expiraRaw ? new Date(expiraRaw) : null,
     destacado, activo, orden: Number.isFinite(parseInt(ordenRaw, 10)) ? parseInt(ordenRaw, 10) : 0,
+    descripcion, imagen,
   };
+}
+
+/** Sube la imagen del curso que el alumno ve en /portal/fases (recorte 16:9). */
+export async function cursoImagenSubirAccion(fd: FormData): Promise<{ ok?: string; error?: string }> {
+  await requiereModulo("precios");
+  const imagen = fd.get("imagen");
+  if (!(imagen instanceof File) || imagen.size === 0) return { error: "Elige una imagen válida" };
+  if (imagen.size > 8 * 1024 * 1024) return { error: "Solo JPG, PNG o WebP de hasta 8 MB" };
+  const dir = path.join(dirImgPanel(), "cursos");
+  await mkdir(dir, { recursive: true });
+  const nombreArchivo = `curso-${randomBytes(6).toString("hex")}.jpg`;
+  try {
+    await sharp(Buffer.from(await imagen.arrayBuffer())).rotate()
+      .resize(1000, 560, { fit: "cover" }).jpeg({ quality: 85 })
+      .toFile(path.join(dir, nombreArchivo));
+  } catch { return { error: "No pudimos procesar esa imagen" }; }
+  return { ok: `/panel/img/cursos/${nombreArchivo}` };
 }
 
 /** Avisa por correo a los alumnos con pago YA CONFIRMADO de este curso que su precio cambió — solo
@@ -105,6 +131,7 @@ export async function cursoActualizarAccion(_prev: Resultado, fd: FormData): Pro
       promocion_activa: v.promocionActiva, promocion_texto: v.promocionTexto,
       promocion_expira_en: v.expiraEn,
       destacado: v.destacado, activo: v.activo, orden: v.orden,
+      descripcion: v.descripcion, imagen: v.imagen,
     },
   });
 
@@ -131,6 +158,7 @@ export async function cursoCrearAccion(_prev: Resultado, fd: FormData): Promise<
       promocion_activa: v.promocionActiva, promocion_texto: v.promocionTexto,
       promocion_expira_en: v.expiraEn,
       destacado: v.destacado, activo: v.activo, orden: v.orden,
+      descripcion: v.descripcion, imagen: v.imagen,
     },
   });
   revalidatePath("/panel/precios");

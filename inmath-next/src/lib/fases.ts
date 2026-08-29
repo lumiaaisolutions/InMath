@@ -67,11 +67,11 @@ export async function listarFasesConEstado(alumnoId: number, cursoId: number): P
 /** Reactivos de un examen de una fase, EN ORDEN (no aleatorio, a diferencia
  *  de la práctica libre) — valida que el examen realmente pertenezca a esa
  *  fase antes de exponer nada. */
-export async function reactivosDeFaseExamen(cursoId: number, faseId: number, examenId: number) {
+export async function reactivosDeFaseExamen(faseId: number, examenId: number) {
   const pertenece = await prisma.fase_examenes.findFirst({ where: { fase_id: faseId, examen_id: examenId } });
   if (!pertenece) return null;
   const filas = await prisma.reactivos.findMany({
-    where: { examen_id: examenId, curso_id: cursoId, activo: true },
+    where: { examen_id: examenId, activo: true },
     orderBy: { orden: "asc" },
     select: { id: true, tema: true, enunciado: true, opciones: true },
   });
@@ -94,7 +94,7 @@ export async function calificarIntentoFase(
   if (!fase.examenes.some((e) => e.examenId === examenId)) return { error: "Ese examen no pertenece a esta fase." };
 
   const ids = respuestas.map((r) => r.reactivo_id);
-  const reactivos = await prisma.reactivos.findMany({ where: { id: { in: ids }, curso_id: cursoId, examen_id: examenId } });
+  const reactivos = await prisma.reactivos.findMany({ where: { id: { in: ids }, examen_id: examenId } });
   const porId = new Map(reactivos.map((r) => [r.id, r]));
 
   const detalle: RespuestaDetalle[] = [];

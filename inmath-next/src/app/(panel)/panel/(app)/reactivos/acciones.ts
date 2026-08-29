@@ -139,14 +139,18 @@ function leerAdjuntos(fd: FormData, totalPreguntas: number): { error: string } |
   return adjuntos;
 }
 
-/** Crea o guarda un examen completo (datos, preguntas y adjuntos) en una sola operación. */
+/** Crea o guarda un examen completo (datos, preguntas y adjuntos) en una sola
+ *  operación. El examen es genérico: `cursoIds` dice en qué modalidad(es)
+ *  aparece — no se duplican preguntas por curso. */
 export async function examenGuardarAccion(_prev: Resultado, fd: FormData): Promise<Resultado> {
   const u = await requiereModulo("reactivos");
   const examenId = parseInt(String(fd.get("examen_id") ?? "0"), 10) || null;
-  const cursoId = parseInt(String(fd.get("curso_id") ?? "0"), 10);
   const titulo = String(fd.get("titulo") ?? "").trim();
   const tema = String(fd.get("tema") ?? "").trim() || null;
-  if (cursoId < 1) return { error: "Elige un curso" };
+  let cursoIds: number[];
+  try { cursoIds = JSON.parse(String(fd.get("curso_ids") ?? "[]")); } catch { return { error: "No pudimos leer las modalidades." }; }
+  cursoIds = cursoIds.filter((n) => Number.isInteger(n) && n > 0);
+  if (cursoIds.length === 0) return { error: "Elige al menos una modalidad donde mostrar el examen" };
   if (!titulo) return { error: "El examen necesita un título" };
 
   const preguntas = leerPreguntas(fd);
@@ -156,20 +160,23 @@ export async function examenGuardarAccion(_prev: Resultado, fd: FormData): Promi
 
   await prisma.$transaction(async (tx) => {
     const examen = examenId
-      ? await tx.examenes.update({ where: { id: examenId }, data: { curso_id: cursoId, titulo, tema } })
-      : await tx.examenes.create({ data: { curso_id: cursoId, titulo, tema, creado_por: u.id } });
+      ? await tx.examenes.update({ where: { id: examenId }, data: { titulo, tema } })
+      : await tx.examenes.create({ data: { titulo, tema, creado_por: u.id } });
+
+    await tx.examen_cursos.deleteMany({ where: { examen_id: examen.id } });
+    await tx.examen_cursos.createMany({ data: cursoIds.map((curso_id) => ({ examen_id: examen.id, curso_id })) });
 
     const idsConservados: number[] = [];
     for (const [i, p] of preguntas.entries()) {
       if (p.dbId) {
         await tx.reactivos.update({
           where: { id: p.dbId },
-          data: { curso_id: cursoId, tema, enunciado: p.enunciado, opciones: p.opciones as never, respuesta_correcta: p.correcta, explicacion: p.explicacion || null, orden: i, activo: true },
+          data: { tema, enunciado: p.enunciado, opciones: p.opciones as never, respuesta_correcta: p.correcta, explicacion: p.explicacion || null, orden: i, activo: true },
         });
         idsConservados.push(p.dbId);
       } else {
         const creado = await tx.reactivos.create({
-          data: { curso_id: cursoId, examen_id: examen.id, tema, enunciado: p.enunciado, opciones: p.opciones as never, respuesta_correcta: p.correcta, explicacion: p.explicacion || null, orden: i, creado_por: u.id },
+          data: { examen_id: examen.id, tema, enunciado: p.enunciado, opciones: p.opciones as never, respuesta_correcta: p.correcta, explicacion: p.explicacion || null, orden: i, creado_por: u.id },
         });
         idsConservados.push(creado.id);
       }
@@ -186,7 +193,9 @@ export async function examenGuardarAccion(_prev: Resultado, fd: FormData): Promi
   });
 
   revalidatePath("/panel/reactivos");
+  revalidatePath("/panel/fases");
   revalidatePath("/portal/practica");
+  revalidatePath("/portal/fases");
   return { ok: examenId ? "Examen actualizado" : `Examen guardado (${preguntas.length} preguntas)` };
 }
 

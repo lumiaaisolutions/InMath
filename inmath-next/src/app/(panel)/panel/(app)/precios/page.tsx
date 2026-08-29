@@ -41,6 +41,7 @@ export default async function PreciosPage() {
             promocion_activa: c.promocion_activa, promocion_texto: c.promocion_texto,
             promocion_expira_en: c.promocion_expira_en ? c.promocion_expira_en.toISOString().slice(0, 16) : null,
             destacado: c.destacado, activo: c.activo, orden: c.orden,
+            descripcion: c.descripcion, imagen: c.imagen,
           }))}
         />
       </div>
