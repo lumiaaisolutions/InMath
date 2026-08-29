@@ -153,10 +153,10 @@ export default async function PortalInicio() {
                 <div className="pt-hero-pie">
                   {proximaCita.meet_link ? (
                     <a className="pt-hero-cta" href={proximaCita.meet_link} target="_blank" rel="noopener">
-                      <Icono n="video" /> Entrar a la videollamada
+                      <Icono n="video" /> Entrar a la asesoría en línea
                     </a>
                   ) : (
-                    <span>Te enviamos el enlace por WhatsApp.</span>
+                    <span>Te enviamos el enlace por correo.</span>
                   )}
                 </div>
               </>

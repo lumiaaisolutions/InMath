@@ -96,11 +96,11 @@ async function confirmarCitaPorCorreo(cita: { id: number; asesor_id: number; ini
   await enviarCorreo({
     para: [correo],
     asunto: "Tu asesoría está confirmada — Cursos InMath",
-    preheader: meetLink ? "Aquí está el enlace de tu videollamada." : "Tu cita quedó agendada, en breve te compartimos el enlace.",
+    preheader: meetLink ? "Aquí está el enlace de tu asesoría en línea." : "Tu cita quedó agendada, en breve te compartimos el enlace.",
     texto: meetLink
-      ? `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. Toca el botón para unirte a la videollamada en ese horario.`
-      : `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. En breve te compartimos el enlace de la videollamada — si no llega, un asesor te lo comparte antes de tu cita.`,
-    ...(meetLink ? { cta: { url: meetLink, label: "Unirme a la videollamada" } } : {}),
+      ? `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. Toca el botón para unirte a tu asesoría en línea en ese horario.`
+      : `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. En breve te compartimos el enlace de tu asesoría en línea — si no llega, un asesor te lo comparte antes de tu cita.`,
+    ...(meetLink ? { cta: { url: meetLink, label: "Unirme a mi asesoría en línea" } } : {}),
   }).catch((e) => console.error("confirmarCitaPorCorreo: no se pudo enviar el correo", e));
 }
 
@@ -140,7 +140,7 @@ export async function agendar(prospectoId: number, inicioStr: string, correo: st
   const inicio = paredDesde(inicioStr);
   if (!inicio || inicio.getTime() < ahoraPared().getTime()) return { error: "Horario inválido o en el pasado", codigo: 422 } as const;
   const correoLimpio = correo.trim().toLowerCase();
-  if (!CORREO_RE.test(correoLimpio)) return { error: "Escribe un correo válido — ahí te llega el enlace de la videollamada", codigo: 422 } as const;
+  if (!CORREO_RE.test(correoLimpio)) return { error: "Escribe un correo válido — ahí te llega el enlace de tu asesoría en línea", codigo: 422 } as const;
   const duracionMin = parseInt(await config("duracion_cita_minutos", "30"), 10);
   const fin = new Date(inicio.getTime() + duracionMin * 60_000);
 

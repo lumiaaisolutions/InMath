@@ -138,7 +138,7 @@ export async function citaCrearAccion(_prev: Resultado, fd: FormData): Promise<R
     return { error: "Nombre, WhatsApp válido, fecha y hora son obligatorios" };
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) {
-    return { error: "Escribe un correo válido — ahí le llega el enlace de la videollamada" };
+    return { error: "Escribe un correo válido — ahí le llega el enlace de su asesoría en línea" };
   }
   const { prospecto } = await upsertPorTelefono(telefono, { nombre, fuente: "otro" });
   if (prospecto.correo !== correo.toLowerCase()) {
@@ -147,7 +147,7 @@ export async function citaCrearAccion(_prev: Resultado, fd: FormData): Promise<R
   const asesorId = fd.get("asesor_id") ? parseInt(String(fd.get("asesor_id")), 10) : null;
   const meetLink = String(fd.get("meet_link") ?? "").trim();
   if (meetLink && !/^https?:\/\//i.test(meetLink)) {
-    return { error: "El enlace de videollamada debe empezar con http:// o https://" };
+    return { error: "El enlace de la asesoría en línea debe empezar con http:// o https://" };
   }
   const r = await agendar(prospecto.id, inicio, correo, asesorId);
   if ("error" in r) return { error: r.error };

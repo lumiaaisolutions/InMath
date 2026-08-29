@@ -68,7 +68,7 @@ export default async function Landing() {
           <div className="pasos">
             {[
               ["chat", "PASO 01", "Escríbenos", "Nos mandas un mensaje y resolvemos tus dudas del curso al momento."],
-              ["video", "PASO 02", "Asesoría", "Una videollamada breve para conocer tu meta y armar tu plan."],
+              ["video", "PASO 02", "Asesoría", "Una asesoría en línea breve para conocer tu meta y armar tu plan."],
               ["card", "PASO 03", "Te inscribes", "Pagas con un enlace seguro en el chat y tu acceso se activa solo."],
               ["trend", "PASO 04", "Avanzas", "Estudias a tu ritmo y cada semana te llega tu reporte de avance."],
             ].map(([ic, num, t, p], i) => (
@@ -129,7 +129,7 @@ export default async function Landing() {
                 {[
                   ["01", "Clases grabadas", "Videos organizados por módulo, con acceso completo desde el primer día."],
                   ["02", "Materiales descargables", "Guías, ejercicios y recursos para practicar a tu ritmo."],
-                  ["03", "Asesorías por videollamada", "Sesiones 1 a 1 con un asesor para resolver dudas y avanzar."],
+                  ["03", "Asesorías en línea", "Sesiones 1 a 1 con un asesor para resolver dudas y avanzar."],
                   ["04", "Reporte de avance", "Cada semana, tu progreso resumido y enviado por WhatsApp."],
                 ].map(([n, t, p], i) => (
                   <div key={n} className={`area reveal${i ? ` d${i}` : ""}`}><span className="pt">{n}</span><div><h3>{t}</h3><p>{p}</p></div></div>
@@ -167,7 +167,7 @@ export default async function Landing() {
             <div className="bento-card bento-media reveal">
               <div className="scrub bento-scrub" aria-label="Estudiando con acompañamiento por WhatsApp">
                 <img className="scrub-frame f1" src="/img/fotos/hero-1.jpg" alt="Persona estudiando y escribiendo por WhatsApp" />
-                <img className="scrub-frame f2" src="/img/fotos/agenda-1.jpg" alt="Asesoría por videollamada" loading="lazy" />
+                <img className="scrub-frame f2" src="/img/fotos/agenda-1.jpg" alt="Asesoría en línea" loading="lazy" />
                 <span className="bento-media-chip"><Icono n="chat" /> Siempre acompañado</span>
               </div>
             </div>
@@ -179,7 +179,7 @@ export default async function Landing() {
             <div className="bento-card bento-b bento-feat reveal">
               <span className="bento-ic ey-ic"><Icono n="user" /></span>
               <h3>Asesorías 1 a 1</h3>
-              <p>Un asesor humano te guía por WhatsApp y videollamada, y ajusta tu plan.</p>
+              <p>Un asesor humano te guía por WhatsApp y en asesorías en línea, y ajusta tu plan.</p>
               <div className="bento-chips">
                 <span><Icono n="check" /> Cita agendada</span>
                 <span><Icono n="chat" /> Dudas al instante</span>
@@ -225,7 +225,7 @@ export default async function Landing() {
             <Faq items={[
               { pregunta: "¿Necesito conocimientos previos?", respuesta: "No. El curso arranca desde lo básico y sube poco a poco. Tu asesor ajusta el plan a tu punto de partida." },
               { pregunta: "¿Cuánto tiempo le dedico al día?", respuesta: "Tú decides. Con 30–45 minutos diarios avanzas bien; como las clases quedan grabadas, estudias cuando puedas." },
-              { pregunta: "¿Y si tengo dudas mientras estudio?", respuesta: "Nos escribes por WhatsApp cuando quieras. Si la duda es de fondo, tu asesor agenda una videollamada contigo." },
+              { pregunta: "¿Y si tengo dudas mientras estudio?", respuesta: "Nos escribes por WhatsApp cuando quieras. Si la duda es de fondo, tu asesor agenda una asesoría en línea contigo." },
               { pregunta: "¿Hasta cuándo dura el descuento de $500?", respuesta: "Es una oferta por tiempo limitado: al completar tu inscripción hoy aseguras el precio de $4,000. Cuando la oferta termine, el precio regresa a $4,500." },
               { pregunta: "¿Cómo pago?", respuesta: "Con un enlace seguro que te llega en el mismo chat. Al confirmarse el pago, tu acceso se activa automáticamente." },
             ]} />

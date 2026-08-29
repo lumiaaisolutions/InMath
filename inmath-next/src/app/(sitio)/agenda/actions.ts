@@ -13,7 +13,7 @@ export async function agendarAccion(_prev: EstadoAgenda, fd: FormData): Promise<
   const correo = String(fd.get("correo") ?? "").trim();
   const inicio = String(fd.get("slot") ?? "");
   if (!nombre || !telefono) return { error: "Escribe tu nombre y un teléfono de WhatsApp válido (10 dígitos)." };
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return { error: "Escribe un correo válido — ahí te llega el enlace de la videollamada." };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return { error: "Escribe un correo válido — ahí te llega el enlace de tu asesoría en línea." };
   if (!/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(inicio)) return { error: "Elige uno de los horarios disponibles." };
 
   const { prospecto } = await upsertPorTelefono(telefono, { nombre, fuente: "organico" });

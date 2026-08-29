@@ -47,7 +47,7 @@ export function NuevaCitaBoton({ asesores, hoy }: { asesores: { id: number; nomb
             <label className="pl-campo">WhatsApp (10 dígitos)<input type="tel" name="telefono" required inputMode="numeric" maxLength={15} placeholder="55 1234 5678" /></label>
             <label className="pl-campo">Correo
               <input type="email" name="correo" required placeholder="correo@ejemplo.com" />
-              <small style={{ color: "var(--tinta-3)" }}>Ahí le llega el enlace de la videollamada.</small>
+              <small style={{ color: "var(--tinta-3)" }}>Ahí le llega el enlace de su asesoría en línea.</small>
             </label>
             <div className="us-campos">
               <label className="pl-campo">Fecha
@@ -68,7 +68,7 @@ export function NuevaCitaBoton({ asesores, hoy }: { asesores: { id: number; nomb
               />
               <input type="hidden" name="asesor_id" value={asesorId} />
             </label>
-            <label className="pl-campo">Enlace de videollamada <span style={{ color: "var(--tinta-3)", fontWeight: 400 }}>(opcional)</span>
+            <label className="pl-campo">Enlace de la asesoría en línea <span style={{ color: "var(--tinta-3)", fontWeight: 400 }}>(opcional)</span>
               <input type="url" name="meet_link" inputMode="url" placeholder="https://meet.google.com/… o Zoom" />
               <small style={{ color: "var(--tinta-3)" }}>El alumno lo verá en su portal para entrar a la asesoría.</small>
             </label>

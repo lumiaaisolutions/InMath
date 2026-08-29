@@ -70,7 +70,7 @@ export async function procesarMensajeBot(telefono: string, contenido: string, ex
   } else if (accion === "agendar_cita") {
     const correo = (decision.correo ?? "").trim().toLowerCase();
     if (!CORREO_RE.test(correo)) {
-      respuestas.push("Para agendarte me falta tu correo — ahí te llega el enlace real de la videollamada. ¿Me lo compartes?");
+      respuestas.push("Para agendarte me falta tu correo — ahí te llega el enlace real de tu asesoría en línea. ¿Me lo compartes?");
       accion = "continuar";
     } else {
       if (prospecto.correo !== correo) {
@@ -83,7 +83,7 @@ export async function procesarMensajeBot(telefono: string, contenido: string, ex
         const slots = await slotsDisponibles(null, 7, null, parseInt(await config("max_slots_ofrecidos", "6"), 10));
         if (slots.length) { respuestas.push(listarSlots(slots)); extraSalida.slots = slots; }
       } else {
-        respuestas.push(`¡Listo! Tu cita quedó agendada para el ${etiqueta(r.cita.inicio)}. Te llegará la confirmación con el enlace de la videollamada a tu correo.`);
+        respuestas.push(`¡Listo! Tu cita quedó agendada para el ${etiqueta(r.cita.inicio)}. Te llegará la confirmación con el enlace a tu correo.`);
         extraSalida.cita = r.cita;
       }
       prospecto = (await prisma.prospectos.findUnique({ where: { id: prospecto.id } }))!;
@@ -262,7 +262,7 @@ function interpretar(crudo: string): Decision {
 }
 
 function listarSlots(slots: Slot[]): string {
-  const lineas = ["Estos son los horarios disponibles para tu videollamada:"];
+  const lineas = ["Estos son los horarios disponibles para tu asesoría en línea:"];
   slots.forEach((s, i) => lineas.push(`${i + 1}) ${s.etiqueta} (${s.inicio})`));
   lineas.push("Respóndeme con el número de la opción que prefieras.");
   return lineas.join("\n");

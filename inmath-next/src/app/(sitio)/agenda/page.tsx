@@ -48,10 +48,10 @@ export default async function Agenda() {
             <div className="cab-seccion reveal-mueve" style={{ marginBottom: 22 }}>
               <span className="eyebrow"><Icono n="calendar" cls="ic-ey" /> Asesoría gratis</span>
               <h1>Agenda tu asesoría, sin costo.</h1>
-              <p>Una videollamada breve con un asesor real para resolver tus dudas y armar tu plan de estudio. Te llega la confirmación con el enlace a tu correo.</p>
+              <p>Una asesoría en línea breve con un asesor real para resolver tus dudas y armar tu plan de estudio. Te llega la confirmación con el enlace a tu correo.</p>
             </div>
-            <div className="scrub scrub-agenda" aria-label="Asesor sonriendo en videollamada, y una agenda donde se marca la fecha de la cita">
-              <img className="scrub-frame f1" src="/img/fotos/agenda-1.jpg" alt="Persona sonriendo durante una videollamada de trabajo" loading="lazy" />
+            <div className="scrub scrub-agenda" aria-label="Asesor sonriendo en una asesoría en línea, y una agenda donde se marca la fecha de la cita">
+              <img className="scrub-frame f1" src="/img/fotos/agenda-1.jpg" alt="Persona sonriendo durante una asesoría en línea" loading="lazy" />
               <img className="scrub-frame f2" src="/img/fotos/agenda-2.jpg" alt="Pluma marcando una fecha en una agenda de papel" loading="lazy" />
               <span className="tinte" />
             </div>

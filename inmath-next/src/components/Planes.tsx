@@ -29,7 +29,7 @@ export function Planes({ precio, precioCentavos, semanas, nombre, promo, moneda 
           <div className="pk3-precio"><b>$0</b><small>/ sin costo</small></div>
           <Link className="pk3-cta" href="/agenda">Agendar asesoría gratis</Link>
           <ul className="pk3-puntos">
-            <li>Asesoría de diagnóstico por videollamada</li>
+            <li>Asesoría de diagnóstico en línea</li>
             <li>Primera clase de cada módulo</li>
             <li>Plan de estudio personalizado</li>
             <li>Sin tarjeta, sin compromiso</li>
@@ -66,7 +66,7 @@ export function Planes({ precio, precioCentavos, semanas, nombre, promo, moneda 
           <li>Acceso completo por {semanas} semanas</li>
           <li>Todas las clases grabadas 24/7</li>
           <li>Materiales descargables incluidos</li>
-          <li>Asesorías 1 a 1 por videollamada</li>
+          <li>Asesorías 1 a 1 en línea</li>
           <li>Reporte de avance semanal por WhatsApp</li>
           <li>Acceso inmediato al confirmar tu pago</li>
         </ul>
