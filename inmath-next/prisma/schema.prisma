@@ -177,8 +177,11 @@ model reactivos {
   tema               String?   @db.VarChar(120)
   enunciado          String    @db.Text
   opciones           Json
+  opciones_tipo      Json?
   respuesta_correcta Int       @db.UnsignedTinyInt
   explicacion        String?   @db.Text
+  adjunto_url        String?   @db.VarChar(255)
+  adjunto_tipo       String?   @db.VarChar(20)
   activo             Boolean   @default(true)
   creado_por         Int?      @db.UnsignedInt
   creado_en          DateTime  @default(now()) @db.Timestamp(0)
@@ -201,6 +204,8 @@ model examenes {
   titulo            String               @db.VarChar(160)
   tema              String?              @db.VarChar(120)
   activo            Boolean              @default(true)
+  porcentaje_minimo Int                  @default(70) @db.UnsignedTinyInt
+  orden_aleatorio   Boolean              @default(true)
   creado_por        Int?                 @db.UnsignedInt
   creado_en         DateTime             @default(now()) @db.Timestamp(0)
   actualizado_en    DateTime             @default(now()) @db.Timestamp(0)

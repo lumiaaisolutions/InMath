@@ -32,8 +32,11 @@ export default async function ReactivosPage() {
       <ClienteReactivos
         examenes={examenes.map((e) => ({
           id: e.id, cursoIds: e.examen_cursos.map((ec) => ec.curso_id), cursoNombres: e.examen_cursos.map((ec) => ec.cursos.nombre), titulo: e.titulo, tema: e.tema, activo: e.activo,
+          porcentajeMinimo: e.porcentaje_minimo, ordenAleatorio: e.orden_aleatorio,
           preguntas: e.reactivos.filter((r) => r.activo).map((r) => ({
-            id: r.id, enunciado: r.enunciado, opciones: r.opciones as string[], correcta: r.respuesta_correcta, explicacion: r.explicacion ?? "",
+            id: r.id, enunciado: r.enunciado, opciones: r.opciones as string[],
+            opcionesTipo: ((r.opciones_tipo as ("texto" | "imagen")[] | null) ?? (r.opciones as string[]).map(() => "texto" as const)),
+            correcta: r.respuesta_correcta, explicacion: r.explicacion ?? "", adjuntoUrl: r.adjunto_url, adjuntoTipo: r.adjunto_tipo,
           })),
           adjuntos: e.adjuntos.map((a) => ({ id: a.id, desde: a.desde_orden, hasta: a.hasta_orden, tipo: a.tipo, nombre: a.nombre, url: a.url })),
         }))}

@@ -1,17 +1,21 @@
 "use client";
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { IconoPanel } from "@/components/IconoPanel";
 import { Velo, ConfirmarDialogo, useToastResultado, SelectorDesplegable, BotonMagnetico, Asistente, AsistentePaso } from "../ClientePanel";
 import {
   reactivoCrearAccion, reactivoActualizarAccion, reactivoActivoAccion,
-  examenGuardarAccion, examenActivoAccion, examenBorrarAccion,
-  reactivoAdjuntoSubirAccion, reactivoExplicarIAAccion, type Resultado,
+  examenGuardarAccion, examenActivoAccion, examenBorrarAccion, examenModalidadesAccion,
+  reactivoAdjuntoSubirAccion, type Resultado,
 } from "./acciones";
 
-type PreguntaFicha = { id: number; enunciado: string; opciones: string[]; correcta: number; explicacion: string };
+type PreguntaFicha = {
+  id: number; enunciado: string; opciones: string[]; opcionesTipo: ("texto" | "imagen")[]; correcta: number;
+  explicacion: string; adjuntoUrl: string | null; adjuntoTipo: string | null;
+};
 type AdjuntoFicha = { id: number; desde: number; hasta: number; tipo: string; nombre: string; url: string };
 type Examen = {
   id: number; cursoIds: number[]; cursoNombres: string[]; titulo: string; tema: string | null; activo: boolean;
+  porcentajeMinimo: number; ordenAleatorio: boolean;
   preguntas: PreguntaFicha[]; adjuntos: AdjuntoFicha[];
 };
 type Reactivo = {
@@ -24,6 +28,15 @@ type Curso = { id: number; nombre: string };
 let contador = 0;
 const nuevoId = () => `n${Date.now()}${contador++}`;
 
+function Interruptor({ activo, onChange, etiqueta, detalle }: { activo: boolean; onChange: (v: boolean) => void; etiqueta: string; detalle?: string }) {
+  return (
+    <button type="button" className={`interr${activo ? " on" : ""}`} role="switch" aria-checked={activo} onClick={() => onChange(!activo)}>
+      <span className="interr-sw" aria-hidden="true" />
+      <span className="interr-tx"><b>{etiqueta}</b>{detalle && <i>{detalle}</i>}</span>
+    </button>
+  );
+}
+
 const MIN_OPCIONES = 2;
 const MAX_OPCIONES = 6;
 
@@ -31,10 +44,16 @@ const MAX_OPCIONES = 6;
 // Exámenes
 // ---------------------------------------------------------------------------
 
-type PreguntaEditable = { cid: string; dbId?: number; enunciado: string; opciones: string[]; correcta: number; explicacion: string };
+type PreguntaEditable = {
+  cid: string; dbId?: number; enunciado: string; opciones: string[]; opcionesTipo: ("texto" | "imagen")[]; correcta: number;
+  explicacion: string; adjuntoUrl: string | null; adjuntoTipo: string | null;
+};
 type AdjuntoEditable = { cid: string; dbId?: number; desde: number; hasta: number; tipo: "imagen" | "video" | "documento"; nombre: string; url: string };
 
-const preguntaVacia = (): PreguntaEditable => ({ cid: nuevoId(), enunciado: "", opciones: ["", "", "", ""], correcta: 0, explicacion: "" });
+const preguntaVacia = (): PreguntaEditable => ({
+  cid: nuevoId(), enunciado: "", opciones: ["", "", "", ""], opcionesTipo: ["texto", "texto", "texto", "texto"],
+  correcta: 0, explicacion: "", adjuntoUrl: null, adjuntoTipo: null,
+});
 
 /** Una pregunta dentro del "frame" del examen — enunciado, opciones, explicación y ayuda de IA. */
 function PreguntaFrame({ n, pregunta, onCambiar, onQuitar, permiteQuitar }: {
@@ -42,25 +61,81 @@ function PreguntaFrame({ n, pregunta, onCambiar, onQuitar, permiteQuitar }: {
 }) {
   const toast = useToastResultado();
   const [explicando, setExplicando] = useState(false);
+  const [subiendoOpcion, setSubiendoOpcion] = useState<number | null>(null);
+  const [subiendoAdjunto, setSubiendoAdjunto] = useState(false);
 
-  const agregarOpcion = () => { if (pregunta.opciones.length < MAX_OPCIONES) onCambiar({ ...pregunta, opciones: [...pregunta.opciones, ""] }); };
+  const agregarOpcion = () => {
+    if (pregunta.opciones.length < MAX_OPCIONES) {
+      onCambiar({ ...pregunta, opciones: [...pregunta.opciones, ""], opcionesTipo: [...pregunta.opcionesTipo, "texto"] });
+    }
+  };
   const quitarOpcion = (i: number) => {
     if (pregunta.opciones.length <= MIN_OPCIONES) return;
     const opciones = pregunta.opciones.filter((_, idx) => idx !== i);
+    const opcionesTipo = pregunta.opcionesTipo.filter((_, idx) => idx !== i);
     let correcta = pregunta.correcta;
     if (correcta === i) correcta = 0; else if (correcta > i) correcta -= 1;
-    onCambiar({ ...pregunta, opciones, correcta });
+    onCambiar({ ...pregunta, opciones, opcionesTipo, correcta });
   };
-  const explicarConIA = async () => {
-    setExplicando(true);
+  const alternarTipoOpcion = (i: number) => {
+    const opcionesTipo = pregunta.opcionesTipo.map((t, idx) => (idx === i ? (t === "imagen" ? "texto" : "imagen") : t));
+    const opciones = pregunta.opciones.map((o, idx) => (idx === i ? "" : o));
+    onCambiar({ ...pregunta, opciones, opcionesTipo });
+  };
+  const subirImagenOpcion = async (i: number, archivo: File) => {
+    setSubiendoOpcion(i);
     try {
       const fd = new FormData();
-      fd.set("enunciado", pregunta.enunciado);
-      pregunta.opciones.forEach((o, i) => fd.set(`opcion_${i}`, o));
-      fd.set("respuesta_correcta", String(pregunta.correcta));
-      const r = await reactivoExplicarIAAccion(fd);
-      if (r.error) toast(r);
-      else if (r.ok) { onCambiar({ ...pregunta, explicacion: r.ok }); toast({ ok: "Sugerencia de la IA lista — revísala antes de guardar." }); }
+      fd.set("archivo", archivo);
+      const r = await reactivoAdjuntoSubirAccion(fd);
+      if (r.error) toast({ error: r.error });
+      else if (r.ok) onCambiar({ ...pregunta, opciones: pregunta.opciones.map((o, idx) => (idx === i ? r.ok!.url : o)) });
+    } catch {
+      toast({ error: "No pudimos subir la imagen — intenta de nuevo" });
+    } finally {
+      setSubiendoOpcion(null);
+    }
+  };
+  const subirAdjuntoPregunta = async (archivo: File) => {
+    setSubiendoAdjunto(true);
+    try {
+      const fd = new FormData();
+      fd.set("archivo", archivo);
+      const r = await reactivoAdjuntoSubirAccion(fd);
+      if (r.error) toast({ error: r.error });
+      else if (r.ok) onCambiar({ ...pregunta, adjuntoUrl: r.ok.url, adjuntoTipo: r.ok.tipo });
+    } catch {
+      toast({ error: "No pudimos subir el archivo — intenta de nuevo" });
+    } finally {
+      setSubiendoAdjunto(false);
+    }
+  };
+  /** Pide la explicación a Ollama y va pegando el texto según llega (streaming) —
+   *  así se ve avance de inmediato en vez de un botón "Pensando…" congelado. */
+  const explicarConIA = async () => {
+    setExplicando(true);
+    onCambiar({ ...pregunta, explicacion: "" });
+    try {
+      const res = await fetch("/api/reactivos/explicar-ia", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enunciado: pregunta.enunciado, opciones: pregunta.opciones, correcta: pregunta.correcta }),
+      });
+      if (!res.ok || !res.body) {
+        const mensaje = await res.text().catch(() => "");
+        toast({ error: mensaje || "No pudimos contactar a la IA. Intenta de nuevo en unos segundos." });
+        return;
+      }
+      const lector = res.body.getReader();
+      const decodificador = new TextDecoder();
+      let acumulado = "";
+      while (true) {
+        const { done, value } = await lector.read();
+        if (done) break;
+        acumulado += decodificador.decode(value, { stream: true });
+        onCambiar({ ...pregunta, explicacion: acumulado });
+      }
+      toast({ ok: "Sugerencia de la IA lista — revísala antes de guardar." });
     } catch {
       toast({ error: "No pudimos contactar a la IA. Intenta de nuevo en unos segundos." });
     } finally {
@@ -80,6 +155,26 @@ function PreguntaFrame({ n, pregunta, onCambiar, onQuitar, permiteQuitar }: {
         <textarea rows={2} value={pregunta.enunciado} placeholder="Escribe la pregunta…" onChange={(e) => onCambiar({ ...pregunta, enunciado: e.target.value })} />
       </label>
       <div className="pl-campo">
+        <span>Material de la pregunta <small>(opcional — una imagen o archivo que acompaña el enunciado)</small></span>
+        {pregunta.adjuntoUrl ? (
+          <div className="rx-pregunta-adjunto">
+            {pregunta.adjuntoTipo === "imagen"
+              ? <img src={pregunta.adjuntoUrl} alt="" />
+              : <span className="rx-pregunta-adjunto-nombre"><IconoPanel n="prompts" cls="ic-sm" /> {pregunta.adjuntoTipo}</span>}
+            <button type="button" className="mat-quitar" aria-label="Quitar material" onClick={() => onCambiar({ ...pregunta, adjuntoUrl: null, adjuntoTipo: null })}>
+              <IconoPanel n="x" cls="ic-sm" />
+            </button>
+          </div>
+        ) : (
+          <label className="mat-dropzone">
+            <input type="file" hidden accept=".jpg,.jpeg,.png,.webp,.mp4,.pdf"
+              onChange={(e) => { if (e.target.files?.[0]) subirAdjuntoPregunta(e.target.files[0]); e.target.value = ""; }} />
+            <IconoPanel n="prompts" cls="ic-sm" />
+            <span>{subiendoAdjunto ? "Subiendo…" : "Elige una imagen o archivo"}</span>
+          </label>
+        )}
+      </div>
+      <div className="pl-campo">
         <span>Opciones — marca cuál es la correcta</span>
         {pregunta.opciones.map((op, i) => (
           <div key={i} className="rx-opcion">
@@ -87,8 +182,30 @@ function PreguntaFrame({ n, pregunta, onCambiar, onQuitar, permiteQuitar }: {
               onClick={() => onCambiar({ ...pregunta, correcta: i })} aria-pressed={pregunta.correcta === i} aria-label={`Opción ${i + 1} es la correcta`}>
               {pregunta.correcta === i && <IconoPanel n="check" cls="ic-sm" />}
             </button>
-            <input type="text" value={op} placeholder={`Opción ${i + 1}`}
-              onChange={(e) => onCambiar({ ...pregunta, opciones: pregunta.opciones.map((o, idx) => (idx === i ? e.target.value : o)) })} />
+            {pregunta.opcionesTipo[i] === "imagen" ? (
+              op ? (
+                <span className="rx-opcion-imagen">
+                  <img src={op} alt="" />
+                  <button type="button" className="mat-quitar" aria-label="Quitar imagen" onClick={() => onCambiar({ ...pregunta, opciones: pregunta.opciones.map((o, idx) => (idx === i ? "" : o)) })}>
+                    <IconoPanel n="x" cls="ic-sm" />
+                  </button>
+                </span>
+              ) : (
+                <label className="rx-opcion-subir">
+                  <input type="file" hidden accept=".jpg,.jpeg,.png,.webp"
+                    onChange={(e) => { if (e.target.files?.[0]) subirImagenOpcion(i, e.target.files[0]); e.target.value = ""; }} />
+                  {subiendoOpcion === i ? "Subiendo…" : "Elige una imagen"}
+                </label>
+              )
+            ) : (
+              <input type="text" value={op} placeholder={`Opción ${i + 1}`}
+                onChange={(e) => onCambiar({ ...pregunta, opciones: pregunta.opciones.map((o, idx) => (idx === i ? e.target.value : o)) })} />
+            )}
+            <button type="button" className={`rx-opcion-tipo${pregunta.opcionesTipo[i] === "imagen" ? " on" : ""}`}
+              title={pregunta.opcionesTipo[i] === "imagen" ? "Usar texto en vez de imagen" : "Usar una imagen como esta opción"}
+              onClick={() => alternarTipoOpcion(i)}>
+              <IconoPanel n="imagen" cls="ic-sm" />
+            </button>
             {pregunta.opciones.length > MIN_OPCIONES && (
               <button type="button" className="rx-quitar" aria-label="Quitar opción" onClick={() => quitarOpcion(i)}><IconoPanel n="x" /></button>
             )}
@@ -99,7 +216,7 @@ function PreguntaFrame({ n, pregunta, onCambiar, onQuitar, permiteQuitar }: {
         )}
       </div>
       <label className="pl-campo">Explicación <small>(se muestra al alumno al calificar)</small>
-        <textarea rows={2} value={pregunta.explicacion} placeholder="Por qué esa opción es la correcta…" onChange={(e) => onCambiar({ ...pregunta, explicacion: e.target.value })} />
+        <textarea rows={4} value={pregunta.explicacion} placeholder="Por qué esa opción es la correcta…" onChange={(e) => onCambiar({ ...pregunta, explicacion: e.target.value })} />
       </label>
       <button type="button" className="boton mini fantasma rx-ia" disabled={explicando || !pregunta.enunciado.trim()} onClick={explicarConIA}>
         <IconoPanel n="chispa" cls="ic-sm" /> {explicando ? "Pensando…" : "Explicar con IA"}
@@ -171,7 +288,7 @@ function AdjuntosExamen({ totalPreguntas, adjuntos, onAgregar, onQuitar }: {
 }
 
 const PASOS_EXAMEN = [
-  { titulo: "Datos del examen", sub: "Título, tema y dónde aparece" },
+  { titulo: "Datos del examen", sub: "Título, tema, calificación mínima y orden" },
   { titulo: "Preguntas", sub: "Cada una con sus opciones y explicación" },
   { titulo: "Adjuntos", sub: "Material de apoyo opcional" },
 ];
@@ -184,9 +301,14 @@ function ExamenFrame({ cursos, editar, onListo, onCerrar }: { cursos: Curso[]; e
   const [cursoIds, setCursoIds] = useState<number[]>(editar?.cursoIds ?? (cursos[0] ? [cursos[0].id] : []));
   const [titulo, setTitulo] = useState(editar?.titulo ?? "");
   const [tema, setTema] = useState(editar?.tema ?? "");
+  const [porcentajeMinimo, setPorcentajeMinimo] = useState(String(editar?.porcentajeMinimo ?? 70));
+  const [ordenAleatorio, setOrdenAleatorio] = useState(editar?.ordenAleatorio ?? true);
   const [preguntas, setPreguntas] = useState<PreguntaEditable[]>(
     editar?.preguntas.length
-      ? editar.preguntas.map((p) => ({ cid: nuevoId(), dbId: p.id, enunciado: p.enunciado, opciones: p.opciones, correcta: p.correcta, explicacion: p.explicacion }))
+      ? editar.preguntas.map((p) => ({
+          cid: nuevoId(), dbId: p.id, enunciado: p.enunciado, opciones: p.opciones, opcionesTipo: p.opcionesTipo,
+          correcta: p.correcta, explicacion: p.explicacion, adjuntoUrl: p.adjuntoUrl, adjuntoTipo: p.adjuntoTipo,
+        }))
       : [preguntaVacia()],
   );
   const [adjuntos, setAdjuntos] = useState<AdjuntoEditable[]>(
@@ -198,8 +320,13 @@ function ExamenFrame({ cursos, editar, onListo, onCerrar }: { cursos: Curso[]; e
     fd.set("curso_ids", JSON.stringify(cursoIds));
     fd.set("titulo", titulo);
     fd.set("tema", tema);
+    fd.set("porcentaje_minimo", porcentajeMinimo);
+    fd.set("orden_aleatorio", ordenAleatorio ? "1" : "0");
     if (editar) fd.set("examen_id", String(editar.id));
-    fd.set("preguntas", JSON.stringify(preguntas.map((p) => ({ dbId: p.dbId, enunciado: p.enunciado, opciones: p.opciones, correcta: p.correcta, explicacion: p.explicacion }))));
+    fd.set("preguntas", JSON.stringify(preguntas.map((p) => ({
+      dbId: p.dbId, enunciado: p.enunciado, opciones: p.opciones, opcionesTipo: p.opcionesTipo,
+      correcta: p.correcta, explicacion: p.explicacion, adjuntoUrl: p.adjuntoUrl, adjuntoTipo: p.adjuntoTipo,
+    }))));
     fd.set("adjuntos", JSON.stringify(adjuntos.map((a) => ({ dbId: a.dbId, desde: a.desde, hasta: a.hasta, tipo: a.tipo, nombre: a.nombre, url: a.url }))));
     const r = await examenGuardarAccion(prev, fd);
     toast(r);
@@ -242,6 +369,13 @@ function ExamenFrame({ cursos, editar, onListo, onCerrar }: { cursos: Curso[]; e
             <label className="pl-campo">Tema <small>(opcional — agrupa también la práctica libre por bloque)</small>
               <input type="text" maxLength={120} value={tema} placeholder="Ej. Álgebra, Comprensión lectora…" onChange={(e) => setTema(e.target.value)} />
             </label>
+            <label className="pl-campo">% mínimo para aprobar
+              <input type="number" min={0} max={100} value={porcentajeMinimo} onChange={(e) => setPorcentajeMinimo(e.target.value)} />
+            </label>
+            <div className="pl-campo">
+              <Interruptor activo={ordenAleatorio} onChange={setOrdenAleatorio} etiqueta="Preguntas al azar en Práctica"
+                detalle={ordenAleatorio ? "El alumno las ve en orden distinto cada vez" : "El alumno las ve en el orden de arriba"} />
+            </div>
           </AsistentePaso>
         </div>
         <div data-paso="1" style={{ display: paso === 1 ? "block" : "none" }}>
@@ -279,10 +413,61 @@ function ExamenFrame({ cursos, editar, onListo, onCerrar }: { cursos: Curso[]; e
   );
 }
 
-function ExamenTarjeta({ examen, onEditar }: { examen: Examen; onEditar: () => void }) {
+/** Popover para elegir rápido en qué modalidad(es) aparece un examen, sin abrir
+ *  el asistente completo — el mismo examen, sin duplicar preguntas. */
+function ModalidadesPopover({ examen, cursos, onCerrar }: { examen: Examen; cursos: Curso[]; onCerrar: () => void }) {
+  const toast = useToastResultado();
+  const [seleccion, setSeleccion] = useState<Set<number>>(new Set(examen.cursoIds));
+  const [guardando, setGuardando] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const clic = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) onCerrar(); };
+    document.addEventListener("mousedown", clic);
+    return () => document.removeEventListener("mousedown", clic);
+  }, [onCerrar]);
+
+  const alternar = (id: number) => setSeleccion((prev) => {
+    const s = new Set(prev);
+    if (s.has(id)) s.delete(id); else s.add(id);
+    return s;
+  });
+
+  const guardar = async () => {
+    setGuardando(true);
+    const r = await examenModalidadesAccion(examen.id, Array.from(seleccion));
+    toast(r);
+    setGuardando(false);
+    if (r.ok) onCerrar();
+  };
+
+  return (
+    <div ref={ref} className="rx-modalidades-pop">
+      <b>Modalidad(es) donde aparece</b>
+      <span className="pl-ayuda">El mismo examen, sin duplicar preguntas.</span>
+      <div className="us-chips">
+        {cursos.map((c) => (
+          <label key={c.id} className="chip-modulo">
+            <input type="checkbox" checked={seleccion.has(c.id)} onChange={() => alternar(c.id)} />
+            <span>{c.nombre}</span>
+          </label>
+        ))}
+      </div>
+      <div className="rx-modalidades-pie">
+        <button type="button" className="boton mini fantasma" onClick={onCerrar}>Cancelar</button>
+        <button type="button" className="boton mini primario" disabled={guardando || seleccion.size === 0} onClick={guardar}>
+          {guardando ? "Guardando…" : "Guardar"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ExamenTarjeta({ examen, cursos, onEditar }: { examen: Examen; cursos: Curso[]; onEditar: () => void }) {
   const toast = useToastResultado();
   const [confirmar, setConfirmar] = useState(false);
   const [ocupado, setOcupado] = useState(false);
+  const [modalidades, setModalidades] = useState(false);
 
   return (
     <div className="tarjeta rx-examen-tarjeta">
@@ -297,9 +482,13 @@ function ExamenTarjeta({ examen, onEditar }: { examen: Examen; onEditar: () => v
           {examen.activo ? "activo" : "inactivo"}
         </button>
       </div>
-      <div className="rx-examen-pie">
+      <div className="rx-examen-pie" style={{ position: "relative" }}>
         <button type="button" className="boton mini fantasma" onClick={onEditar}>Editar</button>
+        <button type="button" className="boton mini fantasma" onClick={() => setModalidades((v) => !v)} title="Elegir en qué modalidad(es) aparece">
+          <IconoPanel n="route" cls="ic-sm" /> Modalidad(es)
+        </button>
         <button type="button" className="boton mini fantasma rx-borrar" onClick={() => setConfirmar(true)}>Eliminar</button>
+        {modalidades && <ModalidadesPopover examen={examen} cursos={cursos} onCerrar={() => setModalidades(false)} />}
       </div>
       <ConfirmarDialogo abierto={confirmar}
         texto={`Se eliminará el examen "${examen.titulo}". Sus preguntas dejan de mostrarse agrupadas (el historial de intentos ya resueltos no se pierde).`}
@@ -331,7 +520,7 @@ function ListaExamenes({ examenes, cursos }: { examenes: Examen[]; cursos: Curso
         <div className="vacio">Sin exámenes todavía — agrupa varias preguntas en el primero</div>
       ) : (
         <div className="rx-examenes-grid">
-          {examenes.map((e) => <ExamenTarjeta key={e.id} examen={e} onEditar={() => setAbierto(e)} />)}
+          {examenes.map((e) => <ExamenTarjeta key={e.id} examen={e} cursos={cursos} onEditar={() => setAbierto(e)} />)}
         </div>
       )}
 

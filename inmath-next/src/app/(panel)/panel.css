@@ -2549,6 +2549,23 @@ body::before { animation: none !important; }
   background: rgba(224,66,78,.1); color: #C9333F; flex: 0 0 auto; cursor: pointer; }
 .rx-quitar svg { width: 12px; height: 12px; }
 .rx-quitar:hover { background: rgba(224,66,78,.18); }
+.rx-opcion-tipo {
+  display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--linea-fuerte);
+  background: var(--papel); color: var(--tinta-3); flex: 0 0 auto; cursor: pointer; transition: var(--transicion);
+}
+.rx-opcion-tipo:hover { border-color: var(--pino); color: var(--pino); }
+.rx-opcion-tipo.on { background: var(--pino); border-color: var(--pino); color: #fff; }
+.rx-opcion-subir {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 12px;
+  border: 1.5px dashed var(--linea-fuerte); border-radius: var(--r-s); font: 600 .78rem var(--cuerpo); color: var(--tinta-3);
+  cursor: pointer; transition: var(--transicion);
+}
+.rx-opcion-subir:hover { border-color: var(--pino); color: var(--pino); }
+.rx-opcion-imagen { flex: 1; display: flex; align-items: center; gap: 8px; }
+.rx-opcion-imagen img { height: 40px; width: 60px; object-fit: cover; border-radius: var(--r-s); border: 1px solid var(--linea); }
+.rx-pregunta-adjunto { display: flex; align-items: center; gap: 10px; }
+.rx-pregunta-adjunto img { height: 60px; width: 90px; object-fit: cover; border-radius: var(--r-s); border: 1px solid var(--linea); }
+.rx-pregunta-adjunto-nombre { display: inline-flex; align-items: center; gap: 6px; font: 600 .82rem var(--cuerpo); color: var(--tinta-2); text-transform: capitalize; }
 button.gaje { border: none; cursor: pointer; }
 button.gaje:disabled { opacity: .6; cursor: default; }
 
@@ -2563,7 +2580,15 @@ button.gaje:disabled { opacity: .6; cursor: default; }
 .rx-examen-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
 .rx-examen-cab b { display: block; font-size: .98rem; }
 .rx-examen-meta { display: block; margin-top: 3px; font-size: .8rem; color: var(--tinta-3); }
-.rx-examen-pie { display: flex; gap: 8px; }
+.rx-examen-pie { display: flex; gap: 8px; flex-wrap: wrap; }
+.rx-modalidades-pop {
+  position: absolute; z-index: 40; top: calc(100% + 8px); left: 0; width: 280px;
+  background: var(--papel); border: 1px solid var(--linea); border-radius: var(--r-m);
+  box-shadow: var(--sombra); padding: 14px; display: flex; flex-direction: column; gap: 8px;
+}
+.rx-modalidades-pop b { font: 700 .86rem var(--display); color: var(--tinta); }
+.rx-modalidades-pop .pl-ayuda { margin: -4px 0 2px; }
+.rx-modalidades-pie { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
 .rx-borrar { color: #C9333F; }
 .rx-frame-ancho { max-width: 760px; padding: 28px 30px; }
 .rx-examen-form { display: flex; flex-direction: column; gap: 18px; max-width: none; }
@@ -2914,12 +2939,19 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 .disp-fecha-dia.hoy { color: var(--pino); font-weight: 700; }
 
 /* ── Formulario tipo asistente (pasos) — reemplaza los formularios amontonados ── */
-.us-frame-asistente { width: min(900px, 100%); padding: 0; overflow: hidden; }
-.us-frame-asistente .us-frame-cab { padding: 22px 26px 18px; margin-bottom: 0; border-bottom: 1px solid var(--linea); }
-.us-asistente { display: flex; align-items: stretch; min-height: 0; }
+.us-frame-asistente {
+  width: min(900px, 100%); padding: 0; overflow: hidden;
+  max-height: 88vh; display: flex; flex-direction: column;
+}
+.us-frame-asistente .us-frame-cab { padding: 22px 26px 18px; margin-bottom: 0; border-bottom: 1px solid var(--linea); flex: 0 0 auto; }
+/* El botón de cerrar es position:absolute — se posiciona respecto al borde
+ * de relleno del padre, así que ignora el padding declarado ahí mismo.
+ * Sin este ajuste queda pegado a la esquina real del modal. */
+.us-frame-asistente .us-frame-cab .us-cerrar { right: 26px; top: 22px; }
+.us-asistente { display: flex; align-items: stretch; min-height: 0; flex: 1 1 auto; }
 .us-asistente-pasos {
   flex: 0 0 220px; padding: 22px 14px; display: flex; flex-direction: column; gap: 4px;
-  background: var(--crema); border-right: 1px solid var(--linea);
+  background: var(--crema); border-right: 1px solid var(--linea); overflow-y: auto;
 }
 .us-asistente-paso {
   display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--r-m);
@@ -2938,7 +2970,7 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 .us-asistente-paso.activo .us-asistente-num { background: var(--pino); border-color: var(--pino); color: #fff; }
 .us-asistente-paso.hecho { color: var(--tinta-2); }
 .us-asistente-paso.hecho .us-asistente-num { background: var(--ok-suave); border-color: var(--ok); color: var(--ok); }
-.us-asistente-cuerpo { flex: 1; min-width: 0; padding: 24px 28px; display: flex; flex-direction: column; }
+.us-asistente-cuerpo { flex: 1; min-width: 0; min-height: 0; padding: 24px 28px; display: flex; flex-direction: column; overflow-y: auto; }
 .us-asistente-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; }
 .us-asistente-campos .pl-campo { gap: 7px; }
 .us-asistente-campos .pl-campo input, .us-asistente-campos .pl-campo select, .us-asistente-campos .pl-campo textarea { width: 100%; }

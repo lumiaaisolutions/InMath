@@ -6,7 +6,6 @@ import path from "node:path";
 import { prisma } from "@/lib/db";
 import { requiereModulo } from "@/lib/panel/sesion";
 import { dirImgPanel } from "@/lib/panel/media";
-import { preguntarOllama } from "@/lib/ollama";
 
 export type Resultado = { ok?: string; error?: string };
 
@@ -88,7 +87,8 @@ export async function reactivoActivoAccion(id: number, activo: boolean): Promise
 // ---------------------------------------------------------------------------
 
 type PreguntaEntrada = {
-  dbId?: number; enunciado: string; opciones: string[]; correcta: number; explicacion: string;
+  dbId?: number; enunciado: string; opciones: string[]; opcionesTipo: ("texto" | "imagen")[]; correcta: number;
+  explicacion: string; adjuntoUrl: string | null; adjuntoTipo: string | null;
 };
 type AdjuntoEntrada = {
   dbId?: number; desde: number; hasta: number; tipo: string; nombre: string; url: string;
@@ -110,8 +110,13 @@ function leerPreguntas(fd: FormData): { error: string } | PreguntaEntrada[] {
     const correcta = Number((p as { correcta?: unknown })?.correcta);
     if (!Number.isInteger(correcta) || correcta < 0 || correcta >= opciones.length) return { error: `Marca la respuesta correcta de la pregunta ${i + 1}.` };
     const explicacion = String((p as { explicacion?: unknown })?.explicacion ?? "").trim();
+    const opcionesTipoRaw = (p as { opcionesTipo?: unknown })?.opcionesTipo;
+    const opcionesTipo = opciones.map((_, idx) =>
+      Array.isArray(opcionesTipoRaw) && opcionesTipoRaw[idx] === "imagen" ? "imagen" as const : "texto" as const);
+    const adjuntoUrl = String((p as { adjuntoUrl?: unknown })?.adjuntoUrl ?? "").trim() || null;
+    const adjuntoTipo = String((p as { adjuntoTipo?: unknown })?.adjuntoTipo ?? "").trim() || null;
     const dbIdRaw = (p as { dbId?: unknown })?.dbId;
-    preguntas.push({ dbId: typeof dbIdRaw === "number" ? dbIdRaw : undefined, enunciado, opciones, correcta, explicacion });
+    preguntas.push({ dbId: typeof dbIdRaw === "number" ? dbIdRaw : undefined, enunciado, opciones, opcionesTipo, correcta, explicacion, adjuntoUrl, adjuntoTipo });
   }
   return preguntas;
 }
@@ -147,6 +152,8 @@ export async function examenGuardarAccion(_prev: Resultado, fd: FormData): Promi
   const examenId = parseInt(String(fd.get("examen_id") ?? "0"), 10) || null;
   const titulo = String(fd.get("titulo") ?? "").trim();
   const tema = String(fd.get("tema") ?? "").trim() || null;
+  const porcentajeMinimo = Math.min(100, Math.max(0, parseInt(String(fd.get("porcentaje_minimo") ?? "70"), 10) || 70));
+  const ordenAleatorio = String(fd.get("orden_aleatorio") ?? "1") === "1";
   let cursoIds: number[];
   try { cursoIds = JSON.parse(String(fd.get("curso_ids") ?? "[]")); } catch { return { error: "No pudimos leer las modalidades." }; }
   cursoIds = cursoIds.filter((n) => Number.isInteger(n) && n > 0);
@@ -160,24 +167,24 @@ export async function examenGuardarAccion(_prev: Resultado, fd: FormData): Promi
 
   await prisma.$transaction(async (tx) => {
     const examen = examenId
-      ? await tx.examenes.update({ where: { id: examenId }, data: { titulo, tema } })
-      : await tx.examenes.create({ data: { titulo, tema, creado_por: u.id } });
+      ? await tx.examenes.update({ where: { id: examenId }, data: { titulo, tema, porcentaje_minimo: porcentajeMinimo, orden_aleatorio: ordenAleatorio } })
+      : await tx.examenes.create({ data: { titulo, tema, porcentaje_minimo: porcentajeMinimo, orden_aleatorio: ordenAleatorio, creado_por: u.id } });
 
     await tx.examen_cursos.deleteMany({ where: { examen_id: examen.id } });
     await tx.examen_cursos.createMany({ data: cursoIds.map((curso_id) => ({ examen_id: examen.id, curso_id })) });
 
     const idsConservados: number[] = [];
     for (const [i, p] of preguntas.entries()) {
+      const datos = {
+        tema, enunciado: p.enunciado, opciones: p.opciones as never, opciones_tipo: p.opcionesTipo as never,
+        respuesta_correcta: p.correcta, explicacion: p.explicacion || null,
+        adjunto_url: p.adjuntoUrl, adjunto_tipo: p.adjuntoTipo, orden: i,
+      };
       if (p.dbId) {
-        await tx.reactivos.update({
-          where: { id: p.dbId },
-          data: { tema, enunciado: p.enunciado, opciones: p.opciones as never, respuesta_correcta: p.correcta, explicacion: p.explicacion || null, orden: i, activo: true },
-        });
+        await tx.reactivos.update({ where: { id: p.dbId }, data: { ...datos, activo: true } });
         idsConservados.push(p.dbId);
       } else {
-        const creado = await tx.reactivos.create({
-          data: { examen_id: examen.id, tema, enunciado: p.enunciado, opciones: p.opciones as never, respuesta_correcta: p.correcta, explicacion: p.explicacion || null, orden: i, creado_por: u.id },
-        });
+        const creado = await tx.reactivos.create({ data: { ...datos, examen_id: examen.id, creado_por: u.id } });
         idsConservados.push(creado.id);
       }
     }
@@ -197,6 +204,23 @@ export async function examenGuardarAccion(_prev: Resultado, fd: FormData): Promi
   revalidatePath("/portal/practica");
   revalidatePath("/portal/fases");
   return { ok: examenId ? "Examen actualizado" : `Examen guardado (${preguntas.length} preguntas)` };
+}
+
+/** Cambia solo en qué modalidad(es) aparece un examen (sin tocar preguntas ni
+ *  adjuntos) — para el switch rápido de la tarjeta, sin abrir el asistente completo. */
+export async function examenModalidadesAccion(examenId: number, cursoIds: number[]): Promise<Resultado> {
+  await requiereModulo("reactivos");
+  const limpios = cursoIds.filter((n) => Number.isInteger(n) && n > 0);
+  if (limpios.length === 0) return { error: "Elige al menos una modalidad donde mostrar el examen" };
+  await prisma.$transaction([
+    prisma.examen_cursos.deleteMany({ where: { examen_id: examenId } }),
+    prisma.examen_cursos.createMany({ data: limpios.map((curso_id) => ({ examen_id: examenId, curso_id })) }),
+  ]);
+  revalidatePath("/panel/reactivos");
+  revalidatePath("/panel/fases");
+  revalidatePath("/portal/practica");
+  revalidatePath("/portal/fases");
+  return { ok: "Modalidades actualizadas" };
 }
 
 export async function examenActivoAccion(id: number, activo: boolean): Promise<Resultado> {
@@ -236,23 +260,5 @@ export async function reactivoAdjuntoSubirAccion(fd: FormData): Promise<{ ok?: {
   return { ok: { nombre: archivo.name, url: `/panel/img/reactivos/${nombreArchivo}`, tipo } };
 }
 
-/** "Explicar con IA" — usa el Ollama local del VPS para sugerir una explicación de la respuesta correcta. */
-export async function reactivoExplicarIAAccion(fd: FormData): Promise<Resultado> {
-  await requiereModulo("reactivos");
-  const enunciado = String(fd.get("enunciado") ?? "").trim();
-  const opciones = leerOpciones(fd);
-  const correcta = parseInt(String(fd.get("respuesta_correcta") ?? "-1"), 10);
-  if (!enunciado) return { error: "Escribe el enunciado antes de pedir ayuda a la IA" };
-  if (opciones.length < 2 || correcta < 0 || correcta >= opciones.length) return { error: "Completa las opciones y marca la correcta antes de pedir ayuda a la IA" };
-
-  const listado = opciones.map((o, i) => `${i === correcta ? "✔" : "•"} ${o}`).join("\n");
-  const sistema = "Eres un profesor de InMath que prepara alumnos para el examen EXANI-II. Te dan una pregunta de opción múltiple con la respuesta correcta marcada. Escribe SOLO la explicación (2 a 4 líneas, español claro, directo al alumno) de por qué esa opción es correcta. No repitas el enunciado ni la lista de opciones, no uses markdown.";
-  const mensaje = `Pregunta: ${enunciado}\n\nOpciones:\n${listado}`;
-
-  try {
-    const explicacion = await preguntarOllama(sistema, mensaje);
-    return { ok: explicacion };
-  } catch {
-    return { error: "No pudimos contactar a la IA. Intenta de nuevo en unos segundos." };
-  }
-}
+// "Explicar con IA" ahora vive en /api/reactivos/explicar-ia (streaming) —
+// una Server Action no puede transmitir texto progresivo al cliente.

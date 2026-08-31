@@ -122,5 +122,5 @@ export async function calificarIntentoFase(
     },
   });
 
-  return { intentoId: intento.id, total, correctas, porcentaje, detalle };
+  return { intentoId: intento.id, total, correctas, porcentaje, detalle, aprobado: porcentaje >= fase.porcentajeMinimo };
 }

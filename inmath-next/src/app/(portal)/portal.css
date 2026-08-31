@@ -553,8 +553,8 @@
 .pt-desp-op.on { background: rgba(76,126,240,.1); color: var(--azul-tinta, #4C7EF0); font-weight: 700; }
 
 /* Pastillas de cantidad (reemplaza <select> de números) */
-.pt-cant-seg { display: flex; gap: 6px; }
-.pt-cant-op { flex: 1; padding: 9px 0; border-radius: 10px; border: 1.5px solid var(--linea); background: #fff;
+.pt-cant-seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.pt-cant-op { flex: 1 1 auto; min-width: 64px; padding: 9px 10px; border-radius: 10px; border: 1.5px solid var(--linea); background: #fff;
   font: 600 .86rem var(--cuerpo); color: var(--tinta-2); cursor: pointer; transition: border-color .15s, background .15s, color .15s; }
 .pt-cant-op:hover { border-color: var(--azul-tinta, #4C7EF0); }
 .pt-cant-op.on { border-color: var(--azul-tinta, #4C7EF0); background: rgba(76,126,240,.08); color: var(--azul-tinta, #4C7EF0); }
@@ -585,6 +585,9 @@
 .pt-practica-score.bien { background: rgba(30,158,94,.08); } .pt-practica-score.bien b { color: var(--ok, #1E9E5E); }
 .pt-practica-score.regular { background: rgba(230,164,26,.1); } .pt-practica-score.regular b { color: #C9820F; }
 .pt-practica-score.bajo { background: rgba(224,66,78,.08); } .pt-practica-score.bajo b { color: var(--error, #E0424E); }
+.pt-practica-aprobado { margin-top: 4px; font: 700 .8rem var(--cuerpo); padding: 5px 12px; border-radius: 99px; }
+.pt-practica-aprobado.si { color: var(--ok, #1E9E5E); background: rgba(30,158,94,.12); }
+.pt-practica-aprobado.no { color: var(--error, #E0424E); background: rgba(224,66,78,.12); }
 .pt-practica-revision { display: grid; gap: 14px; }
 .pt-practica-pregunta.rev.ok { border-color: rgba(30,158,94,.35); }
 .pt-practica-pregunta.rev.mal { border-color: rgba(224,66,78,.35); }

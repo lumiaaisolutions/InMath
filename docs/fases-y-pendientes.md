@@ -102,3 +102,47 @@ frame detalle (guardar/eliminar-lógico/cerrar), frame de creación, checkbox
 "atiende citas" (es_asesor). 5. ✅ Personalizar login: texto/orden POR imagen
 (config login_media_meta JSON), galería clicable con frame de edición y
 preview vivo; el login rota el texto con cada slide y respeta el orden.
+
+### Lote de Reactivos/Práctica — COMPLETADO (31-ago-2026)
+1. ✅ **Scroll en el asistente de examen**: `.us-frame-asistente` (base de
+   los 7 formularios tipo asistente del panel) se convirtió en columna flex
+   con cabecera fija y cuerpo con `overflow-y: auto` — antes `overflow:
+   hidden` bloqueaba todo scroll y con muchas preguntas era imposible llegar
+   a "+ Agregar pregunta". Verificado en navegador: se pudo agregar y
+   scrollear a una 2ª pregunta sin problema.
+2. ✅ **X de cerrar pegada al borde**: bug estructural — un hijo con
+   posición absoluta se alinea al borde de *padding* del ancestro
+   posicionado, ignorando el padding pensado para el flujo normal. Fix
+   puntual en `.us-frame-asistente .us-frame-cab .us-cerrar` corrige los 7
+   formularios de una sola vez (todos comparten esa base).
+3. ✅ **"Explicar con IA" más rápido + con ejemplos**: se reemplazó la
+   Server Action (no puede hacer streaming) por una Route Handler
+   (`/api/reactivos/explicar-ia`) que transmite la respuesta de Ollama
+   token a token en vivo. El retraso de ~20s reportado es el cold-start del
+   modelo en el VPS (CPU-only, se descarga de RAM tras 30 min sin uso) — no
+   la generación en sí (~17 tok/s en caliente). Prompt del sistema mejorado
+   para pedir explicación de 4–6 líneas con un ejemplo concreto.
+4. ✅ **Imagen como opción de respuesta + material por pregunta**: cada
+   opción se puede alternar entre texto e imagen; cada pregunta admite un
+   adjunto propio (imagen/archivo) además del material por rango que ya
+   existía a nivel examen.
+5. ✅ **Botón "Modalidad(es)" en la tarjeta de examen**: popover con chips
+   de curso para reasignar en qué modalidad(es) aparece un examen sin abrir
+   el asistente completo (mismo examen, sin duplicar preguntas).
+6. ✅ **% mínimo para aprobar en exámenes** (ya existía en fases): nuevo
+   campo en el paso 1 del asistente, guardado en `examenes.porcentaje_minimo`.
+7. ✅ **Orden aleatorio vs. fijo por examen**: switch "Preguntas al azar en
+   Práctica" (`examenes.orden_aleatorio`) — si está apagado, `/portal/practica`
+   respeta el orden que definió el admin en vez de barajar.
+8. ✅ **Selector de examen en Práctica del alumno**: además de "Tema", el
+   alumno puede elegir un examen específico (mutuamente excluyente con
+   Tema). Los botones de cantidad son dinámicos: solo se muestran los
+   presets (5/10/15/20) que caben en el total real disponible, y siempre
+   aparece la opción "Todas (N)". La cantidad elegida por el alumno es
+   independiente del switch de orden aleatorio/fijo del admin.
+
+Migraciones aplicadas en producción: `examenes.porcentaje_minimo`,
+`examenes.orden_aleatorio`, `reactivos.opciones_tipo`, `reactivos.adjunto_url`,
+`reactivos.adjunto_tipo`. Pendiente (requiere autorización aparte, toca
+infraestructura compartida del VPS): cron de keep-warm de Ollama para
+eliminar el cold-start de "Explicar con IA".

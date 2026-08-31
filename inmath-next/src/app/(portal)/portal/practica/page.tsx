@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { requiereAlumno } from "@/lib/portal/sesion";
 import { tienePagoConfirmado } from "@/lib/portal/auth";
-import { temasDisponibles, historialDeAlumno } from "@/lib/practica";
+import { temasDisponibles, examenesDisponibles, conteosPorTema, historialDeAlumno } from "@/lib/practica";
 import { ClientePractica } from "./ClientePractica";
 
 export const metadata: Metadata = { title: "Práctica — Portal InMath" };
@@ -12,8 +12,10 @@ export default async function PracticaPage() {
   const alumno = await requiereAlumno();
   if (!(await tienePagoConfirmado(alumno.prospecto_id))) redirect("/portal");
 
-  const [temas, historial] = await Promise.all([
+  const [temas, examenes, conteos, historial] = await Promise.all([
     temasDisponibles(alumno.curso_id),
+    examenesDisponibles(alumno.curso_id),
+    conteosPorTema(alumno.curso_id),
     historialDeAlumno(alumno.id),
   ]);
 
@@ -27,7 +29,7 @@ export default async function PracticaPage() {
             <p className="pt-head-sub">Resuelve preguntas de opción múltiple y mide tu avance.</p>
           </div>
         </header>
-        <ClientePractica temas={temas} historialInicial={historial} />
+        <ClientePractica temas={temas} examenes={examenes} conteos={conteos} historialInicial={historial} />
       </div>
     </section>
   );
