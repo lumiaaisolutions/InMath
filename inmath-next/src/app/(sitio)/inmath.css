@@ -3087,14 +3087,32 @@ body::before { animation: none !important; }
 
 
 
-/* Mathy: logo de marca (cerebro + circuito + birrete) como ícono del agente.
-   Los nodos del circuito laten suavemente para no verse estático del todo. */
+/* Mathy "Cerebrito": ojos que parpadean + dos manos flotantes que saludan
+   por su cuenta. El translate() de posición de cada mano vive en el <g>
+   exterior (JSX); la animación va en <g> internos para no pisar ese transform. */
 .mathy-mascota { overflow: visible; }
-.mathy-nodo { transform-box: fill-box; transform-origin: center; animation: mathyNodo 2.8s ease-in-out infinite; }
-.mathy-nodo:nth-of-type(2n) { animation-delay: .5s; }
-.mathy-nodo:nth-of-type(3n) { animation-delay: 1s; }
-@keyframes mathyNodo { 0%, 100% { opacity: .65; } 50% { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .mathy-nodo { animation: none; } }
+.mathy-ojo { transform-box: fill-box; transform-origin: center; animation: mathyParpadeo 5.5s ease-in-out infinite; }
+@keyframes mathyParpadeo { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.12); } }
+.mathy-saludo { transform-box: fill-box; transform-origin: 50% 100%; animation: mathySaludar 2.4s ease-in-out infinite; }
+.mathy-saludo-der { animation-name: mathySaludarDer; animation-delay: .35s; }
+.mathy-mano-izq, .mathy-mano-der { animation: mathyFlotar 3.6s ease-in-out infinite; }
+.mathy-mano-der { animation-delay: .5s; }
+@keyframes mathySaludar {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-16deg); }
+  40% { transform: rotate(10deg); }
+  60% { transform: rotate(-14deg); }
+  80% { transform: rotate(6deg); }
+}
+@keyframes mathySaludarDer {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(16deg); }
+  40% { transform: rotate(-10deg); }
+  60% { transform: rotate(14deg); }
+  80% { transform: rotate(-6deg); }
+}
+@keyframes mathyFlotar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .mathy-ojo, .mathy-saludo, .mathy-saludo-der, .mathy-mano-izq, .mathy-mano-der { animation: none; } }
 
 
 /* =========================================================================
