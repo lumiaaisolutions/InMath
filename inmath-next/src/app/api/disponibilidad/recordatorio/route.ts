@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       "",
       "Confirma qué días y horas habrá citas. Mientras tanto, el sitio y Mathy usarán el horario base.",
     ].join("\n"),
-    cta: { url: `${base}/panel/disponibilidad`, label: "Definir disponibilidad" },
+    cta: { url: `${base}/panel/disponibilidad`, label: "Definir disponibilidad", icono: "calendario" },
   });
 
   return NextResponse.json({ recordatorio: true, semana: proxLunes, admins: para.length, ...envio });

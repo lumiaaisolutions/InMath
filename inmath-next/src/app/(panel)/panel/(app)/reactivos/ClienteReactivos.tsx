@@ -1,7 +1,7 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { IconoPanel } from "@/components/IconoPanel";
-import { Velo, ConfirmarDialogo, useToastResultado, SelectorDesplegable, BotonMagnetico } from "../ClientePanel";
+import { Velo, ConfirmarDialogo, useToastResultado, SelectorDesplegable, BotonMagnetico, Asistente, AsistentePaso } from "../ClientePanel";
 import {
   reactivoCrearAccion, reactivoActualizarAccion, reactivoActivoAccion,
   examenGuardarAccion, examenActivoAccion, examenBorrarAccion,
@@ -142,7 +142,7 @@ function AdjuntosExamen({ totalPreguntas, adjuntos, onAgregar, onQuitar }: {
   };
 
   return (
-    <div className="pl-campo rx-adjuntos">
+    <div className="pl-campo ancho rx-adjuntos">
       <span>Material de apoyo por rango de preguntas <small>(opcional — imagen, video o documento)</small></span>
       {adjuntos.length > 0 && (
         <ul className="mat-archivos-lista">
@@ -170,9 +170,17 @@ function AdjuntosExamen({ totalPreguntas, adjuntos, onAgregar, onQuitar }: {
   );
 }
 
-/** Formulario completo de un examen — datos generales + lista de preguntas + adjuntos. */
+const PASOS_EXAMEN = [
+  { titulo: "Datos del examen", sub: "Título, tema y dónde aparece" },
+  { titulo: "Preguntas", sub: "Cada una con sus opciones y explicación" },
+  { titulo: "Adjuntos", sub: "Material de apoyo opcional" },
+];
+
+/** Formulario completo de un examen — datos generales + lista de preguntas + adjuntos, en pasos. */
 function ExamenFrame({ cursos, editar, onListo, onCerrar }: { cursos: Curso[]; editar: Examen | null; onListo: () => void; onCerrar: () => void }) {
   const toast = useToastResultado();
+  const [paso, setPaso] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
   const [cursoIds, setCursoIds] = useState<number[]>(editar?.cursoIds ?? (cursos[0] ? [cursos[0].id] : []));
   const [titulo, setTitulo] = useState(editar?.titulo ?? "");
   const [tema, setTema] = useState(editar?.tema ?? "");
@@ -195,52 +203,78 @@ function ExamenFrame({ cursos, editar, onListo, onCerrar }: { cursos: Curso[]; e
     fd.set("adjuntos", JSON.stringify(adjuntos.map((a) => ({ dbId: a.dbId, desde: a.desde, hasta: a.hasta, tipo: a.tipo, nombre: a.nombre, url: a.url }))));
     const r = await examenGuardarAccion(prev, fd);
     toast(r);
-    if (r.ok) onListo();
+    if (r.ok) { onListo(); setPaso(0); }
     return r;
   }, {});
 
   const cambiarPregunta = (cid: string, nueva: PreguntaEditable) => setPreguntas((ps) => ps.map((p) => (p.cid === cid ? nueva : p)));
   const quitarPregunta = (cid: string) => setPreguntas((ps) => (ps.length > 1 ? ps.filter((p) => p.cid !== cid) : ps));
 
+  function cerrar() { onCerrar(); setPaso(0); }
+
+  /** Valida solo los campos visibles del paso actual antes de avanzar. */
+  function siguiente() {
+    const invalido = formRef.current?.querySelector<HTMLElement>(`[data-paso="${paso}"] :invalid`);
+    if (invalido) { (invalido as HTMLInputElement).reportValidity(); return; }
+    setPaso((p) => p + 1);
+  }
+
   return (
-    <form action={accion} className="pl-form rx-examen-form">
-      <div className="pl-campo">
-        <span>Modalidad(es) donde aparece <small>(el mismo examen, sin duplicar preguntas)</small></span>
-        <div className="us-chips">
-          {cursos.map((c) => (
-            <label key={c.id} className="chip-modulo">
-              <input type="checkbox" checked={cursoIds.includes(c.id)}
-                onChange={() => setCursoIds((ids) => ids.includes(c.id) ? ids.filter((x) => x !== c.id) : [...ids, c.id])} />
-              <span>{c.nombre}</span>
+    <form action={accion} ref={formRef}>
+      <Asistente pasos={PASOS_EXAMEN} activo={paso}>
+        <div data-paso="0" style={{ display: paso === 0 ? "block" : "none" }}>
+          <AsistentePaso eyebrow="Paso 1 de 3" titulo="Datos del examen">
+            <div className="pl-campo ancho">
+              <span>Modalidad(es) donde aparece <small>(el mismo examen, sin duplicar preguntas)</small></span>
+              <div className="us-chips">
+                {cursos.map((c) => (
+                  <label key={c.id} className="chip-modulo">
+                    <input type="checkbox" checked={cursoIds.includes(c.id)}
+                      onChange={() => setCursoIds((ids) => ids.includes(c.id) ? ids.filter((x) => x !== c.id) : [...ids, c.id])} />
+                    <span>{c.nombre}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <label className="pl-campo">Título del examen
+              <input type="text" value={titulo} placeholder="Ej. Simulacro Álgebra — bloque 1" onChange={(e) => setTitulo(e.target.value)} />
             </label>
-          ))}
+            <label className="pl-campo">Tema <small>(opcional — agrupa también la práctica libre por bloque)</small>
+              <input type="text" maxLength={120} value={tema} placeholder="Ej. Álgebra, Comprensión lectora…" onChange={(e) => setTema(e.target.value)} />
+            </label>
+          </AsistentePaso>
         </div>
-      </div>
-      <label className="pl-campo">Título del examen
-        <input type="text" value={titulo} placeholder="Ej. Simulacro Álgebra — bloque 1" onChange={(e) => setTitulo(e.target.value)} />
-      </label>
-      <label className="pl-campo">Tema <small>(opcional — agrupa también la práctica libre por bloque)</small>
-        <input type="text" maxLength={120} value={tema} placeholder="Ej. Álgebra, Comprensión lectora…" onChange={(e) => setTema(e.target.value)} />
-      </label>
-
-      <div className="rx-preguntas-lista">
-        {preguntas.map((p, i) => (
-          <PreguntaFrame key={p.cid} n={i + 1} pregunta={p} permiteQuitar={preguntas.length > 1}
-            onCambiar={(nueva) => cambiarPregunta(p.cid, nueva)} onQuitar={() => quitarPregunta(p.cid)} />
-        ))}
-      </div>
-      <button type="button" className="boton fantasma" onClick={() => setPreguntas((ps) => [...ps, preguntaVacia()])}>+ Agregar pregunta</button>
-
-      <AdjuntosExamen totalPreguntas={preguntas.length} adjuntos={adjuntos}
-        onAgregar={(a) => setAdjuntos((as) => [...as, a])}
-        onQuitar={(cid) => setAdjuntos((as) => as.filter((a) => a.cid !== cid))} />
-
-      <div className="us-pie">
-        <button type="button" className="boton fantasma" onClick={onCerrar}>Cancelar</button>
-        <BotonMagnetico type="submit" className="boton primario boton-magnetico" disabled={pendiente}>
-          {pendiente ? "Guardando…" : editar ? "Guardar cambios" : "Guardar examen"}
-        </BotonMagnetico>
-      </div>
+        <div data-paso="1" style={{ display: paso === 1 ? "block" : "none" }}>
+          <AsistentePaso eyebrow="Paso 2 de 3" titulo="Preguntas">
+            <div className="pl-campo ancho">
+              <div className="rx-preguntas-lista">
+                {preguntas.map((p, i) => (
+                  <PreguntaFrame key={p.cid} n={i + 1} pregunta={p} permiteQuitar={preguntas.length > 1}
+                    onCambiar={(nueva) => cambiarPregunta(p.cid, nueva)} onQuitar={() => quitarPregunta(p.cid)} />
+                ))}
+              </div>
+              <button type="button" className="boton fantasma" onClick={() => setPreguntas((ps) => [...ps, preguntaVacia()])} style={{ marginTop: 12 }}>+ Agregar pregunta</button>
+            </div>
+          </AsistentePaso>
+        </div>
+        <div data-paso="2" style={{ display: paso === 2 ? "block" : "none" }}>
+          <AsistentePaso eyebrow="Paso 3 de 3" titulo="Adjuntos">
+            <AdjuntosExamen totalPreguntas={preguntas.length} adjuntos={adjuntos}
+              onAgregar={(a) => setAdjuntos((as) => [...as, a])}
+              onQuitar={(cid) => setAdjuntos((as) => as.filter((a) => a.cid !== cid))} />
+          </AsistentePaso>
+        </div>
+        <div className="us-asistente-nav">
+          <button type="button" className="boton fantasma" onClick={paso === 0 ? cerrar : () => setPaso((p) => p - 1)}>
+            {paso === 0 ? "Cancelar" : "Atrás"}
+          </button>
+          {paso < PASOS_EXAMEN.length - 1
+            ? <button type="button" className="boton primario" onClick={siguiente}>Siguiente</button>
+            : <BotonMagnetico type="submit" className="boton primario boton-magnetico" disabled={pendiente}>
+                {pendiente ? "Guardando…" : editar ? "Guardar cambios" : "Guardar examen"}
+              </BotonMagnetico>}
+        </div>
+      </Asistente>
     </form>
   );
 }
@@ -302,7 +336,7 @@ function ListaExamenes({ examenes, cursos }: { examenes: Examen[]; cursos: Curso
       )}
 
       <Velo abierto={abierto !== null} onCerrar={() => setAbierto(null)}>
-        <div className="us-frame rx-frame-ancho" role="dialog" aria-modal="true">
+        <div className="us-frame us-frame-asistente" role="dialog" aria-modal="true">
           <div className="us-frame-cab">
             <div className="us-quien"><b>{abierto === "crear" ? "Agregar examen" : "Editar examen"}</b><span>Agrupa preguntas, cada una con su propia explicación</span></div>
             <button type="button" className="toast-x us-cerrar" aria-label="Cerrar" onClick={() => setAbierto(null)}><IconoPanel n="x" /></button>
@@ -320,10 +354,18 @@ function ListaExamenes({ examenes, cursos }: { examenes: Examen[]; cursos: Curso
 // Reactivos sueltos (sin agrupar en examen) — conviven con la práctica libre.
 // ---------------------------------------------------------------------------
 
+const PASOS_REACTIVO = [
+  { titulo: "Curso y enunciado", sub: "Dónde aparece y qué se pregunta" },
+  { titulo: "Opciones de respuesta", sub: "Marca cuál es la correcta" },
+  { titulo: "Explicación", sub: "Opcional — se muestra al calificar" },
+];
+
 function FormularioReactivo({ cursos, editar, onListo, onCerrar }: {
   cursos: Curso[]; editar: Reactivo | null; onListo: () => void; onCerrar: () => void;
 }) {
   const toast = useToastResultado();
+  const [paso, setPaso] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
   const [opciones, setOpciones] = useState<string[]>(editar?.opciones.length ? editar.opciones : ["", "", "", ""]);
   const [correcta, setCorrecta] = useState(editar?.respuesta_correcta ?? 0);
   const [cursoId, setCursoId] = useState(String(editar?.curso_id ?? cursos[0]?.id ?? ""));
@@ -331,7 +373,7 @@ function FormularioReactivo({ cursos, editar, onListo, onCerrar }: {
   const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev, fd) => {
     const r = await accionBase(prev, fd);
     toast(r);
-    if (r.ok) onListo();
+    if (r.ok) { onListo(); setPaso(0); }
     return r;
   }, {});
 
@@ -343,49 +385,73 @@ function FormularioReactivo({ cursos, editar, onListo, onCerrar }: {
     else if (correcta > i) setCorrecta(correcta - 1);
   };
 
+  function cerrar() { onCerrar(); setPaso(0); }
+
+  /** Valida solo los campos visibles del paso actual antes de avanzar. */
+  function siguiente() {
+    const invalido = formRef.current?.querySelector<HTMLElement>(`[data-paso="${paso}"] :invalid`);
+    if (invalido) { (invalido as HTMLInputElement).reportValidity(); return; }
+    setPaso((p) => p + 1);
+  }
+
   return (
-    <form action={accion} className="pl-form">
+    <form action={accion} ref={formRef}>
       {editar && <input type="hidden" name="id" value={editar.id} />}
-      <label className="pl-campo">Curso
-        <SelectorDesplegable placeholder="Elige un curso" valor={cursoId} opciones={cursos.map((c) => ({ valor: String(c.id), nombre: c.nombre }))} onChange={setCursoId} />
-        <input type="hidden" name="curso_id" value={cursoId} required />
-      </label>
-      <label className="pl-campo">Tema (opcional — agrupa la práctica por bloque)
-        <input type="text" name="tema" maxLength={120} defaultValue={editar?.tema ?? ""} placeholder="Ej. Álgebra, Comprensión lectora…" />
-      </label>
-      <label className="pl-campo">Enunciado
-        <textarea name="enunciado" required rows={3} defaultValue={editar?.enunciado ?? ""} />
-      </label>
-
-      <div className="pl-campo">
-        <span>Opciones — marca cuál es la correcta</span>
-        <input type="hidden" name="respuesta_correcta" value={correcta} />
-        {opciones.map((op, i) => (
-          <div key={i} className="rx-opcion">
-            <button type="button" className={`rx-correcta${correcta === i ? " on" : ""}`}
-              onClick={() => setCorrecta(i)} aria-pressed={correcta === i} aria-label={`Opción ${i + 1} es la correcta`}>
-              {correcta === i && <IconoPanel n="check" cls="ic-sm" />}
-            </button>
-            <input type="text" name={`opcion_${i}`} required value={op} placeholder={`Opción ${i + 1}`}
-              onChange={(e) => setOpciones(opciones.map((o, idx) => (idx === i ? e.target.value : o)))} />
-            {opciones.length > MIN_OPCIONES && (
-              <button type="button" className="rx-quitar" aria-label="Quitar opción" onClick={() => quitarOpcion(i)}><IconoPanel n="x" /></button>
-            )}
-          </div>
-        ))}
-        {opciones.length < MAX_OPCIONES && (
-          <button type="button" className="boton mini fantasma" onClick={agregarOpcion} style={{ marginTop: 6 }}>+ Agregar opción</button>
-        )}
-      </div>
-
-      <label className="pl-campo">Explicación (opcional — se muestra al alumno al calificar)
-        <textarea name="explicacion" rows={2} defaultValue={editar?.explicacion ?? ""} />
-      </label>
-
-      <div className="us-pie">
-        <button type="button" className="boton fantasma" onClick={onCerrar}>Cancelar</button>
-        <button className="boton primario" disabled={pendiente}>{pendiente ? "Guardando…" : editar ? "Guardar cambios" : "Agregar reactivo suelto"}</button>
-      </div>
+      <Asistente pasos={PASOS_REACTIVO} activo={paso}>
+        <div data-paso="0" style={{ display: paso === 0 ? "block" : "none" }}>
+          <AsistentePaso eyebrow="Paso 1 de 3" titulo="Curso y enunciado">
+            <label className="pl-campo">Curso
+              <SelectorDesplegable placeholder="Elige un curso" valor={cursoId} opciones={cursos.map((c) => ({ valor: String(c.id), nombre: c.nombre }))} onChange={setCursoId} />
+              <input type="hidden" name="curso_id" value={cursoId} required />
+            </label>
+            <label className="pl-campo">Tema <small>(opcional — agrupa la práctica por bloque)</small>
+              <input type="text" name="tema" maxLength={120} defaultValue={editar?.tema ?? ""} placeholder="Ej. Álgebra, Comprensión lectora…" />
+            </label>
+            <label className="pl-campo ancho">Enunciado
+              <textarea name="enunciado" required rows={3} defaultValue={editar?.enunciado ?? ""} />
+            </label>
+          </AsistentePaso>
+        </div>
+        <div data-paso="1" style={{ display: paso === 1 ? "block" : "none" }}>
+          <AsistentePaso eyebrow="Paso 2 de 3" titulo="Opciones de respuesta">
+            <div className="pl-campo ancho">
+              <span>Opciones — marca cuál es la correcta</span>
+              <input type="hidden" name="respuesta_correcta" value={correcta} />
+              {opciones.map((op, i) => (
+                <div key={i} className="rx-opcion">
+                  <button type="button" className={`rx-correcta${correcta === i ? " on" : ""}`}
+                    onClick={() => setCorrecta(i)} aria-pressed={correcta === i} aria-label={`Opción ${i + 1} es la correcta`}>
+                    {correcta === i && <IconoPanel n="check" cls="ic-sm" />}
+                  </button>
+                  <input type="text" name={`opcion_${i}`} required value={op} placeholder={`Opción ${i + 1}`}
+                    onChange={(e) => setOpciones(opciones.map((o, idx) => (idx === i ? e.target.value : o)))} />
+                  {opciones.length > MIN_OPCIONES && (
+                    <button type="button" className="rx-quitar" aria-label="Quitar opción" onClick={() => quitarOpcion(i)}><IconoPanel n="x" /></button>
+                  )}
+                </div>
+              ))}
+              {opciones.length < MAX_OPCIONES && (
+                <button type="button" className="boton mini fantasma" onClick={agregarOpcion} style={{ marginTop: 6 }}>+ Agregar opción</button>
+              )}
+            </div>
+          </AsistentePaso>
+        </div>
+        <div data-paso="2" style={{ display: paso === 2 ? "block" : "none" }}>
+          <AsistentePaso eyebrow="Paso 3 de 3" titulo="Explicación">
+            <label className="pl-campo ancho">Explicación <small>(opcional — se muestra al alumno al calificar)</small>
+              <textarea name="explicacion" rows={2} defaultValue={editar?.explicacion ?? ""} />
+            </label>
+          </AsistentePaso>
+        </div>
+        <div className="us-asistente-nav">
+          <button type="button" className="boton fantasma" onClick={paso === 0 ? cerrar : () => setPaso((p) => p - 1)}>
+            {paso === 0 ? "Cancelar" : "Atrás"}
+          </button>
+          {paso < PASOS_REACTIVO.length - 1
+            ? <button type="button" className="boton primario" onClick={siguiente}>Siguiente</button>
+            : <button type="submit" className="boton primario" disabled={pendiente}>{pendiente ? "Guardando…" : editar ? "Guardar cambios" : "Agregar reactivo suelto"}</button>}
+        </div>
+      </Asistente>
     </form>
   );
 }
@@ -440,7 +506,7 @@ function ListaReactivosSueltos({ inicial, cursos }: { inicial: Reactivo[]; curso
       </table>
 
       <Velo abierto={abierto !== null} onCerrar={() => setAbierto(null)}>
-        <div className="us-frame" role="dialog" aria-modal="true">
+        <div className="us-frame us-frame-asistente" role="dialog" aria-modal="true">
           <div className="us-frame-cab">
             <div className="us-quien"><b>{abierto === "crear" ? "Agregar reactivo suelto" : "Editar reactivo"}</b><span>Opción múltiple — se resuelve en el portal del alumno</span></div>
             <button type="button" className="toast-x us-cerrar" aria-label="Cerrar" onClick={() => setAbierto(null)}><IconoPanel n="x" /></button>

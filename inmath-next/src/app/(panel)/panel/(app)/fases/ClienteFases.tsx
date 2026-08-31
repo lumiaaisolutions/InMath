@@ -1,7 +1,7 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { IconoPanel } from "@/components/IconoPanel";
-import { Velo, ConfirmarDialogo, useToastResultado, SelectorDesplegable, BotonMagnetico } from "../ClientePanel";
+import { Velo, ConfirmarDialogo, useToastResultado, SelectorDesplegable, BotonMagnetico, Asistente, AsistentePaso } from "../ClientePanel";
 import {
   faseGuardarAccion, faseActivaAccion, faseBorrarAccion,
   faseVideoSubirAccion, faseDocumentoSubirAccion, type Resultado,
@@ -74,7 +74,7 @@ function RecursosFase({ recursos, onAgregar, onQuitar }: {
   };
 
   return (
-    <div className="pl-campo rx-adjuntos">
+    <div className="pl-campo rx-adjuntos ancho">
       <span>Videos y materiales de esta fase</span>
       {recursos.length > 0 && (
         <ul className="mat-archivos-lista">
@@ -125,7 +125,7 @@ function SelectorExamenes({ examenesDisponibles, seleccionados, onCambiar }: {
     onCambiar(seleccionados.includes(id) ? seleccionados.filter((x) => x !== id) : [...seleccionados, id]);
   };
   return (
-    <div className="pl-campo">
+    <div className="pl-campo ancho">
       <span>Exámenes que debe aprobar para pasar de fase <small>(si eliges varios, debe aprobar TODOS)</small></span>
       {examenesDisponibles.length === 0 ? (
         <div className="vacio" style={{ padding: "10px 0" }}>Este curso todavía no tiene exámenes en Reactivos.</div>
@@ -147,10 +147,18 @@ function SelectorExamenes({ examenesDisponibles, seleccionados, onCambiar }: {
 // Formulario completo de una fase
 // ---------------------------------------------------------------------------
 
+const PASOS_FASE = [
+  { titulo: "Datos de la fase", sub: "Curso, título y avance requerido" },
+  { titulo: "Videos y materiales", sub: "Lo que verá el alumno en esta fase" },
+  { titulo: "Examen para desbloquear", sub: "Qué debe aprobar para avanzar" },
+];
+
 function FaseFrame({ cursos, examenes, editar, onListo, onCerrar }: {
   cursos: Curso[]; examenes: ExamenDisponible[]; editar: Fase | null; onListo: () => void; onCerrar: () => void;
 }) {
   const toast = useToastResultado();
+  const [paso, setPaso] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
   const [cursoId, setCursoId] = useState(String(editar?.curso_id ?? cursos[0]?.id ?? ""));
   const [titulo, setTitulo] = useState(editar?.titulo ?? "");
   const [descripcion, setDescripcion] = useState(editar?.descripcion ?? "");
@@ -179,35 +187,58 @@ function FaseFrame({ cursos, examenes, editar, onListo, onCerrar }: {
     return r;
   }, {});
 
+  /** Valida solo los campos visibles del paso actual antes de avanzar. */
+  function siguiente() {
+    const invalido = formRef.current?.querySelector<HTMLElement>(`[data-paso="${paso}"] :invalid`);
+    if (invalido) { (invalido as HTMLInputElement).reportValidity(); return; }
+    setPaso((p) => p + 1);
+  }
+
   return (
-    <form action={accion} className="pl-form rx-examen-form">
-      <label className="pl-campo">Curso
-        <SelectorDesplegable placeholder="Elige un curso" valor={cursoId} opciones={cursos.map((c) => ({ valor: String(c.id), nombre: c.nombre }))} onChange={setCursoId} />
-      </label>
-      <label className="pl-campo">Título de la fase
-        <input type="text" value={titulo} placeholder="Ej. Fase 1: Fundamentos de álgebra" onChange={(e) => setTitulo(e.target.value)} />
-      </label>
-      <label className="pl-campo">Descripción <small>(opcional, el alumno la ve)</small>
-        <textarea rows={2} value={descripcion ?? ""} onChange={(e) => setDescripcion(e.target.value)} />
-      </label>
-      <div className="us-campos">
-        <label className="pl-campo">% mínimo para aprobar
-          <input type="number" min={0} max={100} value={porcentajeMinimo} onChange={(e) => setPorcentajeMinimo(e.target.value)} />
-        </label>
-        <label className="pl-campo">Orden <small>(opcional, en blanco = al final)</small>
-          <input type="number" min={0} value={orden} placeholder="Automático" onChange={(e) => setOrden(e.target.value)} />
-        </label>
-      </div>
-
-      <RecursosFase recursos={recursos} onAgregar={(r) => setRecursos((rs) => [...rs, r])} onQuitar={(cid) => setRecursos((rs) => rs.filter((r) => r.cid !== cid))} />
-      <SelectorExamenes examenesDisponibles={examenesDelCurso} seleccionados={examenesSel} onCambiar={setExamenesSel} />
-
-      <div className="us-pie">
-        <button type="button" className="boton fantasma" onClick={onCerrar}>Cancelar</button>
-        <BotonMagnetico type="submit" className="boton primario boton-magnetico" disabled={pendiente}>
-          {pendiente ? "Guardando…" : editar ? "Guardar cambios" : "Crear fase"}
-        </BotonMagnetico>
-      </div>
+    <form action={accion} ref={formRef}>
+      <Asistente pasos={PASOS_FASE} activo={paso}>
+        <div data-paso="0" style={{ display: paso === 0 ? "block" : "none" }}>
+          <AsistentePaso eyebrow="Paso 1 de 3" titulo="Datos de la fase">
+            <label className="pl-campo ancho">Curso
+              <SelectorDesplegable placeholder="Elige un curso" valor={cursoId} opciones={cursos.map((c) => ({ valor: String(c.id), nombre: c.nombre }))} onChange={setCursoId} />
+            </label>
+            <label className="pl-campo ancho">Título de la fase
+              <input type="text" value={titulo} placeholder="Ej. Fase 1: Fundamentos de álgebra" onChange={(e) => setTitulo(e.target.value)} />
+            </label>
+            <label className="pl-campo ancho">Descripción <small>(opcional, el alumno la ve)</small>
+              <textarea rows={2} value={descripcion ?? ""} onChange={(e) => setDescripcion(e.target.value)} />
+            </label>
+            <label className="pl-campo">% mínimo para aprobar
+              <input type="number" min={0} max={100} value={porcentajeMinimo} onChange={(e) => setPorcentajeMinimo(e.target.value)} />
+            </label>
+            <label className="pl-campo">Orden <small>(opcional, en blanco = al final)</small>
+              <input type="number" min={0} value={orden} placeholder="Automático" onChange={(e) => setOrden(e.target.value)} />
+            </label>
+          </AsistentePaso>
+        </div>
+        <div data-paso="1" style={{ display: paso === 1 ? "block" : "none" }}>
+          <AsistentePaso eyebrow="Paso 2 de 3" titulo="Videos y materiales de la fase">
+            <RecursosFase recursos={recursos} onAgregar={(r) => setRecursos((rs) => [...rs, r])} onQuitar={(cid) => setRecursos((rs) => rs.filter((r) => r.cid !== cid))} />
+          </AsistentePaso>
+        </div>
+        <div data-paso="2" style={{ display: paso === 2 ? "block" : "none" }}>
+          <AsistentePaso eyebrow="Paso 3 de 3" titulo="Examen para desbloquear la siguiente fase">
+            <SelectorExamenes examenesDisponibles={examenesDelCurso} seleccionados={examenesSel} onCambiar={setExamenesSel} />
+          </AsistentePaso>
+        </div>
+        <div className="us-asistente-nav">
+          <button type="button" className="boton fantasma" onClick={paso === 0 ? onCerrar : () => setPaso((p) => p - 1)}>
+            {paso === 0 ? "Cancelar" : "Atrás"}
+          </button>
+          {paso < PASOS_FASE.length - 1
+            ? <button type="button" className="boton primario" onClick={siguiente}>Siguiente</button>
+            : (
+              <BotonMagnetico type="submit" className="boton primario boton-magnetico" disabled={pendiente}>
+                {pendiente ? "Guardando…" : editar ? "Guardar cambios" : "Crear fase"}
+              </BotonMagnetico>
+            )}
+        </div>
+      </Asistente>
     </form>
   );
 }
@@ -261,7 +292,7 @@ export function ClienteFases({ fases, examenes, cursos }: { fases: Fase[]; exame
         <BotonMagnetico className="boton primario boton-magnetico" onClick={() => setAbierto("crear")}>+ Agregar fase</BotonMagnetico>
       </div>
       {visibles.length === 0 ? (
-        <div className="vacio">Este curso todavía no tiene fases — el alumno no verá el apartado "Fases" hasta que agregues la primera.</div>
+        <div className="vacio">Este curso todavía no tiene fases — el alumno no verá el apartado &ldquo;Fases&rdquo; hasta que agregues la primera.</div>
       ) : (
         <div className="rx-examenes-grid">
           {visibles.map((f) => <FaseTarjeta key={f.id} fase={f} onEditar={() => setAbierto(f)} />)}
@@ -269,7 +300,7 @@ export function ClienteFases({ fases, examenes, cursos }: { fases: Fase[]; exame
       )}
 
       <Velo abierto={abierto !== null} onCerrar={() => setAbierto(null)}>
-        <div className="us-frame rx-frame-ancho" role="dialog" aria-modal="true">
+        <div className="us-frame us-frame-asistente" role="dialog" aria-modal="true">
           <div className="us-frame-cab">
             <div className="us-quien"><b>{abierto === "crear" ? "Agregar fase" : "Editar fase"}</b><span>Videos, materiales y el examen para desbloquear la siguiente</span></div>
             <button type="button" className="toast-x us-cerrar" aria-label="Cerrar" onClick={() => setAbierto(null)}><IconoPanel n="x" /></button>

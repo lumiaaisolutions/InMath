@@ -70,7 +70,7 @@ export async function registrarAlumnoAccion(fd: FormData): Promise<EstadoRegistr
       "Completa tu pago desde el portal o en la página de inscripción.",
       "Al confirmarse, se desbloquea todo el contenido, tus asesorías y el material.",
     ],
-    cta: { url: `${sitio}/portal/login`, label: "Entrar a mi portal" },
+    cta: { url: `${sitio}/portal/login`, label: "Entrar a mi portal", icono: "check" },
   });
 
   return { ok: { pagoId: pago.id, token: tokenPago(pago.id), montoCentavos: pago.monto_centavos, moneda: pago.moneda, link: pago.link_pago } };
@@ -131,7 +131,7 @@ export async function iniciarPago(_prev: EstadoPago, fd: FormData): Promise<Esta
       "O paga por transferencia y sube tu comprobante en la misma página.",
       "Cuando confirmemos tu pago, tus datos de acceso te llegan por este correo.",
     ],
-    ...(pago.link_pago ? { cta: { url: pago.link_pago, label: "Pagar de forma segura" } } : {}),
+    ...(pago.link_pago ? { cta: { url: pago.link_pago, label: "Pagar de forma segura", icono: "pago" as const } } : {}),
   });
 
   return {

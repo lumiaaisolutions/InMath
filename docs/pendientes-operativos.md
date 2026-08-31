@@ -249,3 +249,39 @@ Todo construido y verificado EN LOCAL (Playwright: desktop + iPhone 13);
 (y crearon `.claude/`, `skills-lock.json`); se agregaron al `.gitignore` para no
 comitearlas. Quedan datos de prueba en la BD local (alumno `5210000000001` /
 `prueba123`, admin `admin.prueba@example.com` / `admin123`) para previsualizar.
+
+---
+
+## Cierre de sesión — 31-ago-2026 (correo de Meet nunca llegaba — RESUELTO de raíz)
+
+El cliente reportó, entre varios pendientes, que el correo de confirmación de
+cita **nunca traía el link de Meet** (siempre el aviso de "en breve") y el
+evento nunca aparecía en Google Calendar. Investigación de raíz a raíz —
+detalle técnico completo en `n8n-conexion.md` (sección "31-ago-2026"). Resumen:
+
+Eran **cuatro problemas apilados**, cada uno enmascarando al siguiente:
+1. El workflow de n8n nunca registraba su webhook en producción (404
+   constante) — mitigado duplicándolo dentro de n8n (la copia sí registra).
+2. n8n bloqueaba el acceso a variables de entorno dentro de los nodos
+   (endurecimiento de seguridad activado por defecto en esta versión) —
+   corregido con una variable en el compose de n8n.
+3. Ningún asesor tiene calendario de Google configurado en la base de datos
+   — se acordó con el cliente usar un solo calendario compartido en vez de
+   uno por asesor.
+4. **La causa real de que nunca llegara nada**: un bug real y preexistente en
+   las expresiones del workflow — leían `cita.id` cuando el dato real vive en
+   `body.cita.id` (el webhook de n8n anida el body del POST). Por eso la
+   fecha del evento salía mal y el link nunca se guardaba en la base de
+   datos, aunque todo lo demás ya estuviera bien.
+
+**Verificado con una prueba real** end-to-end: se creó el evento en Google
+Calendar con Meet real y se guardó en la cita pendiente del cliente
+(miércoles 2-sep, 18:00). Confirmado además, leyendo el código del sitio, que
+el correo con el link se disparará normalmente en la próxima cita real que se
+agende. A petición del cliente, se está reenviando el correo de confirmación
+para esa cita puntual con el Meet ya guardado.
+
+**Pendiente:** el workflow original de n8n quedó despublicado (nunca se
+entendió por qué no registraba su webhook); la copia es ahora la versión en
+producción. Si en el futuro se quiere depurar o recuperar el original, ver la
+nota en `n8n-conexion.md`.

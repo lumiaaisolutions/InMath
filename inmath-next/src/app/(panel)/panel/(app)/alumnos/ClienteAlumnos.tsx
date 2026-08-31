@@ -155,7 +155,7 @@ function FichaDetalle({ fila, onCerrar }: { fila: Fila; onCerrar: () => void }) 
   const pagoActivo = fila.pagos.find((p) => p.estado === "pendiente") ?? fila.pagos[0] ?? null;
   return (
     <EnBody>
-      <div className="us-velo visible" onClick={(e) => { if (e.target === e.currentTarget) onCerrar(); }}>
+      <div className="us-velo visible">
         <div className="us-frame pg-frame" role="dialog" aria-modal="true">
           <div className="us-frame-cab">
             <div className="us-quien"><b>{fila.nombre}</b><span>{fila.cursoNombre ?? "Sin curso"}</span></div>

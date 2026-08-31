@@ -100,7 +100,7 @@ async function confirmarCitaPorCorreo(cita: { id: number; asesor_id: number; ini
     texto: meetLink
       ? `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. Toca el botón para unirte a tu asesoría en línea en ese horario.`
       : `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. En breve te compartimos el enlace de tu asesoría en línea — si no llega, un asesor te lo comparte antes de tu cita.`,
-    ...(meetLink ? { cta: { url: meetLink, label: "Unirme a mi asesoría en línea" } } : {}),
+    ...(meetLink ? { cta: { url: meetLink, label: "Unirme a mi asesoría en línea", icono: "calendario" as const } } : {}),
   }).catch((e) => console.error("confirmarCitaPorCorreo: no se pudo enviar el correo", e));
 }
 

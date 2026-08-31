@@ -3,7 +3,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import { useRouter } from "next/navigation";
 import { IconoPanel } from "@/components/IconoPanel";
 import { loginMediaSubirAccion, loginMediaMetaAccion, loginMediaBorrarAccion, loginMediaRecortarAccion, type Resultado } from "../acciones";
-import { Velo, ConfirmarDialogo, SelectorNumero, useToastResultado } from "../ClientePanel";
+import { Velo, ConfirmarDialogo, SelectorNumero, useToastResultado, Asistente, AsistentePaso } from "../ClientePanel";
 
 export type SlideAdmin = {
   archivo: string; src: string; esVideo: boolean;
@@ -226,6 +226,11 @@ function SubirMedia() {
   );
 }
 
+const PASOS_SLIDE = [
+  { titulo: "Texto en la imagen", sub: "Lo que se sobrepone al fondo" },
+  { titulo: "Orden en el carrusel", sub: "En qué posición aparece" },
+];
+
 /** Frame de edición por slide (texto en vivo + orden + borrar) — port del slideModal. */
 function EditarSlideModal({ slide, abierto, onCerrar }: { slide: SlideAdmin; abierto: boolean; onCerrar: () => void }) {
   const router = useRouter();
@@ -236,14 +241,25 @@ function EditarSlideModal({ slide, abierto, onCerrar }: { slide: SlideAdmin; abi
   const [recortando, setRecortando] = useState<File | null>(null);
   const [cargandoRecorte, setCargandoRecorte] = useState(false);
   const [guardandoRecorte, setGuardandoRecorte] = useState(false);
+  const [paso, setPaso] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
   const [, startBorrar] = useTransition();
   const toast = useToastResultado();
   const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev, fd) => {
     const r = await loginMediaMetaAccion(prev, fd);
     toast(r);
-    if (r.ok) onCerrar();
+    if (r.ok) { setPaso(0); onCerrar(); }
     return r;
   }, {});
+
+  function cerrar() { setPaso(0); onCerrar(); }
+
+  /** Valida solo los campos visibles del paso actual antes de avanzar. */
+  function siguiente() {
+    const invalido = formRef.current?.querySelector<HTMLElement>(`[data-paso="${paso}"] :invalid`);
+    if (invalido) { (invalido as HTMLInputElement).reportValidity(); return; }
+    setPaso((p) => p + 1);
+  }
 
   async function abrirRecorte() {
     setCargandoRecorte(true);
@@ -266,52 +282,74 @@ function EditarSlideModal({ slide, abierto, onCerrar }: { slide: SlideAdmin; abi
     toast(r);
     setGuardandoRecorte(false);
     setRecortando(null);
-    if (r.ok) { router.refresh(); onCerrar(); }
+    if (r.ok) { router.refresh(); setPaso(0); onCerrar(); }
   }
 
   return (
-    <Velo abierto={abierto} onCerrar={onCerrar}>
-      <div className="us-frame" role="dialog" aria-modal="true">
+    <Velo abierto={abierto} onCerrar={cerrar}>
+      <div className={`us-frame${recortando ? "" : " us-frame-asistente"}`} role="dialog" aria-modal="true">
         <div className="us-frame-cab">
           <div className="us-quien"><b>Editar slide</b><span>Así se verá en el login</span></div>
-          <button type="button" className="toast-x us-cerrar" aria-label="Cerrar" onClick={onCerrar}><IconoPanel n="x" /></button>
+          <button type="button" className="toast-x us-cerrar" aria-label="Cerrar" onClick={cerrar}><IconoPanel n="x" /></button>
         </div>
 
         {recortando ? (
           <EncuadreEditor archivo={recortando} onCancelar={() => setRecortando(null)} onListo={guardarRecorte} />
         ) : (
-          <>
-            <div className="plp-media slide-preview">
-              {slide.esVideo ? (
-                <video src={slide.src} autoPlay muted loop playsInline />
-              ) : (
-                <img src={slide.src} alt="" />
-              )}
-              <div className="plp-overlay">
-                <b className="sp-titulo">{titulo}</b>
-                <i className="sp-texto">{texto}</i>
+          <form action={accion} ref={formRef}>
+            <Asistente pasos={PASOS_SLIDE} activo={paso}>
+              <div data-paso="0" style={{ display: paso === 0 ? "block" : "none" }}>
+                <AsistentePaso eyebrow="Paso 1 de 2" titulo="Texto sobre la imagen">
+                  <div className="pl-campo ancho">
+                    <div className="plp-media slide-preview" style={{ margin: 0 }}>
+                      {slide.esVideo ? (
+                        <video src={slide.src} autoPlay muted loop playsInline />
+                      ) : (
+                        <img src={slide.src} alt="" />
+                      )}
+                      <div className="plp-overlay">
+                        <b className="sp-titulo">{titulo}</b>
+                        <i className="sp-texto">{texto}</i>
+                      </div>
+                    </div>
+                  </div>
+                  {!slide.esVideo && (
+                    <div className="pl-campo ancho">
+                      <button type="button" className="boton mini fantasma" style={{ justifySelf: "start" }} disabled={cargandoRecorte || guardandoRecorte} onClick={abrirRecorte}>
+                        {cargandoRecorte ? "Cargando…" : guardandoRecorte ? "Guardando recorte…" : "Editar recorte"}
+                      </button>
+                    </div>
+                  )}
+                  <input type="hidden" name="archivo" value={slide.archivo} />
+                  <label className="pl-campo">Título sobre la imagen
+                    <input type="text" name="titulo" maxLength={60} value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Aprende a tu ritmo" /></label>
+                  <label className="pl-campo">Texto de apoyo
+                    <input type="text" name="texto" maxLength={120} value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Cursos con acompañamiento real." /></label>
+                </AsistentePaso>
               </div>
-            </div>
-            {!slide.esVideo && (
-              <button type="button" className="boton mini fantasma" style={{ marginTop: 10 }} disabled={cargandoRecorte || guardandoRecorte} onClick={abrirRecorte}>
-                {cargandoRecorte ? "Cargando…" : guardandoRecorte ? "Guardando recorte…" : "Editar recorte"}
-              </button>
-            )}
-            <form action={accion} className="pl-form" style={{ marginTop: 14 }}>
-              <input type="hidden" name="archivo" value={slide.archivo} />
-              <input type="hidden" name="orden" value={orden} />
-              <label className="pl-campo">Título sobre la imagen
-                <input type="text" name="titulo" maxLength={60} value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Aprende a tu ritmo" /></label>
-              <label className="pl-campo">Texto de apoyo
-                <input type="text" name="texto" maxLength={120} value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Cursos con acompañamiento real." /></label>
-              <label className="pl-campo">Orden en el carrusel (1 = primero)
-                <SelectorNumero valor={orden} onChange={setOrden} min={1} max={99} /></label>
-              <div className="us-pie"><button className="boton primario" disabled={pendiente}>{pendiente ? "Guardando…" : "Guardar slide"}</button></div>
-            </form>
-            <div className="us-eliminar-form">
-              <button className="boton peligro" onClick={() => setConfirmar(true)}>Eliminar del carrusel</button>
-            </div>
-          </>
+              <div data-paso="1" style={{ display: paso === 1 ? "block" : "none" }}>
+                <AsistentePaso eyebrow="Paso 2 de 2" titulo="Orden en el carrusel">
+                  <input type="hidden" name="orden" value={orden} />
+                  <label className="pl-campo">Orden en el carrusel (1 = primero)
+                    <SelectorNumero valor={orden} onChange={setOrden} min={1} max={99} /></label>
+                </AsistentePaso>
+              </div>
+              <div className="us-asistente-nav">
+                <button type="button" className="boton fantasma" onClick={paso === 0 ? cerrar : () => setPaso((p) => p - 1)}>
+                  {paso === 0 ? "Cancelar" : "Atrás"}
+                </button>
+                {paso < PASOS_SLIDE.length - 1
+                  ? <button type="button" className="boton primario" onClick={siguiente}>Siguiente</button>
+                  : <button type="submit" className="boton primario" disabled={pendiente}>{pendiente ? "Guardando…" : "Guardar slide"}</button>}
+              </div>
+            </Asistente>
+          </form>
+        )}
+
+        {!recortando && (
+          <div className="us-eliminar-form">
+            <button className="boton peligro" onClick={() => setConfirmar(true)}>Eliminar del carrusel</button>
+          </div>
         )}
 
         <ConfirmarDialogo
@@ -320,7 +358,7 @@ function EditarSlideModal({ slide, abierto, onCerrar }: { slide: SlideAdmin; abi
           onNo={() => setConfirmar(false)}
           onSi={() => {
             setConfirmar(false);
-            startBorrar(async () => { toast(await loginMediaBorrarAccion(slide.archivo)); onCerrar(); });
+            startBorrar(async () => { toast(await loginMediaBorrarAccion(slide.archivo)); setPaso(0); onCerrar(); });
           }}
         />
       </div>

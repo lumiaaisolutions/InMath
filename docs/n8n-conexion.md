@@ -172,3 +172,73 @@ se manda **solo por correo**, nunca por WhatsApp. Cambios:
 Desplegado y verificado (200 en homepage y `/agenda`). **Sigue pendiente la
 prueba end-to-end real** de agendar una cita y confirmar que el correo llega
 con el link correcto.
+
+## Actualización 31-ago-2026 — bug real encontrado y corregido (nunca llegaba el link de Meet)
+
+El cliente reportó que el correo de confirmación nunca traía el link de Meet
+(siempre llegaba el aviso de "en breve te lo compartimos") y que el evento no
+aparecía en Google Calendar. Diagnóstico completo, de raíz a raíz:
+
+**Capa 1 — el workflow original (`inmath03gcalv2AB`) nunca registró su webhook
+en producción.** `POST /webhook/cita-creada` devolvía siempre 404 "not
+registered", sin importar cuántas veces se publicara/despublicara desde la UI,
+ni tras reiniciar el contenedor n8n. Causa exacta no confirmada (sospecha:
+corrupción interna ligada a que el workflow se reconstruyó por CLI en vez de
+nativamente en la UI — ver sección de 27-ago arriba). **Mitigación**: se
+duplicó el workflow dentro de n8n (UI → "Duplicate", no CLI) — la copia sí
+registra su webhook correctamente. El original quedó **despublicado y sin
+usar**; la copia, renombrada informalmente "v6", es ahora **el workflow activo
+en producción** (mismo ID de siempre en la URL: `.../workflow/rLXXZCn8vz9gMu4l`).
+
+**Capa 2 — `N8N_BLOCK_ENV_ACCESS_IN_NODE` (endurecimiento de seguridad de n8n)
+bloqueaba `$env.INMATH_BACKEND_URL` / `$env.INMATH_BACKEND_API_KEY` dentro de
+los nodos.** Se añadió `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` al compose de n8n
+(`/root/n8n-stack/docker-compose.yml`) y se recreó el contenedor. **Nota de
+seguridad**: esto reactiva el acceso a variables de entorno para *todos* los
+workflows de la instancia compartida (no solo InMath) — es una relajación de
+seguridad consciente y documentada aquí, no un descuido.
+
+**Capa 3 — ningún asesor tiene `google_calendar_id` configurado en la base de
+datos** (columna `usuarios.google_calendar_id`, vacía para los 7 usuarios
+existentes) y no hay UI en el panel para editarla. El nodo "Crear evento con
+Meet" intentaba buscar el calendario del asesor y fallaba con "resource not
+found". **Solución acordada con el cliente**: un solo calendario compartido
+para todas las asesorías, el de la cuenta Google conectada en n8n
+(`cursosinmath@gmail.com`), en vez de un calendario por asesor. El nodo ahora
+usa ese calendario fijo.
+
+**Capa 4 (la causa real de que nunca llegara nada) — las expresiones del
+workflow leían `$json.cita.id` cuando el payload real anida los datos bajo
+`$json.body.cita.id`.** El webhook de n8n envuelve el body del POST en una
+clave `body` (estructura estándar del nodo Webhook de n8n: `{headers, params,
+query, body}`), pero las expresiones que arma
+`$('Webhook cita creada').first().json.cita...` en los nodos "Crear evento con
+Meet" (fechas de inicio/fin, resumen) y "Guardar event_id y meet_link" (id de
+la cita en la URL del PATCH) apuntaban a `.json.cita...` sin el `.body.`
+intermedio — un bug preexistente en el workflow original, nunca detectado
+porque el flujo nunca había llegado tan lejos (siempre fallaba antes, en las
+capas 1–3). Efecto: la fecha del evento se creaba con la hora actual en vez de
+la hora real de la cita, y la URL del PATCH de vuelta al Next terminaba en
+`/api/citas/` (sin id) → 404 de la página, nunca se guardaba `google_event_id`
+ni `meet_link`. **Corregido**: las 4 expresiones afectadas ahora usan
+`.json.body.cita...` / `.json.body.prospecto_nombre`.
+
+**Verificado end-to-end el 31-ago-2026** con una llamada real al webhook
+usando la cita pendiente del cliente (`citas.id=3`): se creó el evento real en
+`cursosinmath@gmail.com` con Meet (`https://meet.google.com/deq-wonv-oxi`) y
+se guardó correctamente `google_event_id`/`meet_link` en la fila de esa cita
+vía el PATCH a `/api/citas/3`. Se confirmó además, leyendo
+`src/lib/agenda.ts`, que `crearEventoCalendar` lee `meet_link` como campo de
+primer nivel de la respuesta — coincide exactamente con lo que ahora devuelve
+n8n — así que el correo de "tu link ya está listo" (con botón al Meet) se
+disparará normalmente en la próxima cita que se agende de verdad por
+`/agenda`, Mathy, el panel o el bot.
+
+**Pendiente**: la cita `id=3` del cliente ya tiene el Meet guardado en base de
+datos, pero como la prueba se hizo llamando a n8n directo (no a través de
+`agendar()`), no se disparó el correo para esa cita en particular — si el
+cliente quiere el correo con el link para esa cita específica, hay que
+reenviarlo manualmente o simplemente agendar una cita nueva de prueba para ver
+el flujo completo real. El workflow original (`inmath03gcalv2AB`) quedó
+despublicado; sería bueno en algún momento entender por qué nunca registra su
+webhook y decidir si se recupera o se abandona en favor de la copia.

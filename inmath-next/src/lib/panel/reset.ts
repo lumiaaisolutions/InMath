@@ -58,7 +58,7 @@ export async function solicitarReset(email: string): Promise<void> {
       asunto: "Restablece tu contraseña — Inmath CRM",
       preheader: "Enlace para crear una nueva contraseña del panel (vence en 30 minutos).",
       texto: `Hola ${staff.nombre},\n\nRecibimos una solicitud para restablecer tu contraseña del panel. Toca el botón para crear una nueva.`,
-      cta: { url: `${base}/panel/login/restablecer?token=${token}`, label: "Crear nueva contraseña" },
+      cta: { url: `${base}/panel/login/restablecer?token=${token}`, label: "Crear nueva contraseña", icono: "candado" },
       nota: "Este enlace vence en 30 minutos. Si tú no lo pediste, ignora este correo — tu contraseña sigue igual.",
     });
     return;

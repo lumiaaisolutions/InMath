@@ -428,10 +428,48 @@ export function Velo({ abierto, onCerrar, children }: {
   if (!abierto) return null;
   return (
     <EnBody>
-      <div className={`us-velo${visible ? " visible" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) onCerrar(); }}>
+      <div className={`us-velo${visible ? " visible" : ""}`}>
         {children}
       </div>
     </EnBody>
+  );
+}
+
+/* ── Formulario tipo asistente: pasos numerados a la izquierda + campos
+ *  agrupados a la derecha, en vez de todos los campos amontonados en una
+ *  sola columna. El formulario (validación, envío) lo sigue controlando
+ *  quien lo usa; este componente solo pone la estructura visual. ────────── */
+export type PasoAsistente = { titulo: string; sub?: string };
+
+export function Asistente({ pasos, activo, children }: {
+  pasos: PasoAsistente[]; activo: number; children: React.ReactNode;
+}) {
+  return (
+    <div className="us-asistente">
+      <div className="us-asistente-pasos">
+        {pasos.map((p, i) => (
+          <div key={p.titulo} className={`us-asistente-paso${i === activo ? " activo" : i < activo ? " hecho" : ""}`}>
+            <span className="us-asistente-num">{i < activo ? <IconoPanel n="check" cls="ic-sm" /> : i + 1}</span>
+            <span className="us-asistente-txt">{p.titulo}</span>
+          </div>
+        ))}
+      </div>
+      <div className="us-asistente-cuerpo">{children}</div>
+    </div>
+  );
+}
+
+/** Cabecera de contenido de un paso (eyebrow + título + ayuda opcional). */
+export function AsistentePaso({ eyebrow, titulo, sub, children }: {
+  eyebrow?: string; titulo: string; sub?: string; children: React.ReactNode;
+}) {
+  return (
+    <div>
+      {eyebrow && <div className="us-asistente-eyebrow">{eyebrow}</div>}
+      <h3 className="us-asistente-titulo-paso">{titulo}</h3>
+      {sub && <p className="us-asistente-sub-paso">{sub}</p>}
+      <div className="us-asistente-campos">{children}</div>
+    </div>
   );
 }
 

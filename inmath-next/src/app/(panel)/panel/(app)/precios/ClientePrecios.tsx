@@ -1,7 +1,7 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { IconoPanel } from "@/components/IconoPanel";
-import { Velo, ConfirmarDialogo, useToastResultado, Segmentado, BotonMagnetico, SelectorFechaHora } from "../ClientePanel";
+import { Velo, ConfirmarDialogo, useToastResultado, Segmentado, BotonMagnetico, SelectorFechaHora, Asistente, AsistentePaso } from "../ClientePanel";
 import {
   cursoActualizarAccion, cursoCrearAccion, cursoEliminarAccion, cursoImagenSubirAccion,
   cuponCrearAccion, cuponActivoAccion, procesadorPagoAccion, type Resultado,
@@ -111,6 +111,13 @@ const CURSO_VACIO: Curso = {
   promocion_expira_en: null, destacado: false, activo: true, orden: 0, descripcion: null, imagen: null,
 };
 
+const PASOS_CURSO = [
+  { titulo: "Datos básicos", sub: "Nombre, modalidad y duración" },
+  { titulo: "Precio y promoción", sub: "Cuánto cuesta y si hay oferta" },
+  { titulo: "Visibilidad", sub: "Dónde y cómo se muestra" },
+  { titulo: "Portal del alumno", sub: "Descripción e imagen de la fase" },
+];
+
 function FormularioCurso({ curso, onListo, onCerrar }: { curso: Curso | null; onListo: () => void; onCerrar: () => void }) {
   const base = curso ?? CURSO_VACIO;
   const esNuevo = curso === null;
@@ -131,7 +138,16 @@ function FormularioCurso({ curso, onListo, onCerrar }: { curso: Curso | null; on
   const [descripcion, setDescripcion] = useState(base.descripcion ?? "");
   const [imagen, setImagen] = useState(base.imagen ?? "");
   const [subiendoImagen, setSubiendoImagen] = useState(false);
+  const [paso, setPaso] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
   const duracionMostrada = unidadDuracion === "semanas" ? duracionSemanas : Math.round((duracionSemanas / SEMANAS_POR_MES) * 10) / 10;
+
+  /** Valida solo los campos visibles del paso actual antes de avanzar. */
+  function siguiente() {
+    const invalido = formRef.current?.querySelector<HTMLElement>(`[data-paso="${paso}"] :invalid`);
+    if (invalido) { (invalido as HTMLInputElement).reportValidity(); return; }
+    setPaso((p) => p + 1);
+  }
 
   const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev, fd) => {
     fd.set("modalidad", modalidad);
@@ -144,12 +160,14 @@ function FormularioCurso({ curso, onListo, onCerrar }: { curso: Curso | null; on
     if (promoActiva) fd.set("promocion_activa", "on"); else fd.delete("promocion_activa");
     const r = await (esNuevo ? cursoCrearAccion : cursoActualizarAccion)(prev, fd);
     toast(r);
-    if (r.ok) onListo();
+    if (r.ok) { setPaso(0); onListo(); }
     return r;
   }, {});
 
+  function cerrar() { setPaso(0); onCerrar(); }
+
   return (
-    <form action={accion} className="al-editor">
+    <form action={accion} className="al-editor" ref={formRef}>
       {!esNuevo && <input type="hidden" name="id" value={base.id} />}
 
       <VistaPreviaCurso
@@ -157,112 +175,116 @@ function FormularioCurso({ curso, onListo, onCerrar }: { curso: Curso | null; on
         promoActiva={promoActiva} promoTexto={promocionTexto} destacado={destacado} activo={activo} modalidad={modalidad}
       />
 
-      <div className="al-paso">
-        <div className="al-paso-tit"><span className="al-paso-n">1</span> Nombre del curso</div>
-        <div className="al-campo">
-          <input type="text" name="nombre" required maxLength={190} value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Como lo va a ver el alumno" />
+      <Asistente pasos={PASOS_CURSO} activo={paso}>
+        <div data-paso="0" style={{ display: paso === 0 ? "block" : "none" }}>
+          <AsistentePaso eyebrow="Paso 1 de 4" titulo="Datos básicos del curso">
+            <label className="pl-campo ancho">Nombre del curso
+              <input type="text" name="nombre" required maxLength={190} value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Como lo va a ver el alumno" />
+            </label>
+            <label className="pl-campo ancho">Cómo se imparte
+              <Segmentado opciones={MODALIDADES} valor={modalidad} onChange={setModalidad} />
+            </label>
+            <label className="pl-campo ancho">Duración
+              <div className="pp-duracion">
+                <input type="number" min={0.5} step="any" value={duracionMostrada}
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value) || 0;
+                    setDuracionSemanas(Math.max(1, Math.round(unidadDuracion === "semanas" ? v : v * SEMANAS_POR_MES)));
+                  }} />
+                <Segmentado opciones={UNIDADES_DURACION} valor={unidadDuracion} onChange={setUnidadDuracion} />
+              </div>
+              <small className="pp-duracion-ayuda">= {duracionSemanas} semana{duracionSemanas === 1 ? "" : "s"} en total</small>
+            </label>
+          </AsistentePaso>
         </div>
-      </div>
 
-      <div className="al-paso">
-        <div className="al-paso-tit"><span className="al-paso-n">2</span> Cuánto cuesta</div>
-        <div className="al-fila2">
-          <div className="al-campo">
-            <label>Precio de venta ({base.moneda})</label>
-            <input type="number" name="precio" required min={1} step="0.01" value={precio} onChange={(e) => setPrecio(parseFloat(e.target.value) || 0)} />
-          </div>
-          <div className="al-campo">
-            <label>Duración</label>
-            <div className="pp-duracion">
-              <input type="number" min={0.5} step="any" value={duracionMostrada}
-                onChange={(e) => {
-                  const v = parseFloat(e.target.value) || 0;
-                  setDuracionSemanas(Math.max(1, Math.round(unidadDuracion === "semanas" ? v : v * SEMANAS_POR_MES)));
-                }} />
-              <Segmentado opciones={UNIDADES_DURACION} valor={unidadDuracion} onChange={setUnidadDuracion} />
+        <div data-paso="1" style={{ display: paso === 1 ? "block" : "none" }}>
+          <AsistentePaso eyebrow="Paso 2 de 4" titulo="Precio y promoción">
+            <label className="pl-campo">Precio de venta ({base.moneda})
+              <input type="number" name="precio" required min={1} step="0.01" value={precio} onChange={(e) => setPrecio(parseFloat(e.target.value) || 0)} />
+            </label>
+            <div className="pl-campo ancho">
+              <Interruptor activo={promoActiva} onChange={setPromoActiva} etiqueta="Mostrar promoción" detalle="Un precio tachado y un mensaje de oferta en la página de inicio" />
             </div>
-            <small className="pp-duracion-ayuda">= {duracionSemanas} semana{duracionSemanas === 1 ? "" : "s"} en total</small>
-          </div>
+            {promoActiva && (
+              <div className="pl-campo ancho al-campo-anidado">
+                <div className="al-campo">
+                  <label>Precio anterior — se muestra tachado (debe ser mayor al precio de venta)</label>
+                  <input type="number" name="precio_original" min={1} step="0.01"
+                    value={precioOriginal ?? ""} onChange={(e) => setPrecioOriginal(e.target.value ? parseFloat(e.target.value) : null)} />
+                </div>
+                <div className="al-campo">
+                  <label>Mensaje de la promoción (opcional)</label>
+                  <input type="text" name="promocion_texto" maxLength={160} value={promocionTexto} onChange={(e) => setPromocionTexto(e.target.value)} placeholder="Ej. Ahorras $500 inscribiéndote hoy" />
+                </div>
+                <div className="al-campo">
+                  <label>Se apaga sola el (opcional)</label>
+                  <SelectorFechaHora valor={promocionExpira} onChange={setPromocionExpira} />
+                </div>
+              </div>
+            )}
+          </AsistentePaso>
         </div>
-      </div>
 
-      <div className="al-paso">
-        <div className="al-paso-tit"><span className="al-paso-n">3</span> Cómo se imparte</div>
-        <Segmentado opciones={MODALIDADES} valor={modalidad} onChange={setModalidad} />
-      </div>
-
-      <div className="al-paso">
-        <div className="al-paso-tit"><span className="al-paso-n">4</span> Dónde y cómo se muestra</div>
-        <div className="al-campo">
-          <label>Orden en la página (los números más chicos aparecen primero)</label>
-          <input type="number" name="orden" defaultValue={base.orden} style={{ maxWidth: 120 }} />
-        </div>
-        <Interruptor activo={destacado} onChange={setDestacado} etiqueta="Plan recomendado" detalle="Se resalta como la mejor opción en la página de inicio" />
-        <Interruptor activo={activo} onChange={setActivo} etiqueta="Curso visible" detalle={activo ? "Los alumnos nuevos pueden inscribirse" : "Oculto — nadie puede inscribirse a este curso"} />
-      </div>
-
-      <div className="al-paso">
-        <div className="al-paso-tit"><span className="al-paso-n">5</span> Promoción</div>
-        <Interruptor activo={promoActiva} onChange={setPromoActiva} etiqueta="Mostrar promoción" detalle="Un precio tachado y un mensaje de oferta en la página de inicio" />
-        {promoActiva && (
-          <div className="al-campo-anidado">
-            <div className="al-campo">
-              <label>Precio anterior — se muestra tachado (debe ser mayor al precio de venta)</label>
-              <input type="number" name="precio_original" min={1} step="0.01"
-                value={precioOriginal ?? ""} onChange={(e) => setPrecioOriginal(e.target.value ? parseFloat(e.target.value) : null)} />
+        <div data-paso="2" style={{ display: paso === 2 ? "block" : "none" }}>
+          <AsistentePaso eyebrow="Paso 3 de 4" titulo="Dónde y cómo se muestra">
+            <label className="pl-campo">Orden en la página <small>(los números más chicos aparecen primero)</small>
+              <input type="number" name="orden" defaultValue={base.orden} style={{ maxWidth: 120 }} />
+            </label>
+            <div className="pl-campo ancho">
+              <Interruptor activo={destacado} onChange={setDestacado} etiqueta="Plan recomendado" detalle="Se resalta como la mejor opción en la página de inicio" />
             </div>
-            <div className="al-campo">
-              <label>Mensaje de la promoción (opcional)</label>
-              <input type="text" name="promocion_texto" maxLength={160} value={promocionTexto} onChange={(e) => setPromocionTexto(e.target.value)} placeholder="Ej. Ahorras $500 inscribiéndote hoy" />
+            <div className="pl-campo ancho">
+              <Interruptor activo={activo} onChange={setActivo} etiqueta="Curso visible" detalle={activo ? "Los alumnos nuevos pueden inscribirse" : "Oculto — nadie puede inscribirse a este curso"} />
             </div>
-            <div className="al-campo">
-              <label>Se apaga sola el (opcional)</label>
-              <SelectorFechaHora valor={promocionExpira} onChange={setPromocionExpira} />
-            </div>
-          </div>
-        )}
-      </div>
+          </AsistentePaso>
+        </div>
 
-      <div className="al-paso">
-        <div className="al-paso-tit"><span className="al-paso-n">6</span> Fases (portal del alumno)</div>
-        <div className="al-campo">
-          <label>Descripción <small>(el alumno la ve como tarjeta de su curso en "Fases")</small></label>
-          <textarea rows={2} maxLength={500} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} placeholder="Ej. Domina el EXANI-II a tu ritmo, con asesorías 1 a 1 y reporte semanal de avance." />
+        <div data-paso="3" style={{ display: paso === 3 ? "block" : "none" }}>
+          <AsistentePaso eyebrow="Paso 4 de 4" titulo="Portal del alumno (Fases)">
+            <label className="pl-campo ancho">Descripción <small>(el alumno la ve como tarjeta de su curso en &ldquo;Fases&rdquo;)</small>
+              <textarea rows={2} maxLength={500} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} placeholder="Ej. Domina el EXANI-II a tu ritmo, con asesorías 1 a 1 y reporte semanal de avance." />
+            </label>
+            <div className="pl-campo ancho">
+              <label>Imagen de la tarjeta <small>(opcional, 1000×560 recomendado)</small></label>
+              {imagen && <img src={imagen} alt="" style={{ width: "100%", maxWidth: 320, borderRadius: 12, marginBottom: 8, display: "block" }} />}
+              <label className="mat-dropzone">
+                <input type="file" hidden accept=".jpg,.jpeg,.png,.webp"
+                  onChange={async (e) => {
+                    const archivo = e.target.files?.[0];
+                    e.target.value = "";
+                    if (!archivo) return;
+                    setSubiendoImagen(true);
+                    const fdImg = new FormData();
+                    fdImg.set("imagen", archivo);
+                    const r = await cursoImagenSubirAccion(fdImg);
+                    setSubiendoImagen(false);
+                    if (r.ok) setImagen(r.ok);
+                  }} />
+                <IconoPanel n="imagen" cls="ic-sm" />
+                <span>{subiendoImagen ? "Subiendo…" : imagen ? "Cambiar imagen" : "Subir imagen"}</span>
+              </label>
+            </div>
+          </AsistentePaso>
         </div>
-        <div className="al-campo">
-          <label>Imagen de la tarjeta <small>(opcional, 1000×560 recomendado)</small></label>
-          {imagen && <img src={imagen} alt="" style={{ width: "100%", maxWidth: 320, borderRadius: 12, marginBottom: 8, display: "block" }} />}
-          <label className="mat-dropzone">
-            <input type="file" hidden accept=".jpg,.jpeg,.png,.webp"
-              onChange={async (e) => {
-                const archivo = e.target.files?.[0];
-                e.target.value = "";
-                if (!archivo) return;
-                setSubiendoImagen(true);
-                const fdImg = new FormData();
-                fdImg.set("imagen", archivo);
-                const r = await cursoImagenSubirAccion(fdImg);
-                setSubiendoImagen(false);
-                if (r.ok) setImagen(r.ok);
-              }} />
-            <IconoPanel n="imagen" cls="ic-sm" />
-            <span>{subiendoImagen ? "Subiendo…" : imagen ? "Cambiar imagen" : "Subir imagen"}</span>
-          </label>
+
+        <div className="us-asistente-nav">
+          <button type="button" className="boton fantasma" onClick={paso === 0 ? cerrar : () => setPaso((p) => p - 1)}>
+            {paso === 0 ? "Cancelar" : "Atrás"}
+          </button>
+          {paso < PASOS_CURSO.length - 1
+            ? <button type="button" className="boton primario" onClick={siguiente}>Siguiente</button>
+            : <BotonMagnetico type="submit" className="boton primario boton-magnetico" disabled={pendiente}>
+                {pendiente ? "Guardando…" : esNuevo ? "Agregar curso" : "Guardar cambios"}
+              </BotonMagnetico>}
         </div>
-      </div>
+      </Asistente>
 
       {!esNuevo && (
         <div className="us-eliminar-form">
           <button type="button" className="boton peligro" disabled={borrando} onClick={() => setConfirmarBorrar(true)}>{borrando ? "Eliminando…" : "Eliminar curso"}</button>
         </div>
       )}
-
-      <div className="us-pie">
-        <button type="button" className="boton fantasma" onClick={onCerrar}>Cancelar</button>
-        <BotonMagnetico type="submit" className="boton primario boton-magnetico" disabled={pendiente}>
-          {pendiente ? "Guardando…" : esNuevo ? "Agregar curso" : "Guardar cambios"}
-        </BotonMagnetico>
-      </div>
 
       {!esNuevo && (
         <ConfirmarDialogo
@@ -315,7 +337,7 @@ export function ListaCursos({ inicial }: { inicial: Curso[] }) {
       )}
 
       <Velo abierto={editando !== null} onCerrar={() => setEditando(null)}>
-        <div className="us-frame pp-frame-ancho" role="dialog" aria-modal="true">
+        <div className="us-frame us-frame-asistente" role="dialog" aria-modal="true">
           <div className="us-frame-cab">
             <div className="us-quien"><b>{editando === "crear" ? "Agregar curso" : editando?.nombre}</b><span>Precio, cómo se imparte y promoción</span></div>
             <button type="button" className="toast-x us-cerrar" aria-label="Cerrar" onClick={() => setEditando(null)}><IconoPanel n="x" /></button>
@@ -337,68 +359,82 @@ type Cupon = {
 };
 type CursoLigero = { id: number; nombre: string };
 
+const PASOS_CUPON = [
+  { titulo: "Código y descuento", sub: "Qué escribe el alumno y cuánto descuenta" },
+  { titulo: "Vigencia", sub: "Límites de uso y caducidad" },
+];
+
 function FormularioCupon({ cursos, onListo, onCerrar }: { cursos: CursoLigero[]; onListo: () => void; onCerrar: () => void }) {
   const toast = useToastResultado();
   const [tipo, setTipo] = useState<"porcentaje" | "monto_fijo">("porcentaje");
   const [cursoId, setCursoId] = useState<string>("");
   const [expiraEn, setExpiraEn] = useState("");
+  const [paso, setPaso] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
   const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev, fd) => {
     fd.set("tipo", tipo);
     fd.set("curso_id", cursoId);
     fd.set("expira_en", expiraEn);
     const r = await cuponCrearAccion(prev, fd);
     toast(r);
-    if (r.ok) onListo();
+    if (r.ok) { setPaso(0); onListo(); }
     return r;
   }, {});
+
+  function cerrar() { setPaso(0); onCerrar(); }
+
+  /** Valida solo los campos visibles del paso actual antes de avanzar. */
+  function siguiente() {
+    const invalido = formRef.current?.querySelector<HTMLElement>(`[data-paso="${paso}"] :invalid`);
+    if (invalido) { (invalido as HTMLInputElement).reportValidity(); return; }
+    setPaso((p) => p + 1);
+  }
 
   const opcionesCurso = [{ valor: "", nombre: "Todos los cursos" }, ...cursos.map((c) => ({ valor: String(c.id), nombre: c.nombre }))];
 
   return (
-    <form action={accion} className="al-editor">
-      <div className="al-paso">
-        <div className="al-paso-tit"><span className="al-paso-n">1</span> El código</div>
-        <div className="al-campo">
-          <label>El alumno lo escribe al elegir cómo pagar</label>
-          <input type="text" name="codigo" required maxLength={40} style={{ textTransform: "uppercase" }} placeholder="Ej. INMATH10" />
+    <form action={accion} ref={formRef}>
+      <Asistente pasos={PASOS_CUPON} activo={paso}>
+        <div data-paso="0" style={{ display: paso === 0 ? "block" : "none" }}>
+          <AsistentePaso eyebrow="Paso 1 de 2" titulo="Código y descuento">
+            <label className="pl-campo ancho">El alumno lo escribe al elegir cómo pagar
+              <input type="text" name="codigo" required maxLength={40} style={{ textTransform: "uppercase" }} placeholder="Ej. INMATH10" />
+            </label>
+            <label className="pl-campo ancho">Para qué curso aplica
+              <Segmentado opciones={opcionesCurso} valor={cursoId} onChange={setCursoId} />
+            </label>
+            <label className="pl-campo ancho">Cuánto descuenta
+              <Segmentado
+                opciones={[{ valor: "porcentaje" as const, nombre: "Porcentaje (%)" }, { valor: "monto_fijo" as const, nombre: "Monto fijo ($)" }]}
+                valor={tipo} onChange={setTipo}
+              />
+            </label>
+            <label className="pl-campo">{tipo === "porcentaje" ? "Porcentaje de descuento (1-100)" : "Monto que se descuenta ($)"}
+              <input type="number" name="valor" required min={1} max={tipo === "porcentaje" ? 100 : undefined} step={tipo === "porcentaje" ? 1 : 0.01} style={{ maxWidth: 160 }} />
+            </label>
+          </AsistentePaso>
         </div>
-      </div>
 
-      <div className="al-paso">
-        <div className="al-paso-tit"><span className="al-paso-n">2</span> Para qué curso aplica</div>
-        <Segmentado opciones={opcionesCurso} valor={cursoId} onChange={setCursoId} />
-      </div>
-
-      <div className="al-paso">
-        <div className="al-paso-tit"><span className="al-paso-n">3</span> Cuánto descuenta</div>
-        <Segmentado
-          opciones={[{ valor: "porcentaje" as const, nombre: "Porcentaje (%)" }, { valor: "monto_fijo" as const, nombre: "Monto fijo ($)" }]}
-          valor={tipo} onChange={setTipo}
-        />
-        <div className="al-campo" style={{ marginTop: 10 }}>
-          <label>{tipo === "porcentaje" ? "Porcentaje de descuento (1-100)" : "Monto que se descuenta ($)"}</label>
-          <input type="number" name="valor" required min={1} max={tipo === "porcentaje" ? 100 : undefined} step={tipo === "porcentaje" ? 1 : 0.01} style={{ maxWidth: 160 }} />
+        <div data-paso="1" style={{ display: paso === 1 ? "block" : "none" }}>
+          <AsistentePaso eyebrow="Paso 2 de 2" titulo="Vigencia (opcional)">
+            <label className="pl-campo">Cuántas veces se puede usar
+              <input type="number" name="usos_maximos" min={1} placeholder="Sin límite" />
+            </label>
+            <label className="pl-campo">Deja de funcionar el
+              <SelectorFechaHora valor={expiraEn} onChange={setExpiraEn} />
+            </label>
+          </AsistentePaso>
         </div>
-      </div>
 
-      <div className="al-paso">
-        <div className="al-paso-tit"><span className="al-paso-n">4</span> Límites (opcional)</div>
-        <div className="al-fila2">
-          <div className="al-campo">
-            <label>Cuántas veces se puede usar</label>
-            <input type="number" name="usos_maximos" min={1} placeholder="Sin límite" />
-          </div>
-          <div className="al-campo">
-            <label>Deja de funcionar el</label>
-            <SelectorFechaHora valor={expiraEn} onChange={setExpiraEn} />
-          </div>
+        <div className="us-asistente-nav">
+          <button type="button" className="boton fantasma" onClick={paso === 0 ? cerrar : () => setPaso((p) => p - 1)}>
+            {paso === 0 ? "Cancelar" : "Atrás"}
+          </button>
+          {paso < PASOS_CUPON.length - 1
+            ? <button type="button" className="boton primario" onClick={siguiente}>Siguiente</button>
+            : <button type="submit" className="boton primario" disabled={pendiente}>{pendiente ? "Creando…" : "Crear cupón"}</button>}
         </div>
-      </div>
-
-      <div className="us-pie">
-        <button type="button" className="boton fantasma" onClick={onCerrar}>Cancelar</button>
-        <button className="boton primario" disabled={pendiente}>{pendiente ? "Creando…" : "Crear cupón"}</button>
-      </div>
+      </Asistente>
     </form>
   );
 }
@@ -439,12 +475,12 @@ export function ListaCupones({ inicial, cursos }: { inicial: Cupon[]; cursos: Cu
       </div>
 
       <Velo abierto={abierto} onCerrar={() => setAbierto(false)}>
-        <div className="us-frame" role="dialog" aria-modal="true">
+        <div className="us-frame us-frame-asistente" role="dialog" aria-modal="true">
           <div className="us-frame-cab">
             <div className="us-quien"><b>Crear cupón</b><span>El alumno lo captura al elegir cómo pagar</span></div>
             <button type="button" className="toast-x us-cerrar" aria-label="Cerrar" onClick={() => setAbierto(false)}><IconoPanel n="x" /></button>
           </div>
-          <FormularioCupon cursos={cursos} onListo={() => setAbierto(false)} onCerrar={() => setAbierto(false)} />
+          {abierto && <FormularioCupon cursos={cursos} onListo={() => setAbierto(false)} onCerrar={() => setAbierto(false)} />}
         </div>
       </Velo>
     </div>

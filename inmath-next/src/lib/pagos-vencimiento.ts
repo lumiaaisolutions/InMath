@@ -53,7 +53,7 @@ export async function procesarVencimientosPagos() {
             "",
             "No te preocupes: puedes volver a intentarlo cuando quieras. Si ya pagaste, escríbenos y lo resolvemos.",
           ].join("\n"),
-          cta: { url: `${sitio}/pago`, label: "Intentar de nuevo" },
+          cta: { url: `${sitio}/pago`, label: "Intentar de nuevo", icono: "pago" },
         });
       }
       continue;
@@ -82,7 +82,7 @@ export async function procesarVencimientosPagos() {
             "Si ya pagaste, sube tu comprobante en la página de inscripción.",
             "Si aún no pagas, hazlo con el botón de abajo para asegurar tu lugar.",
           ],
-          cta: { url: pago.link_pago ?? `${sitio}/pago`, label: "Completar mi pago" },
+          cta: { url: pago.link_pago ?? `${sitio}/pago`, label: "Completar mi pago", icono: "pago" },
         });
       }
       continue;
@@ -111,7 +111,7 @@ export async function procesarVencimientosPagos() {
             "Si ya pagaste, sube tu comprobante en la página de inscripción.",
             "Si aún no pagas, hazlo con el botón de abajo para asegurar tu lugar.",
           ],
-          cta: { url: pago.link_pago ?? `${sitio}/pago`, label: "Completar mi pago" },
+          cta: { url: pago.link_pago ?? `${sitio}/pago`, label: "Completar mi pago", icono: "pago" },
         });
       }
     }

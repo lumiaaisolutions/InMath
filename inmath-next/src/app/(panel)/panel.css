@@ -2912,4 +2912,52 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 .disp-fecha-dia:hover:not(:disabled) { background: var(--crema-2); }
 .disp-fecha-dia:disabled { color: var(--linea-fuerte); cursor: not-allowed; }
 .disp-fecha-dia.hoy { color: var(--pino); font-weight: 700; }
+
+/* ── Formulario tipo asistente (pasos) — reemplaza los formularios amontonados ── */
+.us-frame-asistente { width: min(900px, 100%); padding: 0; overflow: hidden; }
+.us-frame-asistente .us-frame-cab { padding: 22px 26px 18px; margin-bottom: 0; border-bottom: 1px solid var(--linea); }
+.us-asistente { display: flex; align-items: stretch; min-height: 0; }
+.us-asistente-pasos {
+  flex: 0 0 220px; padding: 22px 14px; display: flex; flex-direction: column; gap: 4px;
+  background: var(--crema); border-right: 1px solid var(--linea);
+}
+.us-asistente-paso {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--r-m);
+  font: 600 .84rem/1.3 var(--cuerpo); color: var(--tinta-3); position: relative;
+}
+.us-asistente-paso + .us-asistente-paso::before {
+  content: ""; position: absolute; left: 24px; top: -4px; width: 1px; height: 4px; background: var(--linea-fuerte);
+}
+.us-asistente-num {
+  flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+  font: 700 .72rem/1 var(--cuerpo); background: var(--papel); border: 1.5px solid var(--linea-fuerte); color: var(--tinta-3);
+  transition: var(--transicion);
+}
+.us-asistente-paso .ic-sm { width: 13px; height: 13px; }
+.us-asistente-paso.activo { color: var(--tinta); background: color-mix(in srgb, var(--pino) 10%, transparent); }
+.us-asistente-paso.activo .us-asistente-num { background: var(--pino); border-color: var(--pino); color: #fff; }
+.us-asistente-paso.hecho { color: var(--tinta-2); }
+.us-asistente-paso.hecho .us-asistente-num { background: var(--ok-suave); border-color: var(--ok); color: var(--ok); }
+.us-asistente-cuerpo { flex: 1; min-width: 0; padding: 24px 28px; display: flex; flex-direction: column; }
+.us-asistente-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; }
+.us-asistente-campos .pl-campo { gap: 7px; }
+.us-asistente-campos .pl-campo input, .us-asistente-campos .pl-campo select, .us-asistente-campos .pl-campo textarea { width: 100%; }
+.us-asistente-campos .pl-campo.ancho { grid-column: 1 / -1; }
+.us-asistente-eyebrow { font: 700 .7rem/1 var(--cuerpo); letter-spacing: .04em; text-transform: uppercase; color: var(--pino); margin-bottom: 4px; }
+.us-asistente-titulo-paso { font: 700 1.05rem/1.3 var(--display); color: var(--tinta); margin: 0 0 4px; }
+.us-asistente-sub-paso { font: 400 .84rem/1.5 var(--cuerpo); color: var(--tinta-3); margin: 0 0 18px; }
+.us-asistente-nav { margin-top: auto; padding-top: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+@media (max-width: 720px) {
+  .us-asistente { flex-direction: column; }
+  .us-asistente-pasos {
+    flex: 0 0 auto; flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--linea);
+    padding: 14px 16px; gap: 6px;
+  }
+  .us-asistente-paso { flex: 0 0 auto; padding: 8px 10px; }
+  .us-asistente-paso + .us-asistente-paso::before { display: none; }
+  .us-asistente-paso .us-asistente-txt { display: none; }
+  .us-asistente-paso.activo .us-asistente-txt { display: inline; }
+  .us-asistente-cuerpo { padding: 20px; }
+  .us-asistente-campos { grid-template-columns: 1fr; }
+}
 .disp-fecha-dia.on { background: var(--grad); color: #fff; }

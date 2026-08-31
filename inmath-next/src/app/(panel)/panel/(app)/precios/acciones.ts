@@ -106,7 +106,7 @@ async function avisarCambioDePrecio(cursoId: number, nombreCurso: string, precio
           ? "Tu inscripción ya está pagada y confirmada, así que este cambio NO te afecta — tu acceso sigue igual, sin ningún cobro adicional."
           : "Tu inscripción ya está pagada y confirmada — este cambio es solo para nuevas inscripciones y no representa ningún cobro ni reembolso.",
       ].join("\n"),
-      cta: { url: `${sitio}/portal`, label: "Ir a mi portal" },
+      cta: { url: `${sitio}/portal`, label: "Ir a mi portal", icono: "check" },
     });
   }
 }

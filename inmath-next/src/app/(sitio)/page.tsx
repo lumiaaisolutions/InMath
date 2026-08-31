@@ -36,12 +36,13 @@ export default async function Landing() {
         <div className="hc-contenido">
           <span className="eyebrow hc-eyebrow"><Icono n="check" cls="ic-ey" /> Cursos con acompañamiento real</span>
           <h1 className="hc-title">
-            <span className="hc-line">Cursos en línea</span>
-            <span className="hc-line">que <em>sí terminas</em>,</span>
-            <span className="hc-line">con acompañamiento</span>
-            <span className="hc-line">de verdad.</span>
+            <span className="hc-line">Domina el <em>EXANI-II</em></span>
+            <span className="hc-line">con Cursos InMath y</span>
+            <span className="hc-line">asegura tu futuro de</span>
+            <span className="hc-line">ser seleccionado universitario.</span>
           </h1>
-          <p className="hc-sub">Clases para estudiar cuando puedas, un asesor que te guía por WhatsApp y un reporte de tu avance cada semana. Aprendes a tu ritmo, sin perder el hilo.</p>
+          <p className="hc-sub">Clases para estudiar cuando puedas, un asesor que te guía con asesorías personalizadas y un reporte de avance cada semana.</p>
+          <p className="hc-sub">Aprendes a tu ritmo y con flexibilidad de horarios.</p>
           <div className="hc-cta">
             <Link className="hc-btn hc-btn-primary" href="/pago">Inscribirme <Icono n="arrow" cls="flecha" /></Link>
             <Link className="hc-btn hc-btn-ghost" href="/agenda"><span className="hc-play"><Icono n="play" /></span> Agendar asesoría gratis</Link>
@@ -95,7 +96,8 @@ export default async function Landing() {
             <div>
               <div className="cab-seccion reveal-mueve" style={{ marginBottom: 24 }}>
                 <span className="eyebrow"><Icono n="user" cls="ic-ey" /> Acompañamiento real</span>
-                <h2>No es un curso que dejas a medias en una plataforma sola.</h2>
+                <h2>No es un curso que dejas inconcluso y sin acompañamiento, en una plataforma sin sentido.</h2>
+                <p>Sabes en qué semana vas y qué sigue, en vez de perderte en una plataforma confusa.</p>
               </div>
               <div className="areas">
                 <div className="area reveal"><span className="pt"><Icono n="chat" /></span><div><h3>Dudas que sí se resuelven</h3><p>Le escribes a tu asesor por WhatsApp y te responde una persona, no un buzón.</p></div></div>
@@ -179,7 +181,7 @@ export default async function Landing() {
             <div className="bento-card bento-b bento-feat reveal">
               <span className="bento-ic ey-ic"><Icono n="user" /></span>
               <h3>Asesorías 1 a 1</h3>
-              <p>Un asesor humano te guía por WhatsApp y en asesorías en línea, y ajusta tu plan.</p>
+              <p>Un asesor te lleva de la mano en el proceso de acuerdo a tu ritmo y estilo de aprendizaje.</p>
               <div className="bento-chips">
                 <span><Icono n="check" /> Cita agendada</span>
                 <span><Icono n="chat" /> Dudas al instante</span>

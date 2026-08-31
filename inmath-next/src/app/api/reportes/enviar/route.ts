@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
         "",
         "Ahí también encuentras tu avance del curso, tus asesorías y el material.",
       ].join("\n"),
-      cta: { url: `${base}/portal/reportes`, label: "Ver mi reporte" },
+      cta: { url: `${base}/portal/reportes`, label: "Ver mi reporte", icono: "check" },
     });
     await prisma.reportes_generados.update({ where: { id: r.id }, data: { enviado_en: ahoraPared() } });
     enviados++;

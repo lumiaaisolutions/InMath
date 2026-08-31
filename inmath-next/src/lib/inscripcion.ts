@@ -134,7 +134,7 @@ export async function enviarBienvenidaAlumno(
       ...(adjuntos ? ["", "Adjuntamos tu recibo de pago en PDF — también puedes descargarlo desde tu portal, en Mi cuenta."] : []),
     ].join("\n"),
     destacado,
-    cta: { url, label: "Entrar a mi portal" },
+    cta: { url, label: "Entrar a mi portal", icono: "check" },
     nota,
     adjuntos,
   });
