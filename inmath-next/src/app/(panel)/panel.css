@@ -2226,34 +2226,14 @@ body::before { animation: none !important; }
 
 
 
-/* =========================================================================
-   v64 — Mathy: libro de líneas + ojos que parpadean + manos flotantes con
-   guante a los lados que saludan, agarran y se señalan. IMPORTANTE:
-   transform-box:fill-box SOLO en los grupos ANIMADOS (no en los grupos de
-   posición, que usan coordenadas del viewBox — si no, se descolocan/invierten).
-   ========================================================================= */
+/* Mathy: logo de marca (cerebro + circuito + birrete) como ícono del agente.
+   Los nodos del circuito laten suavemente para no verse estático del todo. */
 .mathy-mascota { overflow: visible; }
-.mathy-ojos, .mathy-mano-izq, .mathy-mano-der, .mathy-dedos { transform-box: fill-box; }
-.mathy-ojos { transform-origin: center; animation: mathyParpadeo 3.4s steps(1, end) infinite; }
-@keyframes mathyParpadeo { 0%, 88%, 100% { transform: scaleY(1); } 91%, 95% { transform: scaleY(.1); } }
-.mathy-mano-izq { transform-origin: 15% 50%; animation: mathyMano 3.6s ease-in-out infinite; }
-.mathy-mano-der { transform-origin: 15% 50%; animation: mathyMano 3.6s ease-in-out infinite 1s; }
-@keyframes mathyMano {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  8%  { transform: translateY(-1.5px) rotate(-16deg); }
-  14% { transform: translateY(-1.5px) rotate(-2deg); }
-  20% { transform: translateY(-1.5px) rotate(-16deg); }
-  27% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-2.5px) rotate(7deg); }
-  70% { transform: translateY(-.5px) rotate(-3deg); }
-}
-.mathy-dedos { transform-origin: 0% 50%; animation: mathyAgarra 3.6s ease-in-out infinite; }
-@keyframes mathyAgarra {
-  0%, 40%, 100% { transform: rotate(0deg); }
-  55%, 66% { transform: rotate(50deg); }
-  82% { transform: rotate(12deg); }
-}
-@media (prefers-reduced-motion: reduce) { .mathy-ojos, .mathy-mano-izq, .mathy-mano-der, .mathy-dedos { animation: none; } }
+.mathy-nodo { transform-box: fill-box; transform-origin: center; animation: mathyNodo 2.8s ease-in-out infinite; }
+.mathy-nodo:nth-of-type(2n) { animation-delay: .5s; }
+.mathy-nodo:nth-of-type(3n) { animation-delay: 1s; }
+@keyframes mathyNodo { 0%, 100% { opacity: .65; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .mathy-nodo { animation: none; } }
 
 
 /* Paso de código 2FA en el login (M6/M7) */
