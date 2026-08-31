@@ -413,61 +413,53 @@ function ExamenFrame({ cursos, editar, onListo, onCerrar }: { cursos: Curso[]; e
   );
 }
 
-/** Popover para elegir rápido en qué modalidad(es) aparece un examen, sin abrir
- *  el asistente completo — el mismo examen, sin duplicar preguntas. */
-function ModalidadesPopover({ examen, cursos, onCerrar }: { examen: Examen; cursos: Curso[]; onCerrar: () => void }) {
+/** Diálogo para elegir rápido en qué modalidad(es) aparece un examen, sin abrir
+ *  el asistente completo — el mismo examen, sin duplicar preguntas. Cada
+ *  modalidad es un switch independiente que guarda solo, sin botón aparte:
+ *  se ve al instante si el examen ya aparece ahí o no. */
+function ModalidadesDialogo({ abierto, examen, cursos, onCerrar }: { abierto: boolean; examen: Examen | null; cursos: Curso[]; onCerrar: () => void }) {
   const toast = useToastResultado();
-  const [seleccion, setSeleccion] = useState<Set<number>>(new Set(examen.cursoIds));
-  const [guardando, setGuardando] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [seleccion, setSeleccion] = useState<Set<number>>(new Set());
+  const [ocupado, setOcupado] = useState<number | null>(null);
 
-  useEffect(() => {
-    const clic = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) onCerrar(); };
-    document.addEventListener("mousedown", clic);
-    return () => document.removeEventListener("mousedown", clic);
-  }, [onCerrar]);
+  useEffect(() => { if (examen) setSeleccion(new Set(examen.cursoIds)); }, [examen]);
 
-  const alternar = (id: number) => setSeleccion((prev) => {
-    const s = new Set(prev);
-    if (s.has(id)) s.delete(id); else s.add(id);
-    return s;
-  });
-
-  const guardar = async () => {
-    setGuardando(true);
-    const r = await examenModalidadesAccion(examen.id, Array.from(seleccion));
+  const alternar = async (id: number) => {
+    if (!examen) return;
+    const activando = !seleccion.has(id);
+    if (!activando && seleccion.size === 1) { toast({ error: "El examen debe aparecer en al menos una modalidad" }); return; }
+    const nueva = new Set(seleccion);
+    if (activando) nueva.add(id); else nueva.delete(id);
+    setSeleccion(nueva);
+    setOcupado(id);
+    const r = await examenModalidadesAccion(examen.id, Array.from(nueva));
+    if (r.error) setSeleccion(seleccion); // revierte si falló
     toast(r);
-    setGuardando(false);
-    if (r.ok) onCerrar();
+    setOcupado(null);
   };
 
   return (
-    <div ref={ref} className="rx-modalidades-pop">
-      <b>Modalidad(es) donde aparece</b>
-      <span className="pl-ayuda">El mismo examen, sin duplicar preguntas.</span>
-      <div className="us-chips">
-        {cursos.map((c) => (
-          <label key={c.id} className="chip-modulo">
-            <input type="checkbox" checked={seleccion.has(c.id)} onChange={() => alternar(c.id)} />
-            <span>{c.nombre}</span>
-          </label>
-        ))}
+    <Velo abierto={abierto} onCerrar={onCerrar}>
+      <div className="us-frame rx-modalidades-frame" role="dialog" aria-modal="true">
+        <div className="us-frame-cab">
+          <div className="us-quien"><b>Modalidad(es) donde aparece</b><span>{examen?.titulo} · el mismo examen, sin duplicar preguntas</span></div>
+          <button type="button" className="toast-x us-cerrar" aria-label="Cerrar" onClick={onCerrar}><IconoPanel n="x" /></button>
+        </div>
+        <div className="rx-modalidades-lista">
+          {cursos.map((c) => (
+            <Interruptor key={c.id} activo={seleccion.has(c.id)} etiqueta={c.nombre}
+              onChange={() => { if (ocupado === null) alternar(c.id); }} />
+          ))}
+        </div>
       </div>
-      <div className="rx-modalidades-pie">
-        <button type="button" className="boton mini fantasma" onClick={onCerrar}>Cancelar</button>
-        <button type="button" className="boton mini primario" disabled={guardando || seleccion.size === 0} onClick={guardar}>
-          {guardando ? "Guardando…" : "Guardar"}
-        </button>
-      </div>
-    </div>
+    </Velo>
   );
 }
 
-function ExamenTarjeta({ examen, cursos, onEditar }: { examen: Examen; cursos: Curso[]; onEditar: () => void }) {
+function ExamenTarjeta({ examen, onEditar, onModalidades }: { examen: Examen; onEditar: () => void; onModalidades: () => void }) {
   const toast = useToastResultado();
   const [confirmar, setConfirmar] = useState(false);
   const [ocupado, setOcupado] = useState(false);
-  const [modalidades, setModalidades] = useState(false);
 
   return (
     <div className="tarjeta rx-examen-tarjeta">
@@ -482,13 +474,12 @@ function ExamenTarjeta({ examen, cursos, onEditar }: { examen: Examen; cursos: C
           {examen.activo ? "activo" : "inactivo"}
         </button>
       </div>
-      <div className="rx-examen-pie" style={{ position: "relative" }}>
+      <div className="rx-examen-pie">
         <button type="button" className="boton mini fantasma" onClick={onEditar}>Editar</button>
-        <button type="button" className="boton mini fantasma" onClick={() => setModalidades((v) => !v)} title="Elegir en qué modalidad(es) aparece">
+        <button type="button" className="boton mini fantasma" onClick={onModalidades} title="Elegir en qué modalidad(es) aparece">
           <IconoPanel n="route" cls="ic-sm" /> Modalidad(es)
         </button>
         <button type="button" className="boton mini fantasma rx-borrar" onClick={() => setConfirmar(true)}>Eliminar</button>
-        {modalidades && <ModalidadesPopover examen={examen} cursos={cursos} onCerrar={() => setModalidades(false)} />}
       </div>
       <ConfirmarDialogo abierto={confirmar}
         texto={`Se eliminará el examen "${examen.titulo}". Sus preguntas dejan de mostrarse agrupadas (el historial de intentos ya resueltos no se pierde).`}
@@ -500,6 +491,7 @@ function ExamenTarjeta({ examen, cursos, onEditar }: { examen: Examen; cursos: C
 
 function ListaExamenes({ examenes, cursos }: { examenes: Examen[]; cursos: Curso[] }) {
   const [abierto, setAbierto] = useState<"crear" | Examen | null>(null);
+  const [modalidadesDe, setModalidadesDe] = useState<Examen | null>(null);
 
   return (
     <div className="tarjeta rx-panel" style={{ marginBottom: 20 }}>
@@ -520,9 +512,11 @@ function ListaExamenes({ examenes, cursos }: { examenes: Examen[]; cursos: Curso
         <div className="vacio">Sin exámenes todavía — agrupa varias preguntas en el primero</div>
       ) : (
         <div className="rx-examenes-grid">
-          {examenes.map((e) => <ExamenTarjeta key={e.id} examen={e} cursos={cursos} onEditar={() => setAbierto(e)} />)}
+          {examenes.map((e) => <ExamenTarjeta key={e.id} examen={e} onEditar={() => setAbierto(e)} onModalidades={() => setModalidadesDe(e)} />)}
         </div>
       )}
+
+      <ModalidadesDialogo abierto={modalidadesDe !== null} examen={modalidadesDe} cursos={cursos} onCerrar={() => setModalidadesDe(null)} />
 
       <Velo abierto={abierto !== null} onCerrar={() => setAbierto(null)}>
         <div className="us-frame us-frame-asistente" role="dialog" aria-modal="true">
