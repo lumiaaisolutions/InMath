@@ -291,3 +291,55 @@ justo después de abrir el menú del portal.
 izquierda y la derecha (el guante espejado vs. el normal) se
 intercambiaron de posición — afecta al único componente compartido, así
 que se ve en sitio, panel y portal a la vez sin tocar nada más.
+
+### Corte 01-sep-2026 (4) — Portal "liquid glass" desaturado + logo completo en login
+
+**Rediseño del dashboard del portal (ref. Superpower)** — los colores
+estaban saturados (tarjetas verde/coral de borde a borde con texto
+blanco); ahora es "liquid glass sin blur":
+- `pt-hero-*` (v83 en `portal.css`): base blanca pulida con un wash de
+  color difuso ADENTRO que se desvanece antes de los bordes (dos
+  radial-gradient suaves sobre blanco), borde blanco translúcido, brillo
+  interior con `inset box-shadow` — cero `backdrop-filter` (lección de
+  rendimiento de esta misma sesión). Texto en tinta oscura; el acento por
+  tarjeta vive en variables (`--wash-a/--wash-b/--tinta-acc/--pill-bg`).
+- `.pt-pill` pasa de "frosted glass" (blur) a estilo `.eyebrow`: fondo de
+  tinte suave + texto uppercase en la tinta de acento.
+- `NumeroPuntos` (los números dot-matrix): `color` por defecto pasa de
+  `#fff` (invisible sobre el fondo claro nuevo) a `currentColor` — hereda
+  la tinta de acento de cada tarjeta.
+- `pt-stat`/`pt-acceso`: mismo lenguaje glass (gradiente blanco + inset
+  highlight) en vez de blanco plano.
+
+**Práctica (paneles de examen/preguntas, ref. learning-plan)**:
+- Barra de progreso REAL (`.pt-practica-barra`) debajo de "X de Y
+  contestadas", con el gradiente del `.pt-kicker` (teal→azul→coral), que
+  se llena animada conforme el alumno contesta.
+- Tarjetas de pregunta con el mismo glass blanco (radio 20, sombra suave,
+  inset highlight); opciones con micro-interacción (translateX al hover).
+- Tarjeta de calificación con wash suave interior según resultado
+  (verde/ámbar/coral) en vez de fondo plano tintado.
+Sin animaciones infinitas nuevas — solo transiciones de interacción y el
+stagger de entrada que ya existía (`pt-rev`).
+
+**Logo completo en el login**: `public/img/inmath-logo-completo.png`
+(cerebro + IN·MATH + CURSOS + lema, fondo removido con el mismo proceso
+PIL del isotipo, 2x LANCZOS) aparece grande y centrado arriba de "¡Hola
+de nuevo!"; se eliminó la fila "Cursos Inmath" con isotipo chico. El
+saludo y subtítulo quedan centrados. La miniatura de vista previa de
+`/panel/personalizar-login` (`.plp-logo-completo`) refleja exactamente el
+mismo layout para que no haya discrepancia.
+
+**Drift local reparado (solo entorno de desarrollo)**:
+`intentos_practica` local no tenía `examen_id`/`fase_id` (existen en
+producción desde el corte de fases) — recreada localmente con el esquema
+completo. Verificado el flujo completo de práctica end-to-end en local
+con el alumno de prueba (elegir → resolver con barra → calificar 100% →
+revisión), lo que también cierra la verificación pendiente del selector
+de examen/cantidades dinámicas. Credenciales de prueba locales: alumno
+`5210000001` / `prueba123`, admin `admin@inmath.test` / `prueba123`.
+
+**Skills de diseño instaladas** (autorizadas por el cliente):
+`anthropics/skills#frontend-design`, `emilkowalski/skill` (animate) y
+`nextlevelbuilder/ui-ux-pro-max-skill` — en `.agents/skills/` (ya
+ignoradas por git).

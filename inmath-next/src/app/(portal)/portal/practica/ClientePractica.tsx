@@ -140,6 +140,9 @@ function PantallaResolver({ reactivos, tema, examenId, onCalificado, onCancelar 
       className="pt-practica-resolver"
     >
       <div className="pt-practica-progreso">{contestadas} de {reactivos.length} contestadas</div>
+      <div className="pt-practica-barra" aria-hidden="true">
+        <i style={{ ["--p" as string]: `${reactivos.length ? Math.round((contestadas / reactivos.length) * 100) : 0}%` }} />
+      </div>
       {reactivos.map((r, i) => (
         <div className="pt-practica-pregunta" key={r.id}>
           <b>{i + 1}. {r.enunciado}</b>

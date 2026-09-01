@@ -66,7 +66,7 @@ export function PersonalizarLogin({ slides, tituloDefecto, textoDefecto }: {
               )}
             </div>
             <div className="plp-lado">
-              <div className="plp-logo"><img src="/img/inmath.svg" alt="" width={14} height={14} /> <b>Cursos <span>Inmath</span></b></div>
+              <div className="plp-logo plp-logo-completo"><img src="/img/inmath-logo-completo.png" alt="" width={64} height={50} /></div>
               <div className="plp-saludo">¡Hola de nuevo!</div>
               <div className="plp-texto">Inicia sesión para continuar.</div>
               <div className="plp-input" />

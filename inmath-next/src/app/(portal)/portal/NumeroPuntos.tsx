@@ -20,7 +20,7 @@ const P: Record<string, string[]> = {
 
 const COLS = 5, ROWS = 7, PASO = 8, R = 2.9, SEP = 1.6 * PASO;
 
-export function NumeroPuntos({ texto, color = "#fff", className }: { texto: string; color?: string; className?: string }) {
+export function NumeroPuntos({ texto, color = "currentColor", className }: { texto: string; color?: string; className?: string }) {
   const chars = texto.split("").filter((c) => P[c]);
   const anchoChar = (COLS - 1) * PASO;
   const ancho = chars.length * anchoChar + (chars.length - 1) * SEP + R * 2;

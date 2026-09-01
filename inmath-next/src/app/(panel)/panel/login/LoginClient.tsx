@@ -68,9 +68,8 @@ export function LoginClient({ slides, sitioUrl, tituloDefecto, textoDefecto, con
             Volver al sitio
           </a>
           <div className="login-caja login-plano">
-            <div className="login-logo lc-e e1">
-              <img src="/img/inmath.svg" alt="" width={34} height={34} />
-              <b>Cursos <span>Inmath</span></b>
+            <div className="login-logo login-logo-completo lc-e e1">
+              <img src="/img/inmath-logo-completo.png" alt="IN·MATH Cursos" width={220} height={173} />
             </div>
             <h1 className="login-saludo lc-e e2">{reto ? "Verifica que eres tú" : "¡Hola de nuevo!"}</h1>
             <p className="login-sub lc-e e3">{reto ? "Te enviamos un código a tu correo. Escríbelo para entrar." : "Inicia sesión para continuar."}</p>

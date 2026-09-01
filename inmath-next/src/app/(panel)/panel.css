@@ -827,6 +827,10 @@ body::before {
   background: linear-gradient(160deg, rgba(237,243,255,.7), rgba(227,238,255,.5) 55%, rgba(217,233,255,.55)); }
 .plp-logo { display: flex; align-items: center; gap: 5px; font: 700 .6rem var(--display); color: var(--tinta); }
 .plp-logo span { color: #6B9FFF; }
+/* La miniatura refleja el login real: logo completo centrado arriba del saludo */
+.plp-logo-completo { justify-content: center; }
+.plp-logo-completo img { width: 64px; height: auto; }
+.plp-logo-completo ~ .plp-saludo, .plp-logo-completo ~ .plp-texto { text-align: center; }
 .plp-saludo { font: 700 .92rem/1.15 var(--display); letter-spacing: -.02em; color: var(--tinta); overflow-wrap: anywhere; }
 .plp-texto { font: 400 .66rem/1.4 var(--cuerpo); color: var(--tinta-2); overflow-wrap: anywhere; }
 .plp-input { height: 18px; border-radius: 7px; background: rgba(255,255,255,.75); border: 1px solid rgba(255,255,255,.95); box-shadow: 0 2px 6px rgba(18,31,55,.06); }
@@ -1531,6 +1535,16 @@ body::before {
 .sidebar .marca strong { font-size: 1.15rem !important; }
 .login-logo img { width: 48px !important; height: 48px !important; filter: drop-shadow(0 6px 16px rgba(107,159,255,.5)); }
 .login-logo b { font-size: 1.2rem; }
+/* v84 — Logo COMPLETO de marca (cerebro + IN·MATH + CURSOS + lema), grande y
+ * centrado arriba del saludo — sustituye al isotipo chico + texto "Cursos
+ * Inmath" de al lado. Manda sobre el 48px de la regla v30 de arriba. */
+.login-logo-completo { justify-content: center; margin-bottom: 20px; }
+.login-logo-completo img {
+  width: min(230px, 62%) !important; height: auto !important;
+  filter: drop-shadow(0 10px 26px rgba(107,159,255,.35));
+}
+.login-plano .login-saludo { text-align: center; }
+.login-plano .login-sub { text-align: center; }
 .login-volver img { width: 26px; height: 26px; }
 .agente-btn { width: 72px; height: 72px; }
 .agente-libro { width: 44px !important; height: 44px !important; }
