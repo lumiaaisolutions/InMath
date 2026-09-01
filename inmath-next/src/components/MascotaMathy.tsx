@@ -46,18 +46,18 @@ export function MascotaMathy({ cls = "agente-libro mathy-mascota" }: { cls?: str
 
       <ellipse cx={60} cy={106} rx={24} ry={4.2} fill={TINTA} opacity={0.1} />
 
-      {/* mano derecha (a la vista) */}
+      {/* mano derecha (a la vista) — intercambiada con la izquierda */}
       <g transform="translate(110 60)">
         <ellipse cx={0} cy={11} rx={3.8} ry={2.6} fill={TINTA} opacity={0.08} />
         <g className="mathy-mano-izq">
-          <g className="mathy-saludo"><Guante espejo /></g>
+          <g className="mathy-saludo"><Guante /></g>
         </g>
       </g>
-      {/* mano izquierda (a la vista) */}
+      {/* mano izquierda (a la vista) — intercambiada con la derecha */}
       <g transform="translate(10 60)">
         <ellipse cx={0} cy={11} rx={3.8} ry={2.6} fill={TINTA} opacity={0.08} />
         <g className="mathy-mano-der">
-          <g className="mathy-saludo mathy-saludo-der"><Guante /></g>
+          <g className="mathy-saludo mathy-saludo-der"><Guante espejo /></g>
         </g>
       </g>
 

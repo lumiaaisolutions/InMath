@@ -13,8 +13,11 @@ const ITEMS = [
   { key: "cuenta", label: "Mi cuenta", href: "/portal/cuenta", icon: "user" },
 ];
 
-/** Menú del portal EN EL HEADER (al lado del logo). Una "burbuja" de acento se
- *  desliza al apartado activo con rebote suave al cambiar de página. */
+/** Menú del portal EN EL HEADER (al lado del logo). En escritorio es una
+ *  píldora horizontal con una "burbuja" de acento que se desliza al
+ *  apartado activo; en móvil (≤620px) se convierte en menú de hamburguesa
+ *  desplegable — mismo patrón que el sitio público, mismo componente para
+ *  ambos anchos (la clase `.abierto` la maneja este React, no CSS/JS aparte). */
 export function NavPortalHeader() {
   const pathname = usePathname();
   const activo =
@@ -28,6 +31,7 @@ export function NavPortalHeader() {
 
   const refs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const [burbuja, setBurbuja] = useState({ x: 0, w: 0, listo: false });
+  const [abierto, setAbierto] = useState(false);
 
   useEffect(() => {
     const mover = () => {
@@ -42,21 +46,31 @@ export function NavPortalHeader() {
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", mover); };
   }, [activo]);
 
+  // Cierra el menú al cambiar de página (el link ya navegó, no tiene caso
+  // dejarlo desplegado tapando la pantalla nueva).
+  useEffect(() => { setAbierto(false); }, [pathname]);
+
   return (
-    <nav className="nav-hdr" aria-label="Secciones del portal">
-      <span className="nav-hdr-burbuja" aria-hidden="true"
-        style={{ transform: `translateX(${burbuja.x}px)`, width: burbuja.w, opacity: burbuja.listo ? 1 : 0 }} />
-      {ITEMS.map((it) => (
-        <Link key={it.key} href={it.href}
-          ref={(el) => { refs.current[it.key] = el; }}
-          className={`nav-hdr-item${activo === it.key ? " activo" : ""}`}
-          aria-current={activo === it.key ? "page" : undefined}>
-          <Icono n={it.icon} /><span>{it.label}</span>
-        </Link>
-      ))}
-      <form action="/portal/logout" method="post" className="nav-hdr-salir">
-        <button type="submit"><Icono n="logout" /><span>Salir</span></button>
-      </form>
-    </nav>
+    <>
+      <button type="button" className="nav-hdr-toggle" aria-expanded={abierto} aria-controls="navPortal"
+        aria-label={abierto ? "Cerrar menú" : "Abrir menú"} onClick={() => setAbierto((v) => !v)}>
+        <Icono n={abierto ? "x" : "list"} />
+      </button>
+      <nav id="navPortal" className={`nav-hdr${abierto ? " abierto" : ""}`} aria-label="Secciones del portal">
+        <span className="nav-hdr-burbuja" aria-hidden="true"
+          style={{ transform: `translateX(${burbuja.x}px)`, width: burbuja.w, opacity: burbuja.listo ? 1 : 0 }} />
+        {ITEMS.map((it) => (
+          <Link key={it.key} href={it.href}
+            ref={(el) => { refs.current[it.key] = el; }}
+            className={`nav-hdr-item${activo === it.key ? " activo" : ""}`}
+            aria-current={activo === it.key ? "page" : undefined}>
+            <Icono n={it.icon} /><span>{it.label}</span>
+          </Link>
+        ))}
+        <form action="/portal/logout" method="post" className="nav-hdr-salir">
+          <button type="submit"><Icono n="logout" /><span>Salir</span></button>
+        </form>
+      </nav>
+    </>
   );
 }

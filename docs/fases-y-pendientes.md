@@ -252,3 +252,42 @@ caben los 7 accesos completos sin un pequeño scroll horizontal.
 Verificado forzando el ancho a 390px con un alumno de prueba real
 logueado: antes nada del menú se veía; después se ven 4-5 accesos de
 entrada y el resto con un scroll corto dentro de la misma píldora.
+
+### Corte 01-sep-2026 (3) — Menús móviles rediseñados + manos de Mathy intercambiadas
+
+**Sitio público — menú hamburguesa "se veía muy junto"**: se rediseñó el
+menú desplegable de `inmath.css` (bloque v82, antes v79) con más aire real
+entre grupos en vez de todo pegado en una sola columna:
+- Se quitó una entrada duplicada ("Cómo funciona" aparecía dos veces: como
+  ítem plano arriba y otra vez dentro del grupo "El curso").
+- Más separación entre "El curso" y "Acompañamiento" (`.np-tit` con más
+  margen), y una línea punteada separa visualmente el bloque del mega-menú
+  del bloque final (Asesoría gratis / Entrar / Inscribirme).
+- Más padding en cada fila (13-14px en vez de 9-10px) para que no se
+  sientan amontonadas.
+
+**Portal del alumno — de píldora de íconos a menú de hamburguesa real**:
+en vez de forzar los 6 accesos + Salir en una fila horizontal con scroll
+oculto (el fix de la sesión anterior, que ya los hacía visibles pero
+seguían apretados), en ≤620px el menú del portal (`NavPortalHeader.tsx`)
+ahora es un botón de hamburguesa que despliega una lista vertical con
+texto completo — mismo patrón que el sitio, pero resuelto en React (estado
+local `abierto`, no JS/CSS vainilla aparte) ya que el componente ya era
+"use client". El menú se cierra solo al cambiar de página. En escritorio
+(>620px) no cambia nada — sigue la píldora horizontal con la burbuja
+animada.
+
+**Mathy se esconde mientras cualquiera de los dos menús está abierto**:
+antes se quedaba flotando encima del menú desplegado, tapando los últimos
+accesos (visible en la captura que mandó el cliente). Ahora, con
+`body:has(#navPrincipal.abierto) .agente-ia` (sitio) y
+`body:has(#navPortal.abierto) .agente-ia` (portal), el agente completo
+(botón + panel si estaba abierto) desaparece mientras el menú esté
+desplegado — sin JS adicional, un solo selector CSS por cada menú.
+Verificado con un alumno real: `getComputedStyle(agente).display === "none"`
+justo después de abrir el menú del portal.
+
+**Manos de Mathy intercambiadas**: en `MascotaMathy.tsx`, la mano
+izquierda y la derecha (el guante espejado vs. el normal) se
+intercambiaron de posición — afecta al único componente compartido, así
+que se ve en sitio, panel y portal a la vez sin tocar nada más.

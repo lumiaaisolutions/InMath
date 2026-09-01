@@ -357,22 +357,45 @@
 .nav-hdr-salir button:hover { border-color: var(--azul); color: var(--azul); transform: translateY(-1px); }
 .nav-hdr-salir svg { width: 16px; height: 16px; }
 
-/* Móvil: solo íconos (el header no alcanza para textos + logo). "Salir"
- * también se reduce a ícono, y el menú puede hacer scroll horizontal propio
- * como red de seguridad en vez de desbordar/recortarse en pantallas muy
- * angostas (ej. 320-360px). */
+/* Botón de hamburguesa: solo existe visualmente en móvil. */
+.nav-hdr-toggle {
+  display: none; width: 42px; height: 42px; border-radius: 50%; flex: 0 0 auto; margin-left: auto;
+  place-items: center; background: none; border: 1.5px solid var(--linea-2); color: var(--tinta);
+  transition: background .2s ease, border-color .2s ease, color .2s ease;
+}
+.nav-hdr-toggle svg { width: 19px; height: 19px; }
+.nav-hdr-toggle:hover { border-color: var(--azul); color: var(--azul); }
+
+/* Móvil (≤620px): la píldora horizontal se convierte en menú de hamburguesa
+ * — antes se apretaba a solo-íconos con scroll horizontal escondido, lo
+ * cual se sentía "junto" y poco descubrible; ahora es una lista vertical
+ * con texto completo, como el menú del sitio público. */
 @media (max-width: 620px) {
   .barra-portal { gap: 8px; padding-left: 14px; padding-right: 14px; }
-  /* el wordmark "Portal Inmath" también se reduce a solo ícono — si no,
-   * se comía casi todo el ancho y el menú, aunque visible, quedaba apretado
-   * y obligaba a hacer scroll horizontal para ver la mayoría de los íconos. */
   .barra-portal .logo b { display: none; }
-  .nav-hdr-item span { display: none; }
-  .nav-hdr-item { padding: 9px 12px; }
-  .nav-hdr { margin-left: auto; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
-  .nav-hdr::-webkit-scrollbar { display: none; }
-  .nav-hdr-salir span { display: none; }
-  .nav-hdr-salir button { padding: 9px 11px; }
+  .nav-hdr-toggle { display: grid; }
+
+  .nav-hdr {
+    position: absolute; top: calc(100% + 10px); left: 12px; right: 12px; z-index: 60;
+    flex-direction: column; align-items: stretch; gap: 4px;
+    background: #fff; border: 1px solid var(--linea, #E6ECF7); border-radius: 20px;
+    padding: 12px; box-shadow: 0 24px 60px rgba(18,31,55,.2);
+    max-height: 0; overflow: hidden; opacity: 0; pointer-events: none;
+    transition: max-height .34s ease, opacity .24s ease;
+  }
+  .nav-hdr.abierto { max-height: min(80vh, 560px); overflow-y: auto; opacity: 1; pointer-events: auto; }
+  .nav-hdr-burbuja { display: none; } /* no aplica a una lista vertical */
+
+  .nav-hdr-item {
+    padding: 13px 14px; border-radius: 12px; width: 100%; justify-content: flex-start;
+    gap: 12px !important; font-size: .95rem !important;
+  }
+  .nav-hdr-item:hover { background: var(--azul-suave, #E9F1FF) !important; transform: none; }
+  .nav-hdr-item.activo { background: #2F62F0 !important; }
+  .nav-hdr-item svg { width: 19px; height: 19px; }
+
+  .nav-hdr-salir { margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--linea, #E6ECF7); }
+  .nav-hdr-salir button { width: 100%; justify-content: flex-start; padding: 13px 14px; border: 0; }
 }
 
 /* =========================================================================

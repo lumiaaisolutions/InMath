@@ -3628,44 +3628,57 @@ p.legal { min-height: 0 !important; background: none !important; padding: 0 !imp
 /* Contador animado del 70% (evita salto de layout) */
 .bento-count { display: inline-block; min-width: 2.4ch; }
 
-/* ============ v79 — Menú móvil responsive (fix): sólido, scrollable, mega-menú limpio ============ */
+/* ============ v82 — Menú móvil: más aire entre grupos (antes se veía todo
+   apretado en una sola columna sin jerarquía visual clara) + Mathy se
+   esconde mientras el menú está abierto (antes se quedaba flotando encima). ============ */
 @media (max-width: 900px) {
   .nav-toggle { display: grid !important; }
   /* :not(.barra-portal) — ver nota igual arriba: el portal no tiene botón de
      hamburguesa, así que esta regla lo dejaba invisible para siempre. */
   .barra:not(.barra-portal) nav {
     position: absolute; top: calc(100% + 8px); left: 12px; right: 12px;
-    display: flex; flex-direction: column; align-items: stretch; gap: 3px;
+    display: flex; flex-direction: column; align-items: stretch; gap: 6px;
     background: #fff; border: 1px solid var(--linea, #E6ECF7); border-radius: 20px;
-    padding: 12px; box-shadow: 0 24px 60px rgba(18,31,55,.22);
+    padding: 14px; box-shadow: 0 24px 60px rgba(18,31,55,.22);
     max-height: 0; overflow: hidden; opacity: 0; pointer-events: none;
     transition: max-height .34s ease, opacity .24s ease;
   }
   .barra:not(.barra-portal) nav.abierto { max-height: min(82vh, 660px); overflow-y: auto; opacity: 1; pointer-events: auto; }
-  .barra:not(.barra-portal) nav a:not(.cta) { width: 100%; justify-content: flex-start; padding: 12px 14px; border-radius: 12px; }
-  .barra:not(.barra-portal) nav a.cta { width: 100%; justify-content: center; margin-top: 6px; }
+  .barra:not(.barra-portal) nav a:not(.cta) { width: 100%; justify-content: flex-start; padding: 13px 14px; border-radius: 12px; font-size: .95rem; }
+  .barra:not(.barra-portal) nav a.cta { width: 100%; justify-content: center; margin-top: 8px; }
+  /* separa el bloque "Asesoría gratis / Entrar / Inscribirme" del resto */
+  .barra:not(.barra-portal) nav .n-ases { margin-top: 6px; padding-top: 16px; border-top: 1px dashed var(--linea, #E6ECF7); border-radius: 0 0 12px 12px; }
 
-  /* Mega-menú aplanado dentro del hamburguesa: lista indentada limpia */
-  .nav-drop { display: block; width: 100%; }
-  .nav-drop-btn { pointer-events: none; }              /* el título es solo encabezado en móvil */
+  /* Mega-menú aplanado dentro del hamburguesa: lista indentada, con
+   * separación real entre "El curso" y "Acompañamiento" en vez de ir todo
+   * pegado — cada grupo respira antes de empezar. */
+  .nav-drop { display: block; width: 100%; padding-top: 6px; border-top: 1px dashed var(--linea, #E6ECF7); }
+  .nav-drop-btn { pointer-events: none; font-size: .8rem !important; letter-spacing: .02em; opacity: .75; padding: 6px 14px !important; }
   .nav-drop-btn .nav-caret { display: none; }
   .nav-panel {
     position: static !important; width: 100% !important; max-width: none !important;
     opacity: 1 !important; visibility: visible !important; transform: none !important;
     box-shadow: none !important; border: 0 !important; background: none !important;
-    padding: 2px 0 4px 10px !important;
+    padding: 0 0 4px 4px !important;
   }
   .nav-panel::before { display: none; }
   .np-cols { grid-template-columns: 1fr !important; gap: 0 !important; }
-  .np-tit { margin: 8px 0 2px !important; }
-  .np-col a { padding: 10px 12px; font-size: .9rem; }
-  .np-cta { margin-top: 10px; padding: 13px 16px; }
+  .np-tit { margin: 16px 0 4px !important; font-size: .72rem !important; }
+  .np-col:first-child .np-tit { margin-top: 4px !important; }
+  .np-col a { padding: 12px 14px; font-size: .93rem; border-radius: 12px; }
+  .np-cta { margin-top: 14px; padding: 15px 16px; }
 
   /* Sobre el hero oscuro, el toggle blanco; el panel abierto siempre claro */
   body:has(.heroe-cine) .barra:not(.scrolled) nav a:not(.cta) { color: var(--tinta) !important; }
   body:has(.heroe-cine) .barra:not(.scrolled) .np-col a { color: var(--tinta) !important; }
   body:has(.heroe-cine) .barra:not(.scrolled) .np-cta { color: #fff !important; }
 }
+
+/* Mathy (el agente flotante) se oculta mientras cualquiera de los dos menús
+ * móviles (sitio o portal) está desplegado — antes se quedaba flotando
+ * encima del menú abierto, tapando los últimos accesos. */
+body:has(#navPrincipal.abierto) .agente-ia,
+body:has(#navPortal.abierto) .agente-ia { display: none; }
 
 /* v79 — Interacciones extendidas: tilt en planes, glow en pasos, hover en comunidad */
 .pk3-card { transform: perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(var(--lift,0px));

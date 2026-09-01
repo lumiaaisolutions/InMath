@@ -58,7 +58,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <span className="np-tit">El curso</span>
                     <a href="/#incluye"><Icono n="play" /> Clases grabadas</a>
                     <a href="/#incluye"><Icono n="book" /> Material incluido</a>
-                    <a href="/#como"><Icono n="route" /> Cómo funciona</a>
                   </div>
                   <div className="np-col">
                     <span className="np-tit">Acompañamiento</span>
