@@ -3058,6 +3058,10 @@ body::before { animation: none !important; }
 .agente-btn::before { display: none !important; content: none !important; animation: none !important; }
 /* EL SPLASH: halo multirradial estilo eyebrow, contenido detrás de la mascota */
 .agente-btn::after {
+  /* estático a propósito (v81): blur + scale animados infinito forzaban al
+   * navegador a recomponer esta capa en cada frame para siempre mientras el
+   * sitio estuviera abierto — el sospechoso #1 de que "se enlentece toda la
+   * computadora". El brillo se ve igual de bien fijo. */
   content: "" !important; position: absolute; z-index: -1; pointer-events: none;
   inset: -30% !important; left: -30%; top: -30%; right: -30%; bottom: -30%;
   background:
@@ -3067,9 +3071,7 @@ body::before { animation: none !important; }
     radial-gradient(52% 70% at 50% 52%, rgba(124,92,255,.6), transparent 76%) !important;
   border-radius: 50% !important;
   filter: blur(6px) !important; opacity: 1 !important;
-  animation: mathySplash 5.5s ease-in-out infinite !important;
 }
-@keyframes mathySplash { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 /* Mathy RESALTA: launcher grande, mascota protagonista con halo claro. */
 .agente-btn { width: 120px !important; height: 120px !important; }
 .agente-btn .agente-libro { width: 116px !important; height: 116px !important; }
@@ -3080,7 +3082,6 @@ body::before { animation: none !important; }
 .agente-libro {
   filter: drop-shadow(0 0 3px rgba(255,255,255,.95)) drop-shadow(0 1px 1px rgba(255,255,255,.9)) drop-shadow(0 3px 8px rgba(18,31,55,.28));
 }
-@media (prefers-reduced-motion: reduce) { .agente-btn::after { animation: none !important; } }
 
 
 

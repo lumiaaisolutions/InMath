@@ -1,7 +1,7 @@
 import { prisma, config } from "./db";
 import { etiqueta, isoMinuto, diaSemanaN, isoDia, ahoraPared, paredDesde } from "./fechas";
 import { lunesDe, lunesEnRango, overridesDe } from "./disponibilidad";
-import { enviarCorreo } from "./correo";
+import { enviarCorreo, CORREO_CONTACTO } from "./correo";
 
 const CORREO_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -86,27 +86,48 @@ async function crearEventoCalendar(cita: { id: number; asesor_id: number; inicio
   }
 }
 
-/** Manda la única confirmación de la cita: por correo, con el link de Meet si
- *  ya se generó (espera a n8n antes de mandarla), o con aviso de que llega
- *  en breve si no. */
-async function confirmarCitaPorCorreo(cita: { id: number; asesor_id: number; inicio: Date; fin: Date }, correo: string, nombre: string | null) {
+/** Manda la única confirmación de la cita al prospecto: por correo, con el
+ *  link de Meet si ya se generó (espera a n8n antes de mandarla), o con
+ *  aviso de que llega en breve si no. Además avisa al buzón de contacto
+ *  (staff) que hay una asesoría nueva, con el mismo enlace de Meet, para
+ *  que el asesor no dependa de revisar el panel para enterarse. */
+async function confirmarCitaPorCorreo(
+  cita: { id: number; asesor_id: number; inicio: Date; fin: Date },
+  correo: string,
+  nombre: string | null,
+  telefono: string | null,
+) {
   const meetLink = await crearEventoCalendar(cita, nombre);
   if (meetLink) await prisma.citas.update({ where: { id: cita.id }, data: { meet_link: meetLink } });
   const cuando = etiqueta(cita.inicio);
+
+  const [asesor] = await Promise.all([
+    prisma.usuarios.findUnique({ where: { id: cita.asesor_id }, select: { nombre: true } }),
+    enviarCorreo({
+      para: [correo],
+      asunto: "Tu asesoría está confirmada — Cursos InMath",
+      preheader: meetLink ? "Aquí está el enlace de tu asesoría en línea." : "Tu cita quedó agendada, en breve te compartimos el enlace.",
+      texto: meetLink
+        ? `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. Toca el botón para unirte a tu asesoría en línea en ese horario.`
+        : `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. En breve te compartimos el enlace de tu asesoría en línea — si no llega, un asesor te lo comparte antes de tu cita.`,
+      ...(meetLink ? { cta: { url: meetLink, label: "Unirme a mi asesoría en línea", icono: "calendario" as const } } : {}),
+    }).catch((e) => console.error("confirmarCitaPorCorreo: no se pudo enviar el correo", e)),
+  ]);
+
   await enviarCorreo({
-    para: [correo],
-    asunto: "Tu asesoría está confirmada — Cursos InMath",
-    preheader: meetLink ? "Aquí está el enlace de tu asesoría en línea." : "Tu cita quedó agendada, en breve te compartimos el enlace.",
-    texto: meetLink
-      ? `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. Toca el botón para unirte a tu asesoría en línea en ese horario.`
-      : `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. En breve te compartimos el enlace de tu asesoría en línea — si no llega, un asesor te lo comparte antes de tu cita.`,
-    ...(meetLink ? { cta: { url: meetLink, label: "Unirme a mi asesoría en línea", icono: "calendario" as const } } : {}),
-  }).catch((e) => console.error("confirmarCitaPorCorreo: no se pudo enviar el correo", e));
+    para: [CORREO_CONTACTO],
+    asunto: `Nueva asesoría agendada — ${nombre ?? "prospecto sin nombre"}`,
+    preheader: meetLink ? "Ya tiene enlace de Meet." : "El enlace de Meet llega en cuanto n8n lo genere.",
+    texto: `${asesor?.nombre ?? "Un asesor"} tiene una asesoría agendada para el ${cuando}.\n\nProspecto: ${nombre ?? "(sin nombre)"}\nWhatsApp: ${telefono ?? "(sin teléfono)"}\nCorreo: ${correo}`,
+    ...(meetLink
+      ? { cta: { url: meetLink, label: "Unirme a la asesoría en línea", icono: "calendario" as const } }
+      : { nota: "El enlace de Meet todavía no llegaba de n8n al momento de agendar — revisa la cita en /panel/citas más tarde." }),
+  }).catch((e) => console.error("confirmarCitaPorCorreo: no se pudo avisar al staff", e));
 }
 
 /** Port fiel de crearCita: transacción con FOR UPDATE + UNIQUE como última defensa. */
 async function crearCita(prospectoId: number, asesorId: number, inicio: Date, fin: Date, correo: string) {
-  const prospecto = await prisma.prospectos.findUnique({ where: { id: prospectoId }, select: { id: true, etapa: true, nombre: true } });
+  const prospecto = await prisma.prospectos.findUnique({ where: { id: prospectoId }, select: { id: true, etapa: true, nombre: true, telefono_whatsapp: true } });
   if (!prospecto) return { error: "Prospecto no encontrado", codigo: 404 } as const;
   try {
     const r = await prisma.$transaction(async (tx) => {
@@ -125,7 +146,7 @@ async function crearCita(prospectoId: number, asesorId: number, inicio: Date, fi
       }
       return { cita } as const;
     });
-    if (!("error" in r)) await confirmarCitaPorCorreo(r.cita, correo, prospecto.nombre);
+    if (!("error" in r)) await confirmarCitaPorCorreo(r.cita, correo, prospecto.nombre, prospecto.telefono_whatsapp);
     return r;
   } catch (e: unknown) {
     const err = e as { code?: string };

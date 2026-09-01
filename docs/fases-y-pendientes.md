@@ -146,3 +146,85 @@ Migraciones aplicadas en producción: `examenes.porcentaje_minimo`,
 `reactivos.adjunto_tipo`. Pendiente (requiere autorización aparte, toca
 infraestructura compartida del VPS): cron de keep-warm de Ollama para
 eliminar el cold-start de "Explicar con IA".
+
+### Corte 01-sep-2026 — Fixes de scroll/modalidades + logo real + Cerebrito + rendimiento
+
+Bugs reales encontrados y corregidos (no solo cosméticos):
+1. ✅ **Scroll muerto en TODOS los formularios tipo asistente** (Fases,
+   Reactivos, Usuarios, Citas, Precios, Personalizar login): el `<form>` que
+   envuelve `<Asistente>` es hijo directo de `.us-frame-asistente` pero no
+   tenía flex propio (`display:block` por defecto, `min-height:auto`), así
+   que nunca se encogía — crecía al alto de TODO su contenido y el
+   `overflow-y:auto` del cuerpo nunca tenía overflow real que resolver. El
+   scroll "funcionaba" solo por `scrollIntoView()` programático, nunca con
+   la rueda del mouse — por eso con pocas preguntas parecía funcionar (todo
+   cabía) y con un examen real de 9-20 preguntas no se podía bajar. Un solo
+   fix CSS (`.us-frame-asistente > form { display:flex; flex-direction:column;
+   flex:1 1 auto; min-height:0; }`) lo arregla en los 7 formularios a la vez.
+   Verificado con 11 preguntas reales: antes `clientHeight === scrollHeight`
+   (nada que hacer scroll), después `clientHeight` topado y overflow real.
+2. ✅ Los botones Atrás/Siguiente ahora son `position:sticky` al fondo del
+   cuerpo con scroll, para que no se pierdan debajo de listas largas.
+3. ✅ **"Modalidad(es)" en Reactivos** rediseñado: de un popover
+   `position:absolute` dentro del grid de tarjetas (se recortaba/aparecía
+   detrás de la tarjeta siguiente por cómo pinta el navegador un elemento
+   posicionado que no está portado fuera del grid) a un modal centrado
+   (`Velo`, ya portado con `createPortal`) con un switch por modalidad que
+   guarda solo al cambiarlo — sin botón "Guardar" aparte — y bloquea dejar
+   el examen sin ninguna modalidad.
+
+**Logo real de marca en todo el sistema** (antes: ícono de libro dibujado a
+mano en CSS/SVG, no el logo real del cliente):
+- `public/img/inmath.svg` — usado en el header del sitio, sidebar del
+  panel, pantalla de login/bloqueo, portal y "Personalizar login" — ahora es
+  la imagen real del cliente (cerebro + circuito + birrete), procesada con
+  Python/PIL: fondo blanco removido con máscara de alpha por distancia de
+  color + apertura morfológica (erosión→dilatación) para quitar motas
+  sueltas de compresión, recortada al contenido y reescalada con LANCZOS.
+  Como es un solo archivo compartido, el cambio se ve en todos lados a la
+  vez con solo reemplazar ese archivo.
+- `public/img/correo-logo.png` — mismo logo, mismo proceso, en PNG
+  cuadrado 256×256 con transparencia, para el `cid:logoinmath` que se
+  adjunta a **todos** los correos del sistema (`src/lib/correo.ts`).
+- Pantalla de carga del sistema (`src/components/OverlayCarga.tsx`): el
+  "libro que se dibuja" (animación de `stroke-dashoffset` con
+  `pathLength={1}`) pasa a dibujar los dos hemisferios del cerebro + el
+  birrete al centro, mismo mecanismo de auto-dibujado de antes.
+
+**Mathy — el agente de IA, evolucionado a "Cerebrito"** (antes: libro de
+líneas con guantes; iteración intermedia con birrete que se descartó):
+- Cerebro con textura real de circunvoluciones (silueta con dos
+  hemisferios + fisura central + pliegues), sin birrete, solo ojos (sin
+  boca ni mejillas).
+- Manos-guante flotantes (separadas del cuerpo, con su propia sombra):
+  palma blanca + pulgar y 3 dedos planos con contorno azul — mismo
+  lenguaje visual que la mascota anterior del libro — que saludan cada una
+  por su cuenta con una animación de rotación suave.
+- Un solo componente (`src/components/MascotaMathy.tsx`) reutilizado en
+  sitio, panel y portal — el cambio se ve en todos lados a la vez.
+
+**Rendimiento — causa real de "se enlentece toda la computadora" (reporte
+del cliente)**: investigado a fondo. El botón flotante de Mathy tenía un
+brillo de fondo (`.agente-btn::after`, 4 `radial-gradient` con
+`filter: blur(6px)` sobre un elemento de hasta 144px) animado con
+`animation: mathySplash ... infinite` (`transform: scale`) — blur + scale
+animados juntos, para siempre, en el layout persistente del panel/sitio
+(visible en TODA página mientras el sistema está abierto), es el patrón
+más costoso de mantener para el compositor de GPU del navegador: fuerza
+re-rasterizar esa capa en cada frame indefinidamente. Se quitó la
+animación (el brillo queda fijo, se ve igual de bien) en `panel.css` e
+`inmath.css` — elimina el uso sostenido de GPU/CPU mientras el sistema
+está abierto, que es exactamente el síntoma reportado ("se alenta la
+computadora para abrir otras aplicaciones o pestañas"). Las animaciones de
+Cerebrito (parpadeo, saludo, flotar) NO se tocaron porque usan solo
+`transform`/`opacity` — baratas para el compositor, no la causa.
+
+**Correo de admin cuando se agenda una asesoría** (antes: solo el prospecto
+recibía confirmación; el staff no se enteraba salvo revisando el panel):
+`src/lib/agenda.ts` — `confirmarCitaPorCorreo()` ahora, además del correo
+al prospecto, manda uno a `CORREO_CONTACTO` ("Nueva asesoría agendada —
+{nombre}") con el mismo enlace de Meet como botón (o una nota si n8n aún
+no lo generaba), el nombre del asesor asignado, y los datos de contacto
+del prospecto (WhatsApp, correo). Aplica a los 4 caminos que agendan una
+cita (sitio público, bot de WhatsApp, agente de IA del sitio, y alta
+manual desde el panel) porque todos pasan por `agendar()`/`crearCita()`.
