@@ -228,3 +228,27 @@ no lo generaba), el nombre del asesor asignado, y los datos de contacto
 del prospecto (WhatsApp, correo). Aplica a los 4 caminos que agendan una
 cita (sitio público, bot de WhatsApp, agente de IA del sitio, y alta
 manual desde el panel) porque todos pasan por `agendar()`/`crearCita()`.
+
+### Corte 01-sep-2026 (2) — Menú del portal invisible en móvil
+
+**Bug real, no cosmético**: en el portal del alumno, en cualquier pantalla
+≤900px de ancho, el menú del header (Inicio/Fases/Material/Práctica/
+Reportes/Mi cuenta/Salir) desaparecía por completo — invisible y sin poder
+darle clic. Causa: `inmath.css` (compartido entre sitio público y portal)
+tiene reglas para el menú hamburguesa MÓVIL del sitio con el selector
+genérico `.barra nav { max-height:0; opacity:0; pointer-events:none; }`,
+que solo se revela agregando la clase `.abierto` — cosa que hace el botón
+`#navToggle` + el JS de `ScriptsSitio`. El portal usa su propio header
+(`NavPortalHeader`, una píldora de íconos que YA estaba pensada para caber
+sin colapsar) y su propio script (`ScriptsPortal`), que nunca agrega ese
+botón ni esa clase — así que el `<nav>` del portal heredaba el colapso del
+sitio para siempre, sin nada que lo volviera a abrir. Corregido escopando
+esas reglas a `.barra:not(.barra-portal) nav` en los dos breakpoints
+(720px y 900px) donde existían. De paso, en el portal el wordmark "Portal
+Inmath" también se reduce a solo el ícono en ≤620px (antes se comía casi
+todo el ancho del header) y el menú gana `overflow-x:auto` como red de
+seguridad para pantallas muy angostas (320-360px) donde aun icon-only no
+caben los 7 accesos completos sin un pequeño scroll horizontal.
+Verificado forzando el ancho a 390px con un alumno de prueba real
+logueado: antes nada del menú se veía; después se ven 4-5 accesos de
+entrada y el resto con un scroll corto dentro de la misma píldora.

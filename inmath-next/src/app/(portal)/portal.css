@@ -357,12 +357,22 @@
 .nav-hdr-salir button:hover { border-color: var(--azul); color: var(--azul); transform: translateY(-1px); }
 .nav-hdr-salir svg { width: 16px; height: 16px; }
 
-/* Móvil: solo íconos (el header no alcanza para textos + logo). */
+/* Móvil: solo íconos (el header no alcanza para textos + logo). "Salir"
+ * también se reduce a ícono, y el menú puede hacer scroll horizontal propio
+ * como red de seguridad en vez de desbordar/recortarse en pantallas muy
+ * angostas (ej. 320-360px). */
 @media (max-width: 620px) {
   .barra-portal { gap: 8px; padding-left: 14px; padding-right: 14px; }
+  /* el wordmark "Portal Inmath" también se reduce a solo ícono — si no,
+   * se comía casi todo el ancho y el menú, aunque visible, quedaba apretado
+   * y obligaba a hacer scroll horizontal para ver la mayoría de los íconos. */
+  .barra-portal .logo b { display: none; }
   .nav-hdr-item span { display: none; }
   .nav-hdr-item { padding: 9px 12px; }
-  .nav-hdr { margin-left: auto; }
+  .nav-hdr { margin-left: auto; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .nav-hdr::-webkit-scrollbar { display: none; }
+  .nav-hdr-salir span { display: none; }
+  .nav-hdr-salir button { padding: 9px 11px; }
 }
 
 /* =========================================================================

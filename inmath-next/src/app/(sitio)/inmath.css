@@ -818,7 +818,12 @@ body::before {
 .nav-toggle:hover { border-color: var(--azul); color: var(--azul); }
 @media (max-width: 720px) {
   .nav-toggle { display: grid; }
-  .barra nav {
+  /* :not(.barra-portal) — el portal del alumno usa su propio <nav> (píldora
+     de íconos siempre visible, ver NavPortalHeader/portal.css) sin botón de
+     hamburguesa; sin este scope, esta regla lo dejaba colapsado para
+     siempre (max-height:0, pointer-events:none) porque nada le agregaba
+     nunca la clase .abierto — el menú del portal "no aparecía" en móvil. */
+  .barra:not(.barra-portal) nav {
     position: absolute; top: calc(100% + 8px); left: 12px; right: 12px;
     flex-direction: column; align-items: stretch; gap: 5px;
     background: rgba(255,255,255,.88); -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px);
@@ -827,9 +832,9 @@ body::before {
     max-height: 0; overflow: hidden; opacity: 0; pointer-events: none;
     transition: max-height .32s ease, opacity .24s ease;
   }
-  .barra nav.abierto { max-height: 400px; opacity: 1; pointer-events: auto; }
-  .barra nav a:not(.cta) { width: 100%; justify-content: flex-start; }
-  .barra nav a.cta { width: 100%; justify-content: center; margin-top: 4px; }
+  .barra:not(.barra-portal) nav.abierto { max-height: 400px; opacity: 1; pointer-events: auto; }
+  .barra:not(.barra-portal) nav a:not(.cta) { width: 100%; justify-content: flex-start; }
+  .barra:not(.barra-portal) nav a.cta { width: 100%; justify-content: center; margin-top: 4px; }
 }
 
 /* =========================================================================
@@ -3626,7 +3631,9 @@ p.legal { min-height: 0 !important; background: none !important; padding: 0 !imp
 /* ============ v79 — Menú móvil responsive (fix): sólido, scrollable, mega-menú limpio ============ */
 @media (max-width: 900px) {
   .nav-toggle { display: grid !important; }
-  .barra nav {
+  /* :not(.barra-portal) — ver nota igual arriba: el portal no tiene botón de
+     hamburguesa, así que esta regla lo dejaba invisible para siempre. */
+  .barra:not(.barra-portal) nav {
     position: absolute; top: calc(100% + 8px); left: 12px; right: 12px;
     display: flex; flex-direction: column; align-items: stretch; gap: 3px;
     background: #fff; border: 1px solid var(--linea, #E6ECF7); border-radius: 20px;
@@ -3634,9 +3641,9 @@ p.legal { min-height: 0 !important; background: none !important; padding: 0 !imp
     max-height: 0; overflow: hidden; opacity: 0; pointer-events: none;
     transition: max-height .34s ease, opacity .24s ease;
   }
-  .barra nav.abierto { max-height: min(82vh, 660px); overflow-y: auto; opacity: 1; pointer-events: auto; }
-  .barra nav a:not(.cta) { width: 100%; justify-content: flex-start; padding: 12px 14px; border-radius: 12px; }
-  .barra nav a.cta { width: 100%; justify-content: center; margin-top: 6px; }
+  .barra:not(.barra-portal) nav.abierto { max-height: min(82vh, 660px); overflow-y: auto; opacity: 1; pointer-events: auto; }
+  .barra:not(.barra-portal) nav a:not(.cta) { width: 100%; justify-content: flex-start; padding: 12px 14px; border-radius: 12px; }
+  .barra:not(.barra-portal) nav a.cta { width: 100%; justify-content: center; margin-top: 6px; }
 
   /* Mega-menú aplanado dentro del hamburguesa: lista indentada limpia */
   .nav-drop { display: block; width: 100%; }
