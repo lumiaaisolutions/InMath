@@ -1,10 +1,19 @@
-import { requiereModulo } from "@/lib/panel/sesion";
+import { usuarioActual, moduloPermitido } from "@/lib/panel/sesion";
 
 /** "Explicar con IA" — transmite la respuesta de Ollama token por token en
  *  vez de esperar a que termine, para que el admin vea texto de inmediato
  *  en lugar de un botón "Pensando…" congelado. */
 export async function POST(req: Request) {
-  await requiereModulo("reactivos");
+  // OJO: aquí NO sirve requiereModulo() — usa redirect(), que en un Route
+  // Handler se vuelve un 307 que fetch SIGUE hasta una página HTML con
+  // status 200... y el cliente streameaba ese HTML directo al textarea de
+  // la explicación (el "muestra html en código" que reportó el cliente al
+  // expirar su sesión). En un endpoint de fetch los errores se responden
+  // como texto con status, nunca con redirect.
+  const u = await usuarioActual();
+  if (!u || !moduloPermitido(u, "reactivos")) {
+    return new Response("Tu sesión expiró — recarga la página y vuelve a entrar.", { status: 401 });
+  }
 
   const body = await req.json().catch(() => null);
   const enunciado = String(body?.enunciado ?? "").trim();

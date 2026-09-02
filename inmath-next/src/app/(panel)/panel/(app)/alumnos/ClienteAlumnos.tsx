@@ -1,7 +1,7 @@
 "use client";
 import { useActionState, useMemo, useState } from "react";
 import { IconoPanel } from "@/components/IconoPanel";
-import { alumnoCrearAccion, alumnoBajaAccion, pagoAprobarAccion, pagoCancelarAccion, type Resultado } from "../acciones";
+import { alumnoCrearAccion, alumnoEditarAccion, alumnoBajaAccion, pagoAprobarAccion, pagoCancelarAccion, type Resultado } from "../acciones";
 import { ConfirmarDialogo, Velo, useToastResultado, EnBody, Segmentado, SelectorDesplegable, BotonMagnetico } from "../ClientePanel";
 
 
@@ -150,6 +150,43 @@ function BotonBaja({ alumnoId, onListo }: { alumnoId: number; onListo?: () => vo
   );
 }
 
+/* ── Editar datos de contacto ─────────────────────────────────────────── */
+function EditarAlumnoFrame({ fila, onCerrar }: { fila: Fila; onCerrar: () => void }) {
+  const toast = useToastResultado();
+  const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev, fd) => {
+    const r = await alumnoEditarAccion(prev, fd);
+    toast(r);
+    if (r.ok) onCerrar();
+    return r;
+  }, {});
+  return (
+    <Velo abierto onCerrar={onCerrar}>
+      <div className="us-frame" role="dialog" aria-modal="true">
+        <div className="us-frame-cab">
+          <div className="us-quien"><b>Editar datos</b><span>{fila.nombre}</span></div>
+          <button type="button" className="toast-x us-cerrar" aria-label="Cerrar" onClick={onCerrar}><IconoPanel n="x" /></button>
+        </div>
+        <form action={accion} className="formulario" style={{ display: "grid", gap: 14 }}>
+          <input type="hidden" name="prospecto_id" value={fila.prospectoId} />
+          <label className="pl-campo">Nombre
+            <input type="text" name="nombre" defaultValue={fila.nombre} required maxLength={120} />
+          </label>
+          <label className="pl-campo">WhatsApp
+            <input type="tel" name="telefono" defaultValue={fila.telefono} required maxLength={20} />
+          </label>
+          <label className="pl-campo">Correo <small>(opcional — ahí le llegan sus accesos y avisos)</small>
+            <input type="email" name="correo" defaultValue={fila.correo ?? ""} maxLength={190} />
+          </label>
+          <div className="pg-acciones" style={{ justifyContent: "flex-end", display: "flex", gap: 10 }}>
+            <button type="button" className="boton fantasma" onClick={onCerrar}>Cancelar</button>
+            <button type="submit" className="boton primario" disabled={pendiente}>{pendiente ? "Guardando…" : "Guardar cambios"}</button>
+          </div>
+        </form>
+      </div>
+    </Velo>
+  );
+}
+
 /* ── Ficha de detalle (alumno + todos sus pagos) ─────────────────────────── */
 function FichaDetalle({ fila, onCerrar }: { fila: Fila; onCerrar: () => void }) {
   const pagoActivo = fila.pagos.find((p) => p.estado === "pendiente") ?? fila.pagos[0] ?? null;
@@ -250,9 +287,11 @@ function FichaDetalle({ fila, onCerrar }: { fila: Fila; onCerrar: () => void }) 
 /* ── Lista + filtros ──────────────────────────────────────────────────── */
 export function ListaAlumnos({ inicial, cursos }: { inicial: Fila[]; cursos: Curso[] }) {
   const [selId, setSelId] = useState<number | null>(null);
+  const [editId, setEditId] = useState<number | null>(null);
   const [filtroAlumno, setFiltroAlumno] = useState("todos");
   const [filtroPago, setFiltroPago] = useState("todos");
   const sel = inicial.find((f) => f.prospectoId === selId) ?? null;
+  const edit = inicial.find((f) => f.prospectoId === editId) ?? null;
 
   const filas = useMemo(() => inicial.filter((f) => {
     if (filtroAlumno !== "todos") {
@@ -329,7 +368,15 @@ export function ListaAlumnos({ inicial, cursos }: { inicial: Fila[]; cursos: Cur
                     ) : "—"}
                   </td>
                   <td onClick={(e) => e.stopPropagation()}>
-                    {f.alumno?.puedeDarBaja && <span className="gaje alerta" title="Se puede dar de baja">elegible p/baja</span>}
+                    <div className="al-fila-acciones">
+                      <button type="button" className="boton mini fantasma" onClick={() => setSelId(f.prospectoId)} title="Ver ficha completa">
+                        <IconoPanel n="ojo" cls="ic-sm" /> Ver
+                      </button>
+                      <button type="button" className="boton mini fantasma" onClick={() => setEditId(f.prospectoId)} title="Editar nombre, WhatsApp y correo">
+                        <IconoPanel n="editar" cls="ic-sm" /> Editar
+                      </button>
+                      {f.alumno?.puedeDarBaja && <BotonBaja alumnoId={f.alumno.id} />}
+                    </div>
                   </td>
                 </tr>
               );
@@ -338,6 +385,7 @@ export function ListaAlumnos({ inicial, cursos }: { inicial: Fila[]; cursos: Cur
         </table>
       </div>
       {sel && <FichaDetalle fila={sel} onCerrar={() => setSelId(null)} />}
+      {edit && <EditarAlumnoFrame fila={edit} onCerrar={() => setEditId(null)} />}
     </div>
   );
 }

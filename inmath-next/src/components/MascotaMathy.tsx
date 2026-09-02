@@ -61,22 +61,25 @@ export function MascotaMathy({ cls = "agente-libro mathy-mascota" }: { cls?: str
         </g>
       </g>
 
-      {/* cerebro: silueta con dos hemisferios y textura de circunvoluciones */}
-      <path
-        d="M35 52c-9 0-13-10-9-18-4-6-1-15 9-19 4-6 14-10 22-4 8-6 18-2 22 4 10 4 13 13 9 19 4 8 0 18-9 18-2 8-4 16-10 22-6 6-16 6-22 0-6-6-8-14-12-22Z"
-        fill={`url(#${gCerebro})`}
-      />
-      <ellipse cx={40} cy={24} rx={9} ry={5.5} fill="#fff" opacity={0.35} transform="rotate(-24 40 24)" />
-
-      <path d="M60 16c-2 10-2 20 0 30 2 10 2 20 0 30" stroke={AZUL_2} strokeWidth={2} strokeLinecap="round" fill="none" opacity={0.5} />
-      <path d="M38 26c4-3 9-3 12 0M34 38c5-2 10-1 13 3" stroke={AZUL_2} strokeWidth={1.8} strokeLinecap="round" fill="none" opacity={0.45} />
-      <path d="M82 26c-4-3-9-3-12 0M86 38c-5-2-10-1-13 3" stroke={AZUL_2} strokeWidth={1.8} strokeLinecap="round" fill="none" opacity={0.45} />
-
-      {/* solo ojos, sin boca ni mejillas */}
-      <ellipse className="mathy-ojo" cx={49} cy={50} rx={3.6} ry={4.6} fill={TINTA} />
-      <ellipse className="mathy-ojo" cx={71} cy={50} rx={3.6} ry={4.6} fill={TINTA} />
-      <circle cx={50.1} cy={48.3} r={0.9} fill="#fff" />
-      <circle cx={72.1} cy={48.3} r={0.9} fill="#fff" />
+      {/* cerebro: MISMA silueta de dos hemisferios que dibuja la pantalla de
+          carga (OverlayCarga) — el mismo trazo, cerrado y relleno, escalado
+          del viewBox 48 al 120 — para que mascota, logo y pantalla de carga
+          compartan una sola forma reconocible. */}
+      <g transform="translate(60 62) scale(2.45) translate(-24 -26)">
+        <path
+          d="M24 14 C17 11 10 12 7 17 C4 21 5 26 9 28 C6 31 7 36 12 38 C16 41 21 39 24 35 C27 39 32 41 36 38 C41 36 42 31 39 28 C43 26 44 21 41 17 C38 12 31 11 24 14 Z"
+          fill={`url(#${gCerebro})`}
+        />
+        {/* fisura central, igual que el lomo de la pantalla de carga */}
+        <path d="M24 15c-.7 3.4-.7 6.8 0 10.2.7 3.3.7 6.6 0 9.3" stroke={AZUL_2} strokeWidth={0.8} strokeLinecap="round" fill="none" opacity={0.5} />
+        {/* brillo superior izquierdo, look pulido */}
+        <ellipse cx={15} cy={17} rx={4.6} ry={2.6} fill="#fff" opacity={0.35} transform="rotate(-22 15 17)" />
+        {/* solo ojos, sin boca ni mejillas */}
+        <ellipse className="mathy-ojo" cx={19.6} cy={27} rx={1.5} ry={1.9} fill={TINTA} />
+        <ellipse className="mathy-ojo" cx={28.4} cy={27} rx={1.5} ry={1.9} fill={TINTA} />
+        <circle cx={20} cy={26.3} r={0.4} fill="#fff" />
+        <circle cx={28.8} cy={26.3} r={0.4} fill="#fff" />
+      </g>
     </svg>
   );
 }

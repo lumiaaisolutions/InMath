@@ -121,9 +121,13 @@ function PreguntaFrame({ n, pregunta, onCambiar, onQuitar, permiteQuitar }: {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ enunciado: pregunta.enunciado, opciones: pregunta.opciones, correcta: pregunta.correcta }),
       });
-      if (!res.ok || !res.body) {
-        const mensaje = await res.text().catch(() => "");
-        toast({ error: mensaje || "No pudimos contactar a la IA. Intenta de nuevo en unos segundos." });
+      // Defensa: si la sesión expiró, fetch puede terminar en una PÁGINA HTML
+      // con status 200 (siguió un redirect) — jamás hay que streamear eso al
+      // textarea. Solo se acepta la respuesta de texto plano del endpoint.
+      const tipo = res.headers.get("content-type") ?? "";
+      if (!res.ok || !res.body || res.redirected || !tipo.includes("text/plain")) {
+        const mensaje = !res.ok ? await res.text().catch(() => "") : "";
+        toast({ error: mensaje || "Tu sesión expiró o la IA no respondió — recarga la página e intenta de nuevo." });
         return;
       }
       const lector = res.body.getReader();

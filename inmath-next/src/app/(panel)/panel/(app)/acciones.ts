@@ -176,6 +176,31 @@ export async function alumnoCrearAccion(_prev: Resultado, fd: FormData): Promise
   return { ok: "Alumno registrado" };
 }
 
+/** Edita los datos de contacto de un registro de Alumnos y pagos (nombre,
+ *  WhatsApp y correo viven en el prospecto; si ya tiene cuenta de alumno,
+ *  nombre/teléfono se reflejan también ahí para que reportes y correos
+ *  usen siempre el dato vigente). */
+export async function alumnoEditarAccion(_prev: Resultado, fd: FormData): Promise<Resultado> {
+  await requiereModulo("alumnos");
+  const prospectoId = parseInt(String(fd.get("prospecto_id") ?? "0"), 10);
+  const nombre = String(fd.get("nombre") ?? "").trim();
+  const telefono = normalizaTelefono(String(fd.get("telefono") ?? ""));
+  const correo = String(fd.get("correo") ?? "").trim().toLowerCase();
+  if (prospectoId < 1 || !nombre || !telefono) return { error: "Nombre y WhatsApp válido son obligatorios" };
+  if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return { error: "El correo no se ve válido" };
+
+  const otro = await prisma.prospectos.findFirst({ where: { telefono_whatsapp: telefono, id: { not: prospectoId } }, select: { id: true } });
+  if (otro) return { error: "Ese WhatsApp ya pertenece a otro registro" };
+
+  await prisma.prospectos.update({
+    where: { id: prospectoId },
+    data: { nombre, telefono_whatsapp: telefono, correo: correo || null },
+  });
+  await prisma.alumnos.updateMany({ where: { prospecto_id: prospectoId }, data: { nombre, telefono, email: correo || null } });
+  revalidatePath("/panel/alumnos");
+  return { ok: "Datos actualizados" };
+}
+
 /** Cancela un pago pendiente a mano (el admin verificó que no se completó). */
 export async function pagoCancelarAccion(pagoId: number): Promise<Resultado> {
   await requiereModulo("pagos");

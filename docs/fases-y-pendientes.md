@@ -379,3 +379,39 @@ real del curso siguiera pendiente.
 Todas las páginas y acciones del portal ya estaban protegidas
 individualmente (`redirect("/portal")` o error si no hay pago) — el
 problema era exclusivamente el dato de prueba residual.
+
+### Corte 02-sep-2026 — Eventos duplicados en Calendar, acciones en Alumnos, HTML en "Explicar con IA", mascota con silueta del logo
+
+1. ✅ **Eventos duplicados en Google Calendar** (misma cita, 2 eventos con
+   2 links de Meet distintos): el workflow 03 de n8n tenía un nodo
+   "Obtener calendario del asesor" que consultaba `/api/asesores` — n8n
+   ejecuta los nodos siguientes UNA VEZ POR ITEM, así que con 2 asesores
+   en la BD el nodo de Calendar creaba 2 eventos por cita. El nodo era
+   vestigial (el calendario está fijo a cursosinmath@gmail.com y ningún
+   dato suyo se usaba). Fix: se quitó el nodo y se conectó el webhook
+   directo al nodo de Calendar (editado en la BD SQLite de n8n con el
+   contenedor detenido; reiniciado y verificado que el webhook re-registra
+   y ambos workflows re-activan). Los eventos duplicados YA creados los
+   borra el cliente a mano en su Google Calendar. Nota: el JSON del repo
+   (`automatizaciones-n8n/flujos/03*.json`) sigue reflejando el diseño
+   viejo por-asesor; la versión de producción vive en n8n.
+2. ✅ **Acciones por fila en /panel/alumnos**: botones "Ver" (abre la
+   ficha completa — antes solo se descubría clicando la fila), "Editar"
+   (frame nuevo para nombre/WhatsApp/correo, con `alumnoEditarAccion` que
+   actualiza prospecto y refleja en la cuenta de alumno; valida WhatsApp
+   duplicado) y "Dar de baja" (el botón existente, ahora visible en la
+   fila cuando el alumno es elegible — antes solo un gaje informativo).
+3. ✅ **"Explicar con IA" mostraba HTML en código**: `requiereModulo()`
+   usa `redirect()`, que en un Route Handler se vuelve un 307… que `fetch`
+   SIGUE hasta una página HTML con status 200 — y el cliente streameaba
+   ese HTML directo al textarea (pasaba cuando la sesión del admin
+   expiraba). Fix doble: el endpoint responde 401 de texto (sin redirect)
+   con `usuarioActual()`/`moduloPermitido()`, y el cliente además rechaza
+   cualquier respuesta que no sea `text/plain` sin redirect (defensa en
+   profundidad).
+4. ✅ **Mascota con la silueta del logo/pantalla de carga**: la cabeza de
+   Cerebrito ahora usa EXACTAMENTE el mismo trazo de dos hemisferios que
+   dibuja la pantalla de carga (`OverlayCarga`), cerrado y relleno con el
+   gradiente, escalado del viewBox 48 al 120 — mascota, logo y pantalla
+   de carga comparten una sola forma reconocible. Fisura central como el
+   "lomo" de la carga, solo ojos, manos-guante asomando a los lados.

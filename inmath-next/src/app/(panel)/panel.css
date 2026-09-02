@@ -2756,6 +2756,8 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
    :has(> table.lista) de abajo también le pone overflow a los filtros de
    arriba y corta cualquier desplegable que se abra ahí. */
 .al-tabla-scroll { overflow-x: auto; }
+/* Acciones por fila (Ver / Editar / Dar de baja) — no disparan el clic de la fila */
+.al-fila-acciones { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
 .al-alumnos-filtro-etq { display: block; font: 700 .68rem/1 var(--cuerpo); text-transform: uppercase; letter-spacing: .05em; color: var(--tinta-3); margin-bottom: 6px; }
 .pg-vence-mini { font: 500 .74rem var(--cuerpo); color: var(--tinta-3); }
 .pg-historial { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--linea); }
