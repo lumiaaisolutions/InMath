@@ -343,3 +343,39 @@ de examen/cantidades dinámicas. Credenciales de prueba locales: alumno
 `anthropics/skills#frontend-design`, `emilkowalski/skill` (animate) y
 `nextlevelbuilder/ui-ux-pro-max-skill` — en `.agents/skills/` (ya
 ignoradas por git).
+
+### Corte 01-sep-2026 (5) — Alumno sin pagar veía el portal completo
+
+**Reporte del cliente**: "Fotos FHT" (pago PENDIENTE de $4,000) veía el
+dashboard completo del portal en vez del candado de pago.
+
+**Causa raíz (datos, no lógica)**: ese prospecto tenía un pago de **$10.00
+MXN marcado como "pagado"** — el cobro real que se usó para verificar el
+webhook de MercadoPago end-to-end el 23-ago — y el candado
+(`tienePagoConfirmado`) cuenta CUALQUIER pago con estado `pagado`, sin
+importar monto. El pago de prueba desbloqueaba el portal aunque el pago
+real del curso siguiera pendiente.
+
+**Arreglos**:
+1. **Datos (producción, autorizado por el cliente)**: el pago de prueba
+   (id 8, $10) se marcó `reembolsado` — queda en el historial como lo que
+   fue, y el portal de ese alumno quedó bloqueado de inmediato (verificado:
+   ya no tiene ningún pago `pagado`; su pago real de $4,000 sigue
+   `pendiente` intacto).
+2. **Candado del webhook (`pagos-drivers.ts`)**: `aplicarEventoPago` ahora
+   compara lo que el procesador reporta como REALMENTE cobrado
+   (`transaction_amount` re-consultado a la API de MercadoPago) contra el
+   `monto_centavos` del pago — si lo cobrado es menor, NO se confirma el
+   pago y se registra en el log. Cierra el vector de un cobro
+   parcial/manipulado marcando "pagado" un monto mayor.
+3. **Menú del portal con pago pendiente**: `NavPortalHeader` recibe
+   `bloqueado` desde el layout — con pago pendiente solo se muestran
+   Inicio y Mi cuenta (los demás apartados de todos modos redirigían al
+   candado, pero mostrarlos invitaba a clicks muertos). La pantalla de
+   candado ya solo ofrece "Completar mi pago" y "Agendar mi sesión
+   gratis", como pidió el cliente. Verificado en local con el alumno de
+   prueba puesto temporalmente en `pendiente`.
+
+Todas las páginas y acciones del portal ya estaban protegidas
+individualmente (`redirect("/portal")` o error si no hay pago) — el
+problema era exclusivamente el dato de prueba residual.

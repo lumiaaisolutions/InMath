@@ -37,7 +37,7 @@ export default async function PortalLayout({ children }: { children: React.React
         <OverlayCarga marca="sitio" />
         <header className="barra barra-portal">
           <Link className="logo" href="/portal"><img src="/img/inmath.svg" alt="" width={58} height={58} /><b>Portal <span>Inmath</span></b></Link>
-          <NavPortalHeader />
+          <NavPortalHeader bloqueado={pendientePago} />
         </header>
         {children}
         {/* Mathy en el portal: recuerda pagar si está pendiente. */}

@@ -3,8 +3,10 @@ import { prisma, config } from "./db";
 import { ahoraPared } from "./fechas";
 import { inscribirPorPago } from "./inscripcion";
 
-/** Evento neutro que produce un webhook verificado (port de ProcesadorPago). */
-export type EventoPago = { referencia_externa: string; estado: "pagado" | "fallido"; metadatos?: Record<string, unknown> };
+/** Evento neutro que produce un webhook verificado (port de ProcesadorPago).
+ *  `monto_centavos` es lo que el procesador reporta como REALMENTE cobrado —
+ *  cuando viene, aplicarEventoPago lo compara contra lo que se debía. */
+export type EventoPago = { referencia_externa: string; estado: "pagado" | "fallido"; monto_centavos?: number; metadatos?: Record<string, unknown> };
 export type LinkPago = { link: string; referencia_externa: string };
 
 type PagoFila = { id: number; monto_centavos: number; moneda: string };
@@ -116,11 +118,14 @@ const driverMercadoPago: ProcesadorPago = {
     if (res.status !== 200) return null;
     const pago = await res.json().catch(() => ({}));
     if (!pago.external_reference) return null;
+    const montoReal = Number(pago.transaction_amount);
     return {
       // Debe coincidir EXACTO con lo que crearLink() guarda en referencia_externa.
       referencia_externa: String(pago.external_reference),
       estado: pago.status === "approved" ? "pagado" : "fallido",
-      metadatos: { origen: "mercadopago", mp_payment_id: pagoId, mp_status: pago.status ?? null },
+      // Lo que MP reporta como cobrado de verdad (en pesos → centavos).
+      ...(Number.isFinite(montoReal) && montoReal > 0 ? { monto_centavos: Math.round(montoReal * 100) } : {}),
+      metadatos: { origen: "mercadopago", mp_payment_id: pagoId, mp_status: pago.status ?? null, mp_monto: Number.isFinite(montoReal) ? montoReal : null },
     };
   },
 };
@@ -154,6 +159,15 @@ export async function aplicarEventoPago(evento: EventoPago): Promise<{ ok: boole
   if (pago.estado === "pagado") return { ok: true, mensaje: "Pago ya estaba confirmado (webhook duplicado)" };
 
   if (evento.estado === "pagado") {
+    // Defensa: lo cobrado debe cubrir lo que se debía por ESTE pago. Sin este
+    // candado, un cobro parcial/manipulado de (p. ej.) $10 marcaría "pagado"
+    // un pago de $4,000 y desbloquearía el portal completo del alumno.
+    if (evento.monto_centavos != null && evento.monto_centavos < pago.monto_centavos) {
+      console.error(
+        `[pagos] webhook con monto insuficiente para pago #${pago.id}: cobrado ${evento.monto_centavos}¢, se debían ${pago.monto_centavos}¢ — NO se confirma`,
+      );
+      return { ok: false, mensaje: "Monto cobrado menor al monto del pago — no se confirma" };
+    }
     const n = await prisma.pagos.updateMany({
       where: { id: pago.id, estado: { not: "pagado" } },
       data: { estado: "pagado", pagado_en: ahoraPared(), metadatos: (evento.metadatos ?? {}) as never },

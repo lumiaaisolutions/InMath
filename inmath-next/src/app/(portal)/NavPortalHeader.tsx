@@ -17,8 +17,10 @@ const ITEMS = [
  *  píldora horizontal con una "burbuja" de acento que se desliza al
  *  apartado activo; en móvil (≤620px) se convierte en menú de hamburguesa
  *  desplegable — mismo patrón que el sitio público, mismo componente para
- *  ambos anchos (la clase `.abierto` la maneja este React, no CSS/JS aparte). */
-export function NavPortalHeader() {
+ *  ambos anchos (la clase `.abierto` la maneja este React, no CSS/JS aparte).
+ *  Con pago pendiente (`bloqueado`), solo se muestran Inicio y Mi cuenta —
+ *  el resto de apartados de todos modos redirigen al candado de pago. */
+export function NavPortalHeader({ bloqueado = false }: { bloqueado?: boolean }) {
   const pathname = usePathname();
   const activo =
     pathname === "/portal" ? "inicio"
@@ -29,6 +31,7 @@ export function NavPortalHeader() {
     : pathname.startsWith("/portal/cuenta") ? "cuenta"
     : "inicio";
 
+  const items = bloqueado ? ITEMS.filter((it) => it.key === "inicio" || it.key === "cuenta") : ITEMS;
   const refs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const [burbuja, setBurbuja] = useState({ x: 0, w: 0, listo: false });
   const [abierto, setAbierto] = useState(false);
@@ -59,7 +62,7 @@ export function NavPortalHeader() {
       <nav id="navPortal" className={`nav-hdr${abierto ? " abierto" : ""}`} aria-label="Secciones del portal">
         <span className="nav-hdr-burbuja" aria-hidden="true"
           style={{ transform: `translateX(${burbuja.x}px)`, width: burbuja.w, opacity: burbuja.listo ? 1 : 0 }} />
-        {ITEMS.map((it) => (
+        {items.map((it) => (
           <Link key={it.key} href={it.href}
             ref={(el) => { refs.current[it.key] = el; }}
             className={`nav-hdr-item${activo === it.key ? " activo" : ""}`}
