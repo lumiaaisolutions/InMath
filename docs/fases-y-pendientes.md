@@ -415,3 +415,29 @@ problema era exclusivamente el dato de prueba residual.
    gradiente, escalado del viewBox 48 al 120 — mascota, logo y pantalla
    de carga comparten una sola forma reconocible. Fisura central como el
    "lomo" de la carga, solo ojos, manos-guante asomando a los lados.
+
+### Corte 02-sep-2026 (2) — 549 explicaciones generadas + fix definitivo de "Explicar con IA"
+
+**Explicaciones masivas**: las 549 preguntas activas no tenían explicación.
+Se generaron con Claude (12 lotes en paralelo, ~453 caracteres promedio,
+tono profesor InMath, reglas gramaticales citadas y apoyo en el texto de
+lectura) y se cargaron con UPDATE idempotente (solo donde seguía vacía).
+Respaldo previo de la tabla en
+`/var/www/inmath/backup-reactivos-pre-explicaciones-20260902.sql`.
+Resultado: 0 preguntas activas sin explicación.
+
+**Contenido defectuoso detectado en el proceso** (autorizado por el
+cliente): 28 "preguntas" eran texto de hoja de respuestas importado por
+error ("Respuesta correcta del ejercicio 98: A…") y 6 de ortografía c/s/z
+no tenían ninguna opción totalmente correcta — los 33 se DESACTIVARON
+(siguen en el panel para reescribirse, quedan 516 activos). El id 521 sí
+tenía opción correcta clara (conferencia-muchos-ocasión = c-ch-s) y solo
+tenía mal la clave: se corrigió a la opción A.
+
+**Fix definitivo de "Explicar con IA" (401 / HTML en el textarea)**: la
+cookie de sesión del panel se emite con `path:"/panel"`, así que el
+endpoint en `/api/reactivos/explicar-ia` JAMÁS la recibía — con
+`requiereModulo` eso terminaba en redirect→HTML streameado, y con el fix
+anterior en 401 "sesión expirada" aunque la sesión fuera válida. El
+endpoint se movió a `/panel/api/reactivos/explicar-ia` (la cookie ya lo
+alcanza) y el cliente apunta a la nueva ruta.

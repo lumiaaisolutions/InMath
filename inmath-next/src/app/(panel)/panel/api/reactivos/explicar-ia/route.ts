@@ -4,12 +4,12 @@ import { usuarioActual, moduloPermitido } from "@/lib/panel/sesion";
  *  vez de esperar a que termine, para que el admin vea texto de inmediato
  *  en lugar de un botón "Pensando…" congelado. */
 export async function POST(req: Request) {
-  // OJO: aquí NO sirve requiereModulo() — usa redirect(), que en un Route
-  // Handler se vuelve un 307 que fetch SIGUE hasta una página HTML con
-  // status 200... y el cliente streameaba ese HTML directo al textarea de
-  // la explicación (el "muestra html en código" que reportó el cliente al
-  // expirar su sesión). En un endpoint de fetch los errores se responden
-  // como texto con status, nunca con redirect.
+  // Este endpoint DEBE vivir bajo /panel/api/... — la cookie de sesión del
+  // panel tiene path:"/panel", así que un endpoint en /api/... jamás la
+  // recibía (por eso "Explicar con IA" fallaba aun con sesión válida). Y
+  // aquí NO sirve requiereModulo(): usa redirect(), que en un Route Handler
+  // se vuelve un 307 que fetch SIGUE hasta una página HTML con status 200 —
+  // el cliente streameaba ese HTML al textarea. Errores como texto+status.
   const u = await usuarioActual();
   if (!u || !moduloPermitido(u, "reactivos")) {
     return new Response("Tu sesión expiró — recarga la página y vuelve a entrar.", { status: 401 });

@@ -116,7 +116,7 @@ function PreguntaFrame({ n, pregunta, onCambiar, onQuitar, permiteQuitar }: {
     setExplicando(true);
     onCambiar({ ...pregunta, explicacion: "" });
     try {
-      const res = await fetch("/api/reactivos/explicar-ia", {
+      const res = await fetch("/panel/api/reactivos/explicar-ia", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ enunciado: pregunta.enunciado, opciones: pregunta.opciones, correcta: pregunta.correcta }),
