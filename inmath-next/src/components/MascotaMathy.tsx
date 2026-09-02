@@ -11,15 +11,18 @@ import { useId } from "react";
  * vive aparte en /img/inmath.svg — este componente es solo el agente de IA.
  */
 
-const AZUL_CLARO = "#7CA3FF";
-const AZUL_2 = "#3A5FD9";
+/* Paleta de la PANTALLA DE CARGA (OverlayCarga usa el gradiente
+ * #6B9FFF → #AFCFFF): azules suaves, sin saturar — la mascota comparte
+ * silueta Y color con la carga y el logo. */
+const AZUL_CLARO = "#AFCFFF";
+const AZUL = "#6B9FFF";
 const TINTA = "#171C3A";
 
 /** Mano-guante: palma blanca + pulgar y 3 dedos planos, contorno azul —
  *  mismo lenguaje que el guante de la mascota anterior (libro). */
 function Guante({ espejo = false }: { espejo?: boolean }) {
   const s = espejo ? -1 : 1;
-  const linea = { fill: "#fff", stroke: AZUL_2, strokeWidth: 0.9 };
+  const linea = { fill: "#fff", stroke: AZUL, strokeWidth: 0.9 };
   return (
     <g>
       <ellipse cx={0} cy={3} rx={7.4} ry={7.8} {...linea} />
@@ -40,7 +43,7 @@ export function MascotaMathy({ cls = "agente-libro mathy-mascota" }: { cls?: str
       <defs>
         <linearGradient id={gCerebro} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor={AZUL_CLARO} />
-          <stop offset="1" stopColor={AZUL_2} />
+          <stop offset="1" stopColor={AZUL} />
         </linearGradient>
       </defs>
 
@@ -71,7 +74,7 @@ export function MascotaMathy({ cls = "agente-libro mathy-mascota" }: { cls?: str
           fill={`url(#${gCerebro})`}
         />
         {/* fisura central, igual que el lomo de la pantalla de carga */}
-        <path d="M24 15c-.7 3.4-.7 6.8 0 10.2.7 3.3.7 6.6 0 9.3" stroke={AZUL_2} strokeWidth={0.8} strokeLinecap="round" fill="none" opacity={0.5} />
+        <path d="M24 15c-.7 3.4-.7 6.8 0 10.2.7 3.3.7 6.6 0 9.3" stroke="#fff" strokeWidth={0.8} strokeLinecap="round" fill="none" opacity={0.55} />
         {/* brillo superior izquierdo, look pulido */}
         <ellipse cx={15} cy={17} rx={4.6} ry={2.6} fill="#fff" opacity={0.35} transform="rotate(-22 15 17)" />
         {/* solo ojos, sin boca ni mejillas */}
