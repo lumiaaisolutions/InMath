@@ -75,6 +75,22 @@ export function MascotaMathy({ cls = "agente-libro mathy-mascota" }: { cls?: str
         />
         {/* fisura central, igual que el lomo de la pantalla de carga */}
         <path d="M24 15c-.7 3.4-.7 6.8 0 10.2.7 3.3.7 6.6 0 9.3" stroke="#fff" strokeWidth={0.8} strokeLinecap="round" fill="none" opacity={0.55} />
+        {/* circunvoluciones + nodos de circuito, como los rizos del logo —
+            trazos blancos sutiles, espejados en ambos hemisferios */}
+        <g stroke="#fff" strokeWidth={0.7} strokeLinecap="round" fill="none" opacity={0.5}>
+          <path d="M13 19c1.8-2.2 4.4-2.6 6.2-1" />
+          <path d="M10.5 25c1.4-1.6 3.4-1.8 4.8-.6" />
+          <path d="M35 19c-1.8-2.2-4.4-2.6-6.2-1" />
+          <path d="M37.5 25c-1.4-1.6-3.4-1.8-4.8-.6" />
+          <path d="M19 20.5v-2.3" />
+          <path d="M29 20.5v-2.3" />
+        </g>
+        <g fill="#fff" opacity={0.6}>
+          <circle cx={19} cy={21.2} r={0.75} />
+          <circle cx={29} cy={21.2} r={0.75} />
+          <circle cx={12.6} cy={28.6} r={0.65} />
+          <circle cx={35.4} cy={28.6} r={0.65} />
+        </g>
         {/* brillo superior izquierdo, look pulido */}
         <ellipse cx={15} cy={17} rx={4.6} ry={2.6} fill="#fff" opacity={0.35} transform="rotate(-22 15 17)" />
         {/* solo ojos, sin boca ni mejillas */}
