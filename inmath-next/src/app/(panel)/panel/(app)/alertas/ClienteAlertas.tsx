@@ -4,6 +4,7 @@ import { guardarAlertasAccion, alertaMediaSubirAccion, type ResultadoMedia } fro
 import { useToastResultado, Segmentado, ConfirmarDialogo, SelectorFechaHora } from "../ClientePanel";
 import { IconoPanel } from "@/components/IconoPanel";
 import { CuentaRegresiva } from "@/components/CuentaRegresiva";
+import { AlertaEmergenteLienzo } from "@/components/AlertaEmergente";
 import {
   ESTILOS, POSICIONES, DESTINOS, esVideo, varsDiseno, DISENO_DEFECTO,
   type Alerta, type DisenoAlerta,
@@ -69,15 +70,13 @@ function PreviewBanner({ a }: { a: Alerta }) {
 
 /** Preview del emergente (pantalla completa, a escala) con todo aplicado. */
 function PreviewEmergente({ a }: { a: Alerta }) {
+  // MISMO componente que renderiza la landing (AlertaEmergenteLienzo) — nada
+  // duplicado: lo que el admin configura es exactamente lo que ve el
+  // visitante, con la estructura completa (cerrar, kicker, plan, marcador,
+  // CTA y "Quizá después").
   return (
     <div className="al-em-marco">
-      <div className={`am-lienzo alerta-${a.estilo}`} style={varsDiseno(a.diseno) as React.CSSProperties}>
-        {a.media && (esVideo(a.media)
-          ? <video className="am-fondo" src={a.media} muted loop autoPlay playsInline />
-          : <img className="am-fondo" src={a.media} alt="" />)}
-        <div className="am-velo-int" />
-        <div className="am-contenido"><ContenidoRico a={a} escala /></div>
-      </div>
+      <AlertaEmergenteLienzo alerta={a} precio="$4,000" curso="Curso Propedéutico InMath" preview />
     </div>
   );
 }

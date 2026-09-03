@@ -526,3 +526,64 @@ prueba (transacción + cascadas), cancelación de cita futura (estado →
 cancelada) y eliminación de cita pasada (fila borrada), con los candados
 comprobados (botón oculto con pago pagado, "Cancelar" solo en futuras no
 del día, "Eliminar" solo en pasadas sin pago).
+
+### Corte 03-sep-2026 (3) — Botón "Ocultar/Mostrar Mathy" + vista previa fiel del emergente
+
+**F1 — Mathy con botón de visibilidad (sitio, panel y portal)**: en móvil
+la mascota flotante quedaba encimada sobre botones de acción (p. ej.
+"Eliminar" en /panel/alumnos) y bloqueaba sus clics; el auto-ocultado por
+scroll ("recogido", v98) no lo resolvía. Se RETIRÓ ese comportamiento por
+completo y se reemplazó por un botón en el encabezado de cada zona:
+
+- `src/components/MathyVisibilidad.tsx` (nuevo): hook `useMathyVisible` +
+  botón `MathyToggleBoton` ("Ocultar Mathy" / "Mostrar Mathy"). Estado en
+  `localStorage` (clave `mathy_visible`, default VISIBLE) sincronizado
+  entre componentes con un CustomEvent (`mathy:visibilidad`) y entre
+  pestañas con el evento `storage`.
+- Sitio público: botón en la barra de navegación (y dentro del menú
+  hamburguesa en móvil). Panel: botón en el widget de perfil del sidebar.
+  Portal: botón en el menú del header (junto a "Salir").
+- Al ocultarse, el componente devuelve `null` (no `display:none`): no
+  queda NINGÚN área clickeable encima de los botones de abajo.
+- CSS muerto de "recogido" retirado de inmath.css y panel.css (con nota
+  en su lugar apuntando a MathyVisibilidad.tsx).
+
+**F2 — Vista previa del emergente = MISMO componente que la landing**: la
+vista previa en /panel/alertas no se parecía al popup real (faltaban el
+marcador, el CTA "Inscribirme", "Quizá después" y el botón de cerrar; el
+escalado 16:10 + scale(.62) recortaba contenido). Regla pedida por el
+cliente: NADA hardcodeado, la estructura es configurable.
+
+- `AlertaEmergente.tsx` ahora exporta `AlertaEmergenteLienzo`, la ÚNICA
+  fuente de verdad de la estructura del popup (fondo, velo, cerrar,
+  kicker, cuenta regresiva, título, texto, plan, marcador, CTA y "Quizá
+  después"). La landing Y el preview del panel renderizan ESTE componente;
+  el prop `preview` solo desactiva navegación/cierre y muestra
+  placeholder de título.
+- panel.css: el bloque de estilos del preview se reescribió como ESPEJO
+  del CSS real del sitio, scoped a `.al-em-marco`, con ALTO SEGÚN
+  CONTENIDO (sin aspect-ratio ni transform: scale): ningún elemento puede
+  quedar recortado, se configure lo que se configure. Si cambia el diseño
+  del emergente en inmath.css hay que reflejarlo ahí (nota en el propio
+  CSS).
+
+**F3 — Los asistentes por pasos se "guardaban solos" al llegar al último
+paso** (reportado en Usuarios, aplicaba a TODOS los asistentes del panel):
+el botón "Siguiente" (type="button") y el de guardar (type="submit")
+comparten posición en el JSX; al hacer clic en "Siguiente" del penúltimo
+paso, React MUTABA ese mismo nodo del DOM a type="submit" ANTES de que el
+navegador procesara la acción por defecto del clic → el formulario se
+enviaba solo. Arreglo: `key="paso-siguiente"` en el botón "Siguiente" para
+que React REEMPLACE el nodo en vez de mutarlo (9 asistentes: Usuarios
+editar/crear, Precios curso/cupón, Reactivos examen/reactivo, Citas,
+Fases, Personalizar login). Comentario explicativo en ClienteUsuarios.tsx.
+
+**F4 — Texto pegado a los bordes en el modal de Precios** (reportado con
+captura): `.us-frame-asistente` tiene `padding: 0` porque cada región
+interna se rellena sola — pero la vista previa "Así se ve para el alumno"
+(`.pp-preview`) y el botón "Eliminar curso" (`.us-eliminar-form`) viven
+FUERA de esas regiones y quedaban al ras del borde. Se les dio relleno
+propio (16/12px vertical, 26px lateral, igual que la cabecera) y al
+"Eliminar…" un border-top separador. Auditados los 6 apartados con modal
+asistente: los únicos bloques sueltos eran estos dos de Precios y el
+"Eliminar del carrusel" de Personalizar login (mismo arreglo, misma clase).

@@ -273,7 +273,7 @@ function FormularioCurso({ curso, onListo, onCerrar }: { curso: Curso | null; on
             {paso === 0 ? "Cancelar" : "Atrás"}
           </button>
           {paso < PASOS_CURSO.length - 1
-            ? <button type="button" className="boton primario" onClick={siguiente}>Siguiente</button>
+            ? <button type="button" key="paso-siguiente" className="boton primario" onClick={siguiente}>Siguiente</button>
             : <BotonMagnetico type="submit" className="boton primario boton-magnetico" disabled={pendiente}>
                 {pendiente ? "Guardando…" : esNuevo ? "Agregar curso" : "Guardar cambios"}
               </BotonMagnetico>}
@@ -431,7 +431,7 @@ function FormularioCupon({ cursos, onListo, onCerrar }: { cursos: CursoLigero[];
             {paso === 0 ? "Cancelar" : "Atrás"}
           </button>
           {paso < PASOS_CUPON.length - 1
-            ? <button type="button" className="boton primario" onClick={siguiente}>Siguiente</button>
+            ? <button type="button" key="paso-siguiente" className="boton primario" onClick={siguiente}>Siguiente</button>
             : <button type="submit" className="boton primario" disabled={pendiente}>{pendiente ? "Creando…" : "Crear cupón"}</button>}
         </div>
       </Asistente>

@@ -339,7 +339,7 @@ function EditarSlideModal({ slide, abierto, onCerrar }: { slide: SlideAdmin; abi
                   {paso === 0 ? "Cancelar" : "Atrás"}
                 </button>
                 {paso < PASOS_SLIDE.length - 1
-                  ? <button type="button" className="boton primario" onClick={siguiente}>Siguiente</button>
+                  ? <button type="button" key="paso-siguiente" className="boton primario" onClick={siguiente}>Siguiente</button>
                   : <button type="submit" className="boton primario" disabled={pendiente}>{pendiente ? "Guardando…" : "Guardar slide"}</button>}
               </div>
             </Asistente>

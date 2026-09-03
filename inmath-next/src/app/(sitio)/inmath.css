@@ -3739,13 +3739,9 @@ body:has(#navPortal.abierto) .agente-ia { display: none; }
 /* v86 — Mathy: se "esconde" hacia el borde cerca del final de la página, para
    no tapar botones/enlaces del footer o del final del contenido. */
 .agente-btn { transition: transform .35s cubic-bezier(.2,.7,.2,1), opacity .3s; }
-/* v98: además de correrse hacia el borde, se ENCOGE — así el área clickeable
-   real (que sigue del tamaño del botón, aunque casi no se vea) no le queda
-   encima a botones/enlaces cercanos. opacity no reduce el área de clic, solo
-   lo visual, por eso hacía falta el scale. */
-.agente-btn.recogido { transform: translateX(85%) scale(.5); transform-origin: right center; opacity: .4; }
-.agente-btn.recogido:hover, .agente-btn.recogido:focus-visible { transform: translateX(0) scale(1); opacity: 1; }
-@media (prefers-reduced-motion: reduce) { .agente-btn { transition: opacity .2s; } .agente-btn.recogido { transform: none; } }
+/* (El auto-ocultado "recogido" por scroll se retiró: ahora Mathy se muestra u
+   oculta con el botón "Ocultar/Mostrar Mathy" del encabezado — ver
+   MathyVisibilidad.tsx.) */
 
 /* ============ v87 — Pantalla de pago: 3 métodos separados + insignias de marca ============ */
 .pp-metodo-tx { display: grid; gap: 4px; }
@@ -3785,3 +3781,17 @@ body:has(#navPortal.abierto) .agente-ia { display: none; }
 input[type="number"] { -moz-appearance: textfield; }
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* Botón "Ocultar/Mostrar Mathy" del header — reemplaza al auto-ocultado por
+ * scroll de la mascota, que en móvil bloqueaba clics de la página. */
+.mathy-toggle.n-mathy {
+  display: inline-flex; align-items: center; white-space: nowrap; cursor: pointer;
+  font: 600 .84rem/1 var(--cuerpo); color: var(--tinta-2);
+  padding: 8px 13px; border-radius: 999px; border: 1.5px solid var(--linea, #E6ECF7); background: transparent;
+  transition: color var(--t), border-color var(--t);
+}
+.mathy-toggle.n-mathy:hover { color: var(--azul); border-color: var(--azul); }
+body:has(.heroe-cine) .barra:not(.scrolled) .mathy-toggle.n-mathy { color: #fff; border-color: rgba(255,255,255,.45); }
+@media (max-width: 900px) {
+  .barra:not(.barra-portal) nav .mathy-toggle.n-mathy { width: 100%; justify-content: flex-start; padding: 13px 14px; border: 0; border-radius: 12px; }
+}

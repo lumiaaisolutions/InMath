@@ -663,3 +663,16 @@
 .pt-practica-tabla th { text-align: left; padding: 8px 10px; color: var(--tinta-3); font: 600 .72rem var(--cuerpo); text-transform: uppercase; letter-spacing: .04em; }
 .pt-practica-tabla td { padding: 10px; border-top: 1px solid var(--linea); }
 .pt-practica-tabla b.bien { color: var(--ok, #1E9E5E); } .pt-practica-tabla b.regular { color: #C9820F; } .pt-practica-tabla b.bajo { color: var(--error, #E0424E); }
+
+/* "Ocultar/Mostrar Mathy" en el menú del portal: mismo lenguaje que Salir. */
+.nav-hdr-mathy .mathy-toggle {
+  display: inline-flex; align-items: center; white-space: nowrap; cursor: pointer;
+  padding: 10px 16px; border-radius: 999px; border: 1.5px solid var(--linea-2); background: var(--blanco);
+  font: 700 .86rem/1 var(--cuerpo); color: var(--tinta-2);
+  transition: border-color .2s ease, color .2s ease;
+}
+.nav-hdr-mathy .mathy-toggle:hover { border-color: var(--azul); color: var(--azul); }
+@media (max-width: 620px) {
+  .nav-hdr-mathy { margin-top: 0 !important; padding-top: 0 !important; border-top: 0 !important; }
+  .nav-hdr-mathy .mathy-toggle { width: 100%; justify-content: flex-start; padding: 13px 14px; border: 0; }
+}

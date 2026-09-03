@@ -407,7 +407,7 @@ function ExamenFrame({ cursos, editar, onListo, onCerrar }: { cursos: Curso[]; e
             {paso === 0 ? "Cancelar" : "Atrás"}
           </button>
           {paso < PASOS_EXAMEN.length - 1
-            ? <button type="button" className="boton primario" onClick={siguiente}>Siguiente</button>
+            ? <button type="button" key="paso-siguiente" className="boton primario" onClick={siguiente}>Siguiente</button>
             : <BotonMagnetico type="submit" className="boton primario boton-magnetico" disabled={pendiente}>
                 {pendiente ? "Guardando…" : editar ? "Guardar cambios" : "Guardar examen"}
               </BotonMagnetico>}
@@ -635,7 +635,7 @@ function FormularioReactivo({ cursos, editar, onListo, onCerrar }: {
             {paso === 0 ? "Cancelar" : "Atrás"}
           </button>
           {paso < PASOS_REACTIVO.length - 1
-            ? <button type="button" className="boton primario" onClick={siguiente}>Siguiente</button>
+            ? <button type="button" key="paso-siguiente" className="boton primario" onClick={siguiente}>Siguiente</button>
             : <button type="submit" className="boton primario" disabled={pendiente}>{pendiente ? "Guardando…" : editar ? "Guardar cambios" : "Agregar reactivo suelto"}</button>}
         </div>
       </Asistente>

@@ -231,7 +231,7 @@ function FaseFrame({ cursos, examenes, editar, onListo, onCerrar }: {
             {paso === 0 ? "Cancelar" : "Atrás"}
           </button>
           {paso < PASOS_FASE.length - 1
-            ? <button type="button" className="boton primario" onClick={siguiente}>Siguiente</button>
+            ? <button type="button" key="paso-siguiente" className="boton primario" onClick={siguiente}>Siguiente</button>
             : (
               <BotonMagnetico type="submit" className="boton primario boton-magnetico" disabled={pendiente}>
                 {pendiente ? "Guardando…" : editar ? "Guardar cambios" : "Crear fase"}

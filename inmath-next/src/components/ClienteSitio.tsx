@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icono } from "./Icono";
 import { MascotaMathy } from "./MascotaMathy";
+import { useMathyVisible } from "./MathyVisibilidad";
 
 /** Overlay de carga + nav móvil + motor de scrubbing — port del JS de _comun.php. */
 export function ScriptsSitio() {
@@ -218,24 +219,11 @@ export function AgenteIA({ whatsappUrl = "", abrirInicial, sinBoton = false, sal
     if (abrirInicial === undefined) setAbierto(pathname === "/");
   }, [pathname, abrirInicial]);
 
-  // Cerca del final de la página (botones/footer que el botón flotante taparía):
-  // el botón se "esconde" hacia el borde derecho, dejando un filo visible/clicable.
-  const [cercaBorde, setCercaBorde] = useState(false);
-  useEffect(() => {
-    if (abierto) { setCercaBorde(false); return; }
-    const revisar = () => {
-      // Si la página completa cabe en la pantalla (sin nada que scrollear),
-      // "lo que falta" da ~0 y Mathy se recogía SIEMPRE, aunque el usuario
-      // nunca haya scrolleado — por eso "desaparecía" en páginas cortas.
-      const hayScroll = document.documentElement.scrollHeight > window.innerHeight + 40;
-      const restante = document.documentElement.scrollHeight - (window.scrollY + window.innerHeight);
-      setCercaBorde(hayScroll && restante < 130);
-    };
-    revisar();
-    window.addEventListener("scroll", revisar, { passive: true });
-    window.addEventListener("resize", revisar);
-    return () => { window.removeEventListener("scroll", revisar); window.removeEventListener("resize", revisar); };
-  }, [abierto, pathname]);
+  // Visibilidad global: reemplaza al viejo auto-ocultado por scroll
+  // ("recogido"), que en móvil dejaba la mascota encimada sobre botones de
+  // la página bloqueando sus clics. Ahora el usuario decide con el botón
+  // "Ocultar/Mostrar Mathy" del header; por default visible.
+  const visible = useMathyVisible();
   const cerrar = () => {
     setCerrando(true);
     setTimeout(() => { setAbierto(false); setCerrando(false); setAmplio(false); }, 470);
@@ -286,10 +274,11 @@ export function AgenteIA({ whatsappUrl = "", abrirInicial, sinBoton = false, sal
     } finally { setCargando(false); }
   }
 
+  if (!visible) return null;
   return (
     <div className={`agente-ia animo-${animo}${sinBoton ? " sin-boton" : ""}`}>
       {!sinBoton && (
-        <button type="button" className={`agente-btn${cercaBorde ? " recogido" : ""}`} aria-expanded={abierto} aria-label="Abrir a Mathy"
+        <button type="button" className="agente-btn" aria-expanded={abierto} aria-label="Abrir a Mathy"
           onClick={() => (abierto ? cerrar() : setAbierto(true))}>
           <MascotaMathy />
         </button>

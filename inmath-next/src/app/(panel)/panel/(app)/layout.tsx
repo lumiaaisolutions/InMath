@@ -6,6 +6,7 @@ import { ahoraPared, isoDia } from "@/lib/fechas";
 import { IconoPanel } from "@/components/IconoPanel";
 import { OverlayCarga } from "@/components/OverlayCarga";
 import { NavPanel, SalirBoton, AgentePanelIA, ToastProvider, ScriptsPanel } from "./ClientePanel";
+import { MathyToggleBoton } from "@/components/MathyVisibilidad";
 
 export const dynamic = "force-dynamic";
 
@@ -81,6 +82,7 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
           </span>
           <b className="pw-nombre">{u.nombre}</b>
           <i className={`pw-chip ${u.rol === "admin" ? "admin" : ""}`}>{u.rol === "admin" ? "Administrador" : "Asesor"}</i>
+          <MathyToggleBoton className="pw-config" />
           <SalirBoton><IconoPanel n="logout" cls="ic-sm" /> Cerrar sesión</SalirBoton>
         </div>
       </aside>

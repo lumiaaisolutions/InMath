@@ -103,7 +103,7 @@ export function NuevaCitaBoton({ asesores, hoy }: { asesores: { id: number; nomb
                   {paso === 0 ? "Cancelar" : "Atrás"}
                 </button>
                 {paso < PASOS_CITA.length - 1
-                  ? <button type="button" className="boton primario" onClick={siguiente}>Siguiente</button>
+                  ? <button type="button" key="paso-siguiente" className="boton primario" onClick={siguiente}>Siguiente</button>
                   : <button type="submit" className="boton primario" disabled={pendiente || !hora}>{pendiente ? "Agendando…" : "Agendar cita"}</button>}
               </div>
             </Asistente>

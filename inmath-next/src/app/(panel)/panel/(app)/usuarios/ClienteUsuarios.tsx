@@ -184,8 +184,12 @@ function EditarUsuarioModal({ u, yoId, abierto, onCerrar }: {
               <button type="button" className="boton fantasma" onClick={paso === 0 ? cerrar : () => setPaso((p) => p - 1)}>
                 {paso === 0 ? "Cancelar" : "Atrás"}
               </button>
+              {/* key="paso-siguiente": sin ella React MUTA este mismo nodo a
+                  type="submit" al pasar al último paso ANTES de que el navegador
+                  procese el click, y el formulario se envía solo. Aplica igual
+                  en todos los asistentes por pasos del panel. */}
               {paso < PASOS_USUARIO_EDITAR.length - 1
-                ? <button type="button" className="boton primario" onClick={siguiente}>Siguiente</button>
+                ? <button type="button" key="paso-siguiente" className="boton primario" onClick={siguiente}>Siguiente</button>
                 : <button type="submit" className="boton primario" disabled={pendiente}>{pendiente ? "Guardando…" : "Guardar cambios"}</button>}
             </div>
           </Asistente>
@@ -269,7 +273,7 @@ export function NuevoUsuarioBoton() {
                   {paso === 0 ? "Cancelar" : "Atrás"}
                 </button>
                 {paso < PASOS_USUARIO_CREAR.length - 1
-                  ? <button type="button" className="boton primario" onClick={siguiente}>Siguiente</button>
+                  ? <button type="button" key="paso-siguiente" className="boton primario" onClick={siguiente}>Siguiente</button>
                   : <button type="submit" className="boton primario" disabled={pendiente}>{pendiente ? "Creando…" : "Crear usuario"}</button>}
               </div>
             </Asistente>

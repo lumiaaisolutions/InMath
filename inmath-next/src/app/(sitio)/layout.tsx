@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Icono } from "@/components/Icono";
 import { OverlayCarga } from "@/components/OverlayCarga";
 import { ScriptsSitio, AgenteIA } from "@/components/ClienteSitio";
+import { MathyToggleBoton } from "@/components/MathyVisibilidad";
 
 const SITE = "https://inmath.lumiaaisolutions.com";
 export const metadata: Metadata = {
@@ -74,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
             <Link href="/agenda" className="n-ases"><Icono n="calendar" /> Asesoría gratis</Link>
             <Link href="/panel/login" className="n-login"><Icono n="user" /> Entrar</Link>
+            <MathyToggleBoton className="n-mathy" />
             <Link href="/pago" className="cta">Inscribirme</Link>
           </nav>
         </header>

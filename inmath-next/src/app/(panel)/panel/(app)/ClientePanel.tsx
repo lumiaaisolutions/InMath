@@ -7,6 +7,7 @@ import { Liquid } from "liquid-gooey";
 import { motion, useSpring } from "motion/react";
 import { IconoPanel } from "@/components/IconoPanel";
 import { MascotaMathy } from "@/components/MascotaMathy";
+import { useMathyVisible } from "@/components/MathyVisibilidad";
 import { logoutAccion, agentePanelAccion } from "./acciones";
 
 /**
@@ -518,24 +519,10 @@ export function AgentePanelIA() {
   const lista = useRef<HTMLDivElement>(null);
   useEffect(() => { lista.current?.scrollTo(0, 1e6); }, [mensajes, abierto]);
 
-  // Cerca del final de la página: el botón se recoge hacia el borde para no
-  // tapar botones/enlaces (mismo comportamiento que en el sitio público).
-  const [cercaBorde, setCercaBorde] = useState(false);
-  useEffect(() => {
-    if (abierto) { setCercaBorde(false); return; }
-    const revisar = () => {
-      // Si la página completa cabe en la pantalla (sin nada que scrollear),
-      // "lo que falta" da ~0 y Mathy se recogía SIEMPRE, aunque el usuario
-      // nunca haya scrolleado — por eso "desaparecía" en páginas cortas.
-      const hayScroll = document.documentElement.scrollHeight > window.innerHeight + 40;
-      const restante = document.documentElement.scrollHeight - (window.scrollY + window.innerHeight);
-      setCercaBorde(hayScroll && restante < 130);
-    };
-    revisar();
-    window.addEventListener("scroll", revisar, { passive: true });
-    window.addEventListener("resize", revisar);
-    return () => { window.removeEventListener("scroll", revisar); window.removeEventListener("resize", revisar); };
-  }, [abierto]);
+  // Visibilidad global: el usuario decide con "Ocultar/Mostrar Mathy" en el
+  // sidebar — reemplaza al auto-ocultado por scroll que en móvil dejaba la
+  // mascota encimada sobre botones (Ver/Editar/Eliminar) bloqueando clics.
+  const visible = useMathyVisible();
 
   async function enviar() {
     const m = texto.trim();
@@ -551,9 +538,10 @@ export function AgentePanelIA() {
 
   const libro = <MascotaMathy />;
 
+  if (!visible) return null;
   return (
     <div className="agente-ia">
-      <button type="button" className={`agente-btn${cercaBorde ? " recogido" : ""}`} aria-expanded={abierto} aria-label="Abrir a Mathy, el asistente del panel"
+      <button type="button" className="agente-btn" aria-expanded={abierto} aria-label="Abrir a Mathy, el asistente del panel"
         onClick={() => setAbierto(!abierto)}>
         {libro}
       </button>
