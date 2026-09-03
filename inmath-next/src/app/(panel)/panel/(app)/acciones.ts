@@ -290,6 +290,122 @@ export async function alumnoBajaAccion(alumnoId: number): Promise<Resultado> {
   return { ok: aviso };
 }
 
+/**
+ * Elimina POR COMPLETO un registro (prospecto + su cuenta de alumno, pagos,
+ * citas, bitácora y conversaciones) desde Alumnos y pagos o el Pipeline.
+ * Candados: SOLO si el prospecto no tiene NINGÚN pago completado, y el
+ * motivo es obligatorio — se le envía por correo (si dejó uno) antes de
+ * borrar, porque después ya no queda a quién consultarle el dato.
+ */
+export async function registroEliminarAccion(_prev: Resultado, fd: FormData): Promise<Resultado> {
+  await requiereModulo("alumnos");
+  const prospectoId = parseInt(String(fd.get("prospecto_id") ?? "0"), 10);
+  const motivo = String(fd.get("motivo") ?? "").trim();
+  if (prospectoId < 1) return { error: "Registro inválido" };
+  if (motivo.length < 5) return { error: "Escribe el motivo de la eliminación — se le informará por correo" };
+
+  const prospecto = await prisma.prospectos.findUnique({
+    where: { id: prospectoId },
+    include: { alumnos: { select: { id: true, nombre: true, email: true } } },
+  });
+  if (!prospecto) return { error: "Registro no encontrado" };
+
+  const pagado = await prisma.pagos.count({ where: { prospecto_id: prospectoId, estado: "pagado" } });
+  if (pagado > 0) return { error: "No se puede eliminar: este registro tiene un pago completado. Usa 'Dar de baja' si aplica." };
+
+  // Primero el correo (después de borrar ya no hay registro que consultar).
+  const correo = prospecto.alumnos?.email ?? prospecto.correo;
+  const nombre = prospecto.alumnos?.nombre ?? prospecto.nombre ?? "";
+  if (correo) {
+    await enviarCorreo({
+      para: [correo],
+      asunto: "Tu registro en Cursos InMath fue eliminado",
+      tono: "coral",
+      preheader: "Te explicamos el motivo.",
+      texto: [`Hola ${nombre},`.replace(" ,", ","), "", "Te informamos que tu registro en Cursos InMath fue eliminado de nuestro sistema."].join("\n"),
+      destacado: `Motivo: ${motivo}`,
+      nota: "Si crees que esto es un error o quieres volver a registrarte, contáctanos y con gusto te ayudamos.",
+    });
+  }
+
+  // Orden de borrado por las llaves foráneas: pagos y alumno NO caen en
+  // cascada al borrar el prospecto (citas/bitácora/conversaciones sí; y el
+  // alumno arrastra avance/intentos/reportes en cascada).
+  await prisma.$transaction([
+    prisma.pagos.deleteMany({ where: { prospecto_id: prospectoId } }),
+    ...(prospecto.alumnos ? [prisma.alumnos.delete({ where: { id: prospecto.alumnos.id } })] : []),
+    prisma.prospectos.delete({ where: { id: prospectoId } }),
+  ]);
+
+  revalidatePath("/panel/alumnos"); revalidatePath("/panel"); revalidatePath("/panel/citas");
+  return { ok: correo ? "Registro eliminado — se le informó el motivo por correo." : "Registro eliminado. No tenía correo, así que no se pudo avisar por ese medio." };
+}
+
+/**
+ * Cancela una cita con motivo obligatorio que se informa por correo al
+ * prospecto. Candado: NO se pueden cancelar citas del día en curso (para
+ * esas, coordinar directo con el prospecto).
+ */
+export async function citaCancelarAccion(_prev: Resultado, fd: FormData): Promise<Resultado> {
+  await requiereModulo("citas");
+  const citaId = parseInt(String(fd.get("cita_id") ?? "0"), 10);
+  const motivo = String(fd.get("motivo") ?? "").trim();
+  if (citaId < 1) return { error: "Cita inválida" };
+  if (motivo.length < 5) return { error: "Escribe el motivo de la cancelación — se le informará por correo" };
+
+  const cita = await prisma.citas.findUnique({
+    where: { id: citaId },
+    include: { prospectos: { select: { nombre: true, correo: true } } },
+  });
+  if (!cita) return { error: "Cita no encontrada" };
+  if (!["agendada", "confirmada"].includes(cita.estado)) return { error: "Esa cita ya no está activa" };
+
+  const hoy = ahoraPared();
+  const mismoDia = cita.inicio.getUTCFullYear() === hoy.getUTCFullYear()
+    && cita.inicio.getUTCMonth() === hoy.getUTCMonth()
+    && cita.inicio.getUTCDate() === hoy.getUTCDate();
+  if (mismoDia) return { error: "Las citas del día en curso no se pueden cancelar desde aquí — coordínalo directo con el prospecto." };
+
+  await prisma.citas.update({ where: { id: citaId }, data: { estado: "cancelada" } });
+
+  let aviso = "Cita cancelada.";
+  if (cita.prospectos.correo) {
+    const { etiqueta } = await import("@/lib/fechas");
+    await enviarCorreo({
+      para: [cita.prospectos.correo],
+      asunto: "Tu asesoría fue cancelada — Cursos InMath",
+      tono: "coral",
+      preheader: "Te explicamos el motivo y cómo reagendar.",
+      texto: [`Hola ${cita.prospectos.nombre ?? ""},`.replace(" ,", ","), "", `Tu asesoría del ${etiqueta(cita.inicio)} fue cancelada.`].join("\n"),
+      destacado: `Motivo: ${motivo}`,
+      cta: { url: `${(process.env.APP_URL ?? "https://inmath.lumiaaisolutions.com").replace(/\/$/, "")}/agenda`, label: "Reagendar mi asesoría", icono: "calendario" },
+    });
+    aviso += " Se le informó el motivo por correo.";
+  } else {
+    aviso += " No tenía correo registrado para avisarle.";
+  }
+  revalidatePath("/panel/citas"); revalidatePath("/panel");
+  return { ok: aviso };
+}
+
+/**
+ * Elimina del historial una cita que YA PASÓ (decisión de producto: el
+ * histórico es limpiable, no sagrado) — SOLO si el prospecto no tiene
+ * ningún pago completado; si ya pagó, su historial de asesorías se
+ * conserva como evidencia del servicio. Sin correo: la cita ya ocurrió.
+ */
+export async function citaEliminarAccion(citaId: number): Promise<Resultado> {
+  await requiereModulo("citas");
+  const cita = await prisma.citas.findUnique({ where: { id: citaId } });
+  if (!cita) return { error: "Cita no encontrada" };
+  if (cita.inicio.getTime() >= ahoraPared().getTime()) return { error: "Esa cita aún no pasa — usa Cancelar (con motivo) en su lugar." };
+  const pagado = await prisma.pagos.count({ where: { prospecto_id: cita.prospecto_id, estado: "pagado" } });
+  if (pagado > 0) return { error: "Este prospecto ya completó un pago — su historial de asesorías se conserva." };
+  await prisma.citas.delete({ where: { id: citaId } });
+  revalidatePath("/panel/citas"); revalidatePath("/panel");
+  return { ok: "Cita eliminada del historial" };
+}
+
 /** Port de /accion/config (solo admin). */
 /** Port de /accion/usuario-crear. */
 export async function usuarioCrearAccion(_prev: Resultado, fd: FormData): Promise<Resultado> {

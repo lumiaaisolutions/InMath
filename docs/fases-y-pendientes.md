@@ -482,3 +482,47 @@ validaron simulando el ancho (390px) con las mismas declaraciones
 inyectadas + verificación programática del z-index del menú del
 pipeline; el nav de asistentes sí se verificó en vivo (aplica también en
 escritorio).
+
+### Corte 03-sep-2026 (2) — Eliminar registros/citas con motivo por correo + ficha de prospecto completa
+
+**F1 — Eliminar registro (Alumnos y pagos + ficha del prospecto)**:
+`registroEliminarAccion` borra POR COMPLETO un registro (prospecto + cuenta
+de alumno + pagos + citas + bitácora + conversaciones, en transacción y en
+el orden que exigen las FKs). Candados: solo si el prospecto NO tiene
+ningún pago completado (si pagó, el botón ni aparece y el servidor lo
+revalida), y el MOTIVO es obligatorio — se envía por correo al prospecto
+ANTES de borrar (después ya no queda el dato). Botón "Eliminar" en cada
+fila de /panel/alumnos y "Eliminar registro" en la ficha del prospecto
+(accesible desde el pipeline con un clic — se decidió ahí y no en la
+tarjeta del kanban para no facilitar borrados accidentales al arrastrar).
+
+**F2 — Citas**: `citaCancelarAccion` cancela con motivo obligatorio que se
+informa por correo (con botón para reagendar); candado: las citas del DÍA
+EN CURSO no se pueden cancelar desde el panel (se coordinan directo).
+`citaEliminarAccion` borra del historial citas YA PASADAS — decisión de
+producto tomada: el histórico es limpiable, PERO solo si el prospecto no
+tiene pago completado; si ya pagó, sus asesorías se conservan como
+evidencia del servicio. Ambas acciones viven en la sección Citas de la
+ficha del prospecto (a un clic desde el calendario de /panel/citas).
+
+**F3 — Ficha del prospecto (/panel/prospectos/[id]) rediseñada**:
+- Se ELIMINÓ el bloque "Conversación de WhatsApp": el canal de WhatsApp
+  Business está deshabilitado por decisión del cliente (el sitio usa
+  wa.me directo), así que siempre salía vacío. El componente
+  `ChatConversacion` sigue en `ClienteProspecto.tsx` por si el canal se
+  activa en el futuro — solo se desconectó de la página. [DOCUMENTADO
+  también como comentario en el propio page.tsx para no perder el hilo.]
+- "Ficha completa": ahora muestra nombre, WhatsApp, correo (el de la
+  cuenta de alumno si existe, si no el del prospecto), etapa, fuente,
+  puntaje, asesor, curso de interés, alta, y estado/fecha de la cuenta de
+  alumno.
+- Cada cita lista su LINK DE MEET clicable, además del estado y las
+  acciones Cancelar/Eliminar según las reglas de F2.
+- Layout a una columna centrada (el grid de dos columnas existía por el
+  chat que ya no está).
+
+Verificado end-to-end en local: eliminación completa de un prospecto de
+prueba (transacción + cascadas), cancelación de cita futura (estado →
+cancelada) y eliminación de cita pasada (fila borrada), con los candados
+comprobados (botón oculto con pago pagado, "Cancelar" solo en futuras no
+del día, "Eliminar" solo en pasadas sin pago).

@@ -3,12 +3,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requiereSesion } from "@/lib/panel/sesion";
+import { ahoraPared, isoDia } from "@/lib/fechas";
 import { etiquetaEtapa, fechaCorta, dinero } from "@/lib/panel/formato";
-import { AccionesProspecto, ChatConversacion } from "./ClienteProspecto";
+import { AccionesProspecto, EliminarRegistroBoton, CitaAcciones } from "./ClienteProspecto";
 
 export const metadata: Metadata = { title: "Prospecto — Inmath CRM" };
 export const dynamic = "force-dynamic";
 
+// Nota (03-sep-2026): el bloque "Conversación de WhatsApp" se ELIMINÓ de esta
+// ficha a petición del cliente — el canal de WhatsApp Business está
+// deshabilitado por decisión suya (el sitio usa wa.me directo), así que el
+// bloque siempre salía vacío. Si algún día se activa el canal, el componente
+// ChatConversacion sigue vivo en ClienteProspecto.tsx listo para reconectarse.
 export default async function Prospecto({ params }: { params: Promise<{ id: string }> }) {
   await requiereSesion();
   const id = parseInt((await params).id, 10);
@@ -18,10 +24,6 @@ export default async function Prospecto({ params }: { params: Promise<{ id: stri
   });
   if (!p) notFound();
 
-  const conversacion = await prisma.conversaciones.findFirst({ where: { prospecto_id: id, canal: "whatsapp" } });
-  const mensajes = conversacion
-    ? await prisma.mensajes.findMany({ where: { conversacion_id: conversacion.id }, orderBy: [{ creado_en: "asc" }, { id: "asc" }] })
-    : [];
   const bitacora = await prisma.bitacora_pipeline.findMany({ where: { prospecto_id: id }, orderBy: { creado_en: "asc" } });
   const nombresUsuario = new Map(
     (await prisma.usuarios.findMany({ select: { id: true, nombre: true } })).map((u) => [u.id, u.nombre]),
@@ -34,6 +36,10 @@ export default async function Prospecto({ params }: { params: Promise<{ id: stri
   const asesores = await prisma.usuarios.findMany({
     where: { es_asesor: true, activo: true }, select: { id: true, nombre: true }, orderBy: { id: "asc" },
   });
+  const alumno = await prisma.alumnos.findUnique({ where: { prospecto_id: id }, select: { email: true, estado: true, inscrito_en: true } });
+  const sinPago = !pagos.some((pg) => pg.estado === "pagado");
+  const ahora = ahoraPared();
+  const hoyIso = isoDia(ahora);
 
   const califs: [string, string][] = [];
   if (p.datos_calificacion && typeof p.datos_calificacion === "object" && !Array.isArray(p.datos_calificacion)) {
@@ -56,34 +62,27 @@ export default async function Prospecto({ params }: { params: Promise<{ id: stri
         <Link className="boton fantasma" href="/panel">← Pipeline</Link>
       </div>
 
-      <div className="rejilla-detalle">
-        <div className="tarjeta">
-          <div className="seccion">
-            <h3>Conversación de WhatsApp</h3>
-            {conversacion === null ? (
-              <div className="vacio">Aún no hay conversación con este prospecto</div>
-            ) : (
-              <ChatConversacion
-                conversacion={{ id: conversacion.id, estado: conversacion.estado }}
-                mensajes={mensajes.map((m) => ({
-                  id: Number(m.id), direccion: m.direccion, emisor: m.emisor,
-                  contenido: m.contenido ?? "", cuando: fechaCorta(m.creado_en),
-                }))}
-              />
-            )}
-          </div>
-        </div>
-
+      <div style={{ maxWidth: 760, margin: "0 auto" }}>
         <div>
           <div className="tarjeta">
             <div className="seccion">
-              <h3>Ficha</h3>
+              <h3>Ficha completa</h3>
               <dl>
+                <div className="dato"><dt>Nombre</dt><dd>{p.nombre ?? "Sin nombre"}</dd></div>
+                <div className="dato"><dt>WhatsApp</dt><dd style={{ fontFamily: "var(--mono)" }}>{p.telefono_whatsapp}</dd></div>
+                <div className="dato"><dt>Correo</dt><dd>{alumno?.email ?? p.correo ?? "Sin correo"}</dd></div>
                 <div className="dato"><dt>Etapa</dt><dd>{etiquetaEtapa(p.etapa)}</dd></div>
+                <div className="dato"><dt>Fuente</dt><dd>{p.fuente}</dd></div>
                 <div className="dato"><dt>Puntaje</dt><dd>{p.puntaje_calificacion !== null ? `${p.puntaje_calificacion} / 100` : "—"}</dd></div>
                 <div className="dato"><dt>Asesor</dt><dd>{p.usuarios?.nombre ?? "Sin asignar"}</dd></div>
                 <div className="dato"><dt>Curso de interés</dt><dd>{p.cursos?.nombre ?? "—"}</dd></div>
                 <div className="dato"><dt>Alta</dt><dd>{fechaCorta(p.creado_en)}</dd></div>
+                {alumno && (
+                  <>
+                    <div className="dato"><dt>Cuenta de alumno</dt><dd>{alumno.estado}</dd></div>
+                    <div className="dato"><dt>Inscrito</dt><dd>{fechaCorta(alumno.inscrito_en)}</dd></div>
+                  </>
+                )}
               </dl>
               {califs.length > 0 && (
                 <>
@@ -103,15 +102,32 @@ export default async function Prospecto({ params }: { params: Promise<{ id: stri
                 asesorId={p.asesor_id}
                 asesores={asesores}
               />
+              {sinPago && (
+                <div style={{ marginTop: 12 }}>
+                  <EliminarRegistroBoton prospectoId={p.id} nombre={p.nombre ?? p.telefono_whatsapp} />
+                </div>
+              )}
             </div>
 
             {citas.length > 0 && (
               <div className="seccion">
                 <h3>Citas</h3>
                 {citas.map((c) => (
-                  <div className="dato" key={c.id}>
-                    <dt>{fechaCorta(c.inicio)} · {c.usuarios.nombre}</dt>
-                    <dd><span className={`gaje ${c.estado === "completada" ? "ok" : c.estado === "cancelada" || c.estado === "no_asistio" ? "error" : "neutro"}`}>{c.estado}</span></dd>
+                  <div key={c.id} style={{ marginBottom: 10 }}>
+                    <div className="dato">
+                      <dt>{fechaCorta(c.inicio)} · {c.usuarios.nombre}</dt>
+                      <dd style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                        <span className={`gaje ${c.estado === "completada" ? "ok" : c.estado === "cancelada" || c.estado === "no_asistio" ? "error" : "neutro"}`}>{c.estado}</span>
+                        <CitaAcciones citaId={c.id} activa={["agendada", "confirmada"].includes(c.estado)}
+                          esFutura={c.inicio.getTime() >= ahora.getTime()} esHoy={isoDia(c.inicio) === hoyIso} sinPago={sinPago} />
+                      </dd>
+                    </div>
+                    {c.meet_link && (
+                      <a href={c.meet_link} target="_blank" rel="noopener"
+                        style={{ font: "var(--t-mini)", fontFamily: "var(--mono)", color: "var(--azul)", wordBreak: "break-all", display: "block", marginTop: 2 }}>
+                        {c.meet_link}
+                      </a>
+                    )}
                   </div>
                 ))}
               </div>

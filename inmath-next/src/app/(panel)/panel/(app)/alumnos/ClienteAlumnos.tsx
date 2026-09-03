@@ -1,7 +1,7 @@
 "use client";
 import { useActionState, useMemo, useState } from "react";
 import { IconoPanel } from "@/components/IconoPanel";
-import { alumnoCrearAccion, alumnoEditarAccion, alumnoBajaAccion, pagoAprobarAccion, pagoCancelarAccion, type Resultado } from "../acciones";
+import { alumnoCrearAccion, alumnoEditarAccion, alumnoBajaAccion, registroEliminarAccion, pagoAprobarAccion, pagoCancelarAccion, type Resultado } from "../acciones";
 import { ConfirmarDialogo, Velo, useToastResultado, EnBody, Segmentado, SelectorDesplegable, BotonMagnetico } from "../ClientePanel";
 
 
@@ -146,6 +146,54 @@ function BotonBaja({ alumnoId, onListo }: { alumnoId: number; onListo?: () => vo
           })();
         }}
       />
+    </>
+  );
+}
+
+/* ── Eliminar registro completo (solo sin pago completado) con MOTIVO que
+ *   se informa por correo antes de borrar ─────────────────────────────── */
+function EliminarRegistroBoton({ fila }: { fila: Fila }) {
+  const [abierto, setAbierto] = useState(false);
+  const [motivo, setMotivo] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const toast = useToastResultado();
+  if (fila.pagos.some((p) => p.estado === "pagado")) return null;
+  return (
+    <>
+      <button type="button" className="boton mini peligro" onClick={() => setAbierto(true)}>Eliminar</button>
+      {abierto && (
+        <EnBody>
+          <div className="us-velo visible" style={{ zIndex: 400 }}>
+            <div className="us-frame" role="dialog" aria-modal="true" style={{ width: "min(460px, 100%)" }}>
+              <div className="us-frame-cab">
+                <div className="us-quien"><b>Eliminar registro</b><span>Se borra TODO lo de {fila.nombre}: cuenta, pagos, citas e historial. No se puede deshacer.</span></div>
+                <button type="button" className="toast-x us-cerrar" aria-label="Cerrar" onClick={() => setAbierto(false)}><IconoPanel n="x" /></button>
+              </div>
+              <label className="pl-campo" style={{ display: "grid", gap: 6 }}>
+                Motivo <small>(obligatorio — se le informa por correo)</small>
+                <textarea rows={3} value={motivo} onChange={(e) => setMotivo(e.target.value)}
+                  placeholder="Ej. No completaste tu registro y el periodo de inscripción cerró." />
+              </label>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
+                <button type="button" className="boton fantasma" onClick={() => setAbierto(false)}>Volver</button>
+                <button type="button" className="boton peligro" disabled={enviando || motivo.trim().length < 5}
+                  onClick={async () => {
+                    setEnviando(true);
+                    const fd = new FormData();
+                    fd.set("prospecto_id", String(fila.prospectoId));
+                    fd.set("motivo", motivo.trim());
+                    const r = await registroEliminarAccion({}, fd);
+                    toast(r);
+                    setEnviando(false);
+                    if (r.ok) setAbierto(false);
+                  }}>
+                  {enviando ? "…" : "Eliminar definitivamente"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </EnBody>
+      )}
     </>
   );
 }
@@ -376,6 +424,7 @@ export function ListaAlumnos({ inicial, cursos }: { inicial: Fila[]; cursos: Cur
                         <IconoPanel n="editar" cls="ic-sm" /> Editar
                       </button>
                       {f.alumno?.puedeDarBaja && <BotonBaja alumnoId={f.alumno.id} />}
+                      <EliminarRegistroBoton fila={f} />
                     </div>
                   </td>
                 </tr>
