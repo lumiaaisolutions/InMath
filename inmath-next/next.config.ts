@@ -7,9 +7,14 @@ import type { NextConfig } from "next";
  *  `unsafe-inline` en script-src es necesario para los scripts de hidratación
  *  de Next.js (sin infra de nonce); aún así la CSP bloquea TODA carga de
  *  scripts externos no listados, iframes, objetos y form-actions externos. */
+// React (solo en desarrollo) usa eval() para reconstruir callstacks; con la
+// CSP enforzada eso pinta un error en consola y el badge "1 Issue" del dev
+// overlay. En producción React no usa eval jamás, así que 'unsafe-eval' NUNCA
+// se emite en el build de producción.
+const esDesarrollo = process.env.NODE_ENV !== "production";
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
+  `script-src 'self' 'unsafe-inline'${esDesarrollo ? " 'unsafe-eval'" : ""} https://static.cloudflareinsights.com`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob:",

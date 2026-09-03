@@ -587,3 +587,12 @@ propio (16/12px vertical, 26px lateral, igual que la cabecera) y al
 "Eliminar…" un border-top separador. Auditados los 6 apartados con modal
 asistente: los únicos bloques sueltos eran estos dos de Precios y el
 "Eliminar del carrusel" de Personalizar login (mismo arreglo, misma clase).
+
+**F5 — Badge "1 Issue" del dev overlay en local**: era nuestra propia CSP
+de hardening (next.config.ts) bloqueando el `eval()` que React usa SOLO en
+modo desarrollo para reconstruir callstacks. Arreglo: `'unsafe-eval'` se
+agrega a script-src ÚNICAMENTE cuando NODE_ENV ≠ production — el build de
+producción emite la CSP exactamente igual que antes (verificado con curl:
+prod no incluye unsafe-eval). Barrido de consola sin errores en local
+(/, /agenda, /pago, /panel, /panel/citas, /panel/alumnos, /panel/precios)
+y en producción (/, /pago) tras el deploy v60.
