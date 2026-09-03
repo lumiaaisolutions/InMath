@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icono } from "./Icono";
 import { MascotaMathy } from "./MascotaMathy";
-import { useMathyVisible } from "./MathyVisibilidad";
 
 /** Overlay de carga + nav móvil + motor de scrubbing — port del JS de _comun.php. */
 export function ScriptsSitio() {
@@ -219,11 +218,11 @@ export function AgenteIA({ whatsappUrl = "", abrirInicial, sinBoton = false, sal
     if (abrirInicial === undefined) setAbierto(pathname === "/");
   }, [pathname, abrirInicial]);
 
-  // Visibilidad global: reemplaza al viejo auto-ocultado por scroll
-  // ("recogido"), que en móvil dejaba la mascota encimada sobre botones de
-  // la página bloqueando sus clics. Ahora el usuario decide con el botón
-  // "Ocultar/Mostrar Mathy" del header; por default visible.
-  const visible = useMathyVisible();
+  // En la LANDING Mathy siempre se muestra (decisión de producto 03-sep-2026:
+  // el botón "Ocultar/Mostrar Mathy" existe solo en el panel de admin y en el
+  // portal del alumno — y como el localStorage se comparte entre zonas, aquí
+  // tampoco se LEE ese estado, para que ocultarlo en el panel no lo quite de
+  // la página pública). El auto-ocultado por scroll ("recogido") se retiró.
   const cerrar = () => {
     setCerrando(true);
     setTimeout(() => { setAbierto(false); setCerrando(false); setAmplio(false); }, 470);
@@ -274,7 +273,6 @@ export function AgenteIA({ whatsappUrl = "", abrirInicial, sinBoton = false, sal
     } finally { setCargando(false); }
   }
 
-  if (!visible) return null;
   return (
     <div className={`agente-ia animo-${animo}${sinBoton ? " sin-boton" : ""}`}>
       {!sinBoton && (

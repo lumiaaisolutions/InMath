@@ -537,9 +537,12 @@ completo y se reemplazó por un botón en el encabezado de cada zona:
   `localStorage` (clave `mathy_visible`, default VISIBLE) sincronizado
   entre componentes con un CustomEvent (`mathy:visibilidad`) y entre
   pestañas con el evento `storage`.
-- Sitio público: botón en la barra de navegación (y dentro del menú
-  hamburguesa en móvil). Panel: botón en el widget de perfil del sidebar.
-  Portal: botón en el menú del header (junto a "Salir").
+- SOLO en el panel de admin (widget de perfil del sidebar) y en el portal
+  del alumno (menú del header, junto a "Salir"). En la LANDING el botón NO
+  existe (corrección de producto del mismo día): al visitante no se le da
+  ese control y Mathy siempre se muestra ahí — la landing tampoco LEE el
+  estado guardado, porque el localStorage se comparte entre zonas y ocultar
+  a Mathy en el panel no debe quitarlo de la página pública.
 - Al ocultarse, el componente devuelve `null` (no `display:none`): no
   queda NINGÚN área clickeable encima de los botones de abajo.
 - CSS muerto de "recogido" retirado de inmath.css y panel.css (con nota

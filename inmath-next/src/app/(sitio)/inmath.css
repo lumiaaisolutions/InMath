@@ -3782,16 +3782,6 @@ input[type="number"] { -moz-appearance: textfield; }
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-/* Botón "Ocultar/Mostrar Mathy" del header — reemplaza al auto-ocultado por
- * scroll de la mascota, que en móvil bloqueaba clics de la página. */
-.mathy-toggle.n-mathy {
-  display: inline-flex; align-items: center; white-space: nowrap; cursor: pointer;
-  font: 600 .84rem/1 var(--cuerpo); color: var(--tinta-2);
-  padding: 8px 13px; border-radius: 999px; border: 1.5px solid var(--linea, #E6ECF7); background: transparent;
-  transition: color var(--t), border-color var(--t);
-}
-.mathy-toggle.n-mathy:hover { color: var(--azul); border-color: var(--azul); }
-body:has(.heroe-cine) .barra:not(.scrolled) .mathy-toggle.n-mathy { color: #fff; border-color: rgba(255,255,255,.45); }
-@media (max-width: 900px) {
-  .barra:not(.barra-portal) nav .mathy-toggle.n-mathy { width: 100%; justify-content: flex-start; padding: 13px 14px; border: 0; border-radius: 12px; }
-}
+/* (El botón "Ocultar/Mostrar Mathy" existe SOLO en el panel de admin y en el
+ * portal del alumno — decisión de producto 03-sep-2026: al visitante de la
+ * landing no se le da ese control; ahí Mathy siempre se muestra.) */
