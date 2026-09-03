@@ -441,3 +441,44 @@ endpoint en `/api/reactivos/explicar-ia` JAMÁS la recibía — con
 anterior en 401 "sesión expirada" aunque la sesión fuera válida. El
 endpoint se movió a `/panel/api/reactivos/explicar-ia` (la cookie ya lo
 alcanza) y el cliente apunta a la nueva ruta.
+
+### Corte 03-sep-2026 — Auditoría responsive móvil del panel (v85)
+
+Reporte del cliente con capturas desde iPhone; seis problemas, todos de
+CSS, corregidos en `panel.css`:
+
+1. **Pipeline — menú "Mover a…" quedaba DEBAJO de las tarjetas
+   siguientes**: cada `.tarjeta-prospecto` forma su propio contexto de
+   apilamiento (transition/transform), así que el z-index 999 del menú
+   solo competía DENTRO de su tarjeta. Fix: la tarjeta con el menú
+   abierto se eleva (`.tarjeta-prospecto:has(.tp-mover-lista)
+   { z-index: 80 }`).
+2. **Fases — "+ Agregar fase" se salía del borde derecho**: el header
+   `.rx-cab-espaciada` (filtro de curso min-width 260 + botón) no
+   envolvía. En ≤560px el filtro toma su fila completa y el botón baja a
+   la siguiente, ancho completo.
+3. **Asistentes — Cancelar/Siguiente encimados sobre los campos** (visto
+   en "Agregar curso"): el nav sticky tenía el ancho del contenido, así
+   que al flotar dejaba ver el formulario entre y alrededor de los
+   botones. Ahora es una franja OPACA de borde a borde del cuerpo
+   (márgenes negativos que sangran sobre el padding), con border-top y
+   z-index — el contenido pasa por debajo sin transparentarse, en
+   escritorio y móvil.
+4. **Alertas — "Guardar cambios" flotante tapaba la vista previa en
+   móvil**: en ≤640px pasa a barra fija de borde a borde abajo (ancho
+   completo), el marco de la vista previa emergente cambia a 4:3 con el
+   contenido reescalado (.5) para que el título quepa, y `.al-frame`
+   gana margen inferior para que nada quede tapado.
+5. **Usuarios — filtros amontonados**: `.us-filtros` envuelve con gap
+   real y los botones ganan padding táctil en móvil.
+6. **Respiro general en móvil (≤700px)**: más padding del contenido a los
+   bordes de pantalla (16px), dentro de `.cabecera`, `.pp-panel`,
+   `.rx-panel`, tarjetas de stats y pasos del editor de alertas — ataca
+   el "texto muy pegado a los bordes" reportado en todas las páginas.
+
+Nota de verificación: el entorno de pruebas no permite reducir el
+viewport real del navegador, así que las reglas de media query se
+validaron simulando el ancho (390px) con las mismas declaraciones
+inyectadas + verificación programática del z-index del menú del
+pipeline; el nav de asistentes sí se verificó en vivo (aplica también en
+escritorio).

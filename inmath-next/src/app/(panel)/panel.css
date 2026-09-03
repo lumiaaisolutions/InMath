@@ -1214,6 +1214,11 @@ input[type="range"].aj-zoom::-webkit-slider-thumb:hover { transform: scale(1.15)
 /* v106 — Pipeline: botón "Mover a…" (alternativa al drag&drop en pantallas
    chicas) + tablero sin scroll horizontal en móvil. */
 .tp-mover { position: relative; flex: 0 0 auto; display: none; }
+/* Con el menú "Mover a…" abierto, la tarjeta se eleva sobre sus hermanas —
+ * cada tarjeta forma su propio contexto de apilamiento (transition/transform)
+ * y sin esto el menú quedaba DEBAJO de las tarjetas siguientes en móvil. */
+.tarjeta-prospecto { position: relative; }
+.tarjeta-prospecto:has(.tp-mover-lista) { z-index: 80; }
 .tp-mover-btn { width: 28px; height: 28px; }
 .tp-mover-lista { top: calc(100% + 4px); right: 0; left: auto; min-width: 190px; }
 .tp-mover-punto { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
@@ -2096,6 +2101,19 @@ body::before { animation: none !important; }
   .al-frame-prev { position: static; }
   .al-guardar { right: 88px; bottom: 16px; }
 }
+/* Móvil: Guardar deja de flotar sobre el contenido — barra fija de borde a
+ * borde abajo (por eso el botón naranja se veía encimado sobre la vista
+ * previa), la vista previa emergente se reescala para que el texto quepa,
+ * y el marco respira. */
+@media (max-width: 640px) {
+  .al-guardar { left: 14px; right: 14px; bottom: 12px; }
+  .al-guardar .boton { width: 100%; justify-content: center; }
+  .al-frame { margin-bottom: 110px; padding: 16px; }
+  .am-lienzo { aspect-ratio: 4/3; }
+  .am-contenido { transform: scale(.5); }
+  .al-em-marco .am-contenido { transform: scale(.5); }
+  .al-em-marco .am-contenido h3 { font-size: calc(var(--a-tam-tit-emp, 2.05rem) * .82); }
+}
 
 /* =========================================================================
    v58 — Módulo de Pagos: fila clicable + ficha de detalle (portal) + vencimiento
@@ -2587,7 +2605,14 @@ button.gaje:disabled { opacity: .6; cursor: default; }
    quedaba pegado a los bordes de la tarjeta (.tarjeta base no trae padding). */
 .rx-panel { padding: 22px 24px 26px; }
 .rx-panel + .rx-panel { margin-top: 18px; }
-.rx-cab.rx-cab-espaciada { justify-content: space-between; align-items: flex-start; gap: 12px; }
+.rx-cab.rx-cab-espaciada { justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+/* Móvil: el filtro de curso ocupa su fila completa y el botón baja a la
+ * siguiente — antes "+ Agregar fase" se salía del borde derecho. */
+@media (max-width: 560px) {
+  .rx-cab.rx-cab-espaciada > * { flex: 1 1 100%; }
+  .rx-cab.rx-cab-espaciada .pl-campo { min-width: 0 !important; }
+  .rx-cab.rx-cab-espaciada .boton { justify-content: center; }
+}
 .rx-examenes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 .rx-examen-tarjeta { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 .rx-examen-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
@@ -2998,8 +3023,18 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
  * los botones Atrás/Siguiente se quedan siempre visibles al fondo del
  * cuerpo con scroll, en vez de exigir bajar hasta el final para encontrarlos. */
 .us-asistente-nav {
-  margin-top: auto; padding-top: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  position: sticky; bottom: 0; background: var(--papel);
+  margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  position: sticky; z-index: 5;
+  /* Franja OPACA de borde a borde del cuerpo: sangra sobre el padding lateral
+   * e inferior del cuerpo (28px/24px) para que, al flotar por sticky, el
+   * contenido que pasa por debajo no se transparente entre los botones ni por
+   * los costados — en móvil los botones se encimaban sobre los campos. */
+  bottom: -24px; margin-left: -28px; margin-right: -28px; margin-bottom: -24px;
+  padding: 14px 28px 18px; background: var(--papel);
+  border-top: 1px solid var(--linea);
+}
+@media (max-width: 720px) {
+  .us-asistente-nav { margin-left: -20px; margin-right: -20px; margin-bottom: -20px; bottom: -20px; padding: 12px 20px 16px; }
 }
 @media (max-width: 720px) {
   .us-asistente { flex-direction: column; }
@@ -3015,3 +3050,32 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
   .us-asistente-campos { grid-template-columns: 1fr; }
 }
 .disp-fecha-dia.on { background: var(--grad); color: #fff; }
+
+/* =========================================================================
+   v85 — Auditoría responsive MÓVIL (reporte del cliente 02-sep): elementos
+   pegados a los bordes, filtros amontonados y botones desfasados. Reglas
+   de respiro general para pantallas chicas — solo espaciado, sin cambiar
+   el diseño de escritorio.
+   ========================================================================= */
+@media (max-width: 700px) {
+  /* Más aire del contenido a los bordes de la pantalla y dentro de tarjetas */
+  .contenido { padding: 18px 16px 46px !important; }
+  .cabecera { padding: 20px 18px !important; }
+  .pp-panel, .rx-panel { padding: 20px 16px 24px !important; }
+  .tarjeta.al-frame { padding: 16px 14px !important; }
+
+  /* Filtros (Usuarios, Alumnos, etc.): que envuelvan con separación real
+     en vez de apretarse en una sola fila pegada */
+  .us-filtros { flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+  .us-filtro { padding: 10px 16px; }
+  .al-alumnos-cab { flex-wrap: wrap; gap: 14px; }
+  .al-alumnos-filtros { flex-wrap: wrap; gap: 12px; width: 100%; }
+  .al-alumnos-cab .boton { width: 100%; justify-content: center; }
+
+  /* Tarjetas de stats: dos por fila con respiro parejo */
+  .stat-fila { gap: 10px; }
+  .stat-tarjeta { padding: 14px 16px; }
+
+  /* Bloques de paso del editor de alertas: texto sin pegarse al borde */
+  .al-paso { padding: 16px 14px; }
+}
