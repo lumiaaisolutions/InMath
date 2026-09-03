@@ -664,20 +664,34 @@
 .pt-practica-tabla td { padding: 10px; border-top: 1px solid var(--linea); }
 .pt-practica-tabla b.bien { color: var(--ok, #1E9E5E); } .pt-practica-tabla b.regular { color: #C9820F; } .pt-practica-tabla b.bajo { color: var(--error, #E0424E); }
 
-/* Botón "Ocultar/Mostrar a Mathy" JUNTO AL LOGO del portal: círculo con
- * ícono de ojo (abierto = visible; tachado = oculta). El texto completo va
- * en title/aria-label. En estado "oculta" se tiñe ámbar para que se note
- * de un vistazo que Mathy está apagada. */
+/* Botón "Ocultar/Mostrar a Mathy" JUNTO AL LOGO del portal: píldora con la
+ * MINI-CARITA de Mathy (misma cara del asistente flotante: círculo blanco,
+ * anillo azul, dos ojos) + la acción escrita. Despierta = visible; dormida
+ * (ojos cerrados + "z", tonos apagados) = oculta. */
 .logo-mathy.mathy-toggle {
-  display: inline-grid; place-items: center; flex: 0 0 auto; cursor: pointer;
-  width: 34px; height: 34px; border-radius: 50%; margin-left: 2px;
-  border: 1.5px solid var(--linea-2); background: var(--blanco); color: var(--tinta-3);
-  transition: border-color .2s ease, color .2s ease, background .2s ease, transform .15s ease;
+  display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; cursor: pointer;
+  padding: 4px 13px 4px 4px; border-radius: 999px; margin-left: 2px;
+  border: 1.5px solid var(--linea-2); background: var(--blanco);
+  font: 700 .78rem/1 var(--cuerpo); color: var(--tinta-2);
+  transition: border-color .2s ease, color .2s ease, box-shadow .2s ease, transform .15s ease;
 }
-.logo-mathy.mathy-toggle svg { width: 17px; height: 17px; }
-.logo-mathy.mathy-toggle:hover { border-color: var(--azul); color: var(--azul); transform: translateY(-1px); }
-.logo-mathy.mathy-toggle:active { transform: scale(.94); }
-.logo-mathy.mathy-toggle.mathy-oculta {
-  color: #B8860B; border-color: rgba(246,166,42,.55); background: rgba(246,166,42,.1);
+.logo-mathy.mathy-toggle .mt-cara {
+  display: grid; place-items: center; width: 27px; height: 27px; border-radius: 50%;
+  background: #fff; color: #4D7FF0;
+  border: 2px solid rgba(107,159,255,.9);
+  box-shadow: 0 0 0 3px rgba(107,159,255,.16), 0 2px 6px rgba(18,31,55,.14);
 }
-.logo-mathy.mathy-toggle.mathy-oculta:hover { color: #96690a; border-color: #F6A62A; }
+.logo-mathy.mathy-toggle .mt-cara svg { width: 17px; height: 17px; }
+.logo-mathy.mathy-toggle:hover { border-color: var(--azul); color: var(--azul); transform: translateY(-1px); box-shadow: 0 6px 14px -6px rgba(77,127,240,.35); }
+.logo-mathy.mathy-toggle:active { transform: scale(.96); }
+.logo-mathy.mathy-toggle.mathy-oculta { color: var(--tinta-3); }
+.logo-mathy.mathy-toggle.mathy-oculta .mt-cara {
+  color: #9AA7C4; border-color: rgba(154,167,196,.7);
+  box-shadow: 0 0 0 3px rgba(154,167,196,.14); background: #F3F6FC;
+}
+.logo-mathy.mathy-toggle.mathy-oculta:hover { border-color: var(--azul); color: var(--azul); }
+@media (max-width: 620px) {
+  /* En móvil la píldora conserva la carita y encoge el texto para caber
+   * entre el logo y la hamburguesa. */
+  .logo-mathy.mathy-toggle { padding: 3px 10px 3px 3px; font-size: .72rem; }
+}

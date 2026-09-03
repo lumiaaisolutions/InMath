@@ -31,10 +31,13 @@ export function useMathyVisible(): boolean {
   return visible;
 }
 
-/** Botón compacto (ícono de ojo) que vive JUNTO AL LOGO de cada panel.
- *  Ojo abierto = Mathy visible (clic la oculta); ojo tachado = oculta
- *  (clic la muestra). El texto completo va en title/aria-label. */
-export function MathyToggleBoton({ className = "" }: { className?: string }) {
+/** Botón junto al logo de cada panel: una MINI-CARITA de Mathy (misma cara
+ *  que el asistente flotante — círculo blanco, anillo azul, dos ojos) para
+ *  que se entienda de un vistazo que controla a la IA. Ojos abiertos =
+ *  Mathy visible (clic la oculta); dormida (ojos cerrados, botón apagado y
+ *  con "z") = oculta (clic la despierta). Con `conTexto`, acompaña la cara
+ *  con la acción escrita ("Ocultar a Mathy" / "Mostrar a Mathy"). */
+export function MathyToggleBoton({ className = "", conTexto = false }: { className?: string; conTexto?: boolean }) {
   const visible = useMathyVisible();
   const etiqueta = visible ? "Ocultar a Mathy" : "Mostrar a Mathy";
   const alternar = () => {
@@ -44,21 +47,25 @@ export function MathyToggleBoton({ className = "" }: { className?: string }) {
   return (
     <button type="button" className={`mathy-toggle${visible ? "" : " mathy-oculta"} ${className}`.trim()}
       aria-pressed={!visible} aria-label={etiqueta} title={etiqueta} onClick={alternar}>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        {visible ? (
-          <>
-            <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
-            <circle cx="12" cy="12" r="3.1" />
-          </>
-        ) : (
-          <>
-            <path d="M4.2 8.6A16.6 16.6 0 0 0 2.5 12S6 18.5 12 18.5c1.6 0 3-.4 4.3-1.1M9.9 5.9A9 9 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a16.4 16.4 0 0 1-2.3 3" />
-            <path d="M9.8 9.9a3.1 3.1 0 0 0 4.3 4.4" />
-            <path d="M4 4l16 16" />
-          </>
-        )}
-      </svg>
+      <span className="mt-cara" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none">
+          {visible ? (
+            <>
+              {/* despierta: los dos ojos azules de Mathy */}
+              <ellipse cx="11.3" cy="16" rx="3.4" ry="4.8" fill="currentColor" />
+              <ellipse cx="20.7" cy="16" rx="3.4" ry="4.8" fill="currentColor" />
+            </>
+          ) : (
+            <>
+              {/* dormida: ojos cerrados + "z" */}
+              <path d="M7.5 16.5c2.4 2.6 5.2 2.6 7.6 0" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+              <path d="M17 16.5c2.4 2.6 5.2 2.6 7.6 0" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+              <path d="M21.5 6.6h4.4l-4.4 4.6h4.4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </>
+          )}
+        </svg>
+      </span>
+      {conTexto && <span className="mt-tx">{etiqueta}</span>}
     </button>
   );
 }

@@ -3128,20 +3128,32 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
   .al-paso { padding: 16px 14px; }
 }
 
-/* Botón "Ocultar/Mostrar a Mathy" JUNTO AL LOGO del sidebar (círculo glass
- * sobre fondo oscuro): ojo abierto = visible; ojo tachado + tinte ámbar =
- * oculta. Texto completo en title/aria-label. */
+/* Botón "Ocultar/Mostrar a Mathy" JUNTO AL LOGO del sidebar: MINI-CARITA
+ * de Mathy (misma cara del asistente flotante — círculo blanco, anillo azul,
+ * dos ojos) para que se entienda al instante que controla a la IA. Despierta
+ * = visible; dormida (ojos cerrados + "z", tonos apagados) = oculta. El
+ * texto de la acción va en title/aria-label. */
 .sidebar .marca .mathy-toggle {
   display: inline-grid; place-items: center; flex: 0 0 auto; cursor: pointer;
-  width: 32px; height: 32px; border-radius: 50%; margin-left: auto;
-  border: 0; background: rgba(255,255,255,.09); color: #C9D7F5;
-  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.2);
-  transition: background .2s ease, color .2s ease, box-shadow .2s ease, transform .15s ease;
+  width: 36px; height: 36px; border-radius: 50%; margin-left: auto; padding: 0;
+  background: #fff; color: #4D7FF0;
+  border: 2px solid rgba(107,159,255,.95);
+  box-shadow: 0 0 0 4px rgba(107,159,255,.22), 0 4px 12px rgba(0,0,0,.3);
+  transition: box-shadow .2s ease, transform .15s ease, background .2s ease, color .2s ease, border-color .2s ease;
 }
-.sidebar .marca .mathy-toggle svg { width: 16px; height: 16px; }
-.sidebar .marca .mathy-toggle:hover { background: rgba(255,255,255,.18); color: #fff; transform: translateY(-1px); }
+.sidebar .marca .mathy-toggle svg { width: 21px; height: 21px; }
+.sidebar .marca .mathy-toggle:hover {
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 0 0 5px rgba(107,159,255,.32), 0 0 18px rgba(107,159,255,.5), 0 4px 12px rgba(0,0,0,.3);
+}
 .sidebar .marca .mathy-toggle:active { transform: scale(.94); }
 .sidebar .marca .mathy-toggle.mathy-oculta {
-  color: #FFD86B; background: rgba(246,166,42,.16);
-  box-shadow: inset 0 0 0 1.5px rgba(255,216,107,.45);
+  background: #DCE3F2; color: #8A97B8;
+  border-color: rgba(154,167,196,.8);
+  box-shadow: 0 0 0 4px rgba(154,167,196,.18), 0 4px 12px rgba(0,0,0,.25);
 }
+.sidebar .marca .mathy-toggle.mathy-oculta:hover {
+  background: #fff; color: #4D7FF0; border-color: rgba(107,159,255,.95);
+  box-shadow: 0 0 0 5px rgba(107,159,255,.3), 0 4px 12px rgba(0,0,0,.3);
+}
+
