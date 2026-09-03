@@ -599,3 +599,23 @@ producción emite la CSP exactamente igual que antes (verificado con curl:
 prod no incluye unsafe-eval). Barrido de consola sin errores en local
 (/, /agenda, /pago, /panel, /panel/citas, /panel/alumnos, /panel/precios)
 y en producción (/, /pago) tras el deploy v60.
+
+### Corte 03-sep-2026 (4) — Píxel de Meta en el sitio público
+
+Instalado el píxel de Meta (ID 1777137036800940, proporcionado por el
+cliente) SOLO en el sitio público — landing, /agenda, /pago y demás páginas
+del grupo (sitio); nunca en el panel ni en el portal.
+
+- `src/components/MetaPixel.tsx` (nuevo): snippet base con next/script
+  (afterInteractive) + fallback <noscript>. Como Next navega sin recargar,
+  un efecto sobre usePathname dispara un PageView extra en cada cambio de
+  ruta (sin él Meta solo contaría la primera página de cada visita).
+- CSP (next.config.ts): se autorizaron los dominios del píxel —
+  connect.facebook.net en script-src/connect-src y www.facebook.com en
+  img-src/connect-src. Todo lo demás sigue bloqueado.
+- Verificado en local por red: fbevents.js 200, beacon PageView 200 con el
+  ID correcto, y segundo PageView al navegar / → /agenda sin recarga.
+  Verificado en producción: el HTML sirve el píxel y responde 200.
+- Siguiente paso DEL CLIENTE: volver al asistente de Meta Events Manager y
+  confirmar la instalación (paso 3), o probar con la extensión Meta Pixel
+  Helper sobre inmath.lumiaaisolutions.com.

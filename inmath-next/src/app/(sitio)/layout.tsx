@@ -3,6 +3,7 @@ import "./inmath.css";
 import Link from "next/link";
 import { Icono } from "@/components/Icono";
 import { OverlayCarga } from "@/components/OverlayCarga";
+import { MetaPixel } from "@/components/MetaPixel";
 import { ScriptsSitio, AgenteIA } from "@/components/ClienteSitio";
 
 const SITE = "https://inmath.lumiaaisolutions.com";
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body>
+        <MetaPixel />
         <OverlayCarga marca="sitio" />
         <header className="barra">
           <Link className="logo" href="/"><img src="/img/inmath.svg" alt="" width={58} height={58} /><b>Cursos <span>Inmath</span></b></Link>

@@ -14,12 +14,14 @@ import type { NextConfig } from "next";
 const esDesarrollo = process.env.NODE_ENV !== "production";
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${esDesarrollo ? " 'unsafe-eval'" : ""} https://static.cloudflareinsights.com`,
+  // connect.facebook.net = script del píxel de Meta (fbevents.js); los
+  // beacons del píxel van a www.facebook.com/tr (img-src y connect-src).
+  `script-src 'self' 'unsafe-inline'${esDesarrollo ? " 'unsafe-eval'" : ""} https://static.cloudflareinsights.com https://connect.facebook.net`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://www.facebook.com",
   "media-src 'self'",
-  "connect-src 'self' https://cloudflareinsights.com",
+  "connect-src 'self' https://cloudflareinsights.com https://www.facebook.com https://connect.facebook.net",
   "object-src 'none'",
   "base-uri 'self'",
   "frame-ancestors 'none'",
