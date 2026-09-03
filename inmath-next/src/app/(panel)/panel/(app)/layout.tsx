@@ -74,6 +74,7 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
         <div className="marca">
           <img src="/img/inmath.svg" alt="" width={64} height={64} />
           <div><strong>Inmath CRM</strong><span>Cursos · Ventas</span></div>
+          <MathyToggleBoton className="marca-mathy" />
         </div>
         <NavPanel items={items} grupos={grupos} />
         <div className="pie perfil-widget">
@@ -82,7 +83,6 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
           </span>
           <b className="pw-nombre">{u.nombre}</b>
           <i className={`pw-chip ${u.rol === "admin" ? "admin" : ""}`}>{u.rol === "admin" ? "Administrador" : "Asesor"}</i>
-          <MathyToggleBoton className="pw-config" />
           <SalirBoton><IconoPanel n="logout" cls="ic-sm" /> Cerrar sesión</SalirBoton>
         </div>
       </aside>

@@ -3,7 +3,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Icono } from "@/components/Icono";
-import { MathyToggleBoton } from "@/components/MathyVisibilidad";
 
 const ITEMS = [
   { key: "inicio", label: "Inicio", href: "/portal", icon: "route" },
@@ -71,7 +70,6 @@ export function NavPortalHeader({ bloqueado = false }: { bloqueado?: boolean }) 
             <Icono n={it.icon} /><span>{it.label}</span>
           </Link>
         ))}
-        <span className="nav-hdr-salir nav-hdr-mathy"><MathyToggleBoton /></span>
         <form action="/portal/logout" method="post" className="nav-hdr-salir">
           <button type="submit"><Icono n="logout" /><span>Salir</span></button>
         </form>

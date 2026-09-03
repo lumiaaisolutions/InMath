@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AgenteIA } from "@/components/ClienteSitio";
 import { OverlayCarga } from "@/components/OverlayCarga";
 import { NavPortalHeader } from "./NavPortalHeader";
+import { MathyToggleBoton } from "@/components/MathyVisibilidad";
 import { ScriptsPortal } from "./ScriptsPortal";
 import { alumnoActual } from "@/lib/portal/sesion";
 import { tienePagoConfirmado } from "@/lib/portal/auth";
@@ -37,6 +38,7 @@ export default async function PortalLayout({ children }: { children: React.React
         <OverlayCarga marca="sitio" />
         <header className="barra barra-portal">
           <Link className="logo" href="/portal"><img src="/img/inmath.svg" alt="" width={58} height={58} /><b>Portal <span>Inmath</span></b></Link>
+          <MathyToggleBoton className="logo-mathy" />
           <NavPortalHeader bloqueado={pendientePago} />
         </header>
         {children}

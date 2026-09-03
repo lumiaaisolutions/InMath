@@ -537,8 +537,11 @@ completo y se reemplazó por un botón en el encabezado de cada zona:
   `localStorage` (clave `mathy_visible`, default VISIBLE) sincronizado
   entre componentes con un CustomEvent (`mathy:visibilidad`) y entre
   pestañas con el evento `storage`.
-- SOLO en el panel de admin (widget de perfil del sidebar) y en el portal
-  del alumno (menú del header, junto a "Salir"). En la LANDING el botón NO
+- SOLO en el panel de admin y en el portal del alumno, en ambos casos
+  JUNTO AL LOGO (ajuste de diseño 03-sep-2026: círculo con ícono de ojo —
+  abierto = Mathy visible; tachado con tinte ámbar = oculta — y el texto
+  "Ocultar/Mostrar a Mathy" como tooltip/aria-label). Antes estuvo en el
+  widget de perfil (panel) y en el menú (portal). En la LANDING el botón NO
   existe (corrección de producto del mismo día): al visitante no se le da
   ese control y Mathy siempre se muestra ahí — la landing tampoco LEE el
   estado guardado, porque el localStorage se comparte entre zonas y ocultar

@@ -664,15 +664,20 @@
 .pt-practica-tabla td { padding: 10px; border-top: 1px solid var(--linea); }
 .pt-practica-tabla b.bien { color: var(--ok, #1E9E5E); } .pt-practica-tabla b.regular { color: #C9820F; } .pt-practica-tabla b.bajo { color: var(--error, #E0424E); }
 
-/* "Ocultar/Mostrar Mathy" en el menú del portal: mismo lenguaje que Salir. */
-.nav-hdr-mathy .mathy-toggle {
-  display: inline-flex; align-items: center; white-space: nowrap; cursor: pointer;
-  padding: 10px 16px; border-radius: 999px; border: 1.5px solid var(--linea-2); background: var(--blanco);
-  font: 700 .86rem/1 var(--cuerpo); color: var(--tinta-2);
-  transition: border-color .2s ease, color .2s ease;
+/* Botón "Ocultar/Mostrar a Mathy" JUNTO AL LOGO del portal: círculo con
+ * ícono de ojo (abierto = visible; tachado = oculta). El texto completo va
+ * en title/aria-label. En estado "oculta" se tiñe ámbar para que se note
+ * de un vistazo que Mathy está apagada. */
+.logo-mathy.mathy-toggle {
+  display: inline-grid; place-items: center; flex: 0 0 auto; cursor: pointer;
+  width: 34px; height: 34px; border-radius: 50%; margin-left: 2px;
+  border: 1.5px solid var(--linea-2); background: var(--blanco); color: var(--tinta-3);
+  transition: border-color .2s ease, color .2s ease, background .2s ease, transform .15s ease;
 }
-.nav-hdr-mathy .mathy-toggle:hover { border-color: var(--azul); color: var(--azul); }
-@media (max-width: 620px) {
-  .nav-hdr-mathy { margin-top: 0 !important; padding-top: 0 !important; border-top: 0 !important; }
-  .nav-hdr-mathy .mathy-toggle { width: 100%; justify-content: flex-start; padding: 13px 14px; border: 0; }
+.logo-mathy.mathy-toggle svg { width: 17px; height: 17px; }
+.logo-mathy.mathy-toggle:hover { border-color: var(--azul); color: var(--azul); transform: translateY(-1px); }
+.logo-mathy.mathy-toggle:active { transform: scale(.94); }
+.logo-mathy.mathy-toggle.mathy-oculta {
+  color: #B8860B; border-color: rgba(246,166,42,.55); background: rgba(246,166,42,.1);
 }
+.logo-mathy.mathy-toggle.mathy-oculta:hover { color: #96690a; border-color: #F6A62A; }
