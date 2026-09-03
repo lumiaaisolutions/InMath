@@ -21,10 +21,8 @@ temporal + `php -S`; bot en modo simulado `BOT_SIMULADO=1`).
   Sin esto el motor del bot (ya conectado a Gemini) no recibe ni envía mensajes
   reales — queda pendiente explícitamente a petición del cliente.
 - **Google Calendar OAuth** en n8n (Fase 3). Pendiente explícitamente.
-- **Credenciales de MercadoPago** (`MERCADOPAGO_ACCESS_TOKEN`,
-  `MERCADOPAGO_WEBHOOK_SECRET`) — el driver ya está implementado y verificado
-  contra la documentación oficial, solo falta que el cliente genere las
-  credenciales de producción en su cuenta de MercadoPago. Ver [`pagos.md`](pagos.md).
+- ✅ ~~Credenciales de MercadoPago~~ — RESUELTO: en producción desde
+  agosto 2026 (webhook verificado con pago real). Ver [`pagos.md`](pagos.md).
 - **Plantillas de WhatsApp** por aprobar en Meta: `recordatorio_cita`,
   `recordatorio_pago`, `reporte_semanal`.
 - **SMTP** para el envío de reportes por correo (en n8n) — pendiente
@@ -75,23 +73,22 @@ versión de n8n instalada.
   Fase 6 ya está cubierta por el panel y la agenda actuales.
 - **Preguntas abiertas al cliente:** ver `preguntas-cliente.md`.
 
-### Pendientes tras respuestas del cliente (13-ago-2026)
-- Credenciales de Mercado Pago + referencia OXXO (activar pago en línea).
-- Fotos reales de la sesión (landing + carrusel del login).
-- Confirmar con cliente: fecha de inicio del curso y política de asesorías
+### Pendientes tras respuestas del cliente (13-ago-2026 — actualizado 03-sep-2026)
+- ✅ Credenciales de Mercado Pago — EN PRODUCCIÓN (webhook verificado con
+  pago real end-to-end el 23-ago-2026).
+- ✅ UI de es_asesor en Panel→Usuarios (interruptor en el asistente de edición).
+- ⬜ Fotos reales de la sesión (landing + carrusel del login) — sigue en
+  manos del cliente.
+- ⬜ Confirmar con cliente: fecha de inicio del curso y política de asesorías
   extra (el bot hoy los deriva a la asesoría gratuita).
-- UI de es_asesor en Panel→Usuarios (hoy se ajusta por soporte en BD).
 
-### Lote de mejoras del panel solicitado el 13-ago (EN CURSO)
+### Lote de mejoras del panel solicitado el 13-ago (COMPLETADO — auditado 03-sep-2026)
 1. ✅ Logo protagonista en sitio, panel, login, carga y agente (v30 CSS).
-2. ⬜ Alumnos: alta manual (form nombre/tel/curso → crea prospecto+alumno).
-3. ⬜ Citas: alta manual (prospecto + asesor + fecha/hora, valida traslape).
-4. ⬜ Usuarios: filtros por rol, tarjetas compactas (foto/nombre/correo/rol),
-   clic abre frame con datos completos + Editar/Eliminar/Cerrar; "Agregar
-   usuario" abre frame de creación (no tarjeta inline).
-5. ⬜ Personalizar login: texto y ORDEN por imagen (requiere tabla o JSON
-   `login_media` con archivo/titulo/texto/orden), galería clicable con frame
-   de edición y preview como en el login; el login lee texto por slide.
+2. ✅ Alumnos: alta manual (ClienteAlumnos.tsx, "Registrar alumno").
+3. ✅ Citas: alta manual con asistente por pasos (ClienteCitas.tsx, PASOS_CITA).
+4. ✅ Usuarios: filtros por rol, tarjetas, frames de edición/creación por pasos
+   e interruptor de es_asesor en la UI (ya no se toca por BD).
+5. ✅ Personalizar login: galería con texto/orden por slide, asistente y preview.
 
 ### Lote del panel — COMPLETADO (13-ago)
 1. ✅ Logo protagonista. 2. ✅ Alumnos: alta manual (frame, crea prospecto
