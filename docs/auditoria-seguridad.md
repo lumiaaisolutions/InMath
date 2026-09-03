@@ -92,3 +92,17 @@ el análisis estático. Los hallazgos fueron de **hardening** y **todos (H1–H8
 corrigieron y desplegaron en producción**, verificados en vivo. El sitio **no es
 trivialmente "hackeable"** por los vectores comunes (OWASP Top 10) revisados. Se
 recomienda repetir la auditoría tras activar MercadoPago y ante cambios grandes.
+
+## Ajustes de CSP posteriores (03-sep-2026)
+
+Dos cambios quirúrgicos a la CSP de H8, ambos verificados en producción:
+
+1. **`'unsafe-eval'` SOLO en desarrollo** (`NODE_ENV !== "production"`):
+   React usa `eval()` únicamente en modo dev para reconstruir callstacks, y
+   la CSP enforzada pintaba un error de consola y el badge "1 Issue" del
+   dev overlay en local. El build de producción emite la CSP exactamente
+   igual que antes (verificado con curl: sin `unsafe-eval`).
+2. **Dominios del píxel de Meta** (instalado a petición del cliente, solo
+   sitio público): `https://connect.facebook.net` en script-src/connect-src
+   y `https://www.facebook.com` en img-src/connect-src. Todo lo demás sigue
+   bloqueado; el píxel no se carga en el panel ni en el portal.

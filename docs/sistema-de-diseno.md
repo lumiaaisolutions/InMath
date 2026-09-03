@@ -418,3 +418,26 @@ Bloque v8 al final de `sitio/public/css/inmath.css`:
   cero controles nativos), guarda global `[hidden]{display:none!important}`
   (3 bugs de esa clase), overlay del login con chip+gradiente+dots, encuadre
   4:5 al subir fotos del carrusel (canvas 1080×1350), pantalla Usuarios.
+
+## Corte 03-sep-2026 — Toggle de Mathy como mini-carita + kit de identidad
+
+- **Toggle "Ocultar/Mostrar a Mathy"** (solo panel de admin y portal del
+  alumno, JUNTO AL LOGO — nunca en la landing): tras dos iteraciones con el
+  cliente (texto plano → ícono de ojo → veredicto "no se entiende que es la
+  IA"), el diseño final es una **MINI-CARITA de Mathy** — la misma cara del
+  asistente flotante (círculo blanco, anillo azul #6B9FFF con halo, dos ojos
+  azules). Despierta = visible; **dormida** (ojos cerrados + "z", tonos
+  grises apagados) = oculta. En el portal la píldora incluye la acción
+  escrita; en el sidebar del panel va solo la carita (texto en
+  title/aria-label). Componente: `src/components/MathyVisibilidad.tsx`
+  (prop `conTexto`); estilos en panel.css (`.sidebar .marca .mathy-toggle`)
+  y portal.css (`.logo-mathy`).
+- **Kit de identidad gráfica** entregado en `~/Desktop/Identidad InMath/`
+  (03-sep-2026): guía HTML autocontenida (marca, logo, paleta con hex y
+  regla 60·30·10 + "nunca morado", Sora/Figtree, mascota y sus reglas,
+  componentes, tono de voz sí/no, canales), LÉEME.md, logos (isotipo
+  SVG/PNG 1024, logo completo, versión correo, crédito LUMIA), mascota en
+  vectores limpios generados desde `MascotaMathy.tsx` (`mathy-completa.svg`
+  y `mathy-avatar-sin-manos.svg` + PNG 1024 transparentes) y la imagen OG
+  1200×630 para redes. Si la mascota o la paleta cambian en código, el kit
+  se regenera desde las mismas fuentes.

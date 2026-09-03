@@ -148,3 +148,19 @@ usar `host.docker.internal` en `DATABASE_URL`.
   el modo auto de Claude Code lo bloquea sin aprobación explícita del host),
   o correr los pasos de arriba a mano.
 - Credenciales de MercadoPago + texto `datos_pago` (aún dice "PENDIENTE").
+
+## ⚠️ Lección del 03-sep-2026: `prisma generate` es OBLIGATORIO en cada deploy
+
+El rsync sube `src/generated/prisma` generado en la Mac (darwin-arm64), que
+NO sirve en el VPS Linux (debian-openssl-3.0.x). En un deploy se omitió
+`npx prisma generate` en el servidor y **producción respondió 500**
+(PrismaClientInitializationError) hasta regenerar y reconstruir. Secuencia
+completa, siempre y en este orden:
+
+1. `rsync` (excluyendo node_modules/.next/.git/.env)
+2. `npx prisma generate` ← nunca saltarlo
+3. `npm run build`
+4. copiar `public` y `.next/static` a `.next/standalone`
+5. reiniciar pm2 (`pm2 delete inmath-web` + start con PORT=3010 + `pm2 save`)
+6. verificar con curl **200 en /, /pago y /panel/login** antes de dar por
+   bueno el deploy

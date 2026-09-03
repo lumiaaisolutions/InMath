@@ -623,3 +623,42 @@ del grupo (sitio); nunca en el panel ni en el portal.
 - Siguiente paso DEL CLIENTE: volver al asistente de Meta Events Manager y
   confirmar la instalación (paso 3), o probar con la extensión Meta Pixel
   Helper sobre inmath.lumiaaisolutions.com.
+
+### Corte 03-sep-2026 (5) — Cierre del día: iteraciones de Mathy, kit de identidad y limpieza
+
+**F6 — Iteraciones del toggle de Mathy tras feedback del cliente** (v61→v64,
+todo en producción):
+- v61: el botón se RETIRÓ de la landing (decisión de producto: al visitante
+  no se le da ese control; Mathy siempre visible ahí). Como el localStorage
+  se comparte entre zonas, la landing tampoco LEE el estado — ocultarla en
+  el panel no la quita de la página pública.
+- v62: el botón se movió JUNTO AL LOGO en panel y portal (antes: widget de
+  perfil / menú del header).
+- v64: rediseño final como MINI-CARITA de Mathy (despierta = visible;
+  dormida con "z" = oculta; texto de acción en el portal). Detalle completo
+  en sistema-de-diseno.md.
+
+**F7 — Píxel de Meta (v63)**: ver corte (4) arriba. En producción y
+verificado por red; falta solo que el cliente confirme en Events Manager.
+
+**F8 — Kit de identidad gráfica**: carpeta `~/Desktop/Identidad InMath/`
+con guía HTML de marca, logos, mascota en SVG/PNG y OG de redes — detalle
+en sistema-de-diseno.md. Pensado para que marketing/diseño produzca piezas
+sin tocar código.
+
+**F9 — Limpieza e infraestructura**:
+- Eliminado `src/app(panel)_tmp` (archivo vacío colado por el typo de una
+  tarea de shell) del repo y del VPS.
+- Documentada en despliegue-vps.md la lección del deploy con 500: `npx
+  prisma generate` en el VPS es obligatorio en CADA deploy (el cliente
+  Prisma de la Mac no sirve en Linux).
+- CSP: `unsafe-eval` solo en desarrollo + dominios del píxel de Meta
+  (detalle en auditoria-seguridad.md).
+
+**Estado al cierre**: producción estable (v64 + píxel), consola limpia en
+sitio/panel/portal local y en producción, árbol de git limpio. PENDIENTES
+VIVOS: (a) verificación visual del toggle en /portal con sesión de alumno
+— el agente no teclea contraseñas, queda en manos del usuario; (b) cliente:
+confirmar píxel en Meta Events Manager, fotos reales de la sesión, fecha de
+inicio del curso y política de asesorías extra; (c) solo si se retoman:
+WhatsApp Business API y Google Calendar OAuth en n8n.
