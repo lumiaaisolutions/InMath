@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { googlePerfilDesdeCodigo } from "@/lib/portal/google";
+import { googlePerfilDesdeCodigo, googleTokensCalendarDesdeCodigo } from "@/lib/portal/google";
+import { guardarCredencialCalendar } from "@/lib/google-calendar";
 import { googleConfigurado } from "@/lib/portal/auth";
 import { resolverLoginEmail } from "@/lib/auth-unificado";
 import { crearSesion } from "@/lib/panel/sesion";
@@ -23,6 +24,17 @@ export async function GET(req: NextRequest) {
   const esperado = jar.get("inmath_g_state")?.value;
   jar.delete({ name: "inmath_g_state", path: "/api/portal/google" });
   if (!code || !state || !esperado || state !== esperado) return login("google-estado");
+
+  // Rama especial: CONECTAR GOOGLE CALENDAR (state con prefijo gcal_, la
+  // inicia un admin desde /panel/configuracion). Guarda el refresh token que
+  // usa el respaldo directo del link de Meet y regresa al panel — aquí no
+  // hay login de por medio.
+  if (state.startsWith("gcal_")) {
+    const tokens = await googleTokensCalendarDesdeCodigo(code);
+    if (!tokens) return irA("/panel/configuracion?calendar=error");
+    await guardarCredencialCalendar(tokens.refreshToken, tokens.email, null);
+    return irA("/panel/configuracion?calendar=conectada");
+  }
 
   const perfil = await googlePerfilDesdeCodigo(code);
   if (!perfil || !perfil.emailVerificado) return login("google-correo");

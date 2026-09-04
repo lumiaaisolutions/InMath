@@ -662,3 +662,54 @@ VIVOS: (a) verificación visual del toggle en /portal con sesión de alumno
 confirmar píxel en Meta Events Manager, fotos reales de la sesión, fecha de
 inicio del curso y política de asesorías extra; (c) solo si se retoman:
 WhatsApp Business API y Google Calendar OAuth en n8n.
+
+### Corte 03-sep-2026 (6) — Links de Meet que no llegaban: cadena de respaldo completa
+
+**Reporte del cliente**: cita agendada desde /agenda sin evento en Calendar y
+sin link de Meet para nadie; el correo de confirmación decía "en breve te
+compartimos el enlace" y ese enlace nunca llegó.
+
+**Diagnóstico (verificado con pruebas reales)**: el workflow 03 de n8n (el
+"robot" que crea el evento de Calendar + Meet) está ROTO desde el 02-sep —
+responde "Error in workflow" (HTTP 500) sin siquiera registrar ejecución;
+la última exitosa fue el 02-sep 02:54. La estructura del workflow, el
+webhook y la credencial de Google están íntegros en su BD; el fallo es al
+instanciar. Pendiente: reiniciar el contenedor n8n (bloqueado por permisos
+del agente — lo aprueba el usuario). HALLAZGO ADICIONAL: la carpeta
+`scripts/` del VPS (crons de vencimiento de pagos y recordatorio de
+disponibilidad) había sido BORRADA por el `rsync --delete` de algún deploy
+porque no vivía en el repo — esos crons llevaban tiempo fallando en
+silencio. Recreados DENTRO del repo (inmath-next/scripts/) para que viajen
+con cada deploy.
+
+**Solución implementada (decisión del cliente: robot titular + respaldo +
+red de seguridad)** — TODO desplegado y el cron activo:
+
+1. **Cadena del link** (`conseguirLinkCita` en src/lib/agenda.ts): 1º el
+   robot n8n; si falla, 2º el sitio crea el evento DIRECTO en Google
+   Calendar con Meet (`src/lib/google-calendar.ts`, cuenta conectada por
+   OAuth; reutiliza el cliente de Google del login con scope
+   calendar.events y refresh token en `configuraciones`).
+2. **Conectar el respaldo**: tarjeta "Enlace de Meet de las asesorías" en
+   /panel/configuracion (solo admin) con botón "Conectar Google Calendar"
+   → OAuth por /panel/api/google-calendar/conectar → rama `gcal_` del
+   callback de Google. PENDIENTE DEL CLIENTE: pulsarlo una vez con
+   cursosinmath@gmail.com (puede salir la advertencia de "app no
+   verificada" de Google por el scope sensible — Avanzado → continuar).
+3. **Red de seguridad**: (a) banner ROJO en todo el panel cuando hay citas
+   activas futuras sin link; (b) en la ficha del prospecto, la cita sin
+   link muestra gaje "sin link" + botones "Generar link" (reintenta la
+   cadena) y "Pegar link" (Meet hecho a mano) — en AMBOS casos el correo
+   al prospecto sale AUTOMÁTICO al guardar (`citaLinkGenerarAccion` /
+   `citaLinkGuardarAccion`); (c) reintento automático cada 10 min
+   (`POST /api/citas/reparar-links` + scripts/reparar-links-citas.sh en
+   crontab): repara, envía el correo al prospecto solo, y si una cita
+   cumple 10-20 min sin link manda UN correo urgente al staff; (d) los
+   correos de "cita sin link" al staff ahora son ⚠️ URGENTES y explican
+   qué hacer; el correo al prospecto sin link promete el enlace "en unos
+   minutos" (respaldado por el reintento).
+
+**Estado**: cita #11 (Jorge, 03-sep 22:00) resuelta a mano por el staff;
+cita #10 (Danna, 03-sep 20:00) ya pasó sin link — contactarla aparte.
+Pendientes: aprobar reinicio de n8n + clic del cliente en "Conectar Google
+Calendar".

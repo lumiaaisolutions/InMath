@@ -3,6 +3,7 @@ import { requiereSesion, moduloPermitido } from "@/lib/panel/sesion";
 import { avatarUrl } from "@/lib/panel/media";
 import { leerSemana, lunesDe } from "@/lib/disponibilidad";
 import { ahoraPared, isoDia } from "@/lib/fechas";
+import { prisma } from "@/lib/db";
 import { IconoPanel } from "@/components/IconoPanel";
 import { OverlayCarga } from "@/components/OverlayCarga";
 import { NavPanel, SalirBoton, AgentePanelIA, ToastProvider, ScriptsPanel } from "./ClientePanel";
@@ -67,6 +68,14 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
     ? await Promise.all([leerSemana(estaLunes).then((s) => !s), leerSemana(proxLunes).then((s) => !s)])
     : [false, false];
 
+  // Red de seguridad del link de Meet: citas activas futuras SIN enlace →
+  // alerta roja imposible de ignorar (el cliente aún no recibe su link; el
+  // sistema reintenta solo cada 10 min, pero el staff puede resolverlo ya
+  // desde la ficha con "Generar link" o "Pegar link").
+  const citasSinLink = await prisma.citas.count({
+    where: { estado: { in: ["agendada", "confirmada"] }, meet_link: null, inicio: { gt: ahoraPared() } },
+  });
+
   return (
     <div className="app">
       <OverlayCarga marca="panel" />
@@ -87,6 +96,13 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
         </div>
       </aside>
       <main className="contenido">
+        {citasSinLink > 0 && (
+          <Link className="banner-disp banner-disp-urgente" href="/panel">
+            <IconoPanel n="alerta" cls="ic-sm" />
+            <span><b>{citasSinLink === 1 ? "1 asesoría agendada NO tiene enlace de Meet" : `${citasSinLink} asesorías agendadas NO tienen enlace de Meet`}</b> — el cliente aún no recibe su link. Ábrela desde el pipeline y usa &ldquo;Generar link&rdquo; o &ldquo;Pegar link&rdquo;; el correo al cliente sale solo.</span>
+            <span className="banner-cta">Resolver ahora</span>
+          </Link>
+        )}
         {faltaEsta && (
           <Link className="banner-disp banner-disp-urgente" href={`/panel/disponibilidad?semana=${estaLunes}`}>
             <IconoPanel n="alerta" cls="ic-sm" />

@@ -2,6 +2,7 @@ import { prisma, config } from "./db";
 import { etiqueta, isoMinuto, diaSemanaN, isoDia, ahoraPared, paredDesde } from "./fechas";
 import { lunesDe, lunesEnRango, overridesDe } from "./disponibilidad";
 import { enviarCorreo, CORREO_CONTACTO } from "./correo";
+import { crearEventoDirecto } from "./google-calendar";
 
 const CORREO_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -86,6 +87,35 @@ async function crearEventoCalendar(cita: { id: number; asesor_id: number; inicio
   }
 }
 
+/** CADENA completa para conseguir el link de Meet de una cita:
+ *  1) el robot (n8n); 2) si falla, el sitio crea el evento DIRECTO con la
+ *  cuenta de Google conectada en /panel/configuracion. Devuelve null solo si
+ *  ambos fallan (ahí entran la alerta roja del panel, el correo urgente y
+ *  los reintentos automáticos de /api/citas/reparar-links). */
+export async function conseguirLinkCita(cita: { id: number; asesor_id: number; inicio: Date; fin: Date }, prospectoNombre: string | null): Promise<{ link: string | null; via: "n8n" | "directo" | null }> {
+  const porN8n = await crearEventoCalendar(cita, prospectoNombre);
+  if (porN8n) return { link: porN8n, via: "n8n" };
+  const directo = await crearEventoDirecto(cita, prospectoNombre);
+  if (directo) return { link: directo, via: "directo" };
+  return { link: null, via: null };
+}
+
+/** Correo al prospecto CON su link de Meet — se usa al agendar (si el link
+ *  nació a tiempo) y también cuando el link llega DESPUÉS (reintento
+ *  automático o pegado a mano en el panel): el sistema se lo reenvía solo,
+ *  sin depender de que alguien se acuerde. */
+export async function correoLinkProspecto(correo: string, nombre: string | null, cuando: string, meetLink: string, tardio = false) {
+  await enviarCorreo({
+    para: [correo],
+    asunto: tardio ? "El enlace de tu asesoría — Cursos InMath" : "Tu asesoría está confirmada — Cursos InMath",
+    preheader: "Aquí está el enlace de tu asesoría en línea.",
+    texto: tardio
+      ? `Hola ${nombre ?? ""},\n\nAquí está el enlace de tu asesoría en línea del ${cuando}. Guárdalo y únete en ese horario con un clic.`
+      : `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. Toca el botón para unirte a tu asesoría en línea en ese horario.`,
+    cta: { url: meetLink, label: "Unirme a mi asesoría en línea", icono: "calendario" as const },
+  }).catch((e) => console.error("correoLinkProspecto: no se pudo enviar", e));
+}
+
 /** Manda la única confirmación de la cita al prospecto: por correo, con el
  *  link de Meet si ya se generó (espera a n8n antes de mandarla), o con
  *  aviso de que llega en breve si no. Además avisa al buzón de contacto
@@ -97,32 +127,74 @@ async function confirmarCitaPorCorreo(
   nombre: string | null,
   telefono: string | null,
 ) {
-  const meetLink = await crearEventoCalendar(cita, nombre);
+  const { link: meetLink } = await conseguirLinkCita(cita, nombre);
   if (meetLink) await prisma.citas.update({ where: { id: cita.id }, data: { meet_link: meetLink } });
   const cuando = etiqueta(cita.inicio);
 
   const [asesor] = await Promise.all([
     prisma.usuarios.findUnique({ where: { id: cita.asesor_id }, select: { nombre: true } }),
-    enviarCorreo({
-      para: [correo],
-      asunto: "Tu asesoría está confirmada — Cursos InMath",
-      preheader: meetLink ? "Aquí está el enlace de tu asesoría en línea." : "Tu cita quedó agendada, en breve te compartimos el enlace.",
-      texto: meetLink
-        ? `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. Toca el botón para unirte a tu asesoría en línea en ese horario.`
-        : `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. En breve te compartimos el enlace de tu asesoría en línea — si no llega, un asesor te lo comparte antes de tu cita.`,
-      ...(meetLink ? { cta: { url: meetLink, label: "Unirme a mi asesoría en línea", icono: "calendario" as const } } : {}),
-    }).catch((e) => console.error("confirmarCitaPorCorreo: no se pudo enviar el correo", e)),
+    meetLink
+      ? correoLinkProspecto(correo, nombre, cuando, meetLink)
+      : enviarCorreo({
+          para: [correo],
+          asunto: "Tu asesoría está confirmada — Cursos InMath",
+          preheader: "Tu cita quedó agendada, en breve te compartimos el enlace.",
+          texto: `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. En unos minutos te llega otro correo con el enlace de tu asesoría en línea — si no llega, un asesor te lo comparte antes de tu cita.`,
+        }).catch((e) => console.error("confirmarCitaPorCorreo: no se pudo enviar el correo", e)),
   ]);
 
   await enviarCorreo({
     para: [CORREO_CONTACTO],
-    asunto: `Nueva asesoría agendada — ${nombre ?? "prospecto sin nombre"}`,
-    preheader: meetLink ? "Ya tiene enlace de Meet." : "El enlace de Meet llega en cuanto n8n lo genere.",
+    asunto: meetLink
+      ? `Nueva asesoría agendada — ${nombre ?? "prospecto sin nombre"}`
+      : `⚠️ URGENTE: asesoría SIN enlace de Meet — ${nombre ?? "prospecto sin nombre"}`,
+    preheader: meetLink ? "Ya tiene enlace de Meet." : "El cliente NO recibió link. El sistema reintenta solo; si no, pégalo desde la ficha.",
     texto: `${asesor?.nombre ?? "Un asesor"} tiene una asesoría agendada para el ${cuando}.\n\nProspecto: ${nombre ?? "(sin nombre)"}\nWhatsApp: ${telefono ?? "(sin teléfono)"}\nCorreo: ${correo}`,
     ...(meetLink
       ? { cta: { url: meetLink, label: "Unirme a la asesoría en línea", icono: "calendario" as const } }
-      : { nota: "El enlace de Meet todavía no llegaba de n8n al momento de agendar — revisa la cita en /panel/citas más tarde." }),
+      : { nota: "No se pudo generar el enlace de Meet (ni por n8n ni por el respaldo directo). El sistema lo REINTENTA solo cada 10 minutos y se lo envía al cliente en cuanto exista; también puedes generarlo o pegarlo desde la ficha del prospecto — al guardarlo, el correo al cliente sale automático." }),
   }).catch((e) => console.error("confirmarCitaPorCorreo: no se pudo avisar al staff", e));
+}
+
+/** Intenta conseguir el link de una cita que quedó SIN él (robot → directo);
+ *  si lo logra, lo guarda y SE LO ENVÍA al prospecto automáticamente.
+ *  Lo usan el reintento automático (/api/citas/reparar-links, cron cada 10
+ *  min) y el botón "Generar link" de la ficha del prospecto. */
+export async function repararLinkCita(citaId: number): Promise<{ ok: boolean; link?: string; error?: string }> {
+  const cita = await prisma.citas.findUnique({
+    where: { id: citaId },
+    select: { id: true, asesor_id: true, inicio: true, fin: true, meet_link: true, estado: true, prospectos: { select: { nombre: true, correo: true } } },
+  });
+  if (!cita) return { ok: false, error: "Cita no encontrada" };
+  if (cita.meet_link) return { ok: true, link: cita.meet_link };
+  if (!["agendada", "confirmada"].includes(cita.estado)) return { ok: false, error: "La cita ya no está activa" };
+
+  const { link } = await conseguirLinkCita(cita, cita.prospectos?.nombre ?? null);
+  if (!link) return { ok: false, error: "Ni el robot (n8n) ni el respaldo directo pudieron generar el enlace" };
+
+  await prisma.citas.update({ where: { id: citaId }, data: { meet_link: link } });
+  const correo = cita.prospectos?.correo;
+  if (correo && CORREO_RE.test(correo)) {
+    await correoLinkProspecto(correo, cita.prospectos?.nombre ?? null, etiqueta(cita.inicio), link, true);
+  }
+  return { ok: true, link };
+}
+
+/** Guarda un link pegado A MANO por el staff y se lo envía al prospecto
+ *  automáticamente (mismo correo que el reintento — nadie tiene que
+ *  acordarse de reenviarlo). */
+export async function guardarLinkManual(citaId: number, link: string): Promise<{ ok: boolean; error?: string }> {
+  const cita = await prisma.citas.findUnique({
+    where: { id: citaId },
+    select: { id: true, inicio: true, estado: true, prospectos: { select: { nombre: true, correo: true } } },
+  });
+  if (!cita) return { ok: false, error: "Cita no encontrada" };
+  await prisma.citas.update({ where: { id: citaId }, data: { meet_link: link } });
+  const correo = cita.prospectos?.correo;
+  if (correo && CORREO_RE.test(correo)) {
+    await correoLinkProspecto(correo, cita.prospectos?.nombre ?? null, etiqueta(cita.inicio), link, true);
+  }
+  return { ok: true };
 }
 
 /** Port fiel de crearCita: transacción con FOR UPDATE + UNIQUE como última defensa. */

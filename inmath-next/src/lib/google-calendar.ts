@@ -1,0 +1,112 @@
+import { prisma } from "@/lib/db";
+
+/**
+ * Respaldo DIRECTO de Google Calendar + Meet (sin pasar por n8n).
+ *
+ * Cadena de creación del link de una cita (ver agenda.ts):
+ *   1) n8n (workflow 03) — el "robot" titular.
+ *   2) ESTE módulo — si n8n falla, el sitio crea el evento él mismo con la
+ *      cuenta de Google del negocio (cursosinmath@gmail.com).
+ *   3) Si ambos fallan: alerta roja en el panel + correo urgente al staff y
+ *      reintentos automáticos (api/citas/reparar-links).
+ *
+ * Autorización: reutiliza el MISMO cliente OAuth del login con Google
+ * (GOOGLE_CLIENT_ID/SECRET y el redirect /api/portal/google/callback), pero
+ * con scope de Calendar y access_type=offline. El refresh token se guarda en
+ * la tabla `configuraciones` (clave google_calendar_refresh) al pulsar
+ * "Conectar Google Calendar" en /panel/configuracion — es un paso ÚNICO que
+ * hace el dueño con la cuenta cursosinmath@gmail.com.
+ */
+
+const CLAVE_REFRESH = "google_calendar_refresh";
+const CLAVE_CUENTA = "google_calendar_cuenta";
+
+export async function calendarDirectoConfigurado(): Promise<boolean> {
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) return false;
+  const fila = await prisma.configuraciones.findUnique({ where: { clave: CLAVE_REFRESH } });
+  return Boolean(fila?.valor);
+}
+
+export async function calendarCuentaConectada(): Promise<string | null> {
+  const fila = await prisma.configuraciones.findUnique({ where: { clave: CLAVE_CUENTA } });
+  return fila?.valor ?? null;
+}
+
+export async function guardarCredencialCalendar(refreshToken: string, cuenta: string, usuarioId: number | null) {
+  const datos = (clave: string, valor: string, descripcion: string) => ({
+    where: { clave },
+    update: { valor, actualizado_por: usuarioId },
+    create: { clave, valor, tipo: "texto" as const, descripcion, actualizado_por: usuarioId },
+  });
+  await prisma.configuraciones.upsert(datos(CLAVE_REFRESH, refreshToken, "Refresh token OAuth para crear eventos de Calendar/Meet (respaldo directo sin n8n)"));
+  await prisma.configuraciones.upsert(datos(CLAVE_CUENTA, cuenta, "Cuenta de Google conectada para el calendario de asesorías"));
+}
+
+async function accessTokenCalendar(): Promise<string | null> {
+  const fila = await prisma.configuraciones.findUnique({ where: { clave: CLAVE_REFRESH } });
+  if (!fila?.valor) return null;
+  try {
+    const res = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: process.env.GOOGLE_CLIENT_ID ?? "",
+        client_secret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+        refresh_token: fila.valor,
+        grant_type: "refresh_token",
+      }).toString(),
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (res.status !== 200) {
+      console.error("google-calendar: refresh rechazado", res.status, await res.text().catch(() => ""));
+      return null;
+    }
+    const datos = await res.json().catch(() => ({}));
+    return datos.access_token ?? null;
+  } catch (e) {
+    console.error("google-calendar: no se pudo refrescar el token", e);
+    return null;
+  }
+}
+
+/** Crea el evento (con sala de Meet) directamente en el calendario primario
+ *  de la cuenta conectada. Devuelve el link de Meet o null si algo falla —
+ *  nunca lanza: quien llama decide el siguiente paso de la cadena. */
+export async function crearEventoDirecto(cita: { id: number; inicio: Date; fin: Date }, prospectoNombre: string | null): Promise<string | null> {
+  const token = await accessTokenCalendar();
+  if (!token) return null;
+  // Las horas de la agenda son hora local de México sin zona; se la declaramos.
+  const iso = (d: Date) => {
+    const p = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:00`;
+  };
+  try {
+    const res = await fetch(
+      "https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1",
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          summary: `Asesoría InMath — ${prospectoNombre ?? "prospecto"}`,
+          description: `Asesoría 1 a 1 agendada desde el sitio (cita #${cita.id}).`,
+          start: { dateTime: iso(cita.inicio), timeZone: "America/Mexico_City" },
+          end: { dateTime: iso(cita.fin), timeZone: "America/Mexico_City" },
+          conferenceData: { createRequest: { requestId: `inmath-cita-${cita.id}`, conferenceSolutionKey: { type: "hangoutsMeet" } } },
+        }),
+        signal: AbortSignal.timeout(20_000),
+      },
+    );
+    if (res.status < 200 || res.status >= 300) {
+      console.error("google-calendar: crear evento falló", res.status, await res.text().catch(() => ""));
+      return null;
+    }
+    const evento = await res.json().catch(() => ({}));
+    const meet: string | undefined =
+      evento.hangoutLink ??
+      evento.conferenceData?.entryPoints?.find((e: { entryPointType?: string; uri?: string }) => e.entryPointType === "video")?.uri;
+    return meet ?? null;
+  } catch (e) {
+    console.error("google-calendar: crear evento no respondió", e);
+    return null;
+  }
+}

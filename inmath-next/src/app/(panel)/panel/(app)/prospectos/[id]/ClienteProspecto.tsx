@@ -166,17 +166,23 @@ export function EliminarRegistroBoton({ prospectoId, nombre }: { prospectoId: nu
 }
 
 /** Acciones por cita en la ficha: Cancelar (futura, no hoy) / Eliminar (pasada). */
-export function CitaAcciones({ citaId, esFutura, esHoy, activa, sinPago }: {
-  citaId: number; esFutura: boolean; esHoy: boolean; activa: boolean; sinPago: boolean;
+export function CitaAcciones({ citaId, esFutura, esHoy, activa, sinPago, sinLink = false }: {
+  citaId: number; esFutura: boolean; esHoy: boolean; activa: boolean; sinPago: boolean; sinLink?: boolean;
 }) {
   const [cancelando, setCancelando] = useState(false);
   const [confirmarEliminar, setConfirmarEliminar] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const toast = useToastResultado();
 
+  // Cita activa que quedó SIN enlace de Meet (el robot y el respaldo
+  // fallaron al agendar): botones para regenerarlo o pegarlo a mano — en
+  // ambos casos el correo al prospecto sale AUTOMÁTICO al guardar.
+  const accionesLink = activa && (esFutura || esHoy) && sinLink ? <CitaLinkAcciones citaId={citaId} /> : null;
+
   if (activa && esFutura && !esHoy) {
     return (
       <>
+        {accionesLink}
         <button type="button" className="boton mini fantasma rx-borrar" onClick={() => setCancelando(true)}>Cancelar</button>
         {cancelando && (
           <MotivoDialogo
@@ -199,6 +205,7 @@ export function CitaAcciones({ citaId, esFutura, esHoy, activa, sinPago }: {
       </>
     );
   }
+  if (activa && esHoy) return accionesLink;
   if (!esFutura && sinPago) {
     return (
       <>
@@ -230,4 +237,61 @@ export function CitaAcciones({ citaId, esFutura, esHoy, activa, sinPago }: {
     );
   }
   return null;
+}
+
+
+/** Botones de rescate del link de Meet de una cita que quedó sin él:
+ *  "Generar link" reintenta la cadena (robot n8n → respaldo directo de
+ *  Google); "Pegar link" guarda uno hecho a mano. En AMBOS casos el correo
+ *  con el enlace le llega al prospecto automáticamente al guardar. */
+function CitaLinkAcciones({ citaId }: { citaId: number }) {
+  const [pegando, setPegando] = useState(false);
+  const [link, setLink] = useState("");
+  const [ocupado, setOcupado] = useState(false);
+  const toast = useToastResultado();
+
+  return (
+    <>
+      <span className="gaje error">sin link</span>
+      <button type="button" className="boton mini fantasma" disabled={ocupado}
+        onClick={async () => {
+          setOcupado(true);
+          const { citaLinkGenerarAccion } = await import("../../acciones");
+          const r = await citaLinkGenerarAccion(citaId);
+          toast(r);
+          setOcupado(false);
+          if (r.ok) window.location.reload();
+        }}>{ocupado ? "Generando…" : "Generar link"}</button>
+      <button type="button" className="boton mini fantasma" onClick={() => setPegando(true)}>Pegar link</button>
+      {pegando && (
+        <div className="us-velo visible" style={{ zIndex: 400 }}>
+          <div className="us-frame" role="dialog" aria-modal="true" style={{ width: "min(460px, 100%)" }}>
+            <div className="us-frame-cab">
+              <div className="us-quien"><b>Pegar enlace de la asesoría</b><span>Al guardar, el enlace se le envía al prospecto por correo automáticamente.</span></div>
+              <button type="button" className="toast-x us-cerrar" aria-label="Cerrar" onClick={() => setPegando(false)}>✕</button>
+            </div>
+            <label className="pl-campo ancho" style={{ marginTop: 14 }}>Enlace (Meet, Zoom…)
+              <input type="url" inputMode="url" placeholder="https://meet.google.com/…" value={link}
+                onChange={(e) => setLink(e.target.value)} />
+            </label>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
+              <button type="button" className="boton fantasma" onClick={() => setPegando(false)}>Volver</button>
+              <button type="button" className="boton primario" disabled={ocupado || !link.trim()}
+                onClick={async () => {
+                  setOcupado(true);
+                  const { citaLinkGuardarAccion } = await import("../../acciones");
+                  const fd = new FormData();
+                  fd.set("cita_id", String(citaId));
+                  fd.set("meet_link", link.trim());
+                  const r = await citaLinkGuardarAccion({}, fd);
+                  toast(r);
+                  setOcupado(false);
+                  if (r.ok) { setPegando(false); window.location.reload(); }
+                }}>{ocupado ? "Guardando…" : "Guardar y enviar"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }

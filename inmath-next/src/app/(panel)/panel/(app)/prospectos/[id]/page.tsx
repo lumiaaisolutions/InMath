@@ -119,7 +119,8 @@ export default async function Prospecto({ params }: { params: Promise<{ id: stri
                       <dd style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                         <span className={`gaje ${c.estado === "completada" ? "ok" : c.estado === "cancelada" || c.estado === "no_asistio" ? "error" : "neutro"}`}>{c.estado}</span>
                         <CitaAcciones citaId={c.id} activa={["agendada", "confirmada"].includes(c.estado)}
-                          esFutura={c.inicio.getTime() >= ahora.getTime()} esHoy={isoDia(c.inicio) === hoyIso} sinPago={sinPago} />
+                          esFutura={c.inicio.getTime() >= ahora.getTime()} esHoy={isoDia(c.inicio) === hoyIso} sinPago={sinPago}
+                          sinLink={!c.meet_link} />
                       </dd>
                     </div>
                     {c.meet_link && (

@@ -346,6 +346,31 @@ export async function registroEliminarAccion(_prev: Resultado, fd: FormData): Pr
  * prospecto. Candado: NO se pueden cancelar citas del día en curso (para
  * esas, coordinar directo con el prospecto).
  */
+/** "Generar link": reintenta la cadena (robot n8n → respaldo directo de
+ *  Google) para una cita que quedó sin Meet. Si lo consigue, lo guarda y el
+ *  correo al prospecto sale AUTOMÁTICO. */
+export async function citaLinkGenerarAccion(citaId: number): Promise<Resultado> {
+  await requiereModulo("citas");
+  const { repararLinkCita } = await import("@/lib/agenda");
+  const r = await repararLinkCita(citaId);
+  revalidatePath("/panel/citas");
+  return r.ok ? { ok: "Enlace generado y enviado al prospecto por correo" } : { error: r.error ?? "No se pudo generar el enlace" };
+}
+
+/** "Pegar link": guarda un Meet creado a mano por el staff y le envía el
+ *  correo al prospecto automáticamente. */
+export async function citaLinkGuardarAccion(_prev: Resultado, fd: FormData): Promise<Resultado> {
+  await requiereModulo("citas");
+  const citaId = parseInt(String(fd.get("cita_id") ?? "0"), 10);
+  const link = String(fd.get("meet_link") ?? "").trim();
+  if (citaId < 1) return { error: "Cita inválida" };
+  if (!/^https:\/\/\S+$/.test(link)) return { error: "Pega un enlace válido (https://…)" };
+  const { guardarLinkManual } = await import("@/lib/agenda");
+  const r = await guardarLinkManual(citaId, link);
+  revalidatePath("/panel/citas");
+  return r.ok ? { ok: "Enlace guardado y enviado al prospecto por correo" } : { error: r.error ?? "No se pudo guardar" };
+}
+
 export async function citaCancelarAccion(_prev: Resultado, fd: FormData): Promise<Resultado> {
   await requiereModulo("citas");
   const citaId = parseInt(String(fd.get("cita_id") ?? "0"), 10);
