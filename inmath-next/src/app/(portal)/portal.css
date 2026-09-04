@@ -74,7 +74,7 @@
 .pt-chip span { font: 500 .82rem/1 var(--cuerpo); color: var(--tinta-3); }
 
 /* ---- Tarjetas hero (las dos señales grandes) ---- */
-.pt-heros { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.pt-heros { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px; }
 @media (max-width: 720px) { .pt-heros { grid-template-columns: 1fr; } }
 
 .pt-hero {
@@ -144,7 +144,7 @@
 .pt-hero-cta:hover { transform: translateY(-2px); box-shadow: 0 16px 30px -12px rgba(18,31,55,.4); }
 
 /* ---- Fila de datos clave ---- */
-.pt-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 26px; }
+.pt-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
 @media (max-width: 560px) { .pt-stats { grid-template-columns: 1fr 1fr; } }
 .pt-stat {
   background: linear-gradient(165deg, #FFFFFF 0%, #FAFBFF 100%);
@@ -749,6 +749,7 @@
  * se muestra íntegra, sin velos ni anillos que parezcan bordes. */
 .pt-hero-card {
   background: #fff; border-radius: 26px; overflow: hidden;
+  margin-bottom: 22px;
   box-shadow: 0 24px 60px -26px rgba(27,47,82,.35);
 }
 .pt-hero-banner { position: relative; height: 200px; overflow: hidden; }
