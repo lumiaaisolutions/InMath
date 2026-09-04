@@ -1,5 +1,5 @@
 #!/bin/sh
-# Cron cada 10 min: red de seguridad del link de Meet — reintenta generar el
+# Cron cada 3 min: red de seguridad del link de Meet — reintenta generar el
 # enlace de citas que quedaron sin él (robot n8n → respaldo directo de Google),
 # se lo envía al prospecto en cuanto existe y avisa URGENTE al staff si a los
 # 10-20 min sigue sin link.

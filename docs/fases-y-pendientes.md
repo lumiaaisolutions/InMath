@@ -814,3 +814,11 @@ sistema/correo) y borrar el otro (hbx-zqho-jfo).
 - Limpieza manual en el calendario cursosinmath: borrar eventos huérfanos
   de prueba ("Prueba…", "Diagnostico…") y, de los eventos de fer del
   04-sep 17:00, conservar el que coincide con meet.google.com/pqr-xjsb-exb.
+
+**F14 — Cadencia del reintento de links: 10 → 3 minutos** (pedido del
+usuario). Ajustes acoplados para que no sea contraproducente: (a) el aviso
+URGENTE al staff ahora usa la ventana [9,12) min — una pasada exacta con
+cadencia de 3, sigue llegando UNA sola vez; (b) el reintento se salta
+citas con menos de 2 min de creadas (el agendado original puede seguir
+trabajando ~30s; evita que el cron le compita y provoque otra carrera de
+eventos duplicados). Crontab actualizado a */3.
