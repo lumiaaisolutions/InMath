@@ -27,6 +27,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     }
     delete cuerpo.meet_link;
     delete cuerpo.google_event_id;
+    cuerpo.__duplicado_descartado = true;
   }
 
   const data: Record<string, unknown> = {};
@@ -41,7 +42,16 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     data.recordatorio_enviado_en = cuerpo.recordatorio_enviado_en === null
       ? null : paredDesde(String(cuerpo.recordatorio_enviado_en));
   }
-  if (Object.keys(data).length === 0) return NextResponse.json({ error: "Nada que actualizar" }, { status: 422 });
+  if (Object.keys(data).length === 0) {
+    // Si lo ÚNICO que traía era el link duplicado que se descartó arriba,
+    // responde 200 con la fila actual (idempotente) — así el flujo de n8n
+    // termina en éxito en vez de marcar error por una carrera ya resuelta.
+    if ("meet_link" in cuerpo || cuerpo.__duplicado_descartado) {
+      const fila = await prisma.citas.findUnique({ where: { id } });
+      return NextResponse.json(filaApi(fila!));
+    }
+    return NextResponse.json({ error: "Nada que actualizar" }, { status: 422 });
+  }
   const cita = await prisma.citas.update({ where: { id }, data });
   return NextResponse.json(filaApi(cita));
 }

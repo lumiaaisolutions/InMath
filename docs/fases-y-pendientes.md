@@ -791,3 +791,26 @@ a las 22:40 con UN evento — la red de seguridad operando según diseño
 (cadencia 10 min). Limpieza manual: de los eventos 5:00-5:30pm del 04-sep
 en cursosinmath, conservar el de meet.google.com/oes-ewkm-ujo (es el del
 sistema/correo) y borrar el otro (hbx-zqho-jfo).
+
+**F13 — Ronda de pruebas nocturna (22:30-23:00) y afinaciones**:
+- Los "fallos" de las pruebas 2 y 3 coincidieron EXACTAMENTE con las
+  ventanas de reinicio de los deploys v68/v69 (n8n recibía 522 de
+  Cloudflare al guardar porque el sitio estaba reiniciando). El reintento
+  de cada 10 min reparó ambas citas solo (la de fer a las 23:00:04, link
+  enviado por correo automático).
+- BUG PROPIO corregido: el candado anti-duplicados del PATCH dejaba la
+  petición vacía y respondía 422 ("Nada que actualizar") → n8n marcaba
+  error aunque la carrera ya estaba resuelta. Ahora responde 200
+  idempotente con la fila actual.
+- UX del banner rojo: ahora NOMBRA a los prospectos sin link (con fecha y
+  hora) y el botón lleva DIRECTO a la ficha del primero (antes iba a
+  /panel y parecía no hacer nada). En el calendario de /panel/citas las
+  citas activas sin link muestran gaje rojo "⚠ SIN LINK".
+- PENDIENTE DEL DUEÑO (crítico para el respaldo directo): ACTIVAR la
+  Google Calendar API en el proyecto de Google Cloud del login (error
+  SERVICE_DISABLED, proyecto 746722705015):
+  https://console.developers.google.com/apis/api/calendar-json.googleapis.com/overview?project=746722705015
+  Sin esto el respaldo directo no puede crear ni borrar eventos.
+- Limpieza manual en el calendario cursosinmath: borrar eventos huérfanos
+  de prueba ("Prueba…", "Diagnostico…") y, de los eventos de fer del
+  04-sep 17:00, conservar el que coincide con meet.google.com/pqr-xjsb-exb.

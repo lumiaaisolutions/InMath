@@ -75,9 +75,12 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
   // alerta roja imposible de ignorar (el cliente aún no recibe su link; el
   // sistema reintenta solo cada 10 min, pero el staff puede resolverlo ya
   // desde la ficha con "Generar link" o "Pegar link").
-  const citasSinLink = await prisma.citas.count({
+  const sinLink = await prisma.citas.findMany({
     where: { estado: { in: ["agendada", "confirmada"] }, meet_link: null, inicio: { gt: ahoraPared() } },
+    select: { id: true, inicio: true, prospectos: { select: { id: true, nombre: true } } },
+    orderBy: { inicio: "asc" }, take: 4,
   });
+  const citasSinLink = sinLink.length;
 
   return (
     <div className="app">
@@ -100,10 +103,14 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
       </aside>
       <main className="contenido">
         {citasSinLink > 0 && (
-          <Link className="banner-disp banner-disp-urgente" href="/panel">
+          <Link className="banner-disp banner-disp-urgente" href={`/panel/prospectos/${sinLink[0].prospectos.id}`}>
             <IconoPanel n="alerta" cls="ic-sm" />
-            <span><b>{citasSinLink === 1 ? "1 asesoría agendada NO tiene enlace de Meet" : `${citasSinLink} asesorías agendadas NO tienen enlace de Meet`}</b> — el cliente aún no recibe su link. Ábrela desde el pipeline y usa &ldquo;Generar link&rdquo; o &ldquo;Pegar link&rdquo;; el correo al cliente sale solo.</span>
-            <span className="banner-cta">Resolver ahora</span>
+            <span>
+              <b>{citasSinLink === 1 ? "1 asesoría NO tiene enlace de Meet" : `${citasSinLink} asesorías NO tienen enlace de Meet`}:</b>{" "}
+              {sinLink.map((c) => `${c.prospectos.nombre ?? "(sin nombre)"} (${isoDia(c.inicio)} ${String(c.inicio.getUTCHours()).padStart(2, "0")}:${String(c.inicio.getUTCMinutes()).padStart(2, "0")})`).join(", ")}
+              {" "}— el sistema reintenta cada 10 min; con &ldquo;Generar link&rdquo; o &ldquo;Pegar link&rdquo; en su ficha lo resuelves ya y el correo al cliente sale solo.
+            </span>
+            <span className="banner-cta">Abrir la ficha</span>
           </Link>
         )}
         {faltaEsta && (

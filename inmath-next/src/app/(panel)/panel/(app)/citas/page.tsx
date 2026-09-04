@@ -124,6 +124,9 @@ function FilaHora({ h, dias, porCelda, mapaColor, hoyIso }: {
                   {String(c.inicio.getUTCHours()).padStart(2, "0")}:{String(c.inicio.getUTCMinutes()).padStart(2, "0")} · {c.prospectos.nombre ?? c.prospectos.telefono_whatsapp}
                 </span>
                 <small>{c.usuarios.nombre}{c.meet_link ? " · Meet" : ""}</small>
+                {!c.meet_link && ["agendada", "confirmada"].includes(c.estado) && (
+                  <small style={{ display: "block", color: "#FFD1D1", background: "rgba(180,30,30,.55)", borderRadius: 6, padding: "1px 6px", marginTop: 2, fontWeight: 700 }}>⚠ SIN LINK</small>
+                )}
               </Link>
             ))}
           </div>
