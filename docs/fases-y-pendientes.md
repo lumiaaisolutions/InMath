@@ -1031,3 +1031,16 @@ cambio validado por correo** (pedido del usuario, rol dev senior):
 - Nuevas acciones solicitarCodigoPasswordAccion /
   cambiarPasswordConCodigoAccion; el form viejo con "contraseña actual" se
   retiró de la UI.
+
+**F24 (v86) — Vista previa completa del examen en /panel/reactivos**
+(pedido del usuario, rol dev senior): cada tarjeta de examen tiene ahora
+un botón primario "Vista previa" que abre un frame de lectura fiel con
+TODO el contenido tal como lo ve el alumno: cabecera con título y chips
+(modalidades, tema, nº de preguntas, % mínimo, orden, activo), material
+adjunto del examen (imágenes inline o link, con su rango "aplica a
+preguntas X–Y"), y cada pregunta numerada con su enunciado, su imagen,
+sus opciones A/B/C/D (la CORRECTA resaltada en verde con ✓; opciones tipo
+imagen se renderizan), y su explicación en bloque ámbar 💡. Responsive
+(frame a pantalla casi completa en móvil) y con el cierre de vidrio
+flotante. Componente PreviewExamenDialogo + estilos .rx-prev-* — usa los
+datos que la página ya cargaba, sin consultas nuevas.

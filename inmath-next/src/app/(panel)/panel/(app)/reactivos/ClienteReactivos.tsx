@@ -460,7 +460,7 @@ function ModalidadesDialogo({ abierto, examen, cursos, onCerrar }: { abierto: bo
   );
 }
 
-function ExamenTarjeta({ examen, onEditar, onModalidades }: { examen: Examen; onEditar: () => void; onModalidades: () => void }) {
+function ExamenTarjeta({ examen, onEditar, onModalidades, onPreview }: { examen: Examen; onEditar: () => void; onModalidades: () => void; onPreview: () => void }) {
   const toast = useToastResultado();
   const [confirmar, setConfirmar] = useState(false);
   const [ocupado, setOcupado] = useState(false);
@@ -479,6 +479,9 @@ function ExamenTarjeta({ examen, onEditar, onModalidades }: { examen: Examen; on
         </button>
       </div>
       <div className="rx-examen-pie">
+        <button type="button" className="boton mini primario" onClick={onPreview} title="Ver el examen completo como lo vería el alumno">
+          <IconoPanel n="imagen" cls="ic-sm" /> Vista previa
+        </button>
         <button type="button" className="boton mini fantasma" onClick={onEditar}>Editar</button>
         <button type="button" className="boton mini fantasma" onClick={onModalidades} title="Elegir en qué modalidad(es) aparece">
           <IconoPanel n="route" cls="ic-sm" /> Modalidad(es)
@@ -496,6 +499,7 @@ function ExamenTarjeta({ examen, onEditar, onModalidades }: { examen: Examen; on
 function ListaExamenes({ examenes, cursos }: { examenes: Examen[]; cursos: Curso[] }) {
   const [abierto, setAbierto] = useState<"crear" | Examen | null>(null);
   const [modalidadesDe, setModalidadesDe] = useState<Examen | null>(null);
+  const [previewDe, setPreviewDe] = useState<Examen | null>(null);
 
   return (
     <div className="tarjeta rx-panel" style={{ marginBottom: 20 }}>
@@ -516,11 +520,12 @@ function ListaExamenes({ examenes, cursos }: { examenes: Examen[]; cursos: Curso
         <div className="vacio">Sin exámenes todavía — agrupa varias preguntas en el primero</div>
       ) : (
         <div className="rx-examenes-grid">
-          {examenes.map((e) => <ExamenTarjeta key={e.id} examen={e} onEditar={() => setAbierto(e)} onModalidades={() => setModalidadesDe(e)} />)}
+          {examenes.map((e) => <ExamenTarjeta key={e.id} examen={e} onEditar={() => setAbierto(e)} onModalidades={() => setModalidadesDe(e)} onPreview={() => setPreviewDe(e)} />)}
         </div>
       )}
 
       <ModalidadesDialogo abierto={modalidadesDe !== null} examen={modalidadesDe} cursos={cursos} onCerrar={() => setModalidadesDe(null)} />
+      {previewDe && <PreviewExamenDialogo examen={previewDe} onCerrar={() => setPreviewDe(null)} />}
 
       <Velo abierto={abierto !== null} onCerrar={() => setAbierto(null)}>
         <div className="us-frame us-frame-asistente" role="dialog" aria-modal="true">
@@ -713,5 +718,77 @@ export function ClienteReactivos({ examenes, sueltos, cursos }: { examenes: Exam
       <ListaExamenes examenes={examenes} cursos={cursos} />
       <ListaReactivosSueltos inicial={sueltos} cursos={cursos} />
     </>
+  );
+}
+
+
+/** VISTA PREVIA COMPLETA del examen — todo lo que el alumno vería en su
+ *  práctica, en un solo frame de lectura para el staff: cada pregunta con
+ *  sus opciones (la correcta marcada en verde), su explicación, sus
+ *  imágenes y los adjuntos por rango de preguntas. */
+const LETRAS = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
+function PreviewExamenDialogo({ examen, onCerrar }: { examen: Examen; onCerrar: () => void }) {
+  return (
+    <div className="us-velo visible" style={{ zIndex: 420 }}>
+      <div className="us-frame rx-prev-frame" role="dialog" aria-modal="true" aria-label={`Vista previa: ${examen.titulo}`}>
+        <button type="button" className="pg-cerrar" aria-label="Cerrar" onClick={onCerrar}><IconoPanel n="x" /></button>
+
+        <div className="rx-prev-cab">
+          <span className="rx-prev-eyebrow"><IconoPanel n="imagen" cls="ic-sm" /> Vista previa — así lo ve el alumno</span>
+          <h2>{examen.titulo}</h2>
+          <div className="rx-prev-chips">
+            <span className="gaje neutro">{examen.cursoNombres.join(" + ") || "Sin modalidad"}</span>
+            {examen.tema && <span className="gaje neutro">{examen.tema}</span>}
+            <span className="gaje neutro">{examen.preguntas.length} preguntas</span>
+            <span className="gaje neutro">Mínimo {examen.porcentajeMinimo}%</span>
+            <span className="gaje neutro">{examen.ordenAleatorio ? "Orden aleatorio" : "Orden fijo"}</span>
+            <span className={`gaje ${examen.activo ? "ok" : "neutro"}`}>{examen.activo ? "activo" : "inactivo"}</span>
+          </div>
+        </div>
+
+        {examen.adjuntos.length > 0 && (
+          <div className="rx-prev-adjuntos">
+            <span className="pg-etq">Material del examen</span>
+            {examen.adjuntos.map((a) => (
+              <div key={a.id} className="rx-prev-adjunto">
+                {/^image\//.test(a.tipo) || /\.(png|jpe?g|webp|gif)$/i.test(a.url)
+                  ? <img src={a.url} alt={a.nombre} />
+                  : <a href={a.url} target="_blank" rel="noopener" className="pg-link"><IconoPanel n="prompts" cls="ic-sm" /> {a.nombre}</a>}
+                <small>Aplica a preguntas {a.desde}–{a.hasta}</small>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="rx-prev-lista">
+          {examen.preguntas.map((pq, i) => (
+            <article key={pq.id} className="rx-prev-pregunta">
+              <header><span className="rx-prev-num">{i + 1}</span><p>{pq.enunciado}</p></header>
+              {pq.adjuntoUrl && (
+                pq.adjuntoTipo?.startsWith("image") || /\.(png|jpe?g|webp|gif)$/i.test(pq.adjuntoUrl)
+                  ? <img className="rx-prev-img" src={pq.adjuntoUrl} alt="" />
+                  : <a className="pg-link" href={pq.adjuntoUrl} target="_blank" rel="noopener"><IconoPanel n="prompts" cls="ic-sm" /> Ver adjunto de la pregunta</a>
+              )}
+              <ul className="rx-prev-opciones">
+                {pq.opciones.map((op, j) => (
+                  <li key={j} className={j === pq.correcta ? "correcta" : ""}>
+                    <span className="rx-prev-letra">{LETRAS[j] ?? j + 1}</span>
+                    {pq.opcionesTipo[j] === "imagen"
+                      ? <img className="rx-prev-op-img" src={op} alt={`Opción ${LETRAS[j] ?? j + 1}`} />
+                      : <span className="rx-prev-op-tx">{op}</span>}
+                    {j === pq.correcta && <span className="rx-prev-check"><IconoPanel n="check" cls="ic-sm" /> Correcta</span>}
+                  </li>
+                ))}
+              </ul>
+              {pq.explicacion && (
+                <div className="rx-prev-explica"><b>💡 Explicación</b><p>{pq.explicacion}</p></div>
+              )}
+            </article>
+          ))}
+          {examen.preguntas.length === 0 && <p className="rx-prev-vacio">Este examen aún no tiene preguntas activas.</p>}
+        </div>
+      </div>
+    </div>
   );
 }
