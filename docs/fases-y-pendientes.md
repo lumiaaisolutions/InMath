@@ -822,3 +822,10 @@ cadencia de 3, sigue llegando UNA sola vez; (b) el reintento se salta
 citas con menos de 2 min de creadas (el agendado original puede seguir
 trabajando ~30s; evita que el cron le compita y provoque otra carrera de
 eventos duplicados). Crontab actualizado a */3.
+
+**F15 — Correo de "✅ Resuelto" al staff**: cuando el link llega TARDE
+(reintento automático o pegado a mano), el cliente ya recibía su correo
+pero el staff se quedaba solo con el ⚠️ URGENTE, sin saber que se había
+resuelto. Ahora repararLinkCita y guardarLinkManual mandan también al
+buzón de contacto un "✅ Resuelto: la asesoría de X ya tiene su enlace"
+con el botón del Meet — el urgente y su resolución cierran el ciclo.

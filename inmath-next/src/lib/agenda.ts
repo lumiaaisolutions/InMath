@@ -198,6 +198,15 @@ export async function repararLinkCita(citaId: number): Promise<{ ok: boolean; li
   if (correo && CORREO_RE.test(correo)) {
     await correoLinkProspecto(correo, cita.prospectos?.nombre ?? null, etiqueta(cita.inicio), link, true);
   }
+  // Cierra el ciclo con el STAFF: si hubo aviso urgente, este correo lo
+  // resuelve — ya no tienen que revisar el panel para saber que se arregló.
+  await enviarCorreo({
+    para: [CORREO_CONTACTO],
+    asunto: `✅ Resuelto: la asesoría de ${cita.prospectos?.nombre ?? "(sin nombre)"} ya tiene su enlace`,
+    preheader: "El enlace se generó y ya se le envió al cliente por correo.",
+    texto: `La asesoría del ${etiqueta(cita.inicio)} (cita #${cita.id}) ya tiene enlace de Meet y el cliente ya lo recibió por correo automáticamente. No hay nada más que hacer.`,
+    cta: { url: link, label: "Unirme a la asesoría en línea", icono: "calendario" as const },
+  }).catch((e) => console.error("repararLinkCita: no se pudo avisar al staff", e));
   return { ok: true, link };
 }
 
@@ -215,6 +224,13 @@ export async function guardarLinkManual(citaId: number, link: string): Promise<{
   if (correo && CORREO_RE.test(correo)) {
     await correoLinkProspecto(correo, cita.prospectos?.nombre ?? null, etiqueta(cita.inicio), link, true);
   }
+  await enviarCorreo({
+    para: [CORREO_CONTACTO],
+    asunto: `✅ Resuelto: la asesoría de ${cita.prospectos?.nombre ?? "(sin nombre)"} ya tiene su enlace`,
+    preheader: "El enlace se guardó y ya se le envió al cliente por correo.",
+    texto: `La asesoría del ${etiqueta(cita.inicio)} (cita #${citaId}) ya tiene enlace y el cliente ya lo recibió por correo automáticamente.`,
+    cta: { url: link, label: "Unirme a la asesoría en línea", icono: "calendario" as const },
+  }).catch((e) => console.error("guardarLinkManual: no se pudo avisar al staff", e));
   return { ok: true };
 }
 
