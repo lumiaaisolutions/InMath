@@ -754,7 +754,7 @@
 }
 .pt-hero-cuerpo { display: flex; align-items: flex-end; gap: 20px; padding: 0 30px; margin-top: -56px; position: relative; z-index: 2; }
 .pt-hero-foto {
-  flex: 0 0 auto; width: 92px; height: 92px; border-radius: 50%; overflow: hidden;
+  display: block; flex: 0 0 auto; width: 92px; height: 92px; border-radius: 50%; overflow: hidden;
   border: 4px solid #fff; background: #fff; box-shadow: 0 12px 28px rgba(18,31,55,.28);
   transition: transform .25s cubic-bezier(.22,.7,.31,1), box-shadow .25s ease;
 }
