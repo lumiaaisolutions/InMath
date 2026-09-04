@@ -37,29 +37,40 @@ export default async function CuentaPage() {
   return (
     <section className="pt-panel pt-cuenta-panel">
       <div className="pt-wrap">
-        {/* Tarjeta de perfil grande, a todo el ancho */}
-        <div className="pf-tarjeta pt-rev" style={{ ["--d" as string]: "0ms" }}>
-          <div className={`pf-banner${media.banner ? "" : " pf-banner-vacio"}`} style={media.banner ? { backgroundImage: `url(${media.banner})` } : undefined}>
+        {/* Tarjeta de perfil grande, a todo el ancho — mismo tratamiento que
+            la tarjeta de perfil del inicio (portada fundida a blanco + foto
+            flotante + curso-insignia), con controles propios para cambiar
+            portada/foto y las métricas como fila con divisores. */}
+        <header className="pt-hero-card pt-rev" style={{ ["--d" as string]: "0ms" }}>
+          <div className={`pt-hero-banner${media.banner ? "" : " pt-hero-banner-marca"}`}>
+            {media.banner && <img src={media.banner} alt="" />}
             <SubirFoto tipo="banner" etiqueta="Cambiar portada" />
           </div>
-          <div className="pf-cabeza">
-            <div className="pf-avatar-caja">
-              {media.avatar ? <img className="pf-avatar" src={media.avatar} alt="" /> : <span className="pf-avatar pf-avatar-ini">{inicial}</span>}
+          <div className="pt-hero-cuerpo">
+            <div className="pf-hero-foto-caja">
+              <span className="pt-hero-foto">
+                {media.avatar
+                  ? <img src={media.avatar} alt="" />
+                  : <i className="pt-hero-inicial">{inicial}</i>}
+              </span>
               <SubirFoto tipo="avatar" etiqueta="Cambiar foto" />
             </div>
-            <div className="pf-id">
+            <div className="pt-hero-tx">
+              <span className="pt-kicker">Portal del alumno</span>
               <h1>{alumno.nombre}</h1>
-              <p>{alumno.curso_nombre}</p>
-              <span className={`pf-estado ${alumno.estado === "activo" ? "ok" : ""}`}>
-                <i /> {alumno.estado === "activo" ? "Inscripción activa" : alumno.estado}
-              </span>
-            </div>
-            <div className="pf-metricas">
-              <div className="pf-metrica"><b>{avance}%</b><span>Avance</span></div>
-              <div className="pf-metrica"><b>{asesorias}</b><span>Asesorías</span></div>
+              <div className="pf-hero-badges">
+                <span className="pt-hero-curso"><Icono n="book" /> {alumno.curso_nombre}</span>
+                <span className={`pf-estado ${alumno.estado === "activo" ? "ok" : ""}`}>
+                  <i /> {alumno.estado === "activo" ? "Inscripción activa" : alumno.estado}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+          <div className="pt-hero-stats">
+            <div className="pt-hero-stat"><b>{avance}%</b><span>Avance</span></div>
+            <div className="pt-hero-stat"><b>{asesorias}</b><span>Asesorías</span></div>
+          </div>
+        </header>
 
         <div className="pt-cuenta-cols">
           {/* Editar perfil */}

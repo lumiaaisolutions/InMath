@@ -435,31 +435,16 @@
    Mi cuenta — tarjeta de perfil grande (banner + avatar personalizables) +
    datos de la cuenta + seguridad. Se adapta a todo el ancho.
    ========================================================================= */
-.pf-tarjeta {
-  position: relative; border-radius: 26px; overflow: hidden; margin-bottom: 18px;
-  background: var(--blanco); border: 1px solid var(--linea); box-shadow: var(--sombra-s);
-}
-.pf-banner {
-  position: relative; height: clamp(150px, 26vw, 240px);
-  background: linear-gradient(120deg, #6B9FFF, #4C7EF0 45%, #7C5CFF); background-size: cover; background-position: center;
-}
-.pf-cabeza { position: relative; display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; padding: 0 clamp(18px,4vw,32px) 24px; }
-.pf-avatar-caja { position: relative; margin-top: -54px; flex: 0 0 auto; }
-.pf-avatar {
-  width: 116px; height: 116px; border-radius: 50%; object-fit: cover; display: grid; place-items: center;
-  border: 5px solid var(--blanco); box-shadow: 0 12px 30px -10px rgba(18,31,55,.4); background: var(--azul-suave);
-}
-.pf-avatar-ini { font: 700 2.6rem/1 var(--display); color: var(--azul); }
-.pf-id { flex: 1; min-width: 0; padding-bottom: 4px; }
-.pf-id h1 { font: 700 clamp(1.6rem,3.4vw,2.3rem)/1.05 var(--display); letter-spacing: -.025em; color: var(--tinta); overflow-wrap: anywhere; }
-.pf-id p { color: var(--tinta-2); margin: 4px 0 10px; }
+/* Hero de "Mi cuenta" — reutiliza la tarjeta de perfil del inicio
+   (.pt-hero-card / .pt-hero-banner / .pt-hero-cuerpo / .pt-hero-foto /
+   .pt-hero-tx / .pt-hero-stats) y solo suma lo propio de esta página: los
+   controles de subir portada/foto y el estado de inscripción junto al curso. */
+.pf-hero-foto-caja { position: relative; flex: 0 0 auto; }
+.pf-hero-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 10px; }
+.pf-hero-badges .pt-hero-curso { margin-top: 0; }
 .pf-estado { display: inline-flex; align-items: center; gap: 7px; font: 700 .78rem/1 var(--cuerpo); color: var(--tinta-3); }
 .pf-estado i { width: 8px; height: 8px; border-radius: 50%; background: var(--tinta-3); }
 .pf-estado.ok { color: var(--ok); } .pf-estado.ok i { background: var(--ok); box-shadow: 0 0 0 4px var(--ok-suave); }
-.pf-metricas { display: flex; gap: 10px; padding-bottom: 6px; }
-.pf-metrica { text-align: center; padding: 10px 16px; border-radius: 16px; background: var(--lienzo); border: 1px solid var(--linea); }
-.pf-metrica b { display: block; font: 700 1.4rem/1 var(--display); color: var(--tinta); }
-.pf-metrica span { font-size: .74rem; color: var(--tinta-3); }
 
 /* Botones de subir (banner: arriba-derecha; avatar: cámara sobre el avatar) */
 .pf-subir { position: absolute; }
@@ -526,12 +511,6 @@
 }
 @keyframes sparkPulse { 0%,100%{ transform: scaleY(1) } 50%{ transform: scaleY(.55) } }
 
-/* Portada sin foto: color suave y transparente, SIN blur (petición del dueño) */
-.pf-banner-vacio {
-  background:
-    linear-gradient(120deg, rgba(107,159,255,.22), rgba(124,92,255,.16) 55%, rgba(62,201,166,.18)) !important;
-  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
-}
 .pf-bloque-ancho { grid-column: 1 / -1; }
 
 /* Gate de pago: estado bloqueado del portal (M10) */
