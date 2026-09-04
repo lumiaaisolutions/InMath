@@ -906,3 +906,22 @@ desplegadas y verificadas contra la API de producción:
    recolección de datos. Nota: subir a qwen2.5:7b (ya descargado en el VPS)
    requiere ampliar RAM a 16 GB — con 7.8 GB hay riesgo de tirar MySQL/sitio
    (evaluado y descartado por ahora, decisión del usuario: opción A).
+
+**F17 — Agendado del chat 100% DETERMINÍSTICO (v77)**. Las pruebas del
+usuario mostraron al modelo chico en bucle (pedía datos ya dados) y con
+textos desbordando la burbuja. Rediseño de fondo en /api/agente:
+- El SERVIDOR (no la IA) detecta en toda la conversación los 4 datos:
+  horario (etiqueta exacta de la lista o intento de fecha → reencarrila
+  con botones), teléfono (10-13 dígitos, normalizado), correo (regex) y
+  nombre (respuesta a la pregunta-marcador "Ya casi ✨ ¿A nombre de
+  quién…?" o extraído del mensaje que trae tel/correo).
+- FEEDBACK DE PROGRESO en cada paso: "Voy anotando: horario X · WhatsApp
+  Y · correo Z. Me falta…" — el usuario siempre sabe cómo va su registro.
+- Con los 4 datos, agenda el servidor directo (upsert + agendar + cadena
+  completa de Meet/correos). La IA queda SOLO para preguntas libres del
+  curso, y si intenta emitir <agendar> se convierte en el arranque del
+  flujo guiado.
+- CSS: overflow-wrap:anywhere en las burbujas (.ap-msg) — nada vuelve a
+  desbordarse; y regla 6 del prompt: prohibidos formatos técnicos con |.
+Verificado contra producción: horario real → resumen+faltantes → tel/correo
+→ resumen completo + pregunta de nombre; horario inventado → botones reales.
