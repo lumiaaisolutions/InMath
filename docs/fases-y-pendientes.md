@@ -829,3 +829,31 @@ pero el staff se quedaba solo con el ⚠️ URGENTE, sin saber que se había
 resuelto. Ahora repararLinkCita y guardarLinkManual mandan también al
 buzón de contacto un "✅ Resuelto: la asesoría de X ya tiene su enlace"
 con el botón del Meet — el urgente y su resolución cierran el ciclo.
+
+### Corte 04-sep-2026 (madrugada) — CIERRE de la sesión maratónica
+
+El subsistema completo de citas/links quedó documentado en su propio
+archivo: **[`citas-y-links-meet.md`](citas-y-links-meet.md)** (cadena de
+creación, red de seguridad, permisos, historia de bugs y pendientes). Los
+cortes (3)-(6) de arriba quedan como bitácora cronológica.
+
+**Resumen del día (v60→v73, 14 versiones desplegadas y verificadas):**
+- Mathy: botón Ocultar/Mostrar (mini-carita, panel+portal junto al logo).
+- Alertas: preview del emergente = componente único real, sin recortes.
+- Asistentes por pasos: fix del auto-guardado (key en Siguiente) en los 9.
+- Precios: relleno del modal; diálogos de la ficha en portal (vidrio los
+  tapaba); Usuarios: borrado definitivo con candados; módulos aplican a
+  admins con candado anti-bloqueo.
+- Píxel de Meta instalado y verificado (sitio público).
+- Sistema de links de Meet completo (ver citas-y-links-meet.md), con TRES
+  pruebas end-to-end reales del cliente esta noche: las tres citas
+  terminaron con evento único, link en sistema y correos entregados.
+- Crons restaurados dentro del repo (vencimiento, recordatorio,
+  reparar-links cada 3 min).
+- Kit de identidad gráfica en ~/Desktop/Identidad InMath.
+
+**Pendientes al cierre** (detalle en citas-y-links-meet.md):
+1. Cliente/dueño: activar la Google Calendar API (1 clic, URL en el .md).
+2. Cliente: limpiar eventos de prueba/huérfanos del calendario.
+3. Opcional: Retry-on-fail en el nodo Guardar del workflow de n8n.
+4. Regla operativa para pruebas: esperar ~2 min tras cada deploy.
