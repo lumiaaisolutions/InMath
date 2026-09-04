@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { ahoraPared } from "@/lib/fechas";
 import { Icono } from "@/components/Icono";
+import { mediaAlumno } from "@/lib/portal/media";
 import { requiereAlumno } from "@/lib/portal/sesion";
 import { tienePagoConfirmado } from "@/lib/portal/auth";
 import { leerMateriales } from "@/lib/portal/materiales";
@@ -101,6 +102,7 @@ export default async function PortalInicio() {
   // Días desde la inscripción (constancia — refuerzo positivo).
   const diasInscrito = Math.max(0, Math.floor((ahora.getTime() - alumno.inscrito_en.getTime()) / 86400_000));
 
+  const media = await mediaAlumno(alumno.id);
   const chips = [
     { n: diasInscrito, etq: diasInscrito === 1 ? "día contigo" : "días contigo" },
     { n: reportes.length, etq: reportes.length === 1 ? "reporte" : "reportes" },
@@ -112,11 +114,20 @@ export default async function PortalInicio() {
     <section className="pt-panel">
       <div className="pt-wrap">
         {/* Encabezado personalizado + métricas rápidas (escaneo preatentivo) */}
-        <header className="pt-head pt-rev" style={{ ["--d" as string]: "0ms" }}>
-          <div className="pt-head-id">
-            <span className="pt-kicker">Portal del alumno</span>
-            <h1>Hola, {primerNombre}.</h1>
-            <p className="pt-head-sub">{alumno.curso_nombre}</p>
+        <header className={`pt-head pt-rev${media.banner ? " pt-head-hero" : ""}`} style={{ ["--d" as string]: "0ms" }}>
+          {/* Portada del alumno (la que sube en Mi cuenta) como hero del inicio */}
+          {media.banner && (
+            <div className="pt-hero-banner"><img src={media.banner} alt="" /><i className="pt-hero-velo" aria-hidden="true" /></div>
+          )}
+          <div className={`pt-head-id${media.banner ? " pt-head-id-hero" : ""}`}>
+            {media.avatar && (
+              <span className={`pt-hero-foto${media.banner ? " solapa" : ""}`}><img src={media.avatar} alt="" /></span>
+            )}
+            <div>
+              <span className="pt-kicker">Portal del alumno</span>
+              <h1>Hola, {primerNombre}.</h1>
+              <p className="pt-head-sub">{alumno.curso_nombre}</p>
+            </div>
           </div>
         </header>
 

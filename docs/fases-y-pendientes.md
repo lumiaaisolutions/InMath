@@ -1053,3 +1053,12 @@ VERTICALMENTE la pregunta en la que va (la primera sin contestar): la
 tarjeta actual lleva anillo azul y la foto flota a su costado con un pulso
 suave (respetando prefers-reduced-motion). Datos vía mediaAlumno (sesión
 propia). Estilos .pt-avance-* en portal.css.
+
+**F26 (v88) — Hero del inicio del portal con portada y foto del alumno**:
+el inicio (/portal, ya pagado) abre ahora con la PORTADA del alumno (190px,
+sombra suave) con un velo degradado inferior para que el saludo nunca
+pierda contraste, y su FOTO (84px, borde blanco) solapando el borde junto
+al "Hola, X" — misma gramática visual que Mi cuenta y que la ficha del
+panel (consistencia = intuitivo). Sin banner, la foto sale en 64px junto
+al saludo; sin ninguno, el encabezado queda como siempre. Responsive
+(130px/64px en móvil).
