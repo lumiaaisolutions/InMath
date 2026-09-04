@@ -4,6 +4,7 @@ import { slotsDisponibles } from "@/lib/agenda";
 import { ahoraPared, isoDia, diaSemanaN } from "@/lib/fechas";
 import { Icono, Malla } from "@/components/Icono";
 import { AgendaForm, type DiaRango, type GrupoDia } from "./AgendaForm";
+import { alumnoActual } from "@/lib/portal/sesion";
 
 export const metadata: Metadata = { title: "Agendar asesoría — Cursos Inmath", alternates: { canonical: "/agenda" } };
 export const dynamic = "force-dynamic";
@@ -13,6 +14,13 @@ const SEM_LARGA = ["", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "S�
 const MESES = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 export default async function Agenda() {
+  // Si quien llega es un ALUMNO con sesión (viene del portal), sus datos se
+  // pre-llenan (solo completa lo que falte) y el "Volver" regresa al portal.
+  const alumno = await alumnoActual();
+  const prefill = alumno
+    ? { nombre: alumno.nombre ?? "", telefono: (alumno.telefono ?? "").replace(/\D/g, "").slice(-10), correo: alumno.email ?? "" }
+    : null;
+
   // Mismo calendario que usa el chatbot: la disponibilidad sale del mismo servicio.
   // max=90 (7 días × 12 slots/día vía maxPorDia) para que el calendario cubra
   // TODA la semana visible, aunque algún día tenga muchas horas definidas.
@@ -42,7 +50,7 @@ export default async function Agenda() {
     <section className="agenda-hero">
       <Malla />
       <div className="centrado">
-        <Link className="volver" href="/">← Volver al inicio</Link>
+        <Link className="volver" href={prefill ? "/portal" : "/"}>{prefill ? "← Volver a mi portal" : "← Volver al inicio"}</Link>
         <div className="agenda-rej">
           <div className="agenda-lado">
             <div className="cab-seccion reveal-mueve" style={{ marginBottom: 22 }}>
@@ -70,7 +78,7 @@ export default async function Agenda() {
                 </div>
               </div>
             ) : (
-              <AgendaForm rangoDias={rangoDias} grupos={grupos} />
+              <AgendaForm rangoDias={rangoDias} grupos={grupos} prefill={prefill} />
             )}
           </div>
         </div>

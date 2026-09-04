@@ -956,3 +956,15 @@ corregido sí se tomó y el prospecto conservó su nombre real.)
    píldora del portal (mini-carita + "Ocultar/Mostrar a Mathy" escrito),
    colocada justo debajo de la marca del sidebar, adaptada al fondo oscuro
    (.marca-mathy-pill en panel.css).
+
+**F19 (v81) — Portal ↔ /agenda integrados**:
+1. Si un ALUMNO con sesión entra a /agenda (desde "Agendar mi sesión
+   gratis"), el formulario llega PRE-LLENADO con su nombre, WhatsApp (10
+   dígitos) y correo — solo completa lo que falte. Los datos van por la
+   sesión del servidor (cookie path "/"), nunca por la URL.
+2. El "← Volver" de /agenda regresa al PORTAL cuando hay sesión de alumno
+   ("← Volver a mi portal"); sin sesión, al inicio del sitio como siempre.
+3. La asesoría gratis es UNA: si el alumno ya la tomó (completada) o ya
+   tiene una agendada, el botón "Agendar mi sesión gratis" del candado de
+   pago NO aparece — solo "Completar mi pago" (y la nota de abajo deja de
+   invitar a agendar).

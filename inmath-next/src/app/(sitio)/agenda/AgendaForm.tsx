@@ -8,7 +8,10 @@ export type DiaRango = { dia: string; num: string; sem: string; semLarga: string
 export type GrupoDia = { dia: string; horas: { inicio: string; hora: string }[] };
 
 /** Calendario aurora + formulario — port 1:1 del markup de agenda.php. */
-export function AgendaForm({ rangoDias, grupos }: { rangoDias: DiaRango[]; grupos: GrupoDia[] }) {
+export function AgendaForm({ rangoDias, grupos, prefill = null }: {
+  rangoDias: DiaRango[]; grupos: GrupoDia[];
+  prefill?: { nombre: string; telefono: string; correo: string } | null;
+}) {
   const [estado, accion, pendiente] = useActionState<EstadoAgenda, FormData>(agendarAccion, {});
   const primerDisponible = grupos[0]?.dia ?? "";
   const [diaActivo, setDiaActivo] = useState(primerDisponible);
@@ -38,15 +41,15 @@ export function AgendaForm({ rangoDias, grupos }: { rangoDias: DiaRango[]; grupo
           <input type="text" name="sitio_web" defaultValue="" style={{ display: "none" }} tabIndex={-1} autoComplete="off" />
           <div className="campo">
             <label htmlFor="nombre"><Icono n="user" /> Nombre completo</label>
-            <input type="text" id="nombre" name="nombre" required />
+            <input type="text" id="nombre" name="nombre" required defaultValue={prefill?.nombre ?? ""} />
           </div>
           <div className="campo">
             <label htmlFor="telefono"><Icono n="chat" /> WhatsApp (10 dígitos)</label>
-            <input type="tel" id="telefono" name="telefono" required inputMode="numeric" placeholder="55 1234 5678" />
+            <input type="tel" id="telefono" name="telefono" required inputMode="numeric" placeholder="55 1234 5678" defaultValue={prefill?.telefono ?? ""} />
           </div>
           <div className="campo">
             <label htmlFor="correo"><Icono n="mail" /> Correo</label>
-            <input type="email" id="correo" name="correo" required placeholder="tucorreo@ejemplo.com" />
+            <input type="email" id="correo" name="correo" required placeholder="tucorreo@ejemplo.com" defaultValue={prefill?.correo ?? ""} />
             <small>Aquí te llega el enlace de tu asesoría en línea.</small>
           </div>
           <div className="campo">

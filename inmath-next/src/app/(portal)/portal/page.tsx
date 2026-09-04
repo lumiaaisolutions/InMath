@@ -33,6 +33,12 @@ export default async function PortalInicio() {
       where: { prospecto_id: alumno.prospecto_id, estado: { in: ["agendada", "confirmada"] }, inicio: { gte: ahora } },
       orderBy: { inicio: "asc" },
     });
+    // La asesoría gratis es UNA: si ya la tomó (completada) o ya tiene una
+    // agendada, el botón de agendar no se muestra — solo queda el de pago.
+    const yaTomoAsesoria = Boolean(proxCita) || Boolean(await prisma.citas.findFirst({
+      where: { prospecto_id: alumno.prospecto_id, estado: { in: ["agendada", "confirmada", "completada"] } },
+      select: { id: true },
+    }));
     return (
       <section className="pt-panel">
         <div className="pt-wrap">
@@ -50,12 +56,14 @@ export default async function PortalInicio() {
             <p>Tu cuenta ya está lista, pero para desbloquear tu avance, material y reportes necesitas completar tu inscripción.</p>
             <div className="pt-bloqueo-cta">
               <Link className="boton glow glow-halo grande" href="/pago"><Icono n="card" /> Completar mi pago</Link>
-              {!proxCita && <Link className="boton ghost grande" href="/agenda"><Icono n="calendar" /> Agendar mi sesión gratis</Link>}
+              {!yaTomoAsesoria && <Link className="boton ghost grande" href="/agenda"><Icono n="calendar" /> Agendar mi sesión gratis</Link>}
             </div>
             {proxCita && (
               <p className="pt-bloqueo-cita"><Icono n="calendar" /> Tu sesión gratis: {fechaCorta(proxCita.inicio)} · {hora(proxCita.inicio)}</p>
             )}
-            <p className="pt-bloqueo-nota">Mientras tanto, sí puedes agendar tu <b>sesión de orientación gratuita</b> y revisar <Link href="/portal/cuenta">tu cuenta</Link>.</p>
+            {!yaTomoAsesoria
+              ? <p className="pt-bloqueo-nota">Mientras tanto, sí puedes agendar tu <b>sesión de orientación gratuita</b> y revisar <Link href="/portal/cuenta">tu cuenta</Link>.</p>
+              : <p className="pt-bloqueo-nota">Mientras tanto, puedes revisar <Link href="/portal/cuenta">tu cuenta</Link>.</p>}
           </div>
         </div>
       </section>
