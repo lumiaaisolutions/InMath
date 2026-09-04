@@ -857,3 +857,17 @@ cortes (3)-(6) de arriba quedan como bitácora cronológica.
 2. Cliente: limpiar eventos de prueba/huérfanos del calendario.
 3. Opcional: Retry-on-fail en el nodo Guardar del workflow de n8n.
 4. Regla operativa para pruebas: esperar ~2 min tras cada deploy.
+
+### Corte 04-sep-2026 — Mathy "Sin conexión" (modelo de Gemini degradado)
+
+Reporte del cliente en la mañana: Mathy respondía "Sin conexión, intenta de
+nuevo" a todo (compu y teléfono). Causa: el modelo configurado
+(gemini-3.5-flash-lite) se degradó DEL LADO DE GOOGLE — colgado >50 s sin
+responder (timeouts y 503 en los logs), mientras gemini-3.6-flash respondía
+en 2 s con la misma API key. Arreglo doble, desplegado y verificado en vivo
+en producción (Mathy contestó el flujo de agendado al instante):
+1. GEMINI_MODEL=gemini-3.6-flash en el .env del VPS.
+2. Resiliencia en src/lib/gemini.ts: primer intento con el modelo
+   configurado y timeout CORTO (12 s); si falla o se cuelga, reintento
+   automático con el modelo de respaldo (gemini-3.6-flash, 30 s). Una
+   degradación futura de un modelo ya no tira el chat.
