@@ -228,3 +228,18 @@ por código:
 alumno (nombre/WhatsApp/correo por servidor, nunca por URL), "← Volver a
 mi portal" con sesión, y el botón "Agendar mi sesión gratis" del candado
 de pago desaparece si ya tomó o tiene agendada su asesoría (es una sola).
+
+## Corte 04-sep-2026 (noche) — Mi cuenta con la tarjeta de perfil del inicio
+
+- `/portal/cuenta` dejó su propia tarjeta (`.pf-tarjeta`, métricas en cajas
+  flotantes) y adoptó el MISMO hero de `/portal` (v88.5): portada fundida
+  en blanco, foto 92px flotante, curso como insignia gradiente y métricas
+  (Avance/Asesorías) como fila con divisores. Conserva lo propio de esta
+  pantalla: botones "Cambiar portada"/"Cambiar foto" y el estado
+  "Inscripción activa" junto al curso. Sin el kicker "Portal del alumno"
+  (v88.6 — esta pantalla es para ver/editar el perfil, no la vista de
+  portal).
+- Bug de deploy corregido en el camino: la foto salía gigante sin recortar
+  (el `<span class="pt-hero-foto">` perdía su auto-blockificación de
+  flex-item al anidarse en un `<div>` extra — ver el gotcha de CSS en
+  `sistema-de-diseno.md`). Fix: `display:block` explícito en `.pt-hero-foto`.

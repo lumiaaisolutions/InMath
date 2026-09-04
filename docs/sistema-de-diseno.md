@@ -457,6 +457,25 @@ Bloque v8 al final de `sitio/public/css/inmath.css`:
 - **Bordes fundidos**: las tarjetas de tablero no llevan línea dura — borde
   translúcido blanco .65 + sombra doble difusa que se mezcla con el lienzo.
 - **Ritmo vertical**: 22px uniformes entre secciones del tablero (v88.4).
+- **Tarjeta de perfil también en Mi cuenta** (v88.5): `/portal/cuenta`
+  adoptó el mismo hero de `/portal` (portada fundida, foto flotante,
+  curso-insignia, métricas con divisores) en vez de su propia tarjeta
+  `.pf-tarjeta` — mismo lenguaje visual en ambas pantallas. Sin el kicker
+  "Portal del alumno" (v88.6: esa pantalla es para ver/editar el perfil,
+  no la vista de portal). Conserva sus controles propios (subir
+  portada/foto, estado "Inscripción activa" junto al curso).
+- **⚠️ Gotcha de CSS — flex-item auto-blockification**: `.pt-hero-foto` es
+  un `<span>` sin `display` propio; en `/portal` funciona porque, al ser
+  hijo DIRECTO de un contenedor `flex` (`.pt-hero-cuerpo`), el navegador lo
+  blockifica automáticamente (spec de flexbox) y por eso `width/height/
+  overflow` sí aplican. Al reutilizarlo en Mi cuenta se envolvió en un
+  `<div>` extra (`.pf-hero-foto-caja`, para anexar el botón de subir foto)
+  y el span dejó de ser flex-item directo — volvió a su `display:inline`
+  por defecto, donde esas propiedades se ignoran, y la foto salía gigante
+  sin recortar. Fix: `.pt-hero-foto` ahora declara `display:block`
+  explícito. Regla a futuro: cualquier elemento que dependa de ser
+  auto-blockificado por su padre flex necesita `display` explícito si se
+  le va a anidar un nivel más profundo.
 - **Marcador de avance con identidad**: la foto del usuario como thumb de
   la barra de progreso y señalador de la pregunta actual (v87,
   .pt-avance-*), con pulso suave y prefers-reduced-motion.

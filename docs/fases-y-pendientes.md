@@ -1127,3 +1127,48 @@ Resumen v74→v88.4 (todo desplegado, verificado y en producción):
 prueba del calendario, retry-on-fail sugerido en n8n, y los insumos de
 cliente de siempre (fotos reales, fecha de inicio). Regla operativa:
 esperar ~2 min tras cada deploy antes de probar.
+
+### Corte 04-sep-2026 (noche) — Mi cuenta con tarjeta de perfil + cierre del día
+
+**F26-quinquies (v88.5-88.6) — Mi cuenta adopta el hero del inicio**: a
+pedido del usuario ("cópialo en /portal/cuenta, así se debe ver, como en
+el portal"), `/portal/cuenta` dejó su propia tarjeta (`.pf-tarjeta`,
+banner + métricas en cajas flotantes) y ahora usa el MISMO `.pt-hero-card`
+que `/portal`: portada fundida en blanco, foto 92px flotante, curso como
+insignia gradiente y métricas (Avance/Asesorías) como fila con divisores.
+Conserva los controles propios de esta pantalla (subir portada/foto,
+estado "Inscripción activa" junto al curso). Segundo ajuste del mismo
+usuario: se quitó el kicker "Portal del alumno" (v88.6) — esta pantalla es
+para ver/editar el perfil, no la vista de portal.
+
+**Bug de deploy y su diagnóstico** (para no repetir el rodeo): tras el
+primer deploy la foto de Mi cuenta salía GIGANTE sin recortar. Se
+descartaron dos hipótesis antes de dar con la real:
+1. Caché del navegador (el CSS se sirve `Cache-Control: immutable`) —
+   descartada verificando con `curl` directo al chunk servido en
+   producción: el CSS ya tenía las reglas correctas (`width:92px;
+   height:92px; overflow:hidden`). El usuario también limpió caché y
+   persistía, confirmando que no era esto.
+2. Corrupción del CSS (llaves desbalanceadas tras el edit) — descartada
+   contando `{`/`}` del archivo (perfectamente balanceado).
+3. **Causa real**: `.pt-hero-foto` es un `<span>` sin `display` propio.
+   En `/portal` funciona porque es hijo DIRECTO de un contenedor `flex`
+   (`.pt-hero-cuerpo`) y el navegador lo blockifica automáticamente (regla
+   del spec de flexbox: los flex-items se blockifican aunque el elemento
+   sea naturalmente inline). En Mi cuenta se envolvió en un `<div>` extra
+   (`.pf-hero-foto-caja`, necesario para anexarle el botón "Cambiar
+   foto") y el span dejó de ser flex-item directo — volvió a su
+   `display:inline` por defecto, donde `width`/`height`/`overflow` se
+   ignoran, así que el `<img>` se mostraba a su tamaño natural. Fix:
+   `display:block` explícito en `.pt-hero-foto` (detalle técnico en
+   sistema-de-diseno.md, gotcha de CSS).
+
+Todo lo anterior (v88.5, v88.6, el fix) ya está commiteado, pusheado a
+`main` y desplegado en producción (rsync de `src/` + `npm run build` +
+`pm2 delete/start inmath-web` con `PORT=3010`), verificado por el usuario
+tras limpiar caché: "ya quedó".
+
+**Pendientes vivos al cierre** (sin cambios respecto al corte de la
+tarde): activar Google Calendar API, limpieza de eventos de prueba del
+calendario, retry-on-fail en n8n, insumos de cliente (fotos reales, fecha
+de inicio).
