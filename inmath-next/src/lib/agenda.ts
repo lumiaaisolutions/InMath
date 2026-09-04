@@ -2,7 +2,7 @@ import { prisma, config } from "./db";
 import { etiqueta, isoMinuto, diaSemanaN, isoDia, ahoraPared, paredDesde } from "./fechas";
 import { lunesDe, lunesEnRango, overridesDe } from "./disponibilidad";
 import { enviarCorreo, CORREO_CONTACTO } from "./correo";
-import { crearEventoDirecto } from "./google-calendar";
+import { crearEventoDirecto, borrarEventoDirecto } from "./google-calendar";
 
 const CORREO_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -95,9 +95,30 @@ async function crearEventoCalendar(cita: { id: number; asesor_id: number; inicio
 export async function conseguirLinkCita(cita: { id: number; asesor_id: number; inicio: Date; fin: Date }, prospectoNombre: string | null): Promise<{ link: string | null; via: "n8n" | "directo" | null }> {
   const porN8n = await crearEventoCalendar(cita, prospectoNombre);
   if (porN8n) return { link: porN8n, via: "n8n" };
+
+  // ANTI-DUPLICADOS 1: que n8n "falle" puede ser solo LENTITUD (pasó el
+  // timeout de 20s pero su evento sí se creó y su PATCH llegó después).
+  // Antes de crear otro evento, espera unos segundos y re-lee la cita: si
+  // el link del robot ya aterrizó, se usa ese y NO se crea un segundo.
+  for (let i = 0; i < 2; i++) {
+    await new Promise((r) => setTimeout(r, 4000));
+    const fila = await prisma.citas.findUnique({ where: { id: cita.id }, select: { meet_link: true } });
+    if (fila?.meet_link) return { link: fila.meet_link, via: "n8n" };
+  }
+
   const directo = await crearEventoDirecto(cita, prospectoNombre);
-  if (directo) return { link: directo, via: "directo" };
-  return { link: null, via: null };
+  if (!directo) return { link: null, via: null };
+
+  // ANTI-DUPLICADOS 2: guardado atómico "el primero gana". Si justo en esta
+  // ventana el robot guardó su link (updateMany no encuentra meet_link nulo),
+  // el evento del respaldo se BORRA del calendario y se usa el del robot.
+  const gano = await prisma.citas.updateMany({ where: { id: cita.id, meet_link: null }, data: { meet_link: directo.link } });
+  if (gano.count === 0) {
+    if (directo.eventId) await borrarEventoDirecto(directo.eventId);
+    const fila = await prisma.citas.findUnique({ where: { id: cita.id }, select: { meet_link: true } });
+    return { link: fila?.meet_link ?? directo.link, via: "n8n" };
+  }
+  return { link: directo.link, via: "directo" };
 }
 
 /** Correo al prospecto CON su link de Meet — se usa al agendar (si el link

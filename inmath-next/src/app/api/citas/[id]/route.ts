@@ -10,10 +10,25 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const noAuth = verificarApiKey(req);
   if (noAuth) return noAuth;
   const id = parseInt((await ctx.params).id, 10);
-  if (!(await prisma.citas.findUnique({ where: { id }, select: { id: true } }))) {
+  const actual = await prisma.citas.findUnique({ where: { id }, select: { id: true, meet_link: true } });
+  if (!actual) {
     return NextResponse.json({ error: "Cita no encontrada" }, { status: 404 });
   }
   const cuerpo = await req.json().catch(() => ({}));
+
+  // ANTI-DUPLICADOS 3 (lado del robot): si la cita YA tiene link (el
+  // respaldo directo ganó la carrera mientras n8n tardaba), el link del
+  // robot NO sobreescribe — y su evento recién creado se borra del
+  // calendario para que no queden dos. "El primero gana" en ambos sentidos.
+  if (cuerpo.meet_link && actual.meet_link && cuerpo.meet_link !== actual.meet_link) {
+    if (cuerpo.google_event_id) {
+      const { borrarEventoDirecto } = await import("@/lib/google-calendar");
+      borrarEventoDirecto(String(cuerpo.google_event_id)).catch(() => {});
+    }
+    delete cuerpo.meet_link;
+    delete cuerpo.google_event_id;
+  }
+
   const data: Record<string, unknown> = {};
   if ("estado" in cuerpo) {
     if (!ESTADOS.includes(cuerpo.estado)) return NextResponse.json({ error: "estado inválido" }, { status: 422 });

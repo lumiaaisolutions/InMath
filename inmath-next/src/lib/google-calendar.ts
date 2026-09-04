@@ -72,7 +72,7 @@ async function accessTokenCalendar(): Promise<string | null> {
 /** Crea el evento (con sala de Meet) directamente en el calendario primario
  *  de la cuenta conectada. Devuelve el link de Meet o null si algo falla —
  *  nunca lanza: quien llama decide el siguiente paso de la cadena. */
-export async function crearEventoDirecto(cita: { id: number; inicio: Date; fin: Date }, prospectoNombre: string | null): Promise<string | null> {
+export async function crearEventoDirecto(cita: { id: number; inicio: Date; fin: Date }, prospectoNombre: string | null): Promise<{ link: string; eventId: string | null } | null> {
   const token = await accessTokenCalendar();
   if (!token) return null;
   // Las horas de la agenda son hora local de México sin zona; se la declaramos.
@@ -104,9 +104,28 @@ export async function crearEventoDirecto(cita: { id: number; inicio: Date; fin: 
     const meet: string | undefined =
       evento.hangoutLink ??
       evento.conferenceData?.entryPoints?.find((e: { entryPointType?: string; uri?: string }) => e.entryPointType === "video")?.uri;
-    return meet ?? null;
+    return meet ? { link: meet, eventId: evento.id ?? null } : null;
   } catch (e) {
     console.error("google-calendar: crear evento no respondió", e);
     return null;
+  }
+}
+
+/** Borra un evento del calendario conectado — limpieza cuando dos caminos
+ *  (robot n8n y respaldo directo) crearon evento para la MISMA cita: el que
+ *  pierde la carrera se elimina para que nunca queden duplicados. */
+export async function borrarEventoDirecto(eventId: string): Promise<boolean> {
+  const token = await accessTokenCalendar();
+  if (!token) return false;
+  try {
+    const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(eventId)}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(15_000),
+    });
+    return res.status === 204 || res.status === 200 || res.status === 410;
+  } catch (e) {
+    console.error("google-calendar: no se pudo borrar el evento duplicado", e);
+    return false;
   }
 }

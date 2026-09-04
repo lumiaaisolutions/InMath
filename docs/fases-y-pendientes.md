@@ -771,3 +771,23 @@ login, Usuarios) siguen siendo de admins siempre. CANDADO ANTI-BLOQUEO:
 nadie puede editarse sus propios módulos — en tu propia ficha los chips se
 ven fijos y el servidor los ignora (te los ajusta otro administrador), así
 ningún admin se deja fuera por accidente.
+
+**F12 — Duplicados de eventos con links distintos (carrera robot vs
+respaldo)**: al probar, una cita generó DOS eventos con DOS Meets. Causa:
+n8n tardó más del timeout de 20s → el sitio lo dio por caído y creó el
+evento del respaldo → n8n terminó el suyo después. (No eran los permisos
+de usuarios, como se sospechó.) Blindaje en TRES capas, desplegado:
+1. Tras el timeout de n8n, el sitio espera ~8s re-leyendo la cita — si el
+   link del robot aterriza tarde, se usa ese y no se crea otro evento.
+2. Guardado ATÓMICO "el primero gana" (updateMany con meet_link IS NULL):
+   si el respaldo pierde la carrera, su evento recién creado se BORRA del
+   calendario vía API y se usa el del robot.
+3. El PATCH /api/citas/{id} (por donde guarda n8n) tampoco sobreescribe un
+   link existente: si llega tarde, borra el evento del robot y conserva el
+   del respaldo. Nunca pueden quedar dos eventos.
+Nota de la 2ª prueba (22:00): el agendado cayó en la ventana del deploy
+v68 → correo URGENTE a las 22:34 y el reintento automático lo reparó solo
+a las 22:40 con UN evento — la red de seguridad operando según diseño
+(cadencia 10 min). Limpieza manual: de los eventos 5:00-5:30pm del 04-sep
+en cursosinmath, conservar el de meet.google.com/oes-ewkm-ujo (es el del
+sistema/correo) y borrar el otro (hbx-zqho-jfo).
