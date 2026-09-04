@@ -56,7 +56,6 @@ export default async function CuentaPage() {
               <SubirFoto tipo="avatar" etiqueta="Cambiar foto" />
             </div>
             <div className="pt-hero-tx">
-              <span className="pt-kicker">Portal del alumno</span>
               <h1>{alumno.nombre}</h1>
               <div className="pf-hero-badges">
                 <span className="pt-hero-curso"><Icono n="book" /> {alumno.curso_nombre}</span>
