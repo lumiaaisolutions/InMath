@@ -441,3 +441,26 @@ Bloque v8 al final de `sitio/public/css/inmath.css`:
   y `mathy-avatar-sin-manos.svg` + PNG 1024 transparentes) y la imagen OG
   1200×630 para redes. Si la mascota o la paleta cambian en código, el kit
   se regenera desde las mismas fuentes.
+
+## Corte 04-sep-2026 — Lenguaje "tarjeta de perfil" y fundidos
+
+- **Tarjeta de perfil** (nuevo patrón, ref. aportada por el cliente): una
+  sola pieza blanca radio 26 con: portada arriba FUNDIDA en blanco de
+  abajo hacia arriba (::after transparente 42% → blanco 100%; la imagen
+  nunca se lava ni se corta), foto circular solapando el fundido con borde
+  blanco que se disuelve en la tarjeta, texto SIEMPRE sobre blanco, dato
+  clave como INSIGNIA (píldora gradiente azul-menta con ícono) y métricas
+  al pie con divisores verticales. Aplicado al hero de /portal (v88.2-3);
+  variantes del mismo lenguaje en la ficha "Ver" de /panel/alumnos (v84:
+  cierre de vidrio flotante .pg-cerrar, banner limpio, acciones
+  protagónicas verde-gradiente/rojo-delineado) y ficha del prospecto.
+- **Bordes fundidos**: las tarjetas de tablero no llevan línea dura — borde
+  translúcido blanco .65 + sombra doble difusa que se mezcla con el lienzo.
+- **Ritmo vertical**: 22px uniformes entre secciones del tablero (v88.4).
+- **Marcador de avance con identidad**: la foto del usuario como thumb de
+  la barra de progreso y señalador de la pregunta actual (v87,
+  .pt-avance-*), con pulso suave y prefers-reduced-motion.
+- **Vista previa de exámenes** (v86, .rx-prev-*): frame de lectura con
+  opciones A-D (correcta en verde con ✓) y explicación en bloque ámbar 💡.
+- Mathy: mini-carita como toggle (panel/portal junto al logo, píldora con
+  texto); el chat con burbujas overflow-wrap:anywhere.

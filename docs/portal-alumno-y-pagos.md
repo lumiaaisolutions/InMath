@@ -202,3 +202,29 @@ por código:
 - La **creación automática** de eventos de Google Calendar + Meet (flujo 03)
   sigue necesitando credenciales de Google; queda como mejora futura opcional.
   El resultado que ve el alumno (un enlace a la videollamada) ya está cubierto.
+
+## Corte 04-sep-2026 — Identidad del alumno, seguridad y experiencia
+
+**Personalización del alumno (foto + portada) por todo el sistema:**
+- El alumno sube foto y portada en Mi cuenta (ya existía). Ahora se ven:
+  en el HERO del inicio del portal (tarjeta de perfil: portada fundida en
+  blanco bottom-up, foto 92px solapada, saludo siempre sobre blanco, curso
+  como insignia gradiente y métricas con divisores — v88.x), en la
+  PRÁCTICA (la foto viaja por la barra de progreso como línea de tiempo y
+  señala la pregunta actual con anillo y pulso — v87), y en el PANEL de
+  admin (fila y ficha de Alumnos, tarjeta del pipeline, cabecera de la
+  ficha del prospecto — v83, vía /panel/api/alumno-img con sesión staff).
+
+**Seguridad:**
+- 2FA del portal aplica TAMBIÉN al login con Google (v82): el callback
+  emite el código y redirige a /panel/login?reto2fa=<token firmado>.
+- Contraseña consciente del MÉTODO de acceso (v85): cuentas Google (sin
+  password_hash) ven "Sin contraseña — entras con Google" y pueden CREAR
+  una; todo cambio/creación se confirma con código de 6 dígitos al correo
+  (clave alumno_pass_cod, misma dureza que el 2FA). Sección plegada:
+  estado + botón, el formulario solo aparece tras pedir el código.
+
+**Flujo portal ↔ agenda (v81):** /agenda pre-llenada con la sesión del
+alumno (nombre/WhatsApp/correo por servidor, nunca por URL), "← Volver a
+mi portal" con sesión, y el botón "Agendar mi sesión gratis" del candado
+de pago desaparece si ya tomó o tiene agendada su asesoría (es una sola).

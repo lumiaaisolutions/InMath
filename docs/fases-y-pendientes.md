@@ -1099,3 +1099,31 @@ curso y métricas en UNA sola pieza blanca con radio 26 y sombra profunda:
    .pt-hero-card): sin líneas duras — borde translúcido blanco .65 +
    sombra difusa doble que se mezcla con el lienzo; hover con sombra más
    profunda.
+
+### Corte 04-sep-2026 (tarde) — CIERRE de la segunda jornada maratónica
+
+Resumen v74→v88.4 (todo desplegado, verificado y en producción):
+- **Mathy → OLLAMA LOCAL** (decisión del cliente): motor responderIA con
+  Gemini solo de paracaídas, prompt precalentado cada 15 min, agendado del
+  chat 100% determinístico con feedback de progreso (detalle en
+  citas-y-links-meet.md, adenda).
+- **Seguridad del portal**: 2FA también con Google; contraseña consciente
+  del método (Google sin contraseña puede crearla) con código al correo.
+- **Identidad del alumno por todo el sistema**: foto/portada en el panel
+  (Alumnos, pipeline, ficha del prospecto), en el hero del portal (tarjeta
+  de perfil con fundido bottom-up, insignia de curso y métricas con
+  divisores) y como línea de tiempo en la práctica (detalle en
+  portal-alumno-y-pagos.md y sistema-de-diseno.md).
+- **Panel**: ficha "Ver" de Alumnos rediseñada; vista previa completa de
+  exámenes en Reactivos; borrado definitivo de usuarios; módulos de
+  permisos aplican a admins; permiso explícito del respaldo de Calendar.
+- **Portal ↔ agenda**: pre-llenado por sesión, volver al portal, asesoría
+  única.
+- **Infra**: archivo acumulativo de estáticos (deploys sin romper pestañas
+  abiertas), CSP dev/píxel de Meta, crons restaurados.
+
+**Pendientes vivos al cierre** (sin cambios): activar Google Calendar API
+(clic del dueño, URL en citas-y-links-meet.md), limpieza de eventos de
+prueba del calendario, retry-on-fail sugerido en n8n, y los insumos de
+cliente de siempre (fotos reales, fecha de inicio). Regla operativa:
+esperar ~2 min tras cada deploy antes de probar.

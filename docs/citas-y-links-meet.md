@@ -80,3 +80,16 @@ endurecido en la sesión maratónica del 03-sep-2026 (commits v65–v73).
 3. Sugerido: activar "Retry on fail" en el nodo *Guardar event_id y
    meet_link* del workflow de n8n (3 intentos, 5 s) para blindar los 522 de
    ventanas de deploy también del lado del robot.
+
+## Adenda 04-sep-2026 — El chat de Mathy agenda por la MISMA cadena
+
+El agendado desde el chat del sitio (/api/agente) es 100% DETERMINÍSTICO
+desde v77: el servidor guía los pasos (intención → horarios reales como
+botones → recolección con feedback "Voy anotando…" → nombre) y al
+completar los 4 datos llama a `agendar()` — la misma cadena de este
+documento (robot → respaldo → red de seguridad → correos). La IA local
+(Ollama qwen2.5:3b titular, Gemini paracaídas, prompt precalentado cada
+15 min — ver fases-y-pendientes F16/v75-76) solo conversa; nunca agenda
+por su cuenta ni muestra comandos internos (saneado en servidor). Extras:
+extractor de nombre con lista negra de frases de corrección (v79) y
+horarios inexistentes reencarrilados con botones (v77).
