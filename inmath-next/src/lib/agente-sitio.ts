@@ -25,8 +25,9 @@ export async function sistemaAgenteSitio(): Promise<{ sistema: string; lista: Ma
     "\n\nREGLAS PARA AGENDAR (obligatorias):" +
     "\n1. Solo ofrece horarios de la lista. Si piden uno que no está, dilo y ofrece los 2-3 más cercanos." +
     "\n2. Para agendar necesitas los 4 datos, SIN EXCEPCIÓN: nombre, WhatsApp de 10 dígitos, su CORREO (ahí llega el enlace de la asesoría en línea, es obligatorio) y UN horario exacto de la lista. Si no te ha dado el correo, pídeselo antes de agendar — no agendes sin él." +
-    '\n3. Con los 4 datos confirmados responde ÚNICAMENTE: <agendar>{"nombre":"NOMBRE","telefono":"10DIGITOS","correo":"CORREO","inicio":"YYYY-MM-DD HH:MM"}</agendar>' +
-    "\n4. NUNCA digas que la cita quedó agendada tú mismo: el sistema la agenda al recibir el comando. Sin comando, la cita NO existe." +
+    "\n3. Si te falta CUALQUIERA de los 4 datos, tu respuesta es SOLO pedir el dato faltante, en texto normal. PROHIBIDO escribir el comando <agendar> si falta un dato o si usarías datos de ejemplo (\"Tu Nombre\", \"10DIGITOS\", correo vacío): eso rompe el sistema." +
+    '\n4. ÚNICAMENTE cuando el usuario ya te dio los 4 datos REALES (su nombre de verdad, su WhatsApp de 10 dígitos de verdad, su correo de verdad y eligió un horario de la lista), responde SOLO esto, con etiqueta de cierre incluida: <agendar>{"nombre":"NOMBRE","telefono":"10DIGITOS","correo":"CORREO","inicio":"YYYY-MM-DD HH:MM"}</agendar>' +
+    "\n5. NUNCA digas que la cita quedó agendada tú mismo: el sistema la agenda al recibir el comando. Sin comando, la cita NO existe." +
     "\n\nCONTACTO HUMANO: si el usuario pide hablar con una persona/asesor humano, está molesto, o su caso necesita atención personal, dile con calidez que puede escribirle directo a un asesor y TERMINA tu respuesta con la etiqueta exacta [CONTACTO_HUMANO] (el sitio la convierte en un botón de WhatsApp). No inventes números ni links. El correo de contacto del negocio es cursosinmath@gmail.com (compártelo solo si piden un correo)." +
     "\n\nINTERACTIVIDAD (el sitio convierte estas etiquetas en botones; úsalas siempre que apliquen):" +
     "\n- Al ofrecer horarios, tras tu texto agrega [OPCIONES: etiqueta1 | etiqueta2 | etiqueta3] con 2-3 etiquetas legibles EXACTAS de la lista." +

@@ -889,3 +889,20 @@ en producción (v75):
   clave para que la caché de prefijo aplique.
 - Verificado en vivo: Mathy respondió precio en <10 s vía Ollama (cero
   fallbacks a Gemini en logs). Env: OLLAMA_URL/OLLAMA_MODEL opcionales.
+
+**F16 — Mathy con Ollama: blindaje para el modelo chico (v76)**. En la
+primera prueba real, qwen2.5:3b soltó el comando interno <agendar> CRUDO en
+el chat (con datos de ejemplo) y luego se saltó los horarios. Tres capas,
+desplegadas y verificadas contra la API de producción:
+1. Saneado en el servidor: cualquier rastro de <agendar> malformado, sin
+   cierre, no-JSON o con placeholders JAMÁS llega al visitante — se
+   convierte en la petición amable de los 4 datos.
+2. Prompt endurecido (reglas 3-5): prohibido el comando sin los 4 datos
+   REALES; pedir el dato faltante en texto normal.
+3. PASOS GUIADOS DETERMINÍSTICOS: "quiero agendar…", "Agéndala por mí" y
+   "Prefiero agendarla yo" los responde el SERVIDOR con texto fijo y los
+   horarios REALES de la lista (3 más próximos como botones) — esos pasos
+   ya no dependen del modelo; la IA queda para conversación libre y
+   recolección de datos. Nota: subir a qwen2.5:7b (ya descargado en el VPS)
+   requiere ampliar RAM a 16 GB — con 7.8 GB hay riesgo de tirar MySQL/sitio
+   (evaluado y descartado por ahora, decisión del usuario: opción A).

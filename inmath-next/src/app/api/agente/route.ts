@@ -25,11 +25,49 @@ export async function POST(req: NextRequest) {
 
   const { sistema, lista } = await sistemaAgenteSitio();
 
+  // PASOS GUIADOS DETERMINÍSTICOS (04-sep-2026): con el modelo local chico,
+  // los primeros pasos del agendado no se dejan al criterio de la IA — el
+  // servidor responde fijo y con los horarios REALES. La IA entra después,
+  // para la conversación libre y la recolección de datos.
+  const txt = mensaje.toLowerCase();
+  const etiquetas = [...lista.values()];
+  if (/quiero agendar|agendar mi asesor|asesor[ií]a gratis/.test(txt) && !/ag[eé]ndala por m[ií]|prefiero agendarla/.test(txt)) {
+    return NextResponse.json({
+      respuesta: "¡Claro! Puedo agendar tu asesoría gratuita de 30 minutos aquí mismo, o si prefieres eliges tu horario directo en el calendario. ¿Cómo le hacemos? [OPCIONES: Agéndala por mí | Prefiero agendarla yo]",
+    });
+  }
+  if (/ag[eé]ndala por m[ií]/.test(txt)) {
+    const proximos = etiquetas.slice(0, 3);
+    return NextResponse.json({
+      respuesta: proximos.length
+        ? `¡Va! Estos son los horarios más próximos disponibles. Elige uno y compárteme tu nombre, tu WhatsApp de 10 dígitos y tu correo (ahí te llega el enlace de tu asesoría en línea). [OPCIONES: ${proximos.join(" | ")}]`
+        : "Por ahora no veo horarios disponibles esta semana — puedes revisar el calendario completo, ahí aparecen en cuanto se abren. [IR_AGENDA]",
+    });
+  }
+  if (/prefiero agendarla yo/.test(txt)) {
+    return NextResponse.json({
+      respuesta: "¡Perfecto! En el calendario eliges el día y la hora que mejor te acomoden, y ahí mismo dejas tus datos. [IR_AGENDA]",
+    });
+  }
+
   try {
     const respuesta = await responderIA(sistema, historial, mensaje);
     const m = respuesta.match(/<agendar>\s*(\{[\s\S]*?\})\s*<\/agendar>/);
+    // Blindaje para el modelo local: si emitió un <agendar> malformado, con
+    // placeholders o sin cierre, el visitante JAMÁS debe ver el comando
+    // crudo — se detecta cualquier rastro y se convierte en la petición de
+    // datos de siempre.
+    const PEDIR_DATOS = "¡Perfecto! Para agendarte solo necesito cuatro datos: tu nombre, tu WhatsApp de 10 dígitos, tu correo (ahí te llega el enlace de la asesoría en línea) y el horario que prefieras de los disponibles. ¿Me los compartes?";
+    if (!m && respuesta.includes("<agendar>")) {
+      return NextResponse.json({ respuesta: PEDIR_DATOS });
+    }
     if (m) {
-      const datos = JSON.parse(m[1]);
+      let datos: { nombre?: unknown; telefono?: unknown; correo?: unknown; inicio?: unknown };
+      try { datos = JSON.parse(m[1]); } catch { return NextResponse.json({ respuesta: PEDIR_DATOS }); }
+      const placeholder = /tu nombre|10digitos|nombre completo|ejemplo/i;
+      if (placeholder.test(String(datos.nombre ?? "")) || placeholder.test(String(datos.telefono ?? ""))) {
+        return NextResponse.json({ respuesta: PEDIR_DATOS });
+      }
       const nombre = String(datos.nombre ?? "").trim();
       const telefono = normalizaTelefono(String(datos.telefono ?? ""));
       const inicio = String(datos.inicio ?? "").trim();
