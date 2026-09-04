@@ -1,7 +1,7 @@
 "use client";
 import { useActionState, useRef, useState, useTransition } from "react";
 import { IconoPanel } from "@/components/IconoPanel";
-import { usuarioCrearAccion, usuarioGuardarAccion, usuarioEliminarAccion, type Resultado } from "../acciones";
+import { usuarioCrearAccion, usuarioGuardarAccion, usuarioEliminarAccion, usuarioBorrarAccion, type Resultado } from "../acciones";
 import { Velo, ConfirmarDialogo, useToastResultado, Segmentado, BotonMagnetico, Asistente, AsistentePaso } from "../ClientePanel";
 
 export type UsuarioFicha = {
@@ -81,6 +81,7 @@ function EditarUsuarioModal({ u, yoId, abierto, onCerrar }: {
   u: UsuarioFicha; yoId: number; abierto: boolean; onCerrar: () => void;
 }) {
   const [confirmar, setConfirmar] = useState(false);
+  const [confirmarBorrar, setConfirmarBorrar] = useState(false);
   const [borrando, startBorrar] = useTransition();
   const toast = useToastResultado();
   const esYo = u.id === yoId;
@@ -163,22 +164,36 @@ function EditarUsuarioModal({ u, yoId, abierto, onCerrar }: {
                 </div>
                 <div className="pl-campo ancho" style={{ gridColumn: "1 / -1" }}>
                   <div className="us-modulos">
-                    <span className="us-etiqueta">Módulos permitidos{rol === "admin" ? " (los administradores ven todo)" : ""}</span>
+                    <span className="us-etiqueta">Módulos permitidos{rol === "admin" ? " (los administradores ven todo; el respaldo de Calendar se otorga aparte)" : ""}</span>
                     <div className="us-chips">
-                      {MODULOS.map(([clave, nombre]) => (
-                        <div key={clave} className="chip-modulo">
-                          <Interruptor activo={rol === "admin" ? true : modulosSel.has(clave)} onChange={rol === "admin" ? () => {} : () => alternarModulo(clave)} etiqueta={nombre} />
-                          {(rol === "admin" || modulosSel.has(clave)) && <input type="hidden" name="modulos" value={clave} />}
-                        </div>
-                      ))}
+                      {MODULOS.map(([clave, nombre]) => {
+                        // "calendario_respaldo" es un permiso EXPLÍCITO: su
+                        // interruptor se puede prender/apagar aun si el rol
+                        // es admin (el resto sigue fijo para admins).
+                        const editable = rol !== "admin" || clave === "calendario_respaldo";
+                        const encendido = editable ? modulosSel.has(clave) : true;
+                        return (
+                          <div key={clave} className="chip-modulo">
+                            <Interruptor activo={encendido} onChange={editable ? () => alternarModulo(clave) : () => {}} etiqueta={nombre} />
+                            {encendido && <input type="hidden" name="modulos" value={clave} />}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
                 {!esYo && (
-                  <div className="pl-campo ancho" style={{ gridColumn: "1 / -1" }}>
+                  <div className="pl-campo ancho" style={{ gridColumn: "1 / -1", display: "flex", gap: 10, flexWrap: "wrap" }}>
                     <button type="button" className="boton peligro" disabled={borrando || !u.activo} onClick={() => setConfirmar(true)}>
                       {u.activo ? "Bloquear acceso" : "Ya está bloqueado"}
                     </button>
+                    {/* Borrado DEFINITIVO: solo cuentas ya bloqueadas y sin
+                        registros (el servidor revalida ambos candados). */}
+                    {!u.activo && (
+                      <button type="button" className="boton peligro" disabled={borrando} onClick={() => setConfirmarBorrar(true)}>
+                        Borrar usuario definitivamente
+                      </button>
+                    )}
                   </div>
                 )}
               </AsistentePaso>
@@ -197,6 +212,17 @@ function EditarUsuarioModal({ u, yoId, abierto, onCerrar }: {
             </div>
           </Asistente>
         </form>
+        {!esYo && (
+          <ConfirmarDialogo
+            abierto={confirmarBorrar}
+            texto="Se BORRA para siempre — desaparece de la lista y no se puede deshacer. Solo procede si no tiene citas, prospectos ni contenido a su nombre; si los tiene, el sistema lo dirá y se conserva bloqueado como histórico."
+            onNo={() => setConfirmarBorrar(false)}
+            onSi={() => {
+              setConfirmarBorrar(false);
+              startBorrar(async () => { toast(await usuarioBorrarAccion(u.id)); cerrar(); });
+            }}
+          />
+        )}
         {!esYo && (
           <ConfirmarDialogo
             abierto={confirmar}

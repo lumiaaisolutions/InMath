@@ -76,6 +76,19 @@ export function moduloPermitido(u: UsuarioPanel | null, modulo: string): boolean
   } catch { return true; }
 }
 
+/** Chequeo EXPLÍCITO de un módulo sensible (hoy: "calendario_respaldo"):
+ *  a diferencia de moduloPermitido, aquí ser admin NO da pase automático —
+ *  el permiso se otorga interruptor por interruptor en /panel/usuarios.
+ *  modulos NULL (usuarios legado, "todos") sí lo concede. */
+export function moduloExplicito(u: UsuarioPanel | null, modulo: string): boolean {
+  if (!u) return false;
+  if (u.modulos === null) return true;
+  try {
+    const lista = JSON.parse(u.modulos);
+    return !Array.isArray(lista) || lista.includes(modulo);
+  } catch { return true; }
+}
+
 export async function requiereModulo(modulo: string): Promise<UsuarioPanel> {
   const u = await requiereSesion();
   if (!moduloPermitido(u, modulo)) redirect("/panel/configuracion");

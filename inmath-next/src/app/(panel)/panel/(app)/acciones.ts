@@ -461,7 +461,7 @@ export async function usuarioGuardarAccion(_prev: Resultado, fd: FormData): Prom
   const activo = fd.get("activo") != null;
   if (!nombre || !/.+@.+\..+/.test(email)) return { error: "Nombre y correo válidos son obligatorios" };
   if (uid === yo.id && (rol !== "admin" || !activo)) return { error: "No puedes quitarte el acceso a ti mismo" };
-  const modulosValidos = ["pipeline", "citas", "alumnos", "pagos", "reactivos", "precios"];
+  const modulosValidos = ["pipeline", "citas", "alumnos", "pagos", "reactivos", "precios", "calendario_respaldo"];
   const seleccionados = fd.getAll("modulos").map(String).filter((m) => modulosValidos.includes(m));
   const modulos = seleccionados.length === modulosValidos.length ? Prisma.DbNull : seleccionados;
   await prisma.usuarios.update({
@@ -488,6 +488,43 @@ export async function usuarioEliminarAccion(usuarioId: number): Promise<Resultad
   await prisma.usuarios.update({ where: { id: usuarioId }, data: { activo: false, es_asesor: false } });
   revalidatePath("/panel/usuarios");
   return { ok: "Usuario eliminado (acceso revocado)" };
+}
+
+/** Borra DEFINITIVAMENTE a un usuario. Candados: no puedes borrarte a ti
+ *  mismo, el usuario debe estar BLOQUEADO primero (dos pasos deliberados) y
+ *  no debe tener NINGÚN registro vinculado (citas, prospectos asignados,
+ *  conversaciones, contenido creado…) — con historial, se queda bloqueado
+ *  como registro histórico, igual que las citas de alumnos con pago. */
+export async function usuarioBorrarAccion(usuarioId: number): Promise<Resultado> {
+  const yo = await requiereAdmin();
+  if (usuarioId === yo.id) return { error: "No puedes borrarte a ti mismo" };
+  const u = await prisma.usuarios.findUnique({ where: { id: usuarioId }, select: { activo: true, nombre: true } });
+  if (!u) return { error: "Usuario no encontrado" };
+  if (u.activo) return { error: "Primero bloquea su acceso — el borrado definitivo es solo para cuentas bloqueadas" };
+
+  const [citas, prospectos, conversaciones, reactivos, examenes, fases, cupones, prompts, configs] = await Promise.all([
+    prisma.citas.count({ where: { asesor_id: usuarioId } }),
+    prisma.prospectos.count({ where: { asesor_id: usuarioId } }),
+    prisma.conversaciones.count({ where: { asesor_id: usuarioId } }),
+    prisma.reactivos.count({ where: { creado_por: usuarioId } }),
+    prisma.examenes.count({ where: { creado_por: usuarioId } }),
+    prisma.fases.count({ where: { creado_por: usuarioId } }),
+    prisma.cupones.count({ where: { creado_por: usuarioId } }),
+    prisma.prompts.count({ where: { actualizado_por: usuarioId } }),
+    prisma.configuraciones.count({ where: { actualizado_por: usuarioId } }),
+  ]);
+  const partes: string[] = [];
+  if (citas) partes.push(`${citas} cita(s)`);
+  if (prospectos) partes.push(`${prospectos} prospecto(s) asignado(s)`);
+  if (conversaciones) partes.push(`${conversaciones} conversación(es)`);
+  if (reactivos + examenes + fases + cupones + prompts + configs) partes.push("contenido creado en el panel");
+  if (partes.length) {
+    return { error: `No se puede borrar: tiene ${partes.join(", ")}. Se conserva bloqueado como histórico.` };
+  }
+
+  await prisma.usuarios.delete({ where: { id: usuarioId } });
+  revalidatePath("/panel/usuarios");
+  return { ok: `${u.nombre} se borró definitivamente` };
 }
 
 /** Port de /accion/perfil. */

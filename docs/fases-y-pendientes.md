@@ -740,3 +740,22 @@ los interruptores de "Módulos permitidos" de /panel/usuarios. Los
 administradores lo tienen siempre (regla general de módulos); a los
 asesores se les otorga usuario por usuario. Los asesores existentes con
 lista explícita de módulos NO lo ven hasta que se les active.
+
+**F10 (ajuste) — El permiso del respaldo aplica TAMBIÉN a administradores**:
+al probar, el cliente no podía apagar interruptores de un admin (regla
+"los administradores ven todo" + la lista blanca del servidor no incluía
+el módulo nuevo, así que ni en asesores persistía). Arreglo doble:
+`calendario_respaldo` es ahora un permiso EXPLÍCITO (`moduloExplicito` en
+sesion.ts, sin pase automático por rol) — su interruptor se puede
+prender/apagar aun en admins (el resto de módulos sigue fijo para admins)
+— y la lista blanca de usuarioGuardarAccion ya lo acepta. Usuarios legado
+con módulos NULL ("todos") sí lo tienen hasta que se les edite.
+
+**F11 — Borrar usuarios definitivamente** (/panel/usuarios): botón "Borrar
+usuario definitivamente" en la ficha, visible SOLO cuando la cuenta ya
+está bloqueada. Candados del servidor (usuarioBorrarAccion): no borrarte a
+ti mismo, cuenta bloqueada primero, y CERO registros vinculados (citas,
+prospectos asignados, conversaciones, reactivos/exámenes/fases/cupones/
+prompts/configs creados) — si tiene historial, el sistema lo explica y la
+cuenta se conserva bloqueada como histórico. "Bloquear acceso" sigue
+siendo el camino normal.

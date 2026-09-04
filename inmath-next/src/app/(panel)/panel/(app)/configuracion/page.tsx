@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requiereSesion, moduloPermitido } from "@/lib/panel/sesion";
+import { requiereSesion, moduloExplicito } from "@/lib/panel/sesion";
 import { avatarUrl } from "@/lib/panel/media";
 import { IconoPanel } from "@/components/IconoPanel";
 import { PerfilFotoForm, PerfilDatosForm, SalirPerfilBoton } from "../perfil/ClientePerfil";
@@ -12,10 +12,10 @@ export default async function Configuracion({ searchParams }: { searchParams: Pr
   const yo = await requiereSesion();
   const foto = await avatarUrl(yo.id);
   const { calendar } = await searchParams;
-  // La tarjeta del respaldo de Calendar se muestra por PERMISO (módulo
-  // "calendario_respaldo", otorgable por usuario en /panel/usuarios), no
-  // solo por rol — los administradores lo tienen siempre.
-  const puedeCalendar = moduloPermitido(yo, "calendario_respaldo");
+  // La tarjeta del respaldo de Calendar se muestra por PERMISO EXPLÍCITO
+  // (módulo "calendario_respaldo" en /panel/usuarios) — aquí ni los
+  // administradores tienen pase automático: se otorga persona por persona.
+  const puedeCalendar = moduloExplicito(yo, "calendario_respaldo");
   const [calConectado, calCuenta] = puedeCalendar
     ? await Promise.all([calendarDirectoConfigurado(), calendarCuentaConectada()])
     : [false, null];
