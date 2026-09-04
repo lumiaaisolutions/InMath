@@ -164,18 +164,18 @@ function EditarUsuarioModal({ u, yoId, abierto, onCerrar }: {
                 </div>
                 <div className="pl-campo ancho" style={{ gridColumn: "1 / -1" }}>
                   <div className="us-modulos">
-                    <span className="us-etiqueta">Módulos permitidos{rol === "admin" ? " (los administradores ven todo; el respaldo de Calendar se otorga aparte)" : ""}</span>
+                    <span className="us-etiqueta">Módulos permitidos{esYo ? " (tus propios módulos los ajusta otro administrador)" : " (aplican a todos, también administradores)"}</span>
                     <div className="us-chips">
                       {MODULOS.map(([clave, nombre]) => {
-                        // "calendario_respaldo" es un permiso EXPLÍCITO: su
-                        // interruptor se puede prender/apagar aun si el rol
-                        // es admin (el resto sigue fijo para admins).
-                        const editable = rol !== "admin" || clave === "calendario_respaldo";
-                        const encendido = editable ? modulosSel.has(clave) : true;
+                        // Los interruptores mandan para TODOS los roles.
+                        // Único candado: no puedes editarte tus propios
+                        // módulos (te los ajusta otro admin) — así nadie se
+                        // deja fuera por accidente.
+                        const encendido = modulosSel.has(clave);
                         return (
                           <div key={clave} className="chip-modulo">
-                            <Interruptor activo={encendido} onChange={editable ? () => alternarModulo(clave) : () => {}} etiqueta={nombre} />
-                            {encendido && <input type="hidden" name="modulos" value={clave} />}
+                            <Interruptor activo={esYo ? true : encendido} onChange={esYo ? () => {} : () => alternarModulo(clave)} etiqueta={nombre} />
+                            {(esYo || encendido) && <input type="hidden" name="modulos" value={clave} />}
                           </div>
                         );
                       })}

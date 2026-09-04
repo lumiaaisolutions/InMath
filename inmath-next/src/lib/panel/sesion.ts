@@ -65,10 +65,12 @@ export async function requiereAdmin(): Promise<UsuarioPanel> {
   return u;
 }
 
-/** Port de moduloPermitido: admin ve todo; modulos NULL = todos. */
+/** Permiso por módulo. Desde el 03-sep-2026 aplica TAMBIÉN a administradores
+ *  (decisión del cliente): los interruptores de /panel/usuarios mandan para
+ *  todos; modulos NULL (usuarios legado) = todos. Candado anti-bloqueo: nadie
+ *  puede editarse sus propios módulos (usuarioGuardarAccion los ignora). */
 export function moduloPermitido(u: UsuarioPanel | null, modulo: string): boolean {
   if (!u) return false;
-  if (u.rol === "admin") return true;
   if (u.modulos === null) return true;
   try {
     const lista = JSON.parse(u.modulos);
@@ -81,12 +83,7 @@ export function moduloPermitido(u: UsuarioPanel | null, modulo: string): boolean
  *  el permiso se otorga interruptor por interruptor en /panel/usuarios.
  *  modulos NULL (usuarios legado, "todos") sí lo concede. */
 export function moduloExplicito(u: UsuarioPanel | null, modulo: string): boolean {
-  if (!u) return false;
-  if (u.modulos === null) return true;
-  try {
-    const lista = JSON.parse(u.modulos);
-    return !Array.isArray(lista) || lista.includes(modulo);
-  } catch { return true; }
+  return moduloPermitido(u, modulo);
 }
 
 export async function requiereModulo(modulo: string): Promise<UsuarioPanel> {

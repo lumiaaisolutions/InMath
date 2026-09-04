@@ -759,3 +759,15 @@ prospectos asignados, conversaciones, reactivos/exámenes/fases/cupones/
 prompts/configs creados) — si tiene historial, el sistema lo explica y la
 cuenta se conserva bloqueada como histórico. "Bloquear acceso" sigue
 siendo el camino normal.
+
+**F10 (ajuste 2) — Los interruptores de módulos aplican a TODOS los roles**:
+el cliente quería restringir módulos también a administradores (solo el de
+Calendar se dejaba). Cambio de modelo: `moduloPermitido` ya NO da pase
+automático a admins — los interruptores de /panel/usuarios mandan para
+todos (modulos NULL de usuarios legado sigue siendo "todos"). El sidebar
+de admins oculta Reactivos y Precios si se les apagan; los apartados sin
+interruptor (Disponibilidad, Materiales, Fases, Alertas, Personalizar
+login, Usuarios) siguen siendo de admins siempre. CANDADO ANTI-BLOQUEO:
+nadie puede editarse sus propios módulos — en tu propia ficha los chips se
+ven fijos y el servidor los ignora (te los ajusta otro administrador), así
+ningún admin se deja fuera por accidente.

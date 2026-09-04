@@ -29,13 +29,16 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
   if (ventasItems.length > 0) grupos.push({ titulo: "Ventas y alumnos", ic: "pipeline", items: ventasItems });
 
   if (u.rol === "admin") {
+    // Los módulos con interruptor en /panel/usuarios (Reactivos, Precios)
+    // también se respetan para admins; el resto de apartados de admin no
+    // tienen interruptor y siempre se muestran.
     grupos.push(
       {
         titulo: "Contenido y sitio", ic: "imagen",
         items: [
           { href: "/panel/disponibilidad", texto: "Disponibilidad", ic: "reloj" },
           { href: "/panel/materiales", texto: "Material del curso", ic: "prompts" },
-          { href: "/panel/reactivos", texto: "Reactivos", ic: "check" },
+          ...(moduloPermitido(u, "reactivos") ? [{ href: "/panel/reactivos", texto: "Reactivos", ic: "check" }] : []),
           { href: "/panel/fases", texto: "Fases del curso", ic: "route" },
           { href: "/panel/alertas", texto: "Alertas de la página", ic: "alerta" },
           { href: "/panel/personalizar-login", texto: "Personalizar login", ic: "imagen" },
@@ -44,7 +47,7 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
       {
         titulo: "Administración", ic: "config",
         items: [
-          { href: "/panel/precios", texto: "Precios y promociones", ic: "pagos" },
+          ...(moduloPermitido(u, "precios") ? [{ href: "/panel/precios", texto: "Precios y promociones", ic: "pagos" }] : []),
           { href: "/panel/usuarios", texto: "Usuarios", ic: "user" },
         ],
       },

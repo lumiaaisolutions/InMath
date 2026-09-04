@@ -463,7 +463,11 @@ export async function usuarioGuardarAccion(_prev: Resultado, fd: FormData): Prom
   if (uid === yo.id && (rol !== "admin" || !activo)) return { error: "No puedes quitarte el acceso a ti mismo" };
   const modulosValidos = ["pipeline", "citas", "alumnos", "pagos", "reactivos", "precios", "calendario_respaldo"];
   const seleccionados = fd.getAll("modulos").map(String).filter((m) => modulosValidos.includes(m));
-  const modulos = seleccionados.length === modulosValidos.length ? Prisma.DbNull : seleccionados;
+  // Candado anti-bloqueo: tus propios módulos NO se editan desde tu sesión
+  // (te los ajusta otro administrador) — se conservan tal cual estaban.
+  const modulos = uid === yo.id
+    ? undefined
+    : seleccionados.length === modulosValidos.length ? Prisma.DbNull : seleccionados;
   await prisma.usuarios.update({
     where: { id: uid },
     data: {
