@@ -1073,3 +1073,17 @@ al saludo; sin ninguno, el encabezado queda como siempre. Responsive
 - Entrada con vida: la portada "respira" (zoom 1.06→1 en 1.1s) al cargar.
 - Micro-interacciones en chips (lift + sombra al hover). Todo respeta
   prefers-reduced-motion. Móvil: 148px/72px, paddings recalibrados.
+
+**F26-ter (v88.2) — Hero del portal como TARJETA DE PERFIL** (rediseño con
+referencia visual del usuario — profile card): portada, foto, saludo,
+curso y métricas en UNA sola pieza blanca con radio 26 y sombra profunda:
+- Portada íntegra arriba (190px), sin velos ni anillos que parecieran
+  bordes; con zoom de entrada. Sin portada propia → paisaje de marca
+  (malla de pasteles azules), la tarjeta siempre se ve diseñada.
+- Foto 92px solapando el borde portada→blanco (borde blanco se funde con
+  la tarjeta = cero "bordes"); hover lift. Sin foto → inicial en gradiente.
+- "Hola, X." SIEMPRE sobre blanco (contraste garantizado) y el CURSO ahora
+  es una INSIGNIA llamativa (píldora gradiente azul-menta con ícono de
+  libro y sombra azulada) en vez de subtítulo gris.
+- Métricas al pie con DIVISORES verticales (ref. rating/duration/rate):
+  días contigo · reportes · asesorías · materiales. En móvil, rejilla 2×2.

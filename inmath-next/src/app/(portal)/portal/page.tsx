@@ -113,31 +113,33 @@ export default async function PortalInicio() {
   return (
     <section className="pt-panel">
       <div className="pt-wrap">
-        {/* Encabezado personalizado + métricas rápidas (escaneo preatentivo) */}
-        <header className={`pt-head pt-rev${media.banner ? " pt-head-hero" : ""}`} style={{ ["--d" as string]: "0ms" }}>
-          {/* Portada del alumno (la que sube en Mi cuenta) como hero del inicio */}
-          {media.banner && (
-            <div className="pt-hero-banner"><img src={media.banner} alt="" /><i className="pt-hero-velo" aria-hidden="true" /></div>
-          )}
-          <div className={`pt-head-id${media.banner ? " pt-head-id-hero" : ""}`}>
-            {media.avatar && (
-              <span className={`pt-hero-foto${media.banner ? " solapa" : ""}`}><img src={media.avatar} alt="" /></span>
-            )}
-            <div>
+        {/* TARJETA DE PERFIL unificada (ref. card de perfil): portada, foto,
+            saludo, curso como insignia y métricas con divisores — todo en
+            una sola pieza blanca; el texto SIEMPRE sobre blanco. */}
+        <header className="pt-hero-card pt-rev" style={{ ["--d" as string]: "0ms" }}>
+          <div className={`pt-hero-banner${media.banner ? "" : " pt-hero-banner-marca"}`}>
+            {media.banner && <img src={media.banner} alt="" />}
+          </div>
+          <div className="pt-hero-cuerpo">
+            <span className="pt-hero-foto">
+              {media.avatar
+                ? <img src={media.avatar} alt="" />
+                : <i className="pt-hero-inicial">{primerNombre.charAt(0).toUpperCase()}</i>}
+            </span>
+            <div className="pt-hero-tx">
               <span className="pt-kicker">Portal del alumno</span>
               <h1>Hola, {primerNombre}.</h1>
-              <p className="pt-head-sub">{alumno.curso_nombre}</p>
+              <span className="pt-hero-curso"><Icono n="book" /> {alumno.curso_nombre}</span>
             </div>
           </div>
+          <div className="pt-hero-stats">
+            {chips.map((c) => (
+              <div className="pt-hero-stat" key={c.etq}>
+                <b>{c.n}</b><span>{c.etq}</span>
+              </div>
+            ))}
+          </div>
         </header>
-
-        <div className="pt-chips pt-rev" style={{ ["--d" as string]: "60ms" }}>
-          {chips.map((c) => (
-            <div className="pt-chip" key={c.etq}>
-              <b>{c.n}</b><span>{c.etq}</span>
-            </div>
-          ))}
-        </div>
 
         {/* Notificación flotante (ref: "Health Improving") */}
         {delta !== null && delta > 0 && (
