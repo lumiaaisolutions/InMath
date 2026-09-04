@@ -1087,3 +1087,15 @@ curso y métricas en UNA sola pieza blanca con radio 26 y sombra profunda:
   libro y sombra azulada) en vez de subtítulo gris.
 - Métricas al pie con DIVISORES verticales (ref. rating/duration/rate):
   días contigo · reportes · asesorías · materiales. En móvil, rejilla 2×2.
+
+**F26-quater (v88.3) — Fundidos y aire (feedback con referencia)**:
+1. DIFUMINADO bottom-up del banner (::after, transparente 42% → blanco
+   100%): la portada se FUNDE en el blanco de la tarjeta y el saludo/foto
+   viven en esa zona fundida, sin corte duro — igual que la referencia.
+2. Distribución con aire: solape de la foto -56px dentro de la zona
+   fundida, paddings 30px, ritmo vertical del texto en grid con gap, stats
+   con más separación (28px entre divisores).
+3. Bordes "fundidos" en TODO el tablero (.pt-hero/.pt-acceso/.pt-stat/
+   .pt-hero-card): sin líneas duras — borde translúcido blanco .65 +
+   sombra difusa doble que se mezcla con el lienzo; hover con sombra más
+   profunda.
