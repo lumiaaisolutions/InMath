@@ -944,3 +944,15 @@ Verificado con el escenario exacto del usuario: la corrección actualiza el
 correo en el resumen y se vuelve a preguntar el nombre; nada se agenda con
 frases. (El agendado previo del usuario quedó BIEN en BD: el correo
 corregido sí se tomó y el prospecto conservó su nombre real.)
+
+**F18 (v80) — Toggle de Mathy: fix del portal + píldora en el panel**:
+1. BUG: al quitar el ocultado de la landing (v61) se quitó del componente
+   COMPARTIDO AgenteIA — y el portal usa ese componente, así que su botón
+   dejó de tener efecto. Fix: prop `ocultable` en AgenteIA (solo el portal
+   la pasa); la landing sigue mostrando a Mathy siempre y el portal vuelve
+   a obedecer el botón. El hook se llama incondicionalmente (reglas de
+   React) y el candado es un return null temprano.
+2. DISEÑO (pedido del usuario): el panel de admin ahora usa la MISMA
+   píldora del portal (mini-carita + "Ocultar/Mostrar a Mathy" escrito),
+   colocada justo debajo de la marca del sidebar, adaptada al fondo oscuro
+   (.marca-mathy-pill en panel.css).

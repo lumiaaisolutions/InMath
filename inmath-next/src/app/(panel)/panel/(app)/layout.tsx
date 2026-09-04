@@ -89,8 +89,8 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
         <div className="marca">
           <img src="/img/inmath.svg" alt="" width={64} height={64} />
           <div><strong>Inmath CRM</strong><span>Cursos · Ventas</span></div>
-          <MathyToggleBoton className="marca-mathy" />
         </div>
+        <MathyToggleBoton className="marca-mathy-pill" conTexto />
         <NavPanel items={items} grupos={grupos} />
         <div className="pie perfil-widget">
           <span className="pw-avatar-lg">

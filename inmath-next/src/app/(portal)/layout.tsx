@@ -43,7 +43,7 @@ export default async function PortalLayout({ children }: { children: React.React
         </header>
         {children}
         {/* Mathy en el portal: recuerda pagar si está pendiente. */}
-        <AgenteIA whatsappUrl={WHATSAPP_URL} abrirInicial={pendientePago} saludo={pendientePago ? SALUDO_PAGO : undefined} />
+        <AgenteIA whatsappUrl={WHATSAPP_URL} abrirInicial={pendientePago} saludo={pendientePago ? SALUDO_PAGO : undefined} ocultable />
         <ScriptsPortal />
       </body>
     </html>

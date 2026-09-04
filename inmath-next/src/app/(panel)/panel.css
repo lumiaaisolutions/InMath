@@ -3128,32 +3128,28 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
   .al-paso { padding: 16px 14px; }
 }
 
-/* Botón "Ocultar/Mostrar a Mathy" JUNTO AL LOGO del sidebar: MINI-CARITA
- * de Mathy (misma cara del asistente flotante — círculo blanco, anillo azul,
- * dos ojos) para que se entienda al instante que controla a la IA. Despierta
- * = visible; dormida (ojos cerrados + "z", tonos apagados) = oculta. El
- * texto de la acción va en title/aria-label. */
-.sidebar .marca .mathy-toggle {
-  display: inline-grid; place-items: center; flex: 0 0 auto; cursor: pointer;
-  width: 36px; height: 36px; border-radius: 50%; margin-left: auto; padding: 0;
+/* Botón "Ocultar/Mostrar a Mathy" del panel: MISMA píldora que el portal
+ * (mini-carita de Mathy + la acción escrita), adaptada al sidebar oscuro —
+ * va justo debajo de la marca. Despierta = visible; dormida (+z, tonos
+ * apagados) = oculta. */
+.sidebar .marca-mathy-pill.mathy-toggle {
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  margin: 0 18px 12px; padding: 4px 13px 4px 4px; border-radius: 999px;
+  border: 0; background: rgba(255,255,255,.94);
+  font: 700 .76rem/1 var(--cuerpo); color: var(--tinta-2, #4A5872);
+  box-shadow: 0 4px 12px rgba(0,0,0,.28);
+  transition: transform .15s ease, box-shadow .2s ease, color .2s ease;
+}
+.sidebar .marca-mathy-pill.mathy-toggle .mt-cara {
+  display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
   background: #fff; color: #4D7FF0;
-  border: 2px solid rgba(107,159,255,.95);
-  box-shadow: 0 0 0 4px rgba(107,159,255,.22), 0 4px 12px rgba(0,0,0,.3);
-  transition: box-shadow .2s ease, transform .15s ease, background .2s ease, color .2s ease, border-color .2s ease;
+  border: 2px solid rgba(107,159,255,.9);
+  box-shadow: 0 0 0 3px rgba(107,159,255,.16);
 }
-.sidebar .marca .mathy-toggle svg { width: 21px; height: 21px; }
-.sidebar .marca .mathy-toggle:hover {
-  transform: translateY(-1px) scale(1.05);
-  box-shadow: 0 0 0 5px rgba(107,159,255,.32), 0 0 18px rgba(107,159,255,.5), 0 4px 12px rgba(0,0,0,.3);
-}
-.sidebar .marca .mathy-toggle:active { transform: scale(.94); }
-.sidebar .marca .mathy-toggle.mathy-oculta {
-  background: #DCE3F2; color: #8A97B8;
-  border-color: rgba(154,167,196,.8);
-  box-shadow: 0 0 0 4px rgba(154,167,196,.18), 0 4px 12px rgba(0,0,0,.25);
-}
-.sidebar .marca .mathy-toggle.mathy-oculta:hover {
-  background: #fff; color: #4D7FF0; border-color: rgba(107,159,255,.95);
-  box-shadow: 0 0 0 5px rgba(107,159,255,.3), 0 4px 12px rgba(0,0,0,.3);
-}
+.sidebar .marca-mathy-pill.mathy-toggle .mt-cara svg { width: 16px; height: 16px; }
+.sidebar .marca-mathy-pill.mathy-toggle:hover { transform: translateY(-1px); color: var(--pino, #4D7FF0); box-shadow: 0 6px 16px rgba(0,0,0,.35); }
+.sidebar .marca-mathy-pill.mathy-toggle:active { transform: scale(.97); }
+.sidebar .marca-mathy-pill.mathy-toggle.mathy-oculta { background: rgba(220,227,242,.85); color: #5d6a88; }
+.sidebar .marca-mathy-pill.mathy-toggle.mathy-oculta .mt-cara { color: #9AA7C4; border-color: rgba(154,167,196,.7); box-shadow: 0 0 0 3px rgba(154,167,196,.14); background: #F3F6FC; }
+
 

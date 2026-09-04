@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icono } from "./Icono";
+import { useMathyVisible } from "./MathyVisibilidad";
 import { MascotaMathy } from "./MascotaMathy";
 
 /** Overlay de carga + nav móvil + motor de scrubbing — port del JS de _comun.php. */
@@ -204,7 +205,7 @@ function parseaBot(textoCrudo: string) {
 
 /** Chat flotante de Mathy — interactivo: chips de opciones, accesos directos,
  *  modo ampliado (PC/tableta) y mascota que reacciona a la conversación. */
-export function AgenteIA({ whatsappUrl = "", abrirInicial, sinBoton = false, saludo }: { whatsappUrl?: string; abrirInicial?: boolean; sinBoton?: boolean; saludo?: string }) {
+export function AgenteIA({ whatsappUrl = "", abrirInicial, sinBoton = false, saludo, ocultable = false }: { whatsappUrl?: string; abrirInicial?: boolean; sinBoton?: boolean; saludo?: string; ocultable?: boolean }) {
   // En el sitio abre solo al entrar en la LANDING (/); en el resto de páginas
   // del sitio arranca cerrado. En el portal, `abrirInicial` llega explícito
   // (según si el pago está pendiente) y manda sobre esta regla.
@@ -213,6 +214,7 @@ export function AgenteIA({ whatsappUrl = "", abrirInicial, sinBoton = false, sal
   const [cerrando, setCerrando] = useState(false);
   const [amplio, setAmplio] = useState(false);
   const [animo, setAnimo] = useState<"normal" | "piensa" | "feliz" | "triste">("normal");
+  const visibleMathy = useMathyVisible();
   // Al cambiar de ruta (sin prop explícito): abierto solo si volvió a la landing.
   useEffect(() => {
     if (abrirInicial === undefined) setAbierto(pathname === "/");
@@ -272,6 +274,11 @@ export function AgenteIA({ whatsappUrl = "", abrirInicial, sinBoton = false, sal
       reacciona("triste");
     } finally { setCargando(false); }
   }
+
+  // `ocultable` lo pasa SOLO el portal: ahí la mascota obedece el botón
+  // "Ocultar/Mostrar a Mathy" del header. En la landing no se pasa y Mathy
+  // siempre se muestra (decisión de producto 03-sep-2026).
+  if (ocultable && !visibleMathy) return null;
 
   return (
     <div className={`agente-ia animo-${animo}${sinBoton ? " sin-boton" : ""}`}>
