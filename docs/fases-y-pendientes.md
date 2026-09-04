@@ -933,3 +933,14 @@ anotando: …"). Fix: el marcador se busca con includes("¿A nombre de
 quién"). Verificado reproduciendo la conversación exacta del usuario:
 respondió "fer" → "¡Listo, fer! Tu asesoría quedó agendada…" con la cita
 REAL creada y la cadena de Meet/correos disparada.
+
+**F17-ter (v79)**: al corregir el correo ("me equivoqué, el correcto es…")
+el extractor de nombre tomaba lo que sobraba de la frase como nombre
+("me equivoque en correcto") y agendaba con eso. Fix: lista negra
+NO_ES_NOMBRE (equivoc*/correct*/error/cambi*/hola/gracias/quiero…) aplicada
+tanto a la respuesta directa a la pregunta de nombre como a la minería de
+mensajes con tel/correo, y el nombre extraído se limita a ≤4 palabras.
+Verificado con el escenario exacto del usuario: la corrección actualiza el
+correo en el resumen y se vuelve a preguntar el nombre; nada se agenda con
+frases. (El agendado previo del usuario quedó BIEN en BD: el correo
+corregido sí se tomó y el prospecto conservó su nombre real.)

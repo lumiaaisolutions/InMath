@@ -15,6 +15,9 @@ const hits = new Map<string, number[]>();
 const PREGUNTA_NOMBRE = "Ya casi ✨ ¿A nombre de quién agendo la asesoría?";
 
 const NOMBRE_RE = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ.' -]{1,59}$/;
+// Frases que delatan que el mensaje NO es un nombre (correcciones, saludos,
+// peticiones) — sin esto, "me equivoqué en el correo…" acababa como nombre.
+const NO_ES_NOMBRE = /\b(equivoc\w*|correct\w*|incorrect\w*|error|cambi\w*|perd[oó]n|disculpa|quise|mal|ayuda|hola|gracias|quiero|puse|env[ií]\w*|mand[eé]\w*|correo|whatsapp|tel[eé]fono|horario|agendar?|cita|favor|espera)\b/i;
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "local";
@@ -82,11 +85,13 @@ export async function POST(req: NextRequest) {
   // mensaje que trae teléfono/correo al quitar esos datos y muletillas.
   const ultimoBot = [...historial].reverse().find((t) => t.rol === "asistente")?.texto ?? "";
   let nombre = "";
-  if (ultimoBot.includes("¿A nombre de quién") && NOMBRE_RE.test(mensaje) && !/@|\d{6,}/.test(mensaje)) {
+  if (ultimoBot.includes("¿A nombre de quién") && NOMBRE_RE.test(mensaje) && !/@|\d{6,}/.test(mensaje) && !NO_ES_NOMBRE.test(mensaje)) {
     nombre = mensaje.trim();
   } else {
     for (const m of [...delUsuario].reverse()) {
       if (!(correo && m.toLowerCase().includes(correo)) && !(telCrudo && m.replace(/[ .()-]/g, "").includes(telCrudo))) continue;
+      // Mensajes de corrección/meta no se minan para nombre.
+      if (NO_ES_NOMBRE.test(m)) continue;
       const limpio = m
         .replace(new RegExp(correo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "ig"), " ")
         .replace(/[\d|]+/g, " ")
@@ -94,7 +99,7 @@ export async function POST(req: NextRequest) {
         .replace(/[,;:()"]+/g, " ")
         .replace(/\s+/g, " ")
         .trim();
-      if (NOMBRE_RE.test(limpio) && limpio.includes(" ") === true || (NOMBRE_RE.test(limpio) && limpio.length >= 3)) {
+      if (NOMBRE_RE.test(limpio) && limpio.length >= 3 && limpio.split(" ").length <= 4) {
         nombre = limpio;
         break;
       }
