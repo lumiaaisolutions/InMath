@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
-import { requiereAdmin } from "@/lib/panel/sesion";
+import { requiereModulo } from "@/lib/panel/sesion";
 import { googleAuthUrlCalendar } from "@/lib/portal/google";
 import { googleConfigurado } from "@/lib/portal/auth";
 
@@ -11,7 +11,7 @@ import { googleConfigurado } from "@/lib/portal/auth";
  *  (n8n) falla al generar el link de una cita. Vive bajo /panel/api porque
  *  la cookie de sesión del panel tiene path /panel. */
 export async function GET(req: NextRequest) {
-  await requiereAdmin();
+  await requiereModulo("calendario_respaldo");
   const base = (process.env.APP_URL ?? "").replace(/\/$/, "") || req.url;
   if (!googleConfigurado()) {
     return NextResponse.redirect(new URL("/panel/configuracion?calendar=no-config", base));

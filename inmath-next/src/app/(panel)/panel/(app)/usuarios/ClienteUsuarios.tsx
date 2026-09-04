@@ -12,6 +12,9 @@ export type UsuarioFicha = {
 const MODULOS: [string, string][] = [
   ["pipeline", "Pipeline"], ["citas", "Citas"], ["alumnos", "Alumnos y pagos"], ["pagos", "Aprobar/cancelar pagos"],
   ["reactivos", "Reactivos"], ["precios", "Precios y promociones"],
+  // Quién puede (re)conectar la cuenta de Google del respaldo del link de
+  // Meet en Configuración — se otorga aquí, usuario por usuario.
+  ["calendario_respaldo", "Respaldo de Google Calendar"],
 ];
 
 /* ── Controles propios (sin <select> ni <input type="checkbox"> nativos) ─ */

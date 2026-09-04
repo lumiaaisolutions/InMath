@@ -731,3 +731,12 @@ Danna (su cita de las 20:00 ya había pasado cuando se generó el link) para
 reagendar o compensar. LECCIÓN (para el .md de n8n): en n8n 2.x todo
 cambio de flujo requiere PUBLISH; editar la BD a mano deja el flujo activo
 pero muerto.
+
+**F10 — Respaldo de Calendar por PERMISO, no por rol** (pedido del usuario,
+misma noche): la tarjeta "Enlace de Meet de las asesorías" de
+/panel/configuracion (y su ruta de conexión OAuth) ahora se controla con el
+módulo nuevo **"Respaldo de Google Calendar"** (`calendario_respaldo`) en
+los interruptores de "Módulos permitidos" de /panel/usuarios. Los
+administradores lo tienen siempre (regla general de módulos); a los
+asesores se les otorga usuario por usuario. Los asesores existentes con
+lista explícita de módulos NO lo ven hasta que se les active.
