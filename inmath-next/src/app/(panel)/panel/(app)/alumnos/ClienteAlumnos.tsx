@@ -91,12 +91,12 @@ function AccionesPagoReal({ pago, onCerrar }: { pago: Pago; onCerrar?: () => voi
   if (pago.estado !== "pendiente") return null;
   return (
     <>
-      <div className="pg-acciones">
-        <button className="boton mini primario" disabled={enCurso} onClick={() => setConfirmar("aprobar")}>
-          {enCurso ? "…" : "Aprobar e inscribir"}
+      <div className="pg-acciones pg-acciones-ficha">
+        <button className="boton primario pg-btn-aprobar" disabled={enCurso} onClick={() => setConfirmar("aprobar")}>
+          <IconoPanel n="check" cls="ic-sm" /> {enCurso ? "Procesando…" : "Aprobar e inscribir"}
         </button>
-        <button className="boton mini al-quitar" disabled={enCurso} onClick={() => setConfirmar("cancelar")}>
-          Cancelar
+        <button className="boton pg-btn-cancelar" disabled={enCurso} onClick={() => setConfirmar("cancelar")}>
+          Cancelar pago
         </button>
       </div>
       <ConfirmarDialogo
@@ -241,15 +241,18 @@ function FichaDetalle({ fila, onCerrar }: { fila: Fila; onCerrar: () => void }) 
   return (
     <EnBody>
       <div className="us-velo visible">
-        <div className="us-frame pg-frame" role="dialog" aria-modal="true">
+        <div className="us-frame pg-frame pg-ficha" role="dialog" aria-modal="true">
+          {/* Cierre SIEMPRE visible: círculo de vidrio flotante, sobre banner o sobre blanco */}
+          <button type="button" className="pg-cerrar" aria-label="Cerrar" onClick={onCerrar}><IconoPanel n="x" /></button>
           {/* Portada y foto que el alumno configuró en su portal (si las tiene) */}
           {fila.alumno?.banner && (
             <div className="af-banner"><img src={fila.alumno.banner} alt="" /></div>
           )}
-          <div className={`us-frame-cab${fila.alumno?.banner ? " af-cab-con-banner" : ""}`}>
-            {fila.alumno?.foto && <span className="af-foto"><img src={fila.alumno.foto} alt="" /></span>}
+          <div className="pg-ficha-cab">
+            {fila.alumno?.foto
+              ? <span className={`af-foto${fila.alumno?.banner ? " af-foto-solapa" : ""}`}><img src={fila.alumno.foto} alt="" /></span>
+              : <span className={`pg-ficha-inicial${fila.alumno?.banner ? " af-foto-solapa" : ""}`}>{(fila.nombre || "?").charAt(0).toUpperCase()}</span>}
             <div className="us-quien"><b>{fila.nombre}</b><span>{fila.cursoNombre ?? "Sin curso"}</span></div>
-            <button type="button" className="toast-x us-cerrar" aria-label="Cerrar" onClick={onCerrar}><IconoPanel n="x" /></button>
           </div>
 
           <div className="pg-detalle-grid">

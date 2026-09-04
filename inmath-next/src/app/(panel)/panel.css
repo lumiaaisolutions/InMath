@@ -3161,7 +3161,6 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 .pw-avatar-sm img, .tp-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
 .af-banner { margin: -1px -1px 0; border-radius: 22px 22px 0 0; overflow: hidden; height: 120px; }
 .af-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.af-cab-con-banner { margin-top: -26px; position: relative; z-index: 2; }
 .af-foto {
   flex: 0 0 auto; width: 52px; height: 52px; border-radius: 50%; overflow: hidden;
   border: 3px solid #fff; box-shadow: 0 6px 16px rgba(18,31,55,.25); background: #fff;
@@ -3169,3 +3168,55 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 .af-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .af-banner-pagina { border-radius: 18px; height: 140px; margin: 0 0 -34px; box-shadow: 0 14px 34px -18px rgba(18,31,55,.35); }
 .af-foto-pagina { width: 64px; height: 64px; position: relative; z-index: 2; }
+
+/* Ficha "Ver" de Alumnos rediseñada (v84): portada limpia, nombre SIEMPRE
+ * sobre blanco (nada de texto encimado al banner), cierre flotante de
+ * vidrio visible sobre cualquier fondo y acciones protagónicas. */
+.pg-ficha { position: relative; padding-top: 0; }
+.pg-ficha .af-banner { margin: 0 -22px 0; height: 150px; border-radius: 24px 24px 0 0; }
+.pg-ficha .af-banner img { width: 100%; height: 100%; object-fit: cover; }
+.pg-cerrar {
+  position: absolute; top: 14px; right: 14px; z-index: 6;
+  width: 38px; height: 38px; border-radius: 50%; border: 0; cursor: pointer;
+  display: grid; place-items: center; color: var(--tinta);
+  background: rgba(255,255,255,.88); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(18,31,55,.28), inset 0 0 0 1px rgba(255,255,255,.7);
+  transition: transform .15s ease, background .2s ease;
+}
+.pg-cerrar:hover { background: #fff; transform: scale(1.06); }
+.pg-cerrar svg { width: 16px; height: 16px; }
+.pg-ficha-cab { display: flex; align-items: center; gap: 14px; padding: 14px 0 16px; }
+.pg-ficha .pg-ficha-cab { padding-top: 12px; }
+.pg-ficha-cab .us-quien b { font: 800 1.15rem/1.2 var(--display); color: var(--tinta); display: block; }
+.pg-ficha-cab .us-quien span { font: 500 .82rem/1.4 var(--cuerpo); color: var(--tinta-3); }
+.pg-ficha .af-foto, .pg-ficha-inicial { width: 64px; height: 64px; }
+.pg-ficha-inicial {
+  flex: 0 0 auto; border-radius: 50%; display: grid; place-items: center;
+  background: linear-gradient(135deg, #4D7FF0, #6B9FFF); color: #fff;
+  font: 800 1.4rem var(--display); border: 3px solid #fff;
+  box-shadow: 0 6px 16px rgba(18,31,55,.25);
+}
+.af-foto-solapa { margin-top: -38px; position: relative; z-index: 3; }
+/* Acciones protagónicas: primario en gradiente con halo, cancelar delineado */
+.pg-acciones-ficha { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--linea); }
+.pg-btn-aprobar {
+  display: inline-flex; align-items: center; gap: 8px; padding: 13px 24px; border-radius: 999px;
+  font: 800 .92rem var(--cuerpo); color: #fff; border: 0; cursor: pointer;
+  background: linear-gradient(120deg, #12855C, #22C1A6);
+  box-shadow: 0 12px 26px -10px rgba(18,133,92,.65);
+  transition: transform .15s ease, filter .2s ease;
+}
+.pg-btn-aprobar:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.pg-btn-aprobar:disabled { opacity: .6; }
+.pg-btn-cancelar {
+  padding: 13px 22px; border-radius: 999px; cursor: pointer;
+  font: 700 .9rem var(--cuerpo); color: #C0392B; background: #fff;
+  border: 1.5px solid rgba(192,57,43,.45);
+  transition: background .2s ease, transform .15s ease;
+}
+.pg-btn-cancelar:hover { background: #FBEAE7; transform: translateY(-1px); }
+@media (max-width: 640px) {
+  .pg-ficha .af-banner { height: 110px; }
+  .pg-acciones-ficha { flex-direction: column; }
+  .pg-btn-aprobar, .pg-btn-cancelar { width: 100%; justify-content: center; text-align: center; }
+}

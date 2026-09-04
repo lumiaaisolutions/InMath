@@ -1002,3 +1002,14 @@ Infra: nueva ruta /panel/api/alumno-img/{id}-avatar|banner.jpg (la ruta
 /portal/img solo sirve al propio alumno; esta exige sesión del STAFF y
 valida el nombre de archivo) + helper mediaAlumnoParaPanel en
 src/lib/portal/media.ts. Estilos .af-* en panel.css.
+
+**F22 (v84) — Rediseño de la ficha "Ver" de /panel/alumnos** (feedback:
+botones poco llamativos, texto encimado al banner y cierre invisible):
+- Cierre flotante de VIDRIO (círculo blanco con blur y sombra) en la
+  esquina, siempre visible sobre la portada o sobre blanco.
+- La portada va limpia arriba (150px, 110 en móvil) y el NOMBRE ya no se
+  encima: vive en franja blanca bajo el banner; solo la foto solapa
+  (af-foto-solapa). Sin foto, inicial en círculo con gradiente.
+- Acciones protagónicas separadas con borde superior: "Aprobar e
+  inscribir" en gradiente verde con halo e ícono ✓; "Cancelar pago"
+  delineado rojo. En móvil ambos a ancho completo.
