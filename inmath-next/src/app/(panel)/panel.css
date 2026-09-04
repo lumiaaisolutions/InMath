@@ -3153,3 +3153,19 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 .sidebar .marca-mathy-pill.mathy-toggle.mathy-oculta .mt-cara { color: #9AA7C4; border-color: rgba(154,167,196,.7); box-shadow: 0 0 0 3px rgba(154,167,196,.14); background: #F3F6FC; }
 
 
+
+/* Fotos y portadas que el ALUMNO configura en su portal, vistas desde el
+ * panel de admin (fila de Alumnos, ficha "Ver", tarjeta del pipeline y
+ * cabecera de la ficha del prospecto). Si no las tiene, se queda la
+ * inicial de siempre. */
+.pw-avatar-sm img, .tp-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+.af-banner { margin: -1px -1px 0; border-radius: 22px 22px 0 0; overflow: hidden; height: 120px; }
+.af-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.af-cab-con-banner { margin-top: -26px; position: relative; z-index: 2; }
+.af-foto {
+  flex: 0 0 auto; width: 52px; height: 52px; border-radius: 50%; overflow: hidden;
+  border: 3px solid #fff; box-shadow: 0 6px 16px rgba(18,31,55,.25); background: #fff;
+}
+.af-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.af-banner-pagina { border-radius: 18px; height: 140px; margin: 0 0 -34px; box-shadow: 0 14px 34px -18px rgba(18,31,55,.35); }
+.af-foto-pagina { width: 64px; height: 64px; position: relative; z-index: 2; }

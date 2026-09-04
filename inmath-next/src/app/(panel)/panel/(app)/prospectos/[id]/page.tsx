@@ -6,6 +6,7 @@ import { requiereSesion } from "@/lib/panel/sesion";
 import { ahoraPared, isoDia } from "@/lib/fechas";
 import { etiquetaEtapa, fechaCorta, dinero } from "@/lib/panel/formato";
 import { AccionesProspecto, EliminarRegistroBoton, CitaAcciones } from "./ClienteProspecto";
+import { mediaAlumnoParaPanel } from "@/lib/portal/media";
 
 export const metadata: Metadata = { title: "Prospecto — Inmath CRM" };
 export const dynamic = "force-dynamic";
@@ -36,7 +37,7 @@ export default async function Prospecto({ params }: { params: Promise<{ id: stri
   const asesores = await prisma.usuarios.findMany({
     where: { es_asesor: true, activo: true }, select: { id: true, nombre: true }, orderBy: { id: "asc" },
   });
-  const alumno = await prisma.alumnos.findUnique({ where: { prospecto_id: id }, select: { email: true, estado: true, inscrito_en: true } });
+  const alumno = await prisma.alumnos.findUnique({ where: { prospecto_id: id }, select: { id: true, email: true, estado: true, inscrito_en: true } });
   const sinPago = !pagos.some((pg) => pg.estado === "pagado");
   const ahora = ahoraPared();
   const hoyIso = isoDia(ahora);
@@ -49,14 +50,22 @@ export default async function Prospecto({ params }: { params: Promise<{ id: stri
     }
   }
 
+  const media = alumno ? await mediaAlumnoParaPanel(alumno.id) : { avatar: null, banner: null };
+
   return (
     <>
+      {media.banner && (
+        <div className="af-banner af-banner-pagina"><img src={media.banner} alt="" /></div>
+      )}
       <div className="cabecera">
-        <div>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          {media.avatar && <span className="af-foto af-foto-pagina"><img src={media.avatar} alt="" /></span>}
+          <div>
           <h1>{p.nombre ?? "Sin nombre"}</h1>
           <div className="sub">
             <span style={{ fontFamily: "var(--mono)" }}>{p.telefono_whatsapp}</span>
             {" · "}{etiquetaEtapa(p.etapa)}{" · Fuente: "}{p.fuente}
+          </div>
           </div>
         </div>
         <Link className="boton fantasma" href="/panel">← Pipeline</Link>

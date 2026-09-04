@@ -987,3 +987,18 @@ que no mueren entre deploys**:
    fusiona en cada deploy — los chunks de builds viejos siguen sirviéndose
    y las pestañas abiertas navegan fluido tras un deploy. Documentado en
    despliegue-vps.md y en la memoria del pipeline.
+
+**F21 (v83) — Foto y portada del alumno visibles en el panel de admin**
+(pedido del usuario): las imágenes que el alumno configura en su portal
+ahora se ven en el panel donde aplica, con la inicial de siempre como
+respaldo si no las tiene:
+- /panel/alumnos: el icono de la fila muestra su foto de perfil.
+- Ficha "Ver" del alumno: PORTADA arriba + foto junto al nombre.
+- Pipeline: la tarjeta del prospecto muestra la foto (si su cuenta de
+  alumno la tiene).
+- Ficha del prospecto (/panel/prospectos/[id], a donde llegan Citas y
+  Pipeline): portada de fondo + foto en la cabecera.
+Infra: nueva ruta /panel/api/alumno-img/{id}-avatar|banner.jpg (la ruta
+/portal/img solo sirve al propio alumno; esta exige sesión del STAFF y
+valida el nombre de archivo) + helper mediaAlumnoParaPanel en
+src/lib/portal/media.ts. Estilos .af-* en panel.css.

@@ -10,6 +10,7 @@ import { IconoPanel } from "@/components/IconoPanel";
 export type TarjetaPipeline = {
   id: number; nombre: string | null; telefono: string;
   puntaje: number | null; asesor: string | null; ultimoMensaje: string | null;
+  foto?: string | null;
 };
 
 const COLORES: Record<string, string> = {
@@ -227,7 +228,7 @@ export function PipelineTablero({ columnas: inicial, asesores, filtroAsesor }: {
                     arrastrada.current = null; setRecibiendo(null);
                   }}
                 >
-                  <span className="tp-avatar">{(p.nombre ?? "?").charAt(0).toUpperCase()}</span>
+                  <span className="tp-avatar">{p.foto ? <img src={p.foto} alt="" /> : (p.nombre ?? "?").charAt(0).toUpperCase()}</span>
                   <span className="tp-cuerpo">
                     <b>{p.nombre ?? "Sin nombre"}</b>
                     <span className="tel">{p.telefono}</span>

@@ -14,7 +14,7 @@ type Pago = {
 };
 type Fila = {
   prospectoId: number; nombre: string; telefono: string; correo: string | null; cursoNombre: string | null;
-  alumno: { id: number; estado: string; inscritoEn: string; cursoTerminado: boolean; puedeDarBaja: boolean } | null;
+  alumno: { id: number; estado: string; inscritoEn: string; cursoTerminado: boolean; puedeDarBaja: boolean; foto: string | null; banner: string | null } | null;
   pagos: Pago[];
 };
 type Curso = { id: number; nombre: string };
@@ -242,7 +242,12 @@ function FichaDetalle({ fila, onCerrar }: { fila: Fila; onCerrar: () => void }) 
     <EnBody>
       <div className="us-velo visible">
         <div className="us-frame pg-frame" role="dialog" aria-modal="true">
-          <div className="us-frame-cab">
+          {/* Portada y foto que el alumno configuró en su portal (si las tiene) */}
+          {fila.alumno?.banner && (
+            <div className="af-banner"><img src={fila.alumno.banner} alt="" /></div>
+          )}
+          <div className={`us-frame-cab${fila.alumno?.banner ? " af-cab-con-banner" : ""}`}>
+            {fila.alumno?.foto && <span className="af-foto"><img src={fila.alumno.foto} alt="" /></span>}
             <div className="us-quien"><b>{fila.nombre}</b><span>{fila.cursoNombre ?? "Sin curso"}</span></div>
             <button type="button" className="toast-x us-cerrar" aria-label="Cerrar" onClick={onCerrar}><IconoPanel n="x" /></button>
           </div>
@@ -398,7 +403,7 @@ export function ListaAlumnos({ inicial, cursos }: { inicial: Fila[]; cursos: Cur
                 <tr key={f.prospectoId} className="pg-fila-clic" onClick={() => setSelId(f.prospectoId)}>
                   <td>
                     <span className="al-quien">
-                      <span className="pw-avatar-sm">{(f.nombre || "?").charAt(0).toUpperCase()}</span>
+                      <span className="pw-avatar-sm">{f.alumno?.foto ? <img src={f.alumno.foto} alt="" /> : (f.nombre || "?").charAt(0).toUpperCase()}</span>
                       <b style={{ color: "var(--pino)" }}>{f.nombre}</b>
                     </span>
                   </td>

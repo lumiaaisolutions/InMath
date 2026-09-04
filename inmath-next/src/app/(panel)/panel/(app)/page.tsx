@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requiereModulo } from "@/lib/panel/sesion";
 import { fechaCorta } from "@/lib/panel/formato";
 import { PipelineTablero, type TarjetaPipeline } from "./PipelineTablero";
+import { mediaAlumnoParaPanel } from "@/lib/portal/media";
 
 export const metadata: Metadata = { title: "Pipeline — Inmath CRM" };
 export const dynamic = "force-dynamic";
@@ -22,6 +23,7 @@ export default async function Pipeline({ searchParams }: { searchParams: Promise
   for (const etapa of ETAPAS) {
     const filas = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
       `SELECT p.id, p.nombre, p.telefono_whatsapp, p.puntaje_calificacion, u.nombre AS asesor_nombre,
+              (SELECT a.id FROM alumnos a WHERE a.prospecto_id = p.id LIMIT 1) AS alumno_id,
               (SELECT MAX(m.creado_en) FROM mensajes m
                JOIN conversaciones c ON c.id = m.conversacion_id
                WHERE c.prospecto_id = p.id) AS ultimo_mensaje_en
@@ -31,14 +33,15 @@ export default async function Pipeline({ searchParams }: { searchParams: Promise
        ORDER BY p.actualizado_en DESC LIMIT 60`,
       ...(asesorId ? [etapa, asesorId] : [etapa]),
     );
-    columnas[etapa] = filas.map((f) => ({
+    columnas[etapa] = await Promise.all(filas.map(async (f) => ({
       id: Number(f.id),
+      foto: f.alumno_id ? (await mediaAlumnoParaPanel(Number(f.alumno_id))).avatar : null,
       nombre: (f.nombre as string) ?? null,
       telefono: f.telefono_whatsapp as string,
       puntaje: f.puntaje_calificacion === null ? null : Number(f.puntaje_calificacion),
       asesor: (f.asesor_nombre as string) ?? null,
       ultimoMensaje: f.ultimo_mensaje_en ? fechaCorta(f.ultimo_mensaje_en as Date) : null,
-    }));
+    })));
   }
 
   return <PipelineTablero columnas={columnas} asesores={asesores} filtroAsesor={asesor_id ?? ""} />;

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requiereModulo } from "@/lib/panel/sesion";
 import { ahoraPared } from "@/lib/fechas";
 import { ListaAlumnos } from "./ClienteAlumnos";
+import { mediaAlumnoParaPanel } from "@/lib/portal/media";
 
 export const metadata: Metadata = { title: "Alumnos y pagos — Inmath CRM" };
 export const dynamic = "force-dynamic";
@@ -24,6 +25,10 @@ export default async function Alumnos() {
   ]);
 
   const ahora = ahoraPared().getTime();
+  // Fotos/portadas que los alumnos subieron en su portal (si las tienen).
+  const medias = new Map(await Promise.all(
+    prospectos.filter((p) => p.alumnos).map(async (p) => [p.alumnos!.id, await mediaAlumnoParaPanel(p.alumnos!.id)] as const),
+  ));
   const filas = prospectos.map((p) => {
     const alumno = p.alumnos;
     const pagoReciente = p.pagos[0] ?? null;
@@ -43,6 +48,8 @@ export default async function Alumnos() {
       alumno: alumno ? {
         id: alumno.id, estado: alumno.estado, inscritoEn: alumno.inscrito_en.toISOString(),
         cursoTerminado, puedeDarBaja,
+        foto: medias.get(alumno.id)?.avatar ?? null,
+        banner: medias.get(alumno.id)?.banner ?? null,
       } : null,
       pagos: p.pagos.map((pg) => ({
         id: pg.id, estado: pg.estado, montoCentavos: pg.monto_centavos, moneda: pg.moneda,

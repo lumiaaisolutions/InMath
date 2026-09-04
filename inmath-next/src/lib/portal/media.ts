@@ -23,3 +23,15 @@ export async function mediaAlumno(alumnoId: number): Promise<{ avatar: string | 
   };
   return { avatar: await url("avatar"), banner: await url("banner") };
 }
+
+/** URLs de avatar/banner del alumno PARA EL PANEL de admin (sirve la ruta
+ *  /panel/api/alumno-img, con sesión del staff). null si no tiene. */
+export async function mediaAlumnoParaPanel(alumnoId: number): Promise<{ avatar: string | null; banner: string | null }> {
+  const url = async (tipo: "avatar" | "banner") => {
+    try {
+      const s = await stat(path.join(dirPortal(), `${alumnoId}-${tipo}.jpg`));
+      return `/panel/api/alumno-img/${alumnoId}-${tipo}.jpg?v=${Math.floor(s.mtimeMs)}`;
+    } catch { return null; }
+  };
+  return { avatar: await url("avatar"), banner: await url("banner") };
+}
