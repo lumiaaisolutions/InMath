@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { requiereAlumno } from "@/lib/portal/sesion";
+import { mediaAlumno } from "@/lib/portal/media";
 import { tienePagoConfirmado } from "@/lib/portal/auth";
 import { temasDisponibles, examenesDisponibles, conteosPorTema, historialDeAlumno } from "@/lib/practica";
 import { ClientePractica } from "./ClientePractica";
@@ -29,7 +30,7 @@ export default async function PracticaPage() {
             <p className="pt-head-sub">Resuelve preguntas de opción múltiple y mide tu avance.</p>
           </div>
         </header>
-        <ClientePractica temas={temas} examenes={examenes} conteos={conteos} historialInicial={historial} />
+        <ClientePractica temas={temas} examenes={examenes} conteos={conteos} historialInicial={historial} avatarUrl={(await mediaAlumno(alumno.id)).avatar} nombre={alumno.nombre} />
       </div>
     </section>
   );

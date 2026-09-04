@@ -709,3 +709,33 @@
 .pw-reenviar { border: 0; background: none; cursor: pointer; margin-top: 4px; font: 600 .82rem var(--cuerpo); color: var(--tinta-3); text-decoration: underline; }
 .pw-reenviar:hover { color: var(--azul); }
 @media (max-width: 620px) { .pw-resumen { flex-direction: column; align-items: stretch; } .pw-resumen .boton { width: 100%; } }
+
+/* v87 — La FOTO del alumno como marcador de avance en la práctica: viaja
+ * por la barra de progreso (línea de tiempo) y señala verticalmente la
+ * pregunta en la que va. Sin foto, su inicial en círculo de gradiente. */
+.pt-avance-pista { position: relative; margin-top: -11px; padding-top: 0; }
+.pt-avance-pista .pt-practica-barra { margin-top: 0; }
+.pt-avance-foto {
+  width: 30px; height: 30px; border-radius: 50%; overflow: hidden; display: grid; place-items: center;
+  border: 2.5px solid #fff; background: #fff;
+  box-shadow: 0 4px 12px rgba(18,31,55,.3), 0 0 0 2px rgba(107,159,255,.55);
+}
+.pt-avance-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pt-avance-inicial { background: linear-gradient(135deg, #4D7FF0, #6B9FFF); color: #fff; font: 800 .82rem var(--cuerpo); }
+.pt-avance-en-barra {
+  position: absolute; top: 50%; left: var(--p, 0%);
+  transform: translate(-50%, -50%);
+  transition: left .45s cubic-bezier(.22,.7,.31,1);
+  z-index: 2;
+}
+.pt-pregunta-actual { position: relative; box-shadow: 0 0 0 2px rgba(107,159,255,.45), 0 10px 26px -14px rgba(77,127,240,.45); border-radius: 16px; }
+.pt-avance-en-pregunta {
+  position: absolute; top: 50%; left: -15px; transform: translateY(-50%);
+  z-index: 2; animation: ptAvancePulso 2.2s ease-in-out infinite;
+}
+@keyframes ptAvancePulso {
+  0%, 100% { box-shadow: 0 4px 12px rgba(18,31,55,.3), 0 0 0 2px rgba(107,159,255,.55); }
+  50% { box-shadow: 0 4px 12px rgba(18,31,55,.3), 0 0 0 6px rgba(107,159,255,.25); }
+}
+@media (prefers-reduced-motion: reduce) { .pt-avance-en-pregunta { animation: none; } }
+@media (max-width: 620px) { .pt-avance-en-pregunta { left: -8px; width: 26px; height: 26px; } }

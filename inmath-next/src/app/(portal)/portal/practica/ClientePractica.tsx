@@ -117,9 +117,10 @@ function PantallaElegir({ temas, examenes, conteos, onListo }: {
 }
 
 /** Paso 2: resolver — todas las preguntas en una sola pantalla con scroll. */
-function PantallaResolver({ reactivos, tema, examenId, onCalificado, onCancelar }: {
+function PantallaResolver({ reactivos, tema, examenId, onCalificado, onCancelar, avatarUrl = null, nombre = "" }: {
   reactivos: ReactivoParaAlumno[]; tema: string | null; examenId: number | null;
   onCalificado: (r: ResultadoIntento) => void; onCancelar: () => void;
+  avatarUrl?: string | null; nombre?: string;
 }) {
   const [respuestas, setRespuestas] = useState<Record<number, number>>({});
   const [, accion, pendiente] = useActionState<EstadoCalificar, FormData>(async (prev, fd) => {
@@ -128,6 +129,17 @@ function PantallaResolver({ reactivos, tema, examenId, onCalificado, onCancelar 
     return r;
   }, {});
   const contestadas = Object.keys(respuestas).length;
+  // "En qué pregunta va": la primera sin contestar (o la última si terminó).
+  const actualIdx = (() => {
+    const i = reactivos.findIndex((r) => respuestas[r.id] === undefined);
+    return i === -1 ? reactivos.length - 1 : i;
+  })();
+  const inicial = (nombre || "?").charAt(0).toUpperCase();
+  const Marcador = ({ cls }: { cls: string }) => (
+    avatarUrl
+      ? <span className={`pt-avance-foto ${cls}`}><img src={avatarUrl} alt="" /></span>
+      : <span className={`pt-avance-foto pt-avance-inicial ${cls}`}>{inicial}</span>
+  );
 
   return (
     <form
@@ -140,11 +152,15 @@ function PantallaResolver({ reactivos, tema, examenId, onCalificado, onCancelar 
       className="pt-practica-resolver"
     >
       <div className="pt-practica-progreso">{contestadas} de {reactivos.length} contestadas</div>
-      <div className="pt-practica-barra" aria-hidden="true">
-        <i style={{ ["--p" as string]: `${reactivos.length ? Math.round((contestadas / reactivos.length) * 100) : 0}%` }} />
+      <div className="pt-avance-pista" aria-hidden="true"
+        style={{ ["--p" as string]: `${reactivos.length ? Math.round((contestadas / reactivos.length) * 100) : 0}%` }}>
+        <div className="pt-practica-barra"><i style={{ width: "var(--p)" }} /></div>
+        {/* Tu foto viaja por la línea de tiempo conforme contestas */}
+        <Marcador cls="pt-avance-en-barra" />
       </div>
       {reactivos.map((r, i) => (
-        <div className="pt-practica-pregunta" key={r.id}>
+        <div className={`pt-practica-pregunta${i === actualIdx ? " pt-pregunta-actual" : ""}`} key={r.id}>
+          {i === actualIdx && <Marcador cls="pt-avance-en-pregunta" />}
           <b>{i + 1}. {r.enunciado}</b>
           <div className="pt-practica-opciones">
             {r.opciones.map((op, oi) => (
@@ -223,8 +239,9 @@ function Historial({ historial }: { historial: IntentoHistorial[] }) {
   );
 }
 
-export function ClientePractica({ temas, examenes, conteos, historialInicial }: {
+export function ClientePractica({ temas, examenes, conteos, historialInicial, avatarUrl = null, nombre = "" }: {
   temas: string[]; examenes: ExamenDisponible[]; conteos: Record<string, number>; historialInicial: IntentoHistorial[];
+  avatarUrl?: string | null; nombre?: string;
 }) {
   const [paso, setPaso] = useState<
     | { n: "elegir" }
@@ -241,7 +258,7 @@ export function ClientePractica({ temas, examenes, conteos, historialInicial }: 
             onListo={(reactivos, tema, examenId) => setPaso({ n: "resolver", reactivos, tema, examenId })} />
         )}
         {paso.n === "resolver" && (
-          <PantallaResolver
+          <PantallaResolver avatarUrl={avatarUrl} nombre={nombre}
             reactivos={paso.reactivos} tema={paso.tema} examenId={paso.examenId}
             onCalificado={(resultado) => {
               if (!resultado) return;

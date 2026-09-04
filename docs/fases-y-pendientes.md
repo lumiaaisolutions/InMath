@@ -1044,3 +1044,12 @@ imagen se renderizan), y su explicación en bloque ámbar 💡. Responsive
 (frame a pantalla casi completa en móvil) y con el cierre de vidrio
 flotante. Componente PreviewExamenDialogo + estilos .rx-prev-* — usa los
 datos que la página ya cargaba, sin consultas nuevas.
+
+**F25 (v87) — La foto del alumno como marcador de avance en la práctica**
+(/portal/practica): su foto de perfil (o su inicial en círculo de
+gradiente si no tiene) ahora: (a) VIAJA por la barra de progreso como
+línea de tiempo — se desliza con animación conforme contesta; (b) señala
+VERTICALMENTE la pregunta en la que va (la primera sin contestar): la
+tarjeta actual lleva anillo azul y la foto flota a su costado con un pulso
+suave (respetando prefers-reduced-motion). Datos vía mediaAlumno (sesión
+propia). Estilos .pt-avance-* en portal.css.
