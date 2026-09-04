@@ -13,15 +13,15 @@ const MENSAJES_GOOGLE: Record<string, string> = {
 };
 
 /** Login ÚNICO (staff + alumno): split con carrusel + formulario animado + Google. */
-export function LoginClient({ slides, sitioUrl, tituloDefecto, textoDefecto, conGoogle, errorGoogle }: {
+export function LoginClient({ slides, sitioUrl, tituloDefecto, textoDefecto, conGoogle, errorGoogle, retoInicial }: {
   slides: SlideLogin[]; sitioUrl: string; tituloDefecto: string; textoDefecto: string;
-  conGoogle: boolean; errorGoogle?: string;
+  conGoogle: boolean; errorGoogle?: string; retoInicial?: string;
 }) {
   const [estado, accion, pendiente] = useActionState<EstadoLogin, FormData>(loginAccion, {});
   const [est2, accion2, pend2] = useActionState<EstadoLogin, FormData>(verificar2faAccion, {});
   const [actual, setActual] = useState(0);
   const [verPass, setVerPass] = useState(false);
-  const reto = estado.reto2fa ?? est2.reto2fa;
+  const reto = estado.reto2fa ?? est2.reto2fa ?? retoInicial;
   const error = (reto ? est2.error : estado.error) ?? (errorGoogle ? MENSAJES_GOOGLE[errorGoogle] ?? "No pudimos iniciar sesión con Google." : undefined);
 
   useEffect(() => {

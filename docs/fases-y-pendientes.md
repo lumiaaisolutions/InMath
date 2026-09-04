@@ -968,3 +968,22 @@ corregido sí se tomó y el prospecto conservó su nombre real.)
    tiene una agendada, el botón "Agendar mi sesión gratis" del candado de
    pago NO aparece — solo "Completar mi pago" (y la nota de abajo deja de
    invitar a agendar).
+
+**F20 (v82) — 2FA del portal también en el login con Google + estáticos
+que no mueren entre deploys**:
+1. BUG de seguridad reportado: con la verificación en 2 pasos activada, al
+   entrar de nuevo NO pedía código — porque el usuario entraba con GOOGLE
+   y ese camino creaba la sesión directo. Fix: el callback de Google, si
+   el alumno tiene 2FA, emite el código por correo y redirige a
+   /panel/login?reto2fa=<token firmado> — la pantalla "Verifica que eres
+   tú" acepta ahora el reto por URL (retoInicial) además de por el flujo
+   de contraseña. Sin código válido no hay sesión. (El flag vive en
+   configuraciones.alumno_2fa; verificado activo para el alumno de prueba.)
+2. "Mi cuenta tarda / error 522 de un chunk en consola": cada deploy
+   borraba los archivos estáticos del build anterior — las pestañas
+   abiertas pedían chunks que ya no existían (522 vía Cloudflare) y la
+   navegación degradaba a recarga completa. Fix de pipeline: ARCHIVO
+   ACUMULATIVO de estáticos (/var/www/inmath/static-archivo) que se
+   fusiona en cada deploy — los chunks de builds viejos siguen sirviéndose
+   y las pestañas abiertas navegan fluido tras un deploy. Documentado en
+   despliegue-vps.md y en la memoria del pipeline.

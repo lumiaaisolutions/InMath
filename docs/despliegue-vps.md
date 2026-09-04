@@ -160,7 +160,11 @@ completa, siempre y en este orden:
 1. `rsync` (excluyendo node_modules/.next/.git/.env)
 2. `npx prisma generate` ← nunca saltarlo
 3. `npm run build`
-4. copiar `public` y `.next/static` a `.next/standalone`
+4. copiar `public` a `.next/standalone`; los estáticos van vía ARCHIVO
+   ACUMULATIVO: `cp -r .next/static/. /var/www/inmath/static-archivo/` y
+   `cp -r /var/www/inmath/static-archivo/. .next/standalone/.next/static/`
+   (conserva chunks de builds anteriores → pestañas abiertas no reciben
+   522/404 tras un deploy)
 5. reiniciar pm2 (`pm2 delete inmath-web` + start con PORT=3010 + `pm2 save`)
 6. verificar con curl **200 en /, /pago y /panel/login** antes de dar por
    bueno el deploy

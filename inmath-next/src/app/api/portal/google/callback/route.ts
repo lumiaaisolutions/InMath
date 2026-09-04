@@ -6,6 +6,7 @@ import { googleConfigurado } from "@/lib/portal/auth";
 import { resolverLoginEmail } from "@/lib/auth-unificado";
 import { crearSesion } from "@/lib/panel/sesion";
 import { crearSesionAlumno } from "@/lib/portal/sesion";
+import { dosFactoresActivo, emitirCodigo2fa, tokenReto } from "@/lib/portal/dosfactores";
 
 /** Callback de Google (login ÚNICO): valida state, canjea el code y abre la
  *  sesión correcta — staff → /panel, alumno (con pago) → /portal. */
@@ -52,6 +53,13 @@ export async function GET(req: NextRequest) {
   if (acceso.tipo === "staff") {
     await crearSesion(acceso.id);
     return irA("/panel");
+  }
+  // La verificación en 2 pasos también aplica al login con Google: si el
+  // alumno la activó, se le envía el código y se le manda a la pantalla de
+  // "Verifica que eres tú" — sin sesión hasta validar.
+  if (await dosFactoresActivo(acceso.id)) {
+    const enviado = await emitirCodigo2fa(acceso.id);
+    if (enviado) return irA(`/panel/login?reto2fa=${encodeURIComponent(tokenReto(acceso.id))}`);
   }
   await crearSesionAlumno(acceso.id);
   return irA("/portal");

@@ -10,10 +10,10 @@ import { LoginClient, type SlideLogin } from "./LoginClient";
 export const metadata: Metadata = { title: "Entrar — Cursos Inmath" };
 export const dynamic = "force-dynamic";
 
-export default async function Login({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+export default async function Login({ searchParams }: { searchParams: Promise<{ error?: string; reto2fa?: string }> }) {
   if (await usuarioActual()) redirect("/panel");
   if (await alumnoActual()) redirect("/portal");
-  const { error } = await searchParams;
+  const { error, reto2fa } = await searchParams;
 
   const filas = await prisma.configuraciones.findMany({
     where: { clave: { in: ["login_titulo", "login_texto", "login_media_meta"] } },
@@ -36,6 +36,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
     <LoginClient
       slides={slides}
       sitioUrl={sitioUrl}
+      retoInicial={reto2fa}
       tituloDefecto={conf.login_titulo?.trim() ?? ""}
       textoDefecto={conf.login_texto?.trim() ?? ""}
       conGoogle={googleConfigurado()}
