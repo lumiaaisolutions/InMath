@@ -713,3 +713,21 @@ red de seguridad)** — TODO desplegado y el cron activo:
 cita #10 (Danna, 03-sep 20:00) ya pasó sin link — contactarla aparte.
 Pendientes: aprobar reinicio de n8n + clic del cliente en "Conectar Google
 Calendar".
+
+**RESOLUCIÓN (misma noche, 03-sep)**: causa raíz del robot encontrada y
+corregida EN EL EDITOR de n8n (sesión del usuario): la actualización de n8n
+a la serie 2.x (~01-sep) introdujo el modelo de borrador/publicación — el
+flujo 03 quedó "activo" pero SIN VERSIÓN PUBLICADA (la cirugía del 02-sep
+editó la BD directo y nunca publicó), por eso cada llamada moría al
+instante con "Error in workflow" sin registrar ejecución. Fix: botón
+Publish sobre el borrador bueno (3 nodos, sin el nodo duplicador).
+Verificado end-to-end con la cita real #10 (Danna): HTTP 200, evento en
+Calendar y meet_link guardado en BD. El cliente además conectó el RESPALDO
+directo (cursosinmath@gmail.com) en /panel/configuracion. Cadena completa
+operativa: robot ✓ → respaldo directo ✓ → red de seguridad ✓.
+PENDIENTES MENORES: borrar del calendario de cursosinmath@gmail.com los
+eventos de prueba ("Asesoría Cursos Inmath — Prueba…"), y contactar a
+Danna (su cita de las 20:00 ya había pasado cuando se generó el link) para
+reagendar o compensar. LECCIÓN (para el .md de n8n): en n8n 2.x todo
+cambio de flujo requiere PUBLISH; editar la BD a mano deja el flujo activo
+pero muerto.
