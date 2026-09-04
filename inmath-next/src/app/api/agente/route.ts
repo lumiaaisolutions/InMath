@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
   // mensaje que trae teléfono/correo al quitar esos datos y muletillas.
   const ultimoBot = [...historial].reverse().find((t) => t.rol === "asistente")?.texto ?? "";
   let nombre = "";
-  if (ultimoBot.startsWith("Ya casi") && NOMBRE_RE.test(mensaje) && !/@|\d{6,}/.test(mensaje)) {
+  if (ultimoBot.includes("¿A nombre de quién") && NOMBRE_RE.test(mensaje) && !/@|\d{6,}/.test(mensaje)) {
     nombre = mensaje.trim();
   } else {
     for (const m of [...delUsuario].reverse()) {
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
   // si el bot acababa de ofrecer horarios.
   const intentoHorario = /(lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|\d{1,2}:\d{2})/.test(txt);
   const botOfrecioHorarios = /\[OPCIONES:.*(septiembre|octubre|noviembre|diciembre|enero|febrero|marzo|abril|mayo|junio|julio|agosto)/i.test(ultimoBot);
-  const enFlujo = Boolean(inicioSel || ((telefono || correo) && etiquetas.length) || ultimoBot.startsWith("Ya casi") || intentoHorario || botOfrecioHorarios);
+  const enFlujo = Boolean(inicioSel || ((telefono || correo) && etiquetas.length) || ultimoBot.includes("¿A nombre de quién") || intentoHorario || botOfrecioHorarios);
   if (enFlujo && etiquetas.length) {
     const anotado: string[] = [];
     if (inicioSel) anotado.push(`horario ${lista.get(inicioSel)}`);

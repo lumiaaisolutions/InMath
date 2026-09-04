@@ -925,3 +925,11 @@ textos desbordando la burbuja. Rediseño de fondo en /api/agente:
   desbordarse; y regla 6 del prompt: prohibidos formatos técnicos con |.
 Verificado contra producción: horario real → resumen+faltantes → tel/correo
 → resumen completo + pregunta de nombre; horario inventado → botones reales.
+
+**F17-bis (v78)**: el usuario respondió su nombre 3 veces y el flujo no
+avanzaba — el marcador de la pregunta de nombre se buscaba con startsWith
+("Ya casi…") pero el mensaje real del bot empieza con el resumen ("Voy
+anotando: …"). Fix: el marcador se busca con includes("¿A nombre de
+quién"). Verificado reproduciendo la conversación exacta del usuario:
+respondió "fer" → "¡Listo, fer! Tu asesoría quedó agendada…" con la cita
+REAL creada y la cadena de Meet/correos disparada.
