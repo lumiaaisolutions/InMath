@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requiereAlumno } from "@/lib/portal/sesion";
 import { asegurarDirPortal } from "@/lib/portal/media";
-import { activarDosFactores } from "@/lib/portal/dosfactores";
+import { activarDosFactores, emitirCodigoPassword, verificarCodigoPassword } from "@/lib/portal/dosfactores";
 
 export type EstadoCuenta = { ok?: string; error?: string };
 
@@ -93,4 +93,34 @@ export async function cambiarPasswordAlumnoAccion(_prev: EstadoCuenta, fd: FormD
 
   await prisma.alumnos.update({ where: { id: alumno.id }, data: { password_hash: await bcrypt.hash(nueva, 12) } });
   return { ok: "¡Listo! Tu contraseña se actualizó." };
+}
+
+/** Paso 1 del cambio/creación de contraseña: enviar el código al correo de
+ *  la cuenta — la validación por correo aplica a TODOS (con contraseña o
+ *  cuentas que entraron con Google y aún no tienen una). */
+export async function solicitarCodigoPasswordAccion(): Promise<EstadoCuenta> {
+  const alumno = await requiereAlumno();
+  const enviado = await emitirCodigoPassword(alumno.id);
+  if (!enviado) return { error: "Tu cuenta no tiene correo registrado — escríbenos para ayudarte." };
+  return { ok: "Te enviamos un código de 6 dígitos a tu correo. Escríbelo aquí para continuar." };
+}
+
+/** Paso 2: valida el código del correo y guarda la contraseña nueva. */
+export async function cambiarPasswordConCodigoAccion(_prev: EstadoCuenta, fd: FormData): Promise<EstadoCuenta> {
+  const alumno = await requiereAlumno();
+  const codigo = String(fd.get("codigo") ?? "").trim();
+  const nueva = String(fd.get("nueva") ?? "");
+  const confirma = String(fd.get("confirma") ?? "");
+  if (!/^\d{6}$/.test(codigo)) return { error: "Escribe el código de 6 dígitos que te llegó al correo." };
+  if (nueva.length < 8) return { error: "La contraseña nueva debe tener al menos 8 caracteres." };
+  if (nueva !== confirma) return { error: "Las contraseñas no coinciden." };
+  if (!(await verificarCodigoPassword(alumno.id, codigo))) {
+    return { error: "Código incorrecto o vencido. Pide uno nuevo e inténtalo otra vez." };
+  }
+  const fila = await prisma.alumnos.findUnique({ where: { id: alumno.id }, select: { password_hash: true } });
+  if (fila?.password_hash && (await bcrypt.compare(nueva, fila.password_hash))) {
+    return { error: "Esa ya es tu contraseña actual — elige una diferente." };
+  }
+  await prisma.alumnos.update({ where: { id: alumno.id }, data: { password_hash: await bcrypt.hash(nueva, 12) } });
+  return { ok: "¡Listo! Tu contraseña quedó guardada. Ya puedes entrar con ella (además de Google)." };
 }

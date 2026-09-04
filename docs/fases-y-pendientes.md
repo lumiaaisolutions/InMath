@@ -1013,3 +1013,21 @@ botones poco llamativos, texto encimado al banner y cierre invisible):
 - Acciones protagónicas separadas con borde superior: "Aprobar e
   inscribir" en gradiente verde con halo e ícono ✓; "Cancelar pago"
   delineado rojo. En móvil ambos a ancho completo.
+
+**F23 (v85) — Contraseña del portal consciente del método de acceso +
+cambio validado por correo** (pedido del usuario, rol dev senior):
+- Detección del método: alumnos sin password_hash = cuenta creada con
+  GOOGLE. La sección Seguridad ya no muestra el formulario de golpe: vive
+  PLEGADA con el estado — chip verde "Configurada" y botón "Cambiar
+  contraseña", o chip "Sin contraseña — entras con Google" y botón "Crear
+  contraseña" (antes, el form exigía la contraseña actual y esas cuentas
+  quedaban en callejón sin salida).
+- TODO cambio/creación se confirma con CÓDIGO DE 6 DÍGITOS enviado al
+  correo de la cuenta (mismo mecanismo endurecido del 2FA: hash en reposo,
+  10 min de vigencia, intentos limitados; clave alumno_pass_cod en
+  dosfactores.ts). Flujo: botón → correo con código → formulario
+  código+nueva+repetir → guardada (bcrypt 12). Con "Reenviar código" y el
+  correo enmascarado (na•••@gmail.com) en pantalla.
+- Nuevas acciones solicitarCodigoPasswordAccion /
+  cambiarPasswordConCodigoAccion; el form viejo con "contraseña actual" se
+  retiró de la UI.

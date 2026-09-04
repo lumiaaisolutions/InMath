@@ -104,3 +104,44 @@ export function alumnoDeReto(token: string): number | null {
   if (dado.length !== esperado.length || !timingSafeEqual(esperado, dado)) return null;
   return id;
 }
+
+/* ── Código por correo para CAMBIAR/CREAR contraseña (mismo mecanismo que
+ *    el 2FA: hash del código en reposo, vigencia e intentos limitados) ── */
+const CLAVE_COD_PASS = "alumno_pass_cod";
+
+export async function emitirCodigoPassword(alumnoId: number): Promise<boolean> {
+  const alumno = await prisma.alumnos.findUnique({ where: { id: alumnoId }, select: { email: true, nombre: true } });
+  if (!alumno?.email) return false;
+  const codigo = String(randomInt(0, 1_000_000)).padStart(6, "0");
+  const codes = await leerJson<Record<string, { h: string; exp: number; n?: number }>>(CLAVE_COD_PASS);
+  const ahora = Date.now();
+  for (const k of Object.keys(codes)) if (codes[k].exp < ahora) delete codes[k];
+  codes[String(alumnoId)] = { h: hashCod(codigo), exp: ahora + VIGENCIA_MS, n: 0 };
+  await guardarJson(CLAVE_COD_PASS, codes);
+  await enviarCorreo({
+    para: [alumno.email],
+    asunto: "Confirma el cambio de tu contraseña — Portal InMath",
+    preheader: `Tu código de confirmación es ${codigo} (vence en 10 minutos).`,
+    texto: `Hola ${alumno.nombre},\n\nRecibimos una solicitud para cambiar la contraseña de tu cuenta. Escribe este código en tu portal para confirmarla. Si no fuiste tú, ignora este correo — tu contraseña no cambia sin el código.`,
+    codigo,
+  });
+  return true;
+}
+
+export async function verificarCodigoPassword(alumnoId: number, codigo: string): Promise<boolean> {
+  const codes = await leerJson<Record<string, { h: string; exp: number; n?: number }>>(CLAVE_COD_PASS);
+  const e = codes[String(alumnoId)];
+  if (!e || e.exp < Date.now()) return false;
+  const dado = Buffer.from(hashCod(codigo.trim()));
+  const esperado = Buffer.from(e.h);
+  const ok = dado.length === esperado.length && timingSafeEqual(dado, esperado);
+  if (!ok) {
+    e.n = (e.n ?? 0) + 1;
+    if (e.n >= MAX_INTENTOS_2FA) delete codes[String(alumnoId)];
+    await guardarJson(CLAVE_COD_PASS, codes);
+    return false;
+  }
+  delete codes[String(alumnoId)];
+  await guardarJson(CLAVE_COD_PASS, codes);
+  return true;
+}

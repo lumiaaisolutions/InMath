@@ -695,3 +695,17 @@
    * entre el logo y la hamburguesa. */
   .logo-mathy.mathy-toggle { padding: 3px 10px 3px 3px; font-size: .72rem; }
 }
+
+/* Sección de contraseña plegada (v85): estado + botón; el formulario solo
+ * aparece tras pedir el código por correo. */
+.pw-resumen { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.pw-resumen-tx { display: grid; gap: 5px; }
+.pw-resumen-tx b { font: 700 .98rem var(--display); color: var(--tinta); }
+.pw-resumen-tx small { color: var(--tinta-3); font: 400 .82rem/1.5 var(--cuerpo); max-width: 48ch; }
+.pw-chip-estado { display: inline-flex; align-items: center; gap: 6px; width: fit-content; padding: 4px 12px; border-radius: 999px; font: 700 .74rem var(--cuerpo); }
+.pw-chip-estado.ok { background: var(--ok-suave, #E4F5EC); color: var(--ok, #12855C); }
+.pw-chip-estado.ok svg { width: 13px; height: 13px; }
+.pw-chip-estado.neutro { background: #EDF3FF; color: #4A5872; }
+.pw-reenviar { border: 0; background: none; cursor: pointer; margin-top: 4px; font: 600 .82rem var(--cuerpo); color: var(--tinta-3); text-decoration: underline; }
+.pw-reenviar:hover { color: var(--azul); }
+@media (max-width: 620px) { .pw-resumen { flex-direction: column; align-items: stretch; } .pw-resumen .boton { width: 100%; } }

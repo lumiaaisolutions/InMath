@@ -14,6 +14,10 @@ const fecha = (d: Date) => `${d.getUTCDate()} ${MESES[d.getUTCMonth() + 1]} ${d.
 
 export default async function CuentaPage() {
   const alumno = await requiereAlumno();
+  // Método de acceso: sin password_hash = cuenta creada con Google.
+  const filaPass = await prisma.alumnos.findUnique({ where: { id: alumno.id }, select: { password_hash: true, email: true } });
+  const tienePassword = Boolean(filaPass?.password_hash);
+  const correoEnmascarado = (filaPass?.email ?? "tu correo").replace(/^(.{2})[^@]*(@.*)$/, "$1•••$2");
   const [media, avances, asesorias, dosFA] = await Promise.all([
     mediaAlumno(alumno.id),
     prisma.avance_alumnos.findFirst({ where: { alumno_id: alumno.id }, orderBy: { fecha: "desc" }, select: { porcentaje: true } }),
@@ -82,7 +86,7 @@ export default async function CuentaPage() {
             <span className="pf-bloque-tit"><Icono n="lock" /> Seguridad</span>
             <DosFactores activo={dosFA} />
             <div className="pf-sep" />
-            <ClienteCuenta />
+            <ClienteCuenta tienePassword={tienePassword} correoEnmascarado={correoEnmascarado} />
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client";
-import { useActionState, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
 import { Icono } from "@/components/Icono";
-import { cambiarPasswordAlumnoAccion, subirFotoAlumnoAccion, guardarDatosAlumnoAccion, alternar2faAccion, type EstadoCuenta } from "./actions";
+import { subirFotoAlumnoAccion, guardarDatosAlumnoAccion, alternar2faAccion, solicitarCodigoPasswordAccion, cambiarPasswordConCodigoAccion, type EstadoCuenta } from "./actions";
 
 /** Interruptor de verificación en 2 pasos (2FA por correo). */
 export function DosFactores({ activo }: { activo: boolean }) {
@@ -67,30 +67,79 @@ export function SubirFoto({ tipo, etiqueta }: { tipo: "avatar" | "banner"; etiqu
   );
 }
 
-/** Cambio de contraseña del alumno. */
-export function ClienteCuenta() {
-  const [estado, accion, pendiente] = useActionState<EstadoCuenta, FormData>(cambiarPasswordAlumnoAccion, {});
+/** Contraseña del alumno — detecta el MÉTODO de acceso: cuentas creadas con
+ *  Google no tienen contraseña (crearla es opcional), y todo cambio o
+ *  creación se confirma con un CÓDIGO enviado al correo de la cuenta. La
+ *  sección vive PLEGADA (solo el estado) y el formulario aparece únicamente
+ *  tras pedir el código. */
+export function ClienteCuenta({ tienePassword, correoEnmascarado }: { tienePassword: boolean; correoEnmascarado: string }) {
+  const [paso, setPaso] = useState<"resumen" | "codigo">("resumen");
+  const [solicitando, setSolicitando] = useState(false);
+  const [msgSolicitud, setMsgSolicitud] = useState<EstadoCuenta>({});
+  const [estado, accion, pendiente] = useActionState<EstadoCuenta, FormData>(async (prev, fd) => {
+    const r = await cambiarPasswordConCodigoAccion(prev, fd);
+    if (r.ok) setPaso("resumen");
+    return r;
+  }, {});
+
+  const pedirCodigo = async () => {
+    setSolicitando(true);
+    const r = await solicitarCodigoPasswordAccion();
+    setMsgSolicitud(r);
+    if (r.ok) setPaso("codigo");
+    setSolicitando(false);
+  };
+
   return (
     <div className="pt-cuenta-caja">
-      {estado.error && <div className="aviso error">{estado.error}</div>}
-      {estado.ok && <div className="aviso ok">{estado.ok}</div>}
-      <form action={accion} className="formulario">
-        <div className="campo">
-          <label htmlFor="actual"><Icono n="lock" /> Contraseña actual</label>
-          <input type="password" id="actual" name="actual" required autoComplete="current-password" />
+      {estado.ok && paso === "resumen" && <div className="aviso ok">{estado.ok}</div>}
+      {msgSolicitud.error && <div className="aviso error">{msgSolicitud.error}</div>}
+
+      {paso === "resumen" && (
+        <div className="pw-resumen">
+          <div className="pw-resumen-tx">
+            <b>Contraseña</b>
+            {tienePassword
+              ? <span className="pw-chip-estado ok"><Icono n="check" /> Configurada</span>
+              : <span className="pw-chip-estado neutro">Sin contraseña — entras con Google</span>}
+            <small>
+              {tienePassword
+                ? "Puedes cambiarla cuando quieras; te pediremos un código por correo para confirmar."
+                : "Tu cuenta entra con Google. Si quieres, crea una contraseña para también poder entrar con tu correo."}
+            </small>
+          </div>
+          <button type="button" className="boton glow glow-halo" disabled={solicitando} onClick={pedirCodigo}>
+            {solicitando ? "Enviando código…" : tienePassword ? "Cambiar contraseña" : "Crear contraseña"}
+          </button>
         </div>
-        <div className="campo">
-          <label htmlFor="nueva"><Icono n="lock" /> Nueva contraseña</label>
-          <input type="password" id="nueva" name="nueva" required autoComplete="new-password" minLength={8} placeholder="Mínimo 8 caracteres" />
-        </div>
-        <div className="campo">
-          <label htmlFor="confirma"><Icono n="lock" /> Repite la nueva contraseña</label>
-          <input type="password" id="confirma" name="confirma" required autoComplete="new-password" minLength={8} />
-        </div>
-        <button type="submit" className="boton glow glow-halo bloque grande" disabled={pendiente}>
-          {pendiente ? "Guardando…" : "Cambiar mi contraseña"} <span className="flecha"><Icono n="arrow" /></span>
-        </button>
-      </form>
+      )}
+
+      {paso === "codigo" && (
+        <>
+          <div className="aviso ok">Te enviamos un código de 6 dígitos a <b>{correoEnmascarado}</b>. Escríbelo aquí para confirmar que eres tú.</div>
+          {estado.error && <div className="aviso error">{estado.error}</div>}
+          <form action={accion} className="formulario">
+            <div className="campo">
+              <label htmlFor="codigo"><Icono n="mail" /> Código del correo</label>
+              <input type="text" id="codigo" name="codigo" required inputMode="numeric" maxLength={6} pattern="\d{6}" placeholder="000000" autoComplete="one-time-code" />
+            </div>
+            <div className="campo">
+              <label htmlFor="nueva"><Icono n="lock" /> {tienePassword ? "Nueva contraseña" : "Tu contraseña"}</label>
+              <input type="password" id="nueva" name="nueva" required autoComplete="new-password" minLength={8} placeholder="Mínimo 8 caracteres" />
+            </div>
+            <div className="campo">
+              <label htmlFor="confirma"><Icono n="lock" /> Repítela</label>
+              <input type="password" id="confirma" name="confirma" required autoComplete="new-password" minLength={8} />
+            </div>
+            <button type="submit" className="boton glow glow-halo bloque grande" disabled={pendiente}>
+              {pendiente ? "Guardando…" : tienePassword ? "Confirmar y cambiar" : "Confirmar y crear"} <span className="flecha"><Icono n="arrow" /></span>
+            </button>
+            <button type="button" className="pw-reenviar" disabled={solicitando} onClick={pedirCodigo}>
+              {solicitando ? "Reenviando…" : "Reenviar código"}
+            </button>
+          </form>
+        </>
+      )}
     </div>
   );
 }
