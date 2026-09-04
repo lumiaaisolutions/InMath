@@ -871,3 +871,21 @@ en producción (Mathy contestó el flujo de agendado al instante):
    configurado y timeout CORTO (12 s); si falla o se cuelga, reintento
    automático con el modelo de respaldo (gemini-3.6-flash, 30 s). Una
    degradación futura de un modelo ya no tira el chat.
+
+**Corrección al corte anterior — Mathy debe correr con OLLAMA LOCAL, no
+Gemini** (decisión previa del cliente que el código nunca reflejó; el
+keep-warm de Ollama en el crontab era la pista). Implementado y verificado
+en producción (v75):
+- `src/lib/ia.ts`: motor único `responderIA` — OLLAMA local titular
+  (qwen2.5:3b en el VPS, http://127.0.0.1:11434) y Gemini SOLO de
+  paracaídas si Ollama falla. Lo usan el agente del sitio y el del panel.
+- Rendimiento medido: prompt frío ~25-70 s (inviable) vs prompt en caché
+  0.4 s + generación ~13 tok/s → respuestas de 5-15 s. Por eso el prompt
+  REAL de Mathy se PRECALIENTA cada 15 min: `POST /api/ia/calentar`
+  (construye el sistema real con horarios) + scripts/calentar-mathy.sh en
+  crontab (sustituye al viejo keep-warm crudo).
+- El prompt del sistema se extrajo a `src/lib/agente-sitio.ts`
+  (sistemaAgenteSitio) para que ruta y calentador usen el MISMO texto —
+  clave para que la caché de prefijo aplique.
+- Verificado en vivo: Mathy respondió precio en <10 s vía Ollama (cero
+  fallbacks a Gemini en logs). Env: OLLAMA_URL/OLLAMA_MODEL opcionales.

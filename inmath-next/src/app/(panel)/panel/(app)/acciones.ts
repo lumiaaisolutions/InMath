@@ -10,7 +10,8 @@ import { prisma } from "@/lib/db";
 import { ahoraPared } from "@/lib/fechas";
 import { agendar } from "@/lib/agenda";
 import { upsertPorTelefono, normalizaTelefono } from "@/lib/prospectos";
-import { responderGemini, type Turno } from "@/lib/gemini";
+import { type Turno } from "@/lib/gemini";
+import { responderIA } from "@/lib/ia";
 import { Prisma } from "@/generated/prisma/client";
 import { cerrarSesion, requiereSesion, requiereAdmin, requiereModulo } from "@/lib/panel/sesion";
 import { dirImgPanel } from "@/lib/panel/media";
@@ -724,7 +725,7 @@ export async function agentePanelAccion(mensaje: string, historial: Turno[]): Pr
     "del bot y la configuración. Respondes en español, breve y directo (máximo 3-4 frases). " +
     "No inventes datos de prospectos, cifras ni información que no tengas.";
   try {
-    return { respuesta: await responderGemini(sistema, historial.slice(-12), texto) };
+    return { respuesta: await responderIA(sistema, historial.slice(-12), texto) };
   } catch {
     return { error: "No pude conectarme en este momento. Intenta de nuevo en unos segundos." };
   }
