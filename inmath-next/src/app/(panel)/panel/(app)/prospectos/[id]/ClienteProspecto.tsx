@@ -1,11 +1,23 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { etiquetaEtapa } from "@/lib/panel/formato";
 import {
   cambiarEtapaAccion, asignarAccion, reasignarAccion, generarLinkAccion,
   conversacionAccion, mensajeAsesorAccion,
 } from "../../acciones";
 import { useToastResultado, SelectorDesplegable } from "../../ClientePanel";
+
+/** Monta un diálogo DIRECTO en <body> (portal). Sin esto, los velos que
+ *  nacen dentro de las tarjetas de la ficha quedan atrapados en el contexto
+ *  de apilamiento del vidrio (backdrop-filter) y las filas siguientes se
+ *  pintan ENCIMA del diálogo, bloqueando sus botones. */
+function VeloPortal({ children }: { children: React.ReactNode }) {
+  const [listo, setListo] = useState(false);
+  useEffect(() => setListo(true), []);
+  if (!listo) return null;
+  return createPortal(children, document.body);
+}
 
 const ETAPAS = ["prospecto", "calificado", "cita_agendada", "pago_pendiente", "inscrito", "descartado"];
 
@@ -113,7 +125,7 @@ function MotivoDialogo({ titulo, descripcion, etiquetaBoton, onCerrar, onConfirm
   const [motivo, setMotivo] = useState("");
   const [enviando, setEnviando] = useState(false);
   return (
-    <div className="us-velo visible" style={{ zIndex: 400 }}>
+    <VeloPortal><div className="us-velo visible" style={{ zIndex: 400 }}>
       <div className="us-frame" role="dialog" aria-modal="true" style={{ width: "min(460px, 100%)" }}>
         <div className="us-frame-cab">
           <div className="us-quien"><b>{titulo}</b><span>{descripcion}</span></div>
@@ -132,7 +144,7 @@ function MotivoDialogo({ titulo, descripcion, etiquetaBoton, onCerrar, onConfirm
           </button>
         </div>
       </div>
-    </div>
+    </div></VeloPortal>
   );
 }
 
@@ -211,7 +223,7 @@ export function CitaAcciones({ citaId, esFutura, esHoy, activa, sinPago, sinLink
       <>
         <button type="button" className="boton mini fantasma rx-borrar" disabled={ocupado} onClick={() => setConfirmarEliminar(true)}>Eliminar</button>
         {confirmarEliminar && (
-          <div className="us-velo visible" style={{ zIndex: 400 }}>
+          <VeloPortal><div className="us-velo visible" style={{ zIndex: 400 }}>
             <div className="us-frame" role="dialog" aria-modal="true" style={{ width: "min(420px, 100%)" }}>
               <div className="us-frame-cab">
                 <div className="us-quien"><b>Eliminar cita del historial</b><span>Solo se borra este registro de cita ya pasada. No se avisa por correo.</span></div>
@@ -231,7 +243,7 @@ export function CitaAcciones({ citaId, esFutura, esHoy, activa, sinPago, sinLink
                   }}>Eliminar</button>
               </div>
             </div>
-          </div>
+          </div></VeloPortal>
         )}
       </>
     );
@@ -264,7 +276,7 @@ function CitaLinkAcciones({ citaId }: { citaId: number }) {
         }}>{ocupado ? "Generando…" : "Generar link"}</button>
       <button type="button" className="boton mini fantasma" onClick={() => setPegando(true)}>Pegar link</button>
       {pegando && (
-        <div className="us-velo visible" style={{ zIndex: 400 }}>
+        <VeloPortal><div className="us-velo visible" style={{ zIndex: 400 }}>
           <div className="us-frame" role="dialog" aria-modal="true" style={{ width: "min(460px, 100%)" }}>
             <div className="us-frame-cab">
               <div className="us-quien"><b>Pegar enlace de la asesoría</b><span>Al guardar, el enlace se le envía al prospecto por correo automáticamente.</span></div>
@@ -290,7 +302,7 @@ function CitaLinkAcciones({ citaId }: { citaId: number }) {
                 }}>{ocupado ? "Guardando…" : "Guardar y enviar"}</button>
             </div>
           </div>
-        </div>
+        </div></VeloPortal>
       )}
     </>
   );
