@@ -1062,3 +1062,14 @@ al "Hola, X" — misma gramática visual que Mi cuenta y que la ficha del
 panel (consistencia = intuitivo). Sin banner, la foto sale en 64px junto
 al saludo; sin ninguno, el encabezado queda como siempre. Responsive
 (130px/64px en móvil).
+
+**F26-bis (v88.1) — Hero del portal pulido tras feedback ("desfasado")**:
+- Se eliminó el velo blanco que lavaba la portada: ahora solo una viñeta
+  sutil arriba/abajo (rgba tinta .16/.22) — la imagen se ve VIVA y el
+  texto nunca la pisa (el saludo vive siempre sobre el lienzo, alineado a
+  la base de la foto).
+- Foto 96px anclada al borde inferior del banner (solape -46px, borde del
+  color del lienzo, doble sombra con anillo azul); hover: se levanta 4px.
+- Entrada con vida: la portada "respira" (zoom 1.06→1 en 1.1s) al cargar.
+- Micro-interacciones en chips (lift + sombra al hover). Todo respeta
+  prefers-reduced-motion. Móvil: 148px/72px, paddings recalibrados.
