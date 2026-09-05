@@ -1219,3 +1219,8 @@ position:fixed nacía dentro de la tarjeta (que tiene transform en hover)
 y quedaba atrapado. Fix: VeloPortal (createPortal a <body>) para la vista
 previa Y el diálogo de etiquetas — ahora abren centrados y a viewport
 completo en cualquier tamaño de pantalla.
+
+**v89.1 — Vista previa responsive real en móvil**: el frame usaba 100vw
+dentro de un velo con padding → desbordaba por la derecha (✕ cortada,
+texto al borde). Fix: width 100% + paddings recalibrados + título
+compacto en ≤640px. Desplegado y commiteado.
