@@ -3222,7 +3222,7 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 }
 
 /* Vista previa completa del examen (v86) — lectura fiel para el staff. */
-.rx-prev-frame { width: min(780px, 96vw); max-height: 90vh; overflow-y: auto; position: relative; }
+.rx-prev-frame { width: min(780px, 100%); max-height: 90vh; overflow-y: auto; position: relative; }
 .rx-prev-cab { padding-right: 40px; margin-bottom: 14px; }
 .rx-prev-eyebrow { display: inline-flex; align-items: center; gap: 6px; font: 700 .7rem/1 var(--cuerpo); letter-spacing: .08em; text-transform: uppercase; color: var(--pino); margin-bottom: 6px; }
 .rx-prev-cab h2 { font: 800 1.3rem/1.2 var(--display); color: var(--tinta); margin: 0 0 10px; }
@@ -3250,8 +3250,12 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 .rx-prev-explica p { margin: 0; font: 500 .85rem/1.55 var(--cuerpo); color: var(--tinta-2); white-space: pre-wrap; }
 .rx-prev-vacio { color: var(--tinta-3); text-align: center; padding: 20px; }
 @media (max-width: 640px) {
-  .rx-prev-frame { width: 100vw; max-height: 96dvh; border-radius: 18px 18px 0 0; }
+  /* width 100% (no 100vw): el velo tiene padding y 100vw desbordaba por la
+   * derecha cortando la ✕ y el texto (reporte 05-sep). */
+  .rx-prev-frame { width: 100%; max-height: 94dvh; border-radius: 18px; padding: 16px 14px; }
+  .rx-prev-frame .us-velo, .us-velo:has(.rx-prev-frame) { padding: 10px; }
   .rx-prev-pregunta { padding: 13px 14px; }
+  .rx-prev-cab h2 { font-size: 1.12rem; }
 }
 
 /* Etiquetas de exámenes (05-sep-2026): filtro tipo píldoras, selector en la
