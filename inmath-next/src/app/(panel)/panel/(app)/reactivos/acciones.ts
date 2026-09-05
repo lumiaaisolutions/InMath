@@ -262,3 +262,36 @@ export async function reactivoAdjuntoSubirAccion(fd: FormData): Promise<{ ok?: {
 
 // "Explicar con IA" ahora vive en /api/reactivos/explicar-ia (streaming) —
 // una Server Action no puede transmitir texto progresivo al cliente.
+
+/* ── ETIQUETAS de exámenes (F2, 05-sep-2026): registrar, eliminar y asignar
+ *    — permiten separar y filtrar exámenes en Reactivos y en Fases. ── */
+
+export async function etiquetaCrearAccion(nombre: string): Promise<Resultado & { id?: number }> {
+  await requiereModulo("reactivos");
+  const limpio = nombre.trim().slice(0, 60);
+  if (limpio.length < 2) return { error: "Escribe un nombre de al menos 2 caracteres" };
+  try {
+    const e = await prisma.etiquetas.create({ data: { nombre: limpio } });
+    revalidatePath("/panel/reactivos");
+    return { ok: `Etiqueta "${limpio}" registrada`, id: e.id };
+  } catch {
+    return { error: "Ya existe una etiqueta con ese nombre" };
+  }
+}
+
+export async function etiquetaEliminarAccion(id: number): Promise<Resultado> {
+  await requiereModulo("reactivos");
+  // ON DELETE SET NULL: los exámenes que la usaban quedan sin etiqueta.
+  await prisma.examenes.updateMany({ where: { etiqueta_id: id }, data: { etiqueta_id: null } });
+  await prisma.etiquetas.delete({ where: { id } }).catch(() => {});
+  revalidatePath("/panel/reactivos");
+  return { ok: "Etiqueta eliminada (los exámenes que la usaban quedan sin etiqueta)" };
+}
+
+export async function examenEtiquetaAccion(examenId: number, etiquetaId: number | null): Promise<Resultado> {
+  await requiereModulo("reactivos");
+  await prisma.examenes.update({ where: { id: examenId }, data: { etiqueta_id: etiquetaId } });
+  revalidatePath("/panel/reactivos");
+  revalidatePath("/panel/fases");
+  return { ok: etiquetaId ? "Etiqueta asignada" : "Etiqueta quitada" };
+}

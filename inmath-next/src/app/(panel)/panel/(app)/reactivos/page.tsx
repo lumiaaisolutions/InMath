@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ReactivosPage() {
   await requiereModulo("reactivos");
-  const [examenes, sueltos, cursos] = await Promise.all([
+  const [examenes, sueltos, cursos, etiquetas] = await Promise.all([
     prisma.examenes.findMany({
       orderBy: { id: "desc" },
       include: {
@@ -19,6 +19,7 @@ export default async function ReactivosPage() {
     }),
     prisma.reactivos.findMany({ where: { examen_id: null }, orderBy: { id: "desc" }, include: { cursos: { select: { nombre: true } } } }),
     prisma.cursos.findMany({ where: { activo: true }, select: { id: true, nombre: true }, orderBy: { id: "asc" } }),
+    prisma.etiquetas.findMany({ orderBy: { nombre: "asc" } }),
   ]);
 
   return (
@@ -38,6 +39,7 @@ export default async function ReactivosPage() {
             opcionesTipo: ((r.opciones_tipo as ("texto" | "imagen")[] | null) ?? (r.opciones as string[]).map(() => "texto" as const)),
             correcta: r.respuesta_correcta, explicacion: r.explicacion ?? "", adjuntoUrl: r.adjunto_url, adjuntoTipo: r.adjunto_tipo,
           })),
+          etiquetaId: e.etiqueta_id ?? null,
           adjuntos: e.adjuntos.map((a) => ({ id: a.id, desde: a.desde_orden, hasta: a.hasta_orden, tipo: a.tipo, nombre: a.nombre, url: a.url })),
         }))}
         sueltos={sueltos.map((r) => ({
@@ -46,6 +48,7 @@ export default async function ReactivosPage() {
           explicacion: r.explicacion, activo: r.activo,
         }))}
         cursos={cursos}
+        etiquetas={etiquetas.map((e) => ({ id: e.id, nombre: e.nombre }))}
       />
     </>
   );

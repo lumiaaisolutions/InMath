@@ -483,3 +483,14 @@ Bloque v8 al final de `sitio/public/css/inmath.css`:
   opciones A-D (correcta en verde con ✓) y explicación en bloque ámbar 💡.
 - Mathy: mini-carita como toggle (panel/portal junto al logo, píldora con
   texto); el chat con burbujas overflow-wrap:anywhere.
+
+## Nota 05-sep-2026 — Etiquetas y regla de portales
+
+- Lenguaje de ETIQUETAS de exámenes: filtro de píldoras (.rx-fetq, activa
+  = fondo azul de marca), chip de asignación en tarjeta (punteado cuando
+  vacío, sólido azul-suave cuando asignada), mini-chip .rx-etq-mini junto
+  a títulos en selectores.
+- REGLA APRENDIDA (2 incidencias iguales): TODO velo/diálogo que nazca
+  dentro de una tarjeta con transform/blur DEBE montarse con createPortal
+  a <body> (patrón VeloPortal), o el position:fixed queda atrapado y el
+  frame aparece fuera de viewport.

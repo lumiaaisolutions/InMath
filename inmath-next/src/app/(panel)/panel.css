@@ -3253,3 +3253,43 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
   .rx-prev-frame { width: 100vw; max-height: 96dvh; border-radius: 18px 18px 0 0; }
   .rx-prev-pregunta { padding: 13px 14px; }
 }
+
+/* Etiquetas de exámenes (05-sep-2026): filtro tipo píldoras, selector en la
+ * tarjeta y gestión. Se usan en Reactivos y en el selector de Fases. */
+.rx-filtro-etiquetas { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.rx-fetq {
+  padding: 7px 14px; border-radius: 999px; cursor: pointer;
+  border: 1.5px solid var(--linea-fuerte, #C2C6CE); background: #fff;
+  font: 700 .78rem var(--cuerpo); color: var(--tinta-2);
+  transition: background .2s ease, color .2s ease, border-color .2s ease;
+}
+.rx-fetq:hover { border-color: var(--pino); color: var(--pino); }
+.rx-fetq.on { background: var(--pino, #6B9FFF); border-color: var(--pino, #6B9FFF); color: #fff; }
+.rx-etq-wrap { position: relative; display: inline-flex; }
+.rx-etq-chip {
+  padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  border: 1.5px dashed var(--linea-fuerte, #C2C6CE); background: transparent;
+  font: 600 .74rem var(--cuerpo); color: var(--tinta-3);
+}
+.rx-etq-chip.con { border-style: solid; background: #EDF3FF; border-color: rgba(107,159,255,.55); color: #2C4A8A; font-weight: 700; }
+.rx-etq-fondo { position: fixed; inset: 0; z-index: 90; }
+.rx-etq-menu {
+  position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 91;
+  display: grid; gap: 2px; min-width: 180px; max-height: 240px; overflow-y: auto;
+  background: #fff; border: 1px solid var(--linea); border-radius: 12px; padding: 6px;
+  box-shadow: 0 14px 34px -12px rgba(18,31,55,.35);
+}
+.rx-etq-menu button { text-align: left; border: 0; background: none; cursor: pointer; padding: 8px 10px; border-radius: 8px; font: 600 .82rem var(--cuerpo); color: var(--tinta-2); }
+.rx-etq-menu button:hover { background: var(--crema-2, #F3F5FC); color: var(--tinta); }
+.rx-etq-menu button.on { background: #EDF3FF; color: #2C4A8A; }
+.rx-etq-menu button.quitar { color: #C0392B; border-top: 1px solid var(--linea); border-radius: 0 0 8px 8px; margin-top: 2px; }
+.rx-etq-menu .vacia, .rx-etq-lista .vacia { font: 500 .8rem var(--cuerpo); color: var(--tinta-3); padding: 8px 10px; }
+.rx-etq-lista { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.rx-etq-item {
+  display: inline-flex; align-items: center; gap: 8px; padding: 7px 8px 7px 14px;
+  border-radius: 999px; background: #EDF3FF; border: 1.5px solid rgba(107,159,255,.5);
+  font: 700 .8rem var(--cuerpo); color: #2C4A8A;
+}
+.rx-etq-item button { border: 0; background: rgba(107,159,255,.18); color: #2C4A8A; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: .7rem; line-height: 1; }
+.rx-etq-item button:hover { background: #C0392B; color: #fff; }
+.rx-etq-mini { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: #EDF3FF; color: #2C4A8A; font: 700 .66rem var(--cuerpo); font-style: normal; vertical-align: 1px; }

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function FasesPage() {
   await requiereModulo("reactivos");
-  const [fases, examenes, cursos] = await Promise.all([
+  const [fases, examenes, cursos, etiquetas] = await Promise.all([
     prisma.fases.findMany({
       orderBy: [{ curso_id: "asc" }, { orden: "asc" }],
       include: {
@@ -19,9 +19,10 @@ export default async function FasesPage() {
     }),
     prisma.examenes.findMany({
       where: { activo: true }, orderBy: { id: "desc" },
-      select: { id: true, titulo: true, examen_cursos: { select: { curso_id: true } } },
+      select: { id: true, titulo: true, etiqueta_id: true, examen_cursos: { select: { curso_id: true } } },
     }),
     prisma.cursos.findMany({ where: { activo: true }, select: { id: true, nombre: true }, orderBy: { id: "asc" } }),
+    prisma.etiquetas.findMany({ orderBy: { nombre: "asc" } }),
   ]);
 
   return (
@@ -39,7 +40,8 @@ export default async function FasesPage() {
           recursos: f.recursos.map((r) => ({ id: r.id, tipo: r.tipo, titulo: r.titulo, url: r.url })),
           examenes: f.fase_examenes.map((fe) => ({ examenId: fe.examen_id, titulo: fe.examenes.titulo })),
         }))}
-        examenes={examenes.map((e) => ({ id: e.id, titulo: e.titulo, cursoIds: e.examen_cursos.map((ec) => ec.curso_id) }))}
+        examenes={examenes.map((e) => ({ id: e.id, titulo: e.titulo, etiquetaId: e.etiqueta_id ?? null, cursoIds: e.examen_cursos.map((ec) => ec.curso_id) }))}
+        etiquetas={etiquetas.map((e) => ({ id: e.id, nombre: e.nombre }))}
         cursos={cursos}
       />
     </>

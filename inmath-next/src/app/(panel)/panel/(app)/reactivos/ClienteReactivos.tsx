@@ -1,11 +1,12 @@
 "use client";
 import { useActionState, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { IconoPanel } from "@/components/IconoPanel";
 import { Velo, ConfirmarDialogo, useToastResultado, SelectorDesplegable, BotonMagnetico, Asistente, AsistentePaso } from "../ClientePanel";
 import {
   reactivoCrearAccion, reactivoActualizarAccion, reactivoActivoAccion,
   examenGuardarAccion, examenActivoAccion, examenBorrarAccion, examenModalidadesAccion,
-  reactivoAdjuntoSubirAccion, type Resultado,
+  reactivoAdjuntoSubirAccion, etiquetaCrearAccion, etiquetaEliminarAccion, examenEtiquetaAccion, type Resultado,
 } from "./acciones";
 
 type PreguntaFicha = {
@@ -15,9 +16,10 @@ type PreguntaFicha = {
 type AdjuntoFicha = { id: number; desde: number; hasta: number; tipo: string; nombre: string; url: string };
 type Examen = {
   id: number; cursoIds: number[]; cursoNombres: string[]; titulo: string; tema: string | null; activo: boolean;
-  porcentajeMinimo: number; ordenAleatorio: boolean;
+  porcentajeMinimo: number; ordenAleatorio: boolean; etiquetaId: number | null;
   preguntas: PreguntaFicha[]; adjuntos: AdjuntoFicha[];
 };
+type Etiqueta = { id: number; nombre: string };
 type Reactivo = {
   id: number; curso_id: number; curso_nombre: string; tema: string | null;
   enunciado: string; opciones: string[]; respuesta_correcta: number;
@@ -460,7 +462,7 @@ function ModalidadesDialogo({ abierto, examen, cursos, onCerrar }: { abierto: bo
   );
 }
 
-function ExamenTarjeta({ examen, onEditar, onModalidades, onPreview }: { examen: Examen; onEditar: () => void; onModalidades: () => void; onPreview: () => void }) {
+function ExamenTarjeta({ examen, etiquetas, onEditar, onModalidades, onPreview }: { examen: Examen; etiquetas: Etiqueta[]; onEditar: () => void; onModalidades: () => void; onPreview: () => void }) {
   const toast = useToastResultado();
   const [confirmar, setConfirmar] = useState(false);
   const [ocupado, setOcupado] = useState(false);
@@ -479,6 +481,7 @@ function ExamenTarjeta({ examen, onEditar, onModalidades, onPreview }: { examen:
         </button>
       </div>
       <div className="rx-examen-pie">
+        <EtiquetaSelector examenId={examen.id} etiquetaId={examen.etiquetaId} etiquetas={etiquetas} />
         <button type="button" className="boton mini primario" onClick={onPreview} title="Ver el examen completo como lo vería el alumno">
           <IconoPanel n="imagen" cls="ic-sm" /> Vista previa
         </button>
@@ -496,10 +499,16 @@ function ExamenTarjeta({ examen, onEditar, onModalidades, onPreview }: { examen:
   );
 }
 
-function ListaExamenes({ examenes, cursos }: { examenes: Examen[]; cursos: Curso[] }) {
+function ListaExamenes({ examenes, cursos, etiquetas }: { examenes: Examen[]; cursos: Curso[]; etiquetas: Etiqueta[] }) {
   const [abierto, setAbierto] = useState<"crear" | Examen | null>(null);
   const [modalidadesDe, setModalidadesDe] = useState<Examen | null>(null);
   const [previewDe, setPreviewDe] = useState<Examen | null>(null);
+  const [gestionEtiquetas, setGestionEtiquetas] = useState(false);
+  // Filtro por etiqueta: null = todas; 0 = sin etiqueta; id = esa etiqueta.
+  const [filtroEtiqueta, setFiltroEtiqueta] = useState<number | null>(null);
+  const visibles = filtroEtiqueta === null
+    ? examenes
+    : examenes.filter((e) => (filtroEtiqueta === 0 ? e.etiquetaId === null : e.etiquetaId === filtroEtiqueta));
 
   return (
     <div className="tarjeta rx-panel" style={{ marginBottom: 20 }}>
@@ -513,19 +522,40 @@ function ListaExamenes({ examenes, cursos }: { examenes: Examen[]; cursos: Curso
           <span className="st-num">{examenes.reduce((n, e) => n + e.preguntas.length, 0)}</span>
         </div>
       </div>
-      <div className="rx-cab">
+      <div className="rx-cab" style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
         <BotonMagnetico className="boton primario boton-magnetico" onClick={() => setAbierto("crear")}>+ Agregar examen</BotonMagnetico>
+        <button type="button" className="boton fantasma" onClick={() => setGestionEtiquetas(true)}>
+          <IconoPanel n="prompts" cls="ic-sm" /> Etiquetas
+        </button>
       </div>
+      {/* Filtro por etiqueta: separa los exámenes por lo que registres */}
+      {etiquetas.length > 0 && (
+        <div className="rx-filtro-etiquetas">
+          <button type="button" className={`rx-fetq${filtroEtiqueta === null ? " on" : ""}`} onClick={() => setFiltroEtiqueta(null)}>Todas ({examenes.length})</button>
+          {etiquetas.map((et) => {
+            const n = examenes.filter((e) => e.etiquetaId === et.id).length;
+            return (
+              <button key={et.id} type="button" className={`rx-fetq${filtroEtiqueta === et.id ? " on" : ""}`} onClick={() => setFiltroEtiqueta(et.id)}>
+                {et.nombre} ({n})
+              </button>
+            );
+          })}
+          <button type="button" className={`rx-fetq${filtroEtiqueta === 0 ? " on" : ""}`} onClick={() => setFiltroEtiqueta(0)}>
+            Sin etiqueta ({examenes.filter((e) => e.etiquetaId === null).length})
+          </button>
+        </div>
+      )}
       {examenes.length === 0 ? (
         <div className="vacio">Sin exámenes todavía — agrupa varias preguntas en el primero</div>
       ) : (
         <div className="rx-examenes-grid">
-          {examenes.map((e) => <ExamenTarjeta key={e.id} examen={e} onEditar={() => setAbierto(e)} onModalidades={() => setModalidadesDe(e)} onPreview={() => setPreviewDe(e)} />)}
+          {visibles.map((e) => <ExamenTarjeta key={e.id} examen={e} etiquetas={etiquetas} onEditar={() => setAbierto(e)} onModalidades={() => setModalidadesDe(e)} onPreview={() => setPreviewDe(e)} />)}
         </div>
       )}
 
       <ModalidadesDialogo abierto={modalidadesDe !== null} examen={modalidadesDe} cursos={cursos} onCerrar={() => setModalidadesDe(null)} />
       {previewDe && <PreviewExamenDialogo examen={previewDe} onCerrar={() => setPreviewDe(null)} />}
+      {gestionEtiquetas && <EtiquetasDialogo etiquetas={etiquetas} onCerrar={() => setGestionEtiquetas(false)} />}
 
       <Velo abierto={abierto !== null} onCerrar={() => setAbierto(null)}>
         <div className="us-frame us-frame-asistente" role="dialog" aria-modal="true">
@@ -712,10 +742,10 @@ function ListaReactivosSueltos({ inicial, cursos }: { inicial: Reactivo[]; curso
   );
 }
 
-export function ClienteReactivos({ examenes, sueltos, cursos }: { examenes: Examen[]; sueltos: Reactivo[]; cursos: Curso[] }) {
+export function ClienteReactivos({ examenes, sueltos, cursos, etiquetas }: { examenes: Examen[]; sueltos: Reactivo[]; cursos: Curso[]; etiquetas: Etiqueta[] }) {
   return (
     <>
-      <ListaExamenes examenes={examenes} cursos={cursos} />
+      <ListaExamenes examenes={examenes} cursos={cursos} etiquetas={etiquetas} />
       <ListaReactivosSueltos inicial={sueltos} cursos={cursos} />
     </>
   );
@@ -728,8 +758,20 @@ export function ClienteReactivos({ examenes, sueltos, cursos }: { examenes: Exam
  *  imágenes y los adjuntos por rango de preguntas. */
 const LETRAS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
+/** Monta un diálogo DIRECTO en <body>: sin esto, position:fixed queda
+ *  atrapado en el contexto de apilamiento de la tarjeta (transform del
+ *  hover) y el frame aparece al fondo de la página, obligando a hacer
+ *  scroll (bug F4, 05-sep-2026). */
+function VeloPortal({ children }: { children: React.ReactNode }) {
+  const [listo, setListo] = useState(false);
+  useEffect(() => setListo(true), []);
+  if (!listo) return null;
+  return createPortal(children, document.body);
+}
+
 function PreviewExamenDialogo({ examen, onCerrar }: { examen: Examen; onCerrar: () => void }) {
   return (
+    <VeloPortal>
     <div className="us-velo visible" style={{ zIndex: 420 }}>
       <div className="us-frame rx-prev-frame" role="dialog" aria-modal="true" aria-label={`Vista previa: ${examen.titulo}`}>
         <button type="button" className="pg-cerrar" aria-label="Cerrar" onClick={onCerrar}><IconoPanel n="x" /></button>
@@ -790,5 +832,82 @@ function PreviewExamenDialogo({ examen, onCerrar }: { examen: Examen; onCerrar: 
         </div>
       </div>
     </div>
+    </VeloPortal>
+  );
+}
+
+
+/** Selector compacto de etiqueta en la tarjeta del examen. */
+function EtiquetaSelector({ examenId, etiquetaId, etiquetas }: { examenId: number; etiquetaId: number | null; etiquetas: Etiqueta[] }) {
+  const [abierto, setAbierto] = useState(false);
+  const [ocupado, setOcupado] = useState(false);
+  const toast = useToastResultado();
+  const actual = etiquetas.find((e) => e.id === etiquetaId) ?? null;
+
+  const asignar = async (id: number | null) => {
+    setOcupado(true);
+    toast(await examenEtiquetaAccion(examenId, id));
+    setOcupado(false);
+    setAbierto(false);
+  };
+
+  return (
+    <span className="rx-etq-wrap">
+      <button type="button" className={`rx-etq-chip${actual ? " con" : ""}`} disabled={ocupado}
+        onClick={() => setAbierto((v) => !v)} title="Asignar etiqueta">
+        {actual ? actual.nombre : "Sin etiqueta"} ▾
+      </button>
+      {abierto && (
+        <>
+          <i className="rx-etq-fondo" onClick={() => setAbierto(false)} />
+          <span className="rx-etq-menu" role="menu">
+            {etiquetas.map((e) => (
+              <button key={e.id} type="button" className={e.id === etiquetaId ? "on" : ""} onClick={() => asignar(e.id)}>{e.nombre}</button>
+            ))}
+            {etiquetaId !== null && <button type="button" className="quitar" onClick={() => asignar(null)}>Quitar etiqueta</button>}
+            {etiquetas.length === 0 && <span className="vacia">Registra etiquetas con el botón &ldquo;Etiquetas&rdquo;</span>}
+          </span>
+        </>
+      )}
+    </span>
+  );
+}
+
+/** Gestión de etiquetas: registrar nuevas y eliminar existentes. */
+function EtiquetasDialogo({ etiquetas, onCerrar }: { etiquetas: Etiqueta[]; onCerrar: () => void }) {
+  const [nombre, setNombre] = useState("");
+  const [ocupado, setOcupado] = useState(false);
+  const toast = useToastResultado();
+
+  return (
+    <VeloPortal>
+      <div className="us-velo visible" style={{ zIndex: 420 }}>
+        <div className="us-frame" role="dialog" aria-modal="true" style={{ width: "min(440px, 100%)" }}>
+          <div className="us-frame-cab">
+            <div className="us-quien"><b>Etiquetas de exámenes</b><span>Sepáralos por lo que tú decidas (materia, bloque, nivel…)</span></div>
+            <button type="button" className="toast-x us-cerrar" aria-label="Cerrar" onClick={onCerrar}><IconoPanel n="x" /></button>
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+            <input type="text" value={nombre} maxLength={60} placeholder="Nueva etiqueta (ej. Álgebra)"
+              style={{ flex: 1 }} onChange={(e) => setNombre(e.target.value)}
+              onKeyDown={async (e) => { if (e.key === "Enter" && nombre.trim().length >= 2) { setOcupado(true); toast(await etiquetaCrearAccion(nombre)); setNombre(""); setOcupado(false); } }} />
+            <button type="button" className="boton primario" disabled={ocupado || nombre.trim().length < 2}
+              onClick={async () => { setOcupado(true); toast(await etiquetaCrearAccion(nombre)); setNombre(""); setOcupado(false); }}>
+              {ocupado ? "…" : "Registrar"}
+            </button>
+          </div>
+          <div className="rx-etq-lista">
+            {etiquetas.length === 0 && <span className="vacia">Aún no hay etiquetas — registra la primera arriba.</span>}
+            {etiquetas.map((e) => (
+              <span key={e.id} className="rx-etq-item">
+                {e.nombre}
+                <button type="button" aria-label={`Eliminar ${e.nombre}`} disabled={ocupado}
+                  onClick={async () => { setOcupado(true); toast(await etiquetaEliminarAccion(e.id)); setOcupado(false); }}>✕</button>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </VeloPortal>
   );
 }

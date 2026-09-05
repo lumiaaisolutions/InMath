@@ -23,6 +23,7 @@ archivo: cada tema vive en su propio `.md`.
 | [`citas-y-links-meet.md`](citas-y-links-meet.md) | **Citas y links de Meet**: cadena robot n8n → respaldo directo de Google → red de seguridad (reintentos, avisos, botones); permisos y bugs históricos |
 | [`portal-alumno-y-pagos.md`](portal-alumno-y-pagos.md) | **Portal del alumno (Fases 3–4)**: login validado por pago, login con Google, pago con tarjeta listo, material del curso, y lo que falta en n8n |
 | [`sistema-de-diseno.md`](sistema-de-diseno.md) | Identidad visual, tokens, regla 60-30-10, animaciones, skills |
+| [`auditoria-ciberseguridad-2026-09.md`](auditoria-ciberseguridad-2026-09.md) | **Auditoría de seguridad EN CURSO** (Fases 0-1 hechas, 2-4 pendientes — sesión dedicada): hallazgos C-01…A-07 abiertos |
 | [`fases-y-pendientes.md`](fases-y-pendientes.md) | Estado de las 7 fases y lo que falta por decidir/credenciales |
 | [`migracion-vps-exposicion-api.md`](migracion-vps-exposicion-api.md) | Migración al VPS: por qué `backend/public/index.php` no quedó expuesto por HTTP y si hace falta |
 | [`despliegue-vps.md`](despliegue-vps.md) | **F4 de la migración Next.js**: mapa real de producción (VPS/Cloudflare/BD) y procedimiento de deploy/corte/retiro del PHP |

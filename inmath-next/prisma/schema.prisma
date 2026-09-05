@@ -203,6 +203,7 @@ model examenes {
   id                Int                  @id @default(autoincrement()) @db.UnsignedInt
   titulo            String               @db.VarChar(160)
   tema              String?              @db.VarChar(120)
+  etiqueta_id       Int?                 @db.UnsignedInt
   activo            Boolean              @default(true)
   porcentaje_minimo Int                  @default(70) @db.UnsignedTinyInt
   orden_aleatorio   Boolean              @default(true)
@@ -210,6 +211,7 @@ model examenes {
   creado_en         DateTime             @default(now()) @db.Timestamp(0)
   actualizado_en    DateTime             @default(now()) @db.Timestamp(0)
   usuarios          usuarios?            @relation(fields: [creado_por], references: [id], onUpdate: NoAction, map: "fk_examenes_usuario")
+  etiquetas         etiquetas?           @relation(fields: [etiqueta_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_examenes_etiqueta")
   reactivos         reactivos[]
   adjuntos          examen_adjuntos[]
   fase_examenes     fase_examenes[]
@@ -558,4 +560,11 @@ enum pagos_estado {
   fallido
   reembolsado
   cancelado
+}
+
+model etiquetas {
+  id        Int        @id @default(autoincrement()) @db.UnsignedInt
+  nombre    String     @unique(map: "uq_etiquetas_nombre") @db.VarChar(60)
+  creado_en DateTime   @default(now()) @db.Timestamp(0)
+  examenes  examenes[]
 }

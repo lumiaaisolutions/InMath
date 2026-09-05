@@ -1172,3 +1172,50 @@ tras limpiar caché: "ya quedó".
 tarde): activar Google Calendar API, limpieza de eventos de prueba del
 calendario, retry-on-fail en n8n, insumos de cliente (fotos reales, fecha
 de inicio).
+
+### Corte 05-sep-2026 — Auditoría de ciberseguridad INICIADA (pausada)
+
+Fases 0-1 completadas y documentadas en
+[`auditoria-ciberseguridad-2026-09.md`](auditoria-ciberseguridad-2026-09.md):
+7 hallazgos críticos/altos ABIERTOS (Ollama expuesto a internet, puertos
+sin firewall, SSH con contraseña, materiales de pago sin sesión,
+rate-limit burlable, .env 664, editor n8n expuesto). **PENDIENTE: sesión
+dedicada para Fases 2-4 y remediación** — la exprés de C-01/C-02 son ~20
+min y tumban el grueso del riesgo.
+
+### Corte 05-sep-2026 (2) — Etiquetas de exámenes + fix de la vista previa (v89)
+
+Trabajo dividido en fases (pedido del usuario, rol dev senior):
+
+**F1 — Modelo de datos**: tabla `etiquetas` (id, nombre único ≤60,
+creado_en) + columna `examenes.etiqueta_id` (nullable, FK ON DELETE SET
+NULL — borrar una etiqueta deja los exámenes "sin etiqueta", nunca los
+borra). Aplicado con `prisma db push` en local y PRODUCCIÓN (aditivo,
+verificado sin pérdida de datos; el aviso local de `curso_id` era drift
+de la BD de pruebas, no de producción).
+
+**F2 — /panel/reactivos**:
+- Botón "Etiquetas" junto a "+ Agregar examen" → diálogo de GESTIÓN:
+  registrar nueva (Enter o botón, mín. 2 chars, nombre único) y eliminar
+  (chip con ✕; los exámenes que la usaban quedan sin etiqueta).
+- Cada tarjeta de examen tiene un SELECTOR de etiqueta (chip punteado
+  "Sin etiqueta ▾" / chip azul con el nombre): menú con todas las
+  etiquetas + "Quitar etiqueta".
+- FILTRO de píldoras sobre el grid: "Todas (n)" · cada etiqueta con su
+  conteo · "Sin etiqueta (n)".
+- Acciones: etiquetaCrearAccion / etiquetaEliminarAccion /
+  examenEtiquetaAccion (módulo "reactivos"; revalidan reactivos y fases).
+
+**F3 — /panel/fases (paso 3, selección de exámenes)**: mismo filtro de
+píldoras por etiqueta ("Todas / etiquetas usadas / Sin etiqueta") y cada
+examen muestra su etiqueta como mini-chip azul junto al título. Los
+exámenes YA seleccionados siguen visibles aunque el filtro los excluya
+(no se puede "perder" una selección por filtrar).
+
+**F4 — Vista previa de exámenes (bug)**: el frame aparecía al FONDO de la
+página (había que hacer scroll) y se cortaba en móvil — mismo bug de
+contexto de apilamiento ya visto en la ficha del prospecto: el velo
+position:fixed nacía dentro de la tarjeta (que tiene transform en hover)
+y quedaba atrapado. Fix: VeloPortal (createPortal a <body>) para la vista
+previa Y el diálogo de etiquetas — ahora abren centrados y a viewport
+completo en cualquier tamaño de pantalla.

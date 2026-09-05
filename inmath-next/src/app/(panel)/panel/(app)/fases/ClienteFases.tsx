@@ -14,7 +14,8 @@ type Fase = {
   orden: number; porcentaje_minimo: number; activo: boolean;
   recursos: RecursoFicha[]; examenes: ExamenFicha[];
 };
-type ExamenDisponible = { id: number; titulo: string; cursoIds: number[] };
+type ExamenDisponible = { id: number; titulo: string; etiquetaId: number | null; cursoIds: number[] };
+type EtiquetaFases = { id: number; nombre: string };
 type Curso = { id: number; nombre: string };
 
 let contador = 0;
@@ -118,23 +119,41 @@ function RecursosFase({ recursos, onAgregar, onQuitar }: {
 // Selector de exámenes que hay que aprobar para pasar la fase
 // ---------------------------------------------------------------------------
 
-function SelectorExamenes({ examenesDisponibles, seleccionados, onCambiar }: {
-  examenesDisponibles: ExamenDisponible[]; seleccionados: number[]; onCambiar: (ids: number[]) => void;
+function SelectorExamenes({ examenesDisponibles, etiquetas, seleccionados, onCambiar }: {
+  examenesDisponibles: ExamenDisponible[]; etiquetas: EtiquetaFases[]; seleccionados: number[]; onCambiar: (ids: number[]) => void;
 }) {
+  // Filtro por ETIQUETA (las que se registran en Reactivos): distingue a qué
+  // corresponde cada examen sin leer los títulos uno por uno. Los YA
+  // seleccionados se muestran siempre, aunque el filtro los deje fuera.
+  const [filtro, setFiltro] = useState<number | null>(null);
   const alternar = (id: number) => {
     onCambiar(seleccionados.includes(id) ? seleccionados.filter((x) => x !== id) : [...seleccionados, id]);
   };
+  const conEtiquetaUsada = etiquetas.filter((et) => examenesDisponibles.some((e) => e.etiquetaId === et.id));
+  const visibles = filtro === null
+    ? examenesDisponibles
+    : examenesDisponibles.filter((e) => (filtro === 0 ? e.etiquetaId === null : e.etiquetaId === filtro) || seleccionados.includes(e.id));
+  const nombreEtq = (id: number | null) => etiquetas.find((et) => et.id === id)?.nombre ?? null;
   return (
     <div className="pl-campo ancho">
       <span>Exámenes que debe aprobar para pasar de fase <small>(si eliges varios, debe aprobar TODOS)</small></span>
+      {conEtiquetaUsada.length > 0 && (
+        <div className="rx-filtro-etiquetas" style={{ marginTop: 2 }}>
+          <button type="button" className={`rx-fetq${filtro === null ? " on" : ""}`} onClick={() => setFiltro(null)}>Todas</button>
+          {conEtiquetaUsada.map((et) => (
+            <button key={et.id} type="button" className={`rx-fetq${filtro === et.id ? " on" : ""}`} onClick={() => setFiltro(et.id)}>{et.nombre}</button>
+          ))}
+          <button type="button" className={`rx-fetq${filtro === 0 ? " on" : ""}`} onClick={() => setFiltro(0)}>Sin etiqueta</button>
+        </div>
+      )}
       {examenesDisponibles.length === 0 ? (
         <div className="vacio" style={{ padding: "10px 0" }}>Este curso todavía no tiene exámenes en Reactivos.</div>
       ) : (
         <div className="us-chips">
-          {examenesDisponibles.map((e) => (
+          {visibles.map((e) => (
             <label key={e.id} className="chip-modulo">
               <input type="checkbox" checked={seleccionados.includes(e.id)} onChange={() => alternar(e.id)} />
-              <span>{e.titulo}</span>
+              <span>{e.titulo}{nombreEtq(e.etiquetaId) && <i className="rx-etq-mini">{nombreEtq(e.etiquetaId)}</i>}</span>
             </label>
           ))}
         </div>
@@ -153,8 +172,8 @@ const PASOS_FASE = [
   { titulo: "Examen para desbloquear", sub: "Qué debe aprobar para avanzar" },
 ];
 
-function FaseFrame({ cursos, examenes, editar, onListo, onCerrar }: {
-  cursos: Curso[]; examenes: ExamenDisponible[]; editar: Fase | null; onListo: () => void; onCerrar: () => void;
+function FaseFrame({ cursos, examenes, etiquetas, editar, onListo, onCerrar }: {
+  cursos: Curso[]; examenes: ExamenDisponible[]; etiquetas: EtiquetaFases[]; editar: Fase | null; onListo: () => void; onCerrar: () => void;
 }) {
   const toast = useToastResultado();
   const [paso, setPaso] = useState(0);
@@ -223,7 +242,7 @@ function FaseFrame({ cursos, examenes, editar, onListo, onCerrar }: {
         </div>
         <div data-paso="2" style={{ display: paso === 2 ? "block" : "none" }}>
           <AsistentePaso eyebrow="Paso 3 de 3" titulo="Examen para desbloquear la siguiente fase">
-            <SelectorExamenes examenesDisponibles={examenesDelCurso} seleccionados={examenesSel} onCambiar={setExamenesSel} />
+            <SelectorExamenes examenesDisponibles={examenesDelCurso} etiquetas={etiquetas} seleccionados={examenesSel} onCambiar={setExamenesSel} />
           </AsistentePaso>
         </div>
         <div className="us-asistente-nav">
@@ -278,7 +297,7 @@ function FaseTarjeta({ fase, onEditar }: { fase: Fase; onEditar: () => void }) {
   );
 }
 
-export function ClienteFases({ fases, examenes, cursos }: { fases: Fase[]; examenes: ExamenDisponible[]; cursos: Curso[] }) {
+export function ClienteFases({ fases, examenes, cursos, etiquetas = [] }: { fases: Fase[]; examenes: ExamenDisponible[]; cursos: Curso[]; etiquetas?: EtiquetaFases[] }) {
   const [abierto, setAbierto] = useState<"crear" | Fase | null>(null);
   const [cursoFiltro, setCursoFiltro] = useState(String(cursos[0]?.id ?? ""));
   const visibles = fases.filter((f) => String(f.curso_id) === cursoFiltro);
@@ -306,7 +325,7 @@ export function ClienteFases({ fases, examenes, cursos }: { fases: Fase[]; exame
             <button type="button" className="toast-x us-cerrar" aria-label="Cerrar" onClick={() => setAbierto(null)}><IconoPanel n="x" /></button>
           </div>
           {abierto !== null && (
-            <FaseFrame cursos={cursos} examenes={examenes} editar={abierto === "crear" ? null : abierto} onListo={() => setAbierto(null)} onCerrar={() => setAbierto(null)} />
+            <FaseFrame cursos={cursos} examenes={examenes} etiquetas={etiquetas} editar={abierto === "crear" ? null : abierto} onListo={() => setAbierto(null)} onCerrar={() => setAbierto(null)} />
           )}
         </div>
       </Velo>
