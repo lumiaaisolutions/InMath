@@ -1224,3 +1224,12 @@ completo en cualquier tamaño de pantalla.
 dentro de un velo con padding → desbordaba por la derecha (✕ cortada,
 texto al borde). Fix: width 100% + paddings recalibrados + título
 compacto en ≤640px. Desplegado y commiteado.
+
+### Corte 05-sep-2026 (3) — Auditoría de ciberseguridad COMPLETA (análisis)
+
+Fases 2, 3 y 4 terminadas y documentadas en
+auditoria-ciberseguridad-2026-09.md: 18 hallazgos totales (2 críticos, 5
+altos, 6 medios, 5 bajos) + limpieza mapeada + plan en 3 olas con
+esfuerzos. **PENDIENTE: ejecutar la remediación** — la Ola 1 (~6 h,
+requiere visto bueno para tocar servidor) elimina ~80 % del riesgo; su
+primera media hora (Ollama+firewall) es lo más urgente del sistema hoy.
