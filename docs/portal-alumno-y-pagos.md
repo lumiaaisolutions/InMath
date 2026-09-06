@@ -243,3 +243,13 @@ de pago desaparece si ya tomó o tiene agendada su asesoría (es una sola).
   (el `<span class="pt-hero-foto">` perdía su auto-blockificación de
   flex-item al anidarse en un `<div>` extra — ver el gotcha de CSS en
   `sistema-de-diseno.md`). Fix: `display:block` explícito en `.pt-hero-foto`.
+
+## 06-sep-2026 — Retroalimentación del alumno (v90)
+
+Tarjeta "Tu voz construye InMath" en el inicio del portal: el alumno envía
+PREGUNTAS o RECOMENDACIONES del sistema (5-800 chars, máx. 5/día) y ve su
+historial con estado. El admin las recibe en /panel/sugerencias (filtros
+por tipo/estado, marcar atendida, eliminar). Entradas blindadas: lista
+blanca de tipo, saneado de control-chars, Prisma parametrizado y render
+como texto plano en ambos extremos. Detalle en fases-y-pendientes (corte
+06-sep).

@@ -3297,3 +3297,23 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 .rx-etq-item button { border: 0; background: rgba(107,159,255,.18); color: #2C4A8A; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: .7rem; line-height: 1; }
 .rx-etq-item button:hover { background: #C0392B; color: #fff; }
 .rx-etq-mini { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: #EDF3FF; color: #2C4A8A; font: 700 .66rem var(--cuerpo); font-style: normal; vertical-align: 1px; }
+
+/* v90 — Bandeja "Sugerencias del portal" (retroalimentación de alumnos). */
+.sg-filtros { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+.sg-lista { display: grid; gap: 12px; }
+.sg-item {
+  border: 1px solid var(--linea); border-radius: 16px; padding: 14px 16px;
+  display: grid; gap: 8px; background: #fff;
+  transition: box-shadow .2s ease, transform .15s ease;
+}
+.sg-item:hover { box-shadow: 0 10px 26px -14px rgba(18,31,55,.22); transform: translateY(-1px); }
+.sg-item.nueva { border-left: 4px solid var(--pino, #6B9FFF); background: linear-gradient(90deg, rgba(107,159,255,.05), #fff 40%); }
+.sg-item header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sg-tipo { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font: 700 .72rem var(--cuerpo); }
+.sg-tipo.pregunta { background: #EDF3FF; color: #2C4A8A; }
+.sg-tipo.recomendacion { background: #E3F5EF; color: #0E6E5C; }
+.sg-quien { font: 600 .8rem var(--cuerpo); color: var(--tinta-2); }
+.sg-fecha { margin-left: auto; font: 500 .74rem var(--cuerpo); color: var(--tinta-3); }
+.sg-msg { margin: 0; font: 500 .9rem/1.55 var(--cuerpo); color: var(--tinta); white-space: pre-wrap; overflow-wrap: anywhere; }
+.sg-item footer { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+@media (max-width: 640px) { .sg-fecha { margin-left: 0; width: 100%; } }

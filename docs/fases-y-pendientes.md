@@ -1233,3 +1233,28 @@ altos, 6 medios, 5 bajos) + limpieza mapeada + plan en 3 olas con
 esfuerzos. **PENDIENTE: ejecutar la remediación** — la Ola 1 (~6 h,
 requiere visto bueno para tocar servidor) elimina ~80 % del riesgo; su
 primera media hora (Ollama+firewall) es lo más urgente del sistema hoy.
+
+### Corte 06-sep-2026 — Preguntas y recomendaciones del alumno (v90)
+
+**Módulo de retroalimentación del sistema** (pedido del usuario, rol dev
+senior + diseño con las skills):
+- **Datos**: tabla `retroalimentaciones` (alumno_id FK cascade, tipo
+  pregunta|recomendacion, mensaje TEXT, estado nueva|atendida,
+  creado_en) — push en local y producción.
+- **Portal (inicio)**: tarjeta "Tu voz construye InMath" — segmentado
+  propio Pregunta/Recomendación (con color por tipo), textarea con
+  contador vivo 0/800 (rojo cerca del tope), placeholders con ejemplos,
+  estado de gracias con palomita animada (pop, respeta reduced-motion) y
+  "Mis mensajes (n)" plegable con chip de tipo y estado
+  recibida/✓atendida.
+- **Panel admin**: /panel/sugerencias (solo admins, item en
+  Administración) — bandeja con doble filtro (tipo y estado), item con
+  banda azul cuando está "sin atender", alumno+correo+fecha, y acciones
+  "✓ Marcar atendida"/"Reabrir"/"Eliminar". El sub de cabecera dice
+  cuántas faltan por atender.
+- **BLINDAJE de entradas** (requisito explícito): sesión de alumno
+  obligatoria; `tipo` por lista blanca; mensaje trim + 5-800 chars +
+  caracteres de control eliminados; SOLO Prisma (parametrizado → sin
+  inyección SQL); pintado SIEMPRE como texto React (escape automático →
+  sin XSS; prohibido dangerouslySetInnerHTML en el módulo);
+  overflow-wrap en render; tope anti-spam de 5 envíos/día por alumno.

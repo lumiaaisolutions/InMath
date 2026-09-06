@@ -124,3 +124,31 @@ export async function cambiarPasswordConCodigoAccion(_prev: EstadoCuenta, fd: Fo
   await prisma.alumnos.update({ where: { id: alumno.id }, data: { password_hash: await bcrypt.hash(nueva, 12) } });
   return { ok: "¡Listo! Tu contraseña quedó guardada. Ya puedes entrar con ella (además de Google)." };
 }
+
+/* ── Preguntas y recomendaciones (retroalimentación del sistema) ──────────
+ * BLINDAJE de entrada (el texto viaja a BD y se muestra al admin):
+ * 1. Sesión de alumno obligatoria (requiereAlumno) — nada anónimo.
+ * 2. tipo por LISTA BLANCA (pregunta|recomendacion) — jamás texto libre.
+ * 3. mensaje: trim, 5-800 chars, sin caracteres de control (se eliminan);
+ *    va a BD SOLO por Prisma (consultas parametrizadas → inyección SQL
+ *    imposible) y se PINTA SIEMPRE como texto React (escape automático →
+ *    XSS imposible; prohibido dangerouslySetInnerHTML en este módulo).
+ * 4. Tope de 5 envíos por día por alumno (anti-spam/flood). */
+export async function enviarRetroAccion(_prev: EstadoCuenta, fd: FormData): Promise<EstadoCuenta> {
+  const alumno = await requiereAlumno();
+  const tipo = fd.get("tipo") === "recomendacion" ? "recomendacion" : "pregunta";
+  const mensaje = String(fd.get("mensaje") ?? "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .trim()
+    .slice(0, 800);
+  if (mensaje.length < 5) return { error: "Cuéntanos un poco más (mínimo 5 caracteres)." };
+
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const enviadasHoy = await prisma.retroalimentaciones.count({
+    where: { alumno_id: alumno.id, creado_en: { gte: hoy } },
+  });
+  if (enviadasHoy >= 5) return { error: "Ya nos enviaste 5 mensajes hoy — mañana podrás mandar más. ¡Gracias por tanto interés!" };
+
+  await prisma.retroalimentaciones.create({ data: { alumno_id: alumno.id, tipo, mensaje } });
+  return { ok: tipo === "pregunta" ? "¡Recibimos tu pregunta! El equipo la revisará pronto." : "¡Gracias por tu recomendación! Nos ayuda a mejorar InMath." };
+}

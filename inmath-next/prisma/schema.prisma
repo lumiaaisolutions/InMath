@@ -31,6 +31,7 @@ model alumnos {
 
   @@index([curso_id], map: "fk_alumnos_curso")
   @@index([estado], map: "idx_alumnos_estado")
+  retroalimentaciones retroalimentaciones[]
 }
 
 model avance_alumnos {
@@ -567,4 +568,26 @@ model etiquetas {
   nombre    String     @unique(map: "uq_etiquetas_nombre") @db.VarChar(60)
   creado_en DateTime   @default(now()) @db.Timestamp(0)
   examenes  examenes[]
+}
+
+model retroalimentaciones {
+  id        Int                      @id @default(autoincrement()) @db.UnsignedInt
+  alumno_id Int                      @db.UnsignedInt
+  tipo      retroalimentaciones_tipo
+  mensaje   String                   @db.Text
+  estado    retroalimentaciones_estado @default(nueva)
+  creado_en DateTime                 @default(now()) @db.Timestamp(0)
+  alumnos   alumnos                  @relation(fields: [alumno_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_retro_alumno")
+
+  @@index([alumno_id, creado_en], map: "idx_retro_alumno")
+}
+
+enum retroalimentaciones_tipo {
+  pregunta
+  recomendacion
+}
+
+enum retroalimentaciones_estado {
+  nueva
+  atendida
 }

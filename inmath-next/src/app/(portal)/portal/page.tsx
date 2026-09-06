@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { ahoraPared } from "@/lib/fechas";
 import { Icono } from "@/components/Icono";
 import { mediaAlumno } from "@/lib/portal/media";
+import { RetroCard } from "./RetroCard";
 import { requiereAlumno } from "@/lib/portal/sesion";
 import { tienePagoConfirmado } from "@/lib/portal/auth";
 import { leerMateriales } from "@/lib/portal/materiales";
@@ -103,6 +104,9 @@ export default async function PortalInicio() {
   const diasInscrito = Math.max(0, Math.floor((ahora.getTime() - alumno.inscrito_en.getTime()) / 86400_000));
 
   const media = await mediaAlumno(alumno.id);
+  const misRetros = await prisma.retroalimentaciones.findMany({
+    where: { alumno_id: alumno.id }, orderBy: { creado_en: "desc" }, take: 10,
+  });
   const chips = [
     { n: diasInscrito, etq: diasInscrito === 1 ? "día contigo" : "días contigo" },
     { n: reportes.length, etq: reportes.length === 1 ? "reporte" : "reportes" },
@@ -237,6 +241,11 @@ export default async function PortalInicio() {
             </a>
           )}
         </div>
+
+        <RetroCard historial={misRetros.map((r) => ({
+          id: r.id, tipo: r.tipo, mensaje: r.mensaje, estado: r.estado,
+          fecha: fechaLarga(r.creado_en),
+        }))} />
 
         <footer className="pt-foot pt-rev" style={{ ["--d" as string]: "420ms" }}>
           <span>Inscrito el {fechaLarga(alumno.inscrito_en)}</span>

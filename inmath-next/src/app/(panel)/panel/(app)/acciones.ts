@@ -730,3 +730,18 @@ export async function agentePanelAccion(mensaje: string, historial: Turno[]): Pr
     return { error: "No pude conectarme en este momento. Intenta de nuevo en unos segundos." };
   }
 }
+
+/* ── Sugerencias del portal (retroalimentación de alumnos) ── */
+export async function retroEstadoAccion(id: number, estado: "nueva" | "atendida"): Promise<Resultado> {
+  await requiereAdmin();
+  await prisma.retroalimentaciones.update({ where: { id }, data: { estado } });
+  revalidatePath("/panel/sugerencias");
+  return { ok: estado === "atendida" ? "Marcada como atendida" : "Reabierta" };
+}
+
+export async function retroEliminarAccion(id: number): Promise<Resultado> {
+  await requiereAdmin();
+  await prisma.retroalimentaciones.delete({ where: { id } }).catch(() => {});
+  revalidatePath("/panel/sugerencias");
+  return { ok: "Sugerencia eliminada" };
+}
