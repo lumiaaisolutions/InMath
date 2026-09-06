@@ -5,6 +5,7 @@ import path from "node:path";
 import sharp from "sharp";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
+import { enviarCorreo, CORREO_CONTACTO } from "@/lib/correo";
 import { requiereAlumno } from "@/lib/portal/sesion";
 import { asegurarDirPortal } from "@/lib/portal/media";
 import { activarDosFactores, emitirCodigoPassword, verificarCodigoPassword } from "@/lib/portal/dosfactores";
@@ -150,5 +151,17 @@ export async function enviarRetroAccion(_prev: EstadoCuenta, fd: FormData): Prom
   if (enviadasHoy >= 5) return { error: "Ya nos enviaste 5 mensajes hoy — mañana podrás mandar más. ¡Gracias por tanto interés!" };
 
   await prisma.retroalimentaciones.create({ data: { alumno_id: alumno.id, tipo, mensaje } });
+
+  // Aviso al buzón del equipo (best-effort: si el correo falla, el registro
+  // ya quedó guardado y visible en /panel/sugerencias igual).
+  const base = (process.env.APP_URL ?? "").replace(/\/$/, "");
+  await enviarCorreo({
+    para: [CORREO_CONTACTO],
+    asunto: `${tipo === "pregunta" ? "Nueva PREGUNTA" : "Nueva RECOMENDACIÓN"} en el portal — ${alumno.nombre}`,
+    preheader: mensaje.slice(0, 90),
+    texto: `${alumno.nombre} (${alumno.email ?? "sin correo"}) escribió desde su portal:\n\n"${mensaje}"`,
+    ...(base ? { cta: { url: `${base}/panel/sugerencias`, label: "Abrir sugerencias del portal", icono: "calendario" as const } } : {}),
+  }).catch((e) => console.error("enviarRetroAccion: no se pudo avisar al staff", e));
+
   return { ok: tipo === "pregunta" ? "¡Recibimos tu pregunta! El equipo la revisará pronto." : "¡Gracias por tu recomendación! Nos ayuda a mejorar InMath." };
 }

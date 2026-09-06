@@ -3317,3 +3317,26 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 .sg-msg { margin: 0; font: 500 .9rem/1.55 var(--cuerpo); color: var(--tinta); white-space: pre-wrap; overflow-wrap: anywhere; }
 .sg-item footer { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 @media (max-width: 640px) { .sg-fecha { margin-left: 0; width: 100%; } }
+
+/* v90.1 — Sugerencias: distribución con aire (feedback: todo pegado a los
+ * bordes) + bloque de respuesta del admin. */
+.sg-filtros { margin: 4px 2px 20px; gap: 16px 22px; }
+.sg-lista { gap: 16px; padding: 0 2px 6px; }
+.sg-item { padding: 18px 22px; gap: 12px; border-radius: 18px; }
+.sg-item.nueva { padding-left: 24px; }
+.sg-item header { gap: 12px; }
+.sg-msg { padding: 2px 2px 0; }
+.sg-item footer { gap: 12px; padding-top: 4px; border-top: 1px dashed var(--linea); margin-top: 2px; padding-top: 12px; }
+.sg-resp {
+  background: var(--ok-suave, #E4F5EC); border: 1px solid rgba(18,133,92,.25);
+  border-radius: 12px; padding: 12px 16px; display: grid; gap: 4px;
+}
+.sg-resp b { font: 700 .74rem var(--cuerpo); color: var(--ok, #12855C); }
+.sg-resp p { margin: 0; font: 500 .86rem/1.5 var(--cuerpo); color: var(--tinta-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.sg-resp-form { width: 100%; display: grid; gap: 8px; }
+.sg-resp-form textarea {
+  width: 100%; resize: vertical; border-radius: 12px; padding: 10px 12px;
+  border: 1.5px solid var(--linea-2, #DDE5F4); font: 500 .88rem/1.5 var(--cuerpo); color: var(--tinta);
+}
+.sg-resp-form textarea:focus { outline: none; border-color: var(--pino); box-shadow: 0 0 0 3px rgba(107,159,255,.16); }
+.sg-resp-acciones { display: flex; justify-content: flex-end; gap: 8px; }

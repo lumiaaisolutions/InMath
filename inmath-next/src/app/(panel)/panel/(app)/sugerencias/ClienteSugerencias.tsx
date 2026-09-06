@@ -1,12 +1,13 @@
 "use client";
-import { useMemo, useState, useTransition } from "react";
+import { useActionState, useMemo, useState, useTransition } from "react";
 import { IconoPanel } from "@/components/IconoPanel";
 import { useToastResultado } from "../ClientePanel";
-import { retroEstadoAccion, retroEliminarAccion } from "../acciones";
+import { retroEstadoAccion, retroEliminarAccion, retroResponderAccion, type Resultado } from "../acciones";
 
 type Retro = {
   id: number; tipo: "pregunta" | "recomendacion"; mensaje: string;
   estado: "nueva" | "atendida"; alumno: string; correo: string | null; fecha: string;
+  respuesta: string | null; respondidoEn: string | null;
 };
 
 const fechaCorta = (iso: string) => {
@@ -60,8 +61,15 @@ export function BandejaSugerencias({ inicial }: { inicial: Retro[] }) {
                 <span className="sg-fecha">{fechaCorta(f.fecha)}</span>
               </header>
               <p className="sg-msg">{f.mensaje}</p>
+              {f.respuesta && (
+                <div className="sg-resp">
+                  <b>Respuesta enviada{f.respondidoEn ? ` · ${fechaCorta(f.respondidoEn)}` : ""}</b>
+                  <p>{f.respuesta}</p>
+                </div>
+              )}
               <footer>
                 <span className={`gaje ${f.estado === "nueva" ? "neutro" : "ok"}`}>{f.estado === "nueva" ? "sin atender" : "atendida"}</span>
+                <RespuestaBoton retro={f} />
                 <button type="button" className="boton mini fantasma" disabled={ocupado}
                   onClick={() => startTransition(async () => toast(await retroEstadoAccion(f.id, f.estado === "nueva" ? "atendida" : "nueva")))}>
                   {f.estado === "nueva" ? "✓ Marcar atendida" : "Reabrir"}
@@ -76,5 +84,43 @@ export function BandejaSugerencias({ inicial }: { inicial: Retro[] }) {
         </div>
       )}
     </div>
+  );
+}
+
+
+/** Responder al alumno: textarea inline; al enviar se guarda, se marca
+ *  atendida y le llega el correo con la respuesta. */
+function RespuestaBoton({ retro }: { retro: Retro }) {
+  const [abierto, setAbierto] = useState(false);
+  const [texto, setTexto] = useState(retro.respuesta ?? "");
+  const toast = useToastResultado();
+  const [, accion, pendiente] = useActionState<Resultado, FormData>(async (prev, fd) => {
+    fd.set("retro_id", String(retro.id));
+    fd.set("respuesta", texto);
+    const r = await retroResponderAccion(prev, fd);
+    toast(r);
+    if (r.ok) setAbierto(false);
+    return r;
+  }, {});
+
+  if (!abierto) {
+    return (
+      <button type="button" className="boton mini primario" onClick={() => setAbierto(true)}>
+        {retro.respuesta ? "Editar respuesta" : "Responder"}
+      </button>
+    );
+  }
+  return (
+    <form action={accion} className="sg-resp-form">
+      <textarea rows={3} maxLength={1200} value={texto} autoFocus
+        placeholder={`Respuesta para ${retro.alumno} — le llegará por correo y la verá en su portal`}
+        onChange={(e) => setTexto(e.target.value)} />
+      <div className="sg-resp-acciones">
+        <button type="button" className="boton mini fantasma" onClick={() => setAbierto(false)}>Cancelar</button>
+        <button type="submit" className="boton mini primario" disabled={pendiente || texto.trim().length < 2}>
+          {pendiente ? "Enviando…" : "Enviar respuesta"}
+        </button>
+      </div>
+    </form>
   );
 }

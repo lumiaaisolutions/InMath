@@ -864,3 +864,14 @@
 .pt-retro-hist small { color: var(--tinta-3); font: 500 .72rem var(--cuerpo); }
 @media (prefers-reduced-motion: reduce) { .pt-retro-check { animation: none; } }
 @media (max-width: 620px) { .pt-retro { padding: 16px; } .pt-retro-pie { flex-wrap: wrap; } }
+
+/* v90.1 — Apartado Sugerencias del portal + respuesta del equipo */
+.pt-wrap-angosto { max-width: 760px; }
+.pt-retro-resp {
+  margin-top: 6px; background: var(--ok-suave, #E4F5EC);
+  border: 1px solid rgba(18,133,92,.25); border-radius: 12px; padding: 12px 14px;
+  display: grid; gap: 4px;
+}
+.pt-retro-resp b { display: inline-flex; align-items: center; gap: 6px; font: 700 .74rem var(--cuerpo); color: #0E6E5C; }
+.pt-retro-resp b svg { width: 13px; height: 13px; }
+.pt-retro-resp p { margin: 0; font: 500 .86rem/1.55 var(--cuerpo); color: var(--tinta-2); white-space: pre-wrap; overflow-wrap: anywhere; }

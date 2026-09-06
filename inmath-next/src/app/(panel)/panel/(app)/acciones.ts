@@ -745,3 +745,41 @@ export async function retroEliminarAccion(id: number): Promise<Resultado> {
   revalidatePath("/panel/sugerencias");
   return { ok: "Sugerencia eliminada" };
 }
+
+/** Respuesta del admin a una sugerencia: se guarda, marca atendida y se le
+ *  AVISA AL ALUMNO por correo con su mensaje original y la respuesta.
+ *  Mismo blindaje que la entrada del alumno: saneado + Prisma + texto plano. */
+export async function retroResponderAccion(_prev: Resultado, fd: FormData): Promise<Resultado> {
+  const yo = await requiereAdmin();
+  const id = parseInt(String(fd.get("retro_id") ?? "0"), 10);
+  const respuesta = String(fd.get("respuesta") ?? "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .trim()
+    .slice(0, 1200);
+  if (id < 1) return { error: "Sugerencia inválida" };
+  if (respuesta.length < 2) return { error: "Escribe la respuesta" };
+
+  const retro = await prisma.retroalimentaciones.findUnique({
+    where: { id },
+    include: { alumnos: { select: { nombre: true, email: true } } },
+  });
+  if (!retro) return { error: "Sugerencia no encontrada" };
+
+  await prisma.retroalimentaciones.update({
+    where: { id },
+    data: { respuesta, respondido_en: ahoraPared(), estado: "atendida" },
+  });
+
+  if (retro.alumnos.email) {
+    const base = (process.env.APP_URL ?? "").replace(/\/$/, "");
+    await enviarCorreo({
+      para: [retro.alumnos.email],
+      asunto: retro.tipo === "pregunta" ? "Respondimos tu pregunta — Portal InMath" : "Leímos tu recomendación — Portal InMath",
+      preheader: respuesta.slice(0, 90),
+      texto: `Hola ${retro.alumnos.nombre},\n\nEscribiste:\n"${retro.mensaje.slice(0, 400)}"\n\n${yo.nombre} del equipo InMath te responde:\n"${respuesta}"`,
+      ...(base ? { cta: { url: `${base}/portal/sugerencias`, label: "Ver en mi portal", icono: "calendario" as const } } : {}),
+    }).catch((e) => console.error("retroResponderAccion: no se pudo avisar al alumno", e));
+  }
+  revalidatePath("/panel/sugerencias");
+  return { ok: retro.alumnos.email ? "Respuesta enviada al alumno por correo" : "Respuesta guardada (el alumno no tiene correo registrado)" };
+}

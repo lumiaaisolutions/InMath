@@ -1258,3 +1258,22 @@ senior + diseño con las skills):
   inyección SQL); pintado SIEMPRE como texto React (escape automático →
   sin XSS; prohibido dangerouslySetInnerHTML en el módulo);
   overflow-wrap en render; tope anti-spam de 5 envíos/día por alumno.
+
+**v90.1 — Sugerencias: respuesta del admin, apartado propio y correos**
+(feedback del usuario tras probar):
+1. DISTRIBUCIÓN del panel con aire: filtros separados, items 18/22px,
+   footer con divisor punteado, lista con gap 16.
+2. RESPUESTA del admin: columnas respuesta/respondido_en (push local y
+   prod); botón "Responder"/"Editar respuesta" con textarea inline
+   (≤1200 chars, mismo saneado que la entrada del alumno); al enviar se
+   guarda, marca atendida y el ALUMNO recibe CORREO con su mensaje
+   original + la respuesta y botón "Ver en mi portal". El alumno la ve en
+   su historial como bloque verde "Respuesta del equipo · fecha".
+3. APARTADO PROPIO en el portal: /portal/sugerencias con item
+   "Sugerencias" en el menú (visible también con pago pendiente — la
+   retroalimentación no se bloquea); la tarjeta salió del inicio; página
+   angosta (760px) con historial siempre abierto.
+4. CORREOS: al enviar el alumno → aviso al buzón del equipo con tipo,
+   nombre, correo y texto + botón al panel; al responder el admin →
+   correo al alumno (best-effort, el registro queda aunque el correo
+   falle).

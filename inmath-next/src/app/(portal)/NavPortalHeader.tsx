@@ -10,6 +10,7 @@ const ITEMS = [
   { key: "material", label: "Material", href: "/portal/material", icon: "list" },
   { key: "practica", label: "Práctica", href: "/portal/practica", icon: "check" },
   { key: "reportes", label: "Reportes", href: "/portal/reportes", icon: "trend" },
+  { key: "sugerencias", label: "Sugerencias", href: "/portal/sugerencias", icon: "chat" },
   { key: "cuenta", label: "Mi cuenta", href: "/portal/cuenta", icon: "user" },
 ];
 
@@ -28,10 +29,11 @@ export function NavPortalHeader({ bloqueado = false }: { bloqueado?: boolean }) 
     : pathname.startsWith("/portal/material") ? "material"
     : pathname.startsWith("/portal/practica") ? "practica"
     : pathname.startsWith("/portal/reportes") ? "reportes"
+    : pathname.startsWith("/portal/sugerencias") ? "sugerencias"
     : pathname.startsWith("/portal/cuenta") ? "cuenta"
     : "inicio";
 
-  const items = bloqueado ? ITEMS.filter((it) => it.key === "inicio" || it.key === "cuenta") : ITEMS;
+  const items = bloqueado ? ITEMS.filter((it) => ["inicio", "sugerencias", "cuenta"].includes(it.key)) : ITEMS;
   const refs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const [burbuja, setBurbuja] = useState({ x: 0, w: 0, listo: false });
   const [abierto, setAbierto] = useState(false);

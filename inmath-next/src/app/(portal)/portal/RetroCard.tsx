@@ -3,17 +3,21 @@ import { useActionState, useState } from "react";
 import { Icono } from "@/components/Icono";
 import { enviarRetroAccion, type EstadoCuenta } from "./cuenta/actions";
 
-type MiRetro = { id: number; tipo: "pregunta" | "recomendacion"; mensaje: string; estado: "nueva" | "atendida"; fecha: string };
+type MiRetro = {
+  id: number; tipo: "pregunta" | "recomendacion"; mensaje: string;
+  estado: "nueva" | "atendida"; fecha: string;
+  respuesta?: string | null; respondidoEl?: string | null;
+};
 
 const MAX = 800;
 
 /** "Tu voz construye InMath" — preguntas y recomendaciones del alumno.
  *  El mensaje SIEMPRE se pinta como texto (React escapa solo): nada de
  *  HTML del usuario. El blindaje fuerte vive en enviarRetroAccion. */
-export function RetroCard({ historial }: { historial: MiRetro[] }) {
+export function RetroCard({ historial, abiertaSiempre = false }: { historial: MiRetro[]; abiertaSiempre?: boolean }) {
   const [tipo, setTipo] = useState<"pregunta" | "recomendacion">("pregunta");
   const [mensaje, setMensaje] = useState("");
-  const [verHist, setVerHist] = useState(false);
+  const [verHist, setVerHist] = useState(abiertaSiempre);
   const [estado, accion, pendiente] = useActionState<EstadoCuenta, FormData>(async (prev, fd) => {
     fd.set("tipo", tipo);
     const r = await enviarRetroAccion(prev, fd);
@@ -59,7 +63,7 @@ export function RetroCard({ historial }: { historial: MiRetro[] }) {
           <div className="pt-retro-pie">
             {historial.length > 0 && (
               <button type="button" className="pt-retro-hist-btn" onClick={() => setVerHist((v) => !v)}>
-                {verHist ? "Ocultar mis mensajes" : `Mis mensajes (${historial.length})`}
+                {abiertaSiempre ? `Mis mensajes (${historial.length})` : verHist ? "Ocultar mis mensajes" : `Mis mensajes (${historial.length})`}
               </button>
             )}
             <button type="submit" className="boton glow glow-halo" disabled={pendiente || mensaje.trim().length < 5}>
@@ -77,6 +81,12 @@ export function RetroCard({ historial }: { historial: MiRetro[] }) {
               {/* Texto plano SIEMPRE — React escapa; jamás HTML del usuario */}
               <p>{h.mensaje}</p>
               <small>{h.fecha} · {h.estado === "atendida" ? "✓ atendida" : "recibida"}</small>
+              {h.respuesta && (
+                <div className="pt-retro-resp">
+                  <b><Icono n="check" /> Respuesta del equipo{h.respondidoEl ? ` · ${h.respondidoEl}` : ""}</b>
+                  <p>{h.respuesta}</p>
+                </div>
+              )}
             </li>
           ))}
         </ul>

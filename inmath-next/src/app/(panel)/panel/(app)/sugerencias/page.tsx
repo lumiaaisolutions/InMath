@@ -33,6 +33,7 @@ export default async function Sugerencias() {
           id: f.id, tipo: f.tipo, mensaje: f.mensaje, estado: f.estado,
           alumno: f.alumnos.nombre, correo: f.alumnos.email,
           fecha: f.creado_en.toISOString(),
+          respuesta: f.respuesta, respondidoEn: f.respondido_en?.toISOString() ?? null,
         }))}
       />
     </>
