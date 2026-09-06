@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { requiereAdmin } from "@/lib/panel/sesion";
 import { BandejaSugerencias } from "./ClienteSugerencias";
+import { mediaAlumnoParaPanel } from "@/lib/portal/media";
 
 export const metadata: Metadata = { title: "Sugerencias del portal — Inmath CRM" };
 export const dynamic = "force-dynamic";
@@ -16,6 +17,10 @@ export default async function Sugerencias() {
     include: { alumnos: { select: { nombre: true, email: true } } },
   });
   const nuevas = filas.filter((f) => f.estado === "nueva").length;
+  // Foto y portada del alumno (si las configuró en su portal) — identidad
+  // visual en la bandeja. Un lookup por alumno único, no por mensaje.
+  const idsAlumnos = [...new Set(filas.map((f) => f.alumno_id))];
+  const medias = new Map(await Promise.all(idsAlumnos.map(async (id) => [id, await mediaAlumnoParaPanel(id)] as const)));
 
   return (
     <>
@@ -34,6 +39,8 @@ export default async function Sugerencias() {
           alumno: f.alumnos.nombre, correo: f.alumnos.email,
           fecha: f.creado_en.toISOString(),
           respuesta: f.respuesta, respondidoEn: f.respondido_en?.toISOString() ?? null,
+          foto: medias.get(f.alumno_id)?.avatar ?? null,
+          banner: medias.get(f.alumno_id)?.banner ?? null,
         }))}
       />
     </>

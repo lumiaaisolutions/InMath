@@ -8,6 +8,7 @@ type Retro = {
   id: number; tipo: "pregunta" | "recomendacion"; mensaje: string;
   estado: "nueva" | "atendida"; alumno: string; correo: string | null; fecha: string;
   respuesta: string | null; respondidoEn: string | null;
+  foto: string | null; banner: string | null;
 };
 
 const fechaCorta = (iso: string) => {
@@ -51,8 +52,13 @@ export function BandejaSugerencias({ inicial }: { inicial: Retro[] }) {
       ) : (
         <div className="sg-lista">
           {filas.map((f) => (
-            <article key={f.id} className={`sg-item${f.estado === "nueva" ? " nueva" : ""}`}>
+            <article key={f.id} className={`sg-item${f.estado === "nueva" ? " nueva" : ""}${f.banner ? " con-fondo" : ""}`}>
+              {/* Portada del alumno como fondo difuminado y translúcido */}
+              {f.banner && <i className="sg-fondo" aria-hidden="true"><img src={f.banner} alt="" /></i>}
               <header>
+                <span className="sg-avatar">
+                  {f.foto ? <img src={f.foto} alt="" /> : (f.alumno || "?").charAt(0).toUpperCase()}
+                </span>
                 <span className={`sg-tipo ${f.tipo}`}>
                   <IconoPanel n={f.tipo === "pregunta" ? "chat" : "chispa"} cls="ic-sm" />
                   {f.tipo === "pregunta" ? "Pregunta" : "Recomendación"}

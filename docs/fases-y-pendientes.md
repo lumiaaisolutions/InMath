@@ -1277,3 +1277,10 @@ senior + diseño con las skills):
    nombre, correo y texto + botón al panel; al responder el admin →
    correo al alumno (best-effort, el registro queda aunque el correo
    falle).
+
+**v90.2 — Identidad del alumno en la bandeja de Sugerencias**: cada
+mensaje muestra la FOTO de perfil del alumno como identificador (38px,
+borde blanco; inicial en gradiente si no tiene) y su PORTADA como fondo
+del item — difuminada (blur 10px), translúcida (.32) y con velo blanco al
+90% para que el texto jamás pierda contraste. Un lookup de media por
+alumno único, no por mensaje.

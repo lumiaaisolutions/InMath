@@ -3340,3 +3340,18 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 }
 .sg-resp-form textarea:focus { outline: none; border-color: var(--pino); box-shadow: 0 0 0 3px rgba(107,159,255,.16); }
 .sg-resp-acciones { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* v90.2 — Identidad del alumno en Sugerencias: foto como identificador y su
+ * portada de fondo, difuminada y translúcida (velo blanco encima para que
+ * el texto nunca pierda contraste). */
+.sg-item { position: relative; overflow: hidden; isolation: isolate; }
+.sg-fondo { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.sg-fondo img { width: 100%; height: 100%; object-fit: cover; filter: blur(10px) saturate(1.05); transform: scale(1.12); opacity: .32; }
+.sg-fondo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255,255,255,.82), rgba(255,255,255,.92) 55%, rgba(255,255,255,.85)); }
+.sg-avatar {
+  flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; overflow: hidden;
+  display: grid; place-items: center; background: linear-gradient(135deg, #4D7FF0, #6B9FFF);
+  color: #fff; font: 700 .95rem var(--display);
+  border: 2.5px solid #fff; box-shadow: 0 4px 12px rgba(18,31,55,.22);
+}
+.sg-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
