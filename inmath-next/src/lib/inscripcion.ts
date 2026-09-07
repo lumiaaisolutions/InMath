@@ -2,8 +2,8 @@ import bcrypt from "bcryptjs";
 import { randomBytes } from "node:crypto";
 import { prisma } from "./db";
 import { ahoraPared } from "./fechas";
-import { enviarCorreo } from "./correo";
-import { generarOLeerRecibo } from "./recibo";
+import { enviarCorreo, CORREO_CONTACTO } from "./correo";
+import { generarOLeerRecibo, reciboEmbebidoDesdePago } from "./recibo";
 
 type PagoBase = { id: number; prospecto_id: number; curso_id: number; monto_centavos?: number; moneda?: string };
 type ProspectoAcceso = { id: number; nombre: string | null; telefono_whatsapp: string; correo: string | null };
@@ -51,6 +51,7 @@ export async function inscribirPorPago(
   const pagoCompleto = await prisma.pagos.findUnique({ where: { id: pago.id } });
   const alumnoNombre = prospecto.nombre ?? `Alumno ${prospecto.telefono_whatsapp}`;
   await enviarBienvenidaAlumno(prospecto, curso?.nombre ?? "tu curso", cred, pagoCompleto, alumnoNombre);
+  await avisarAdminPagoConfirmado(prospecto, curso?.nombre ?? "tu curso", pagoCompleto, alumnoNombre);
   return { alumnoId, cred };
 }
 
@@ -60,6 +61,39 @@ export async function inscribirPorPago(
  * usa el WhatsApp como respaldo. Devuelve la contraseña temporal en claro solo
  * la primera vez; `passTmp: null` si ya estaban provisionadas.
  */
+/** Aviso al equipo: un alumno completó su pago. Incluye el recibo embebido
+ *  (mismo formato del alumno) y el PDF adjunto, y un botón a la ficha. */
+async function avisarAdminPagoConfirmado(
+  prospecto: ProspectoAcceso, cursoNombre: string, pago: PagoParaRecibo, alumnoNombre?: string,
+): Promise<void> {
+  if (!pago) return;
+  const nombre = alumnoNombre ?? prospecto.nombre ?? "Alumno";
+  const base = (process.env.APP_URL ?? "").replace(/\/$/, "");
+  let adjuntos: { filename: string; content: Buffer }[] | undefined;
+  try {
+    const recibo = await generarOLeerRecibo({
+      id: pago.id, monto_centavos: pago.monto_centavos, moneda: pago.moneda,
+      procesador: pago.procesador, pagado_en: pago.pagado_en, referencia_externa: pago.referencia_externa,
+      alumnoNombre: nombre, cursoNombre,
+    });
+    adjuntos = [{ filename: `recibo-inmath-${String(pago.id).padStart(6, "0")}.pdf`, content: recibo }];
+  } catch (e) { console.error("[recibo admin] no se pudo generar el PDF:", e); }
+
+  await enviarCorreo({
+    para: [CORREO_CONTACTO],
+    asunto: `💰 Pago confirmado — ${nombre}`,
+    tono: "verde",
+    preheader: `${nombre} pagó ${cursoNombre}. Ya quedó inscrito y con acceso al portal.`,
+    texto: `${nombre} (${prospecto.correo ?? prospecto.telefono_whatsapp}) completó su pago por ${cursoNombre}. Su cuenta ya quedó inscrita y con acceso al portal.\n\nAdjuntamos el recibo; abajo el mismo detalle.`,
+    recibo: reciboEmbebidoDesdePago(
+      { id: pago.id, monto_centavos: pago.monto_centavos, moneda: pago.moneda, procesador: pago.procesador, pagado_en: pago.pagado_en, referencia_externa: pago.referencia_externa },
+      nombre, cursoNombre,
+    ),
+    ...(base ? { cta: { url: `${base}/panel/alumnos`, label: "Ver en el panel", icono: "pago" as const } } : {}),
+    ...(adjuntos ? { adjuntos } : {}),
+  }).catch((e) => console.error("avisarAdminPagoConfirmado:", e));
+}
+
 export async function provisionarAccesoAlumno(
   alumnoId: number,
   prospecto: ProspectoAcceso,
@@ -120,11 +154,19 @@ export async function enviarBienvenidaAlumno(
     }
   }
 
+  const reciboEmbebido = pago
+    ? reciboEmbebidoDesdePago(
+        { id: pago.id, monto_centavos: pago.monto_centavos, moneda: pago.moneda, procesador: pago.procesador, pagado_en: pago.pagado_en, referencia_externa: pago.referencia_externa },
+        alumnoNombre ?? prospecto.nombre ?? "Alumno InMath", cursoNombre,
+      )
+    : undefined;
+
   await enviarCorreo({
     para: [prospecto.correo],
     asunto: "¡Tu inscripción está activa!",
     tono: "verde",
     preheader: `Confirmamos tu pago por ${cursoNombre}. Ya puedes entrar a tu portal.`,
+    recibo: reciboEmbebido,
     texto: [
       `Hola ${prospecto.nombre ?? ""},`.replace(" ,", ","),
       "",

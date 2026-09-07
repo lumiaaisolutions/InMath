@@ -49,6 +49,7 @@ export default async function PanelAppLayout({ children }: { children: React.Rea
         items: [
           ...(moduloPermitido(u, "precios") ? [{ href: "/panel/precios", texto: "Precios y promociones", ic: "pagos" }] : []),
           { href: "/panel/sugerencias", texto: "Sugerencias del portal", ic: "chat" },
+          { href: "/panel/correos-preview", texto: "Vista previa de correos", ic: "correo" },
           { href: "/panel/usuarios", texto: "Usuarios", ic: "user" },
         ],
       },

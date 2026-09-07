@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { ahoraPared } from "@/lib/fechas";
 import { upsertPorTelefono, normalizaTelefono } from "@/lib/prospectos";
 import { pagoParaProspecto, tokenPago, tokenPagoValido, guardarComprobante, asegurarLinkDePago } from "@/lib/pagos";
-import { enviarCorreo } from "@/lib/correo";
+import { enviarCorreo, CORREO_CONTACTO } from "@/lib/correo";
 import { passwordSegura } from "@/lib/password";
 import { validarYCalcularCupon } from "@/lib/precios";
 
@@ -212,5 +212,17 @@ export async function subirComprobante(_prev: EstadoComprobante, fd: FormData): 
       destacado: "En cuanto lo confirmemos (normalmente el mismo día), tu portal se desbloquea y tus datos de acceso te llegan por este correo.",
     });
   }
+
+  // Aviso al equipo: hay un comprobante nuevo por revisar → dar acceso.
+  const base = (process.env.APP_URL ?? "").replace(/\/$/, "");
+  await enviarCorreo({
+    para: [CORREO_CONTACTO],
+    asunto: `📎 Comprobante recibido — ${pago?.prospectos?.nombre ?? "prospecto"}`,
+    tono: "ambar",
+    preheader: "Un alumno subió su comprobante de pago — revísalo y dale acceso.",
+    texto: `${pago?.prospectos?.nombre ?? "Un prospecto"} (${pago?.prospectos?.correo ?? pago?.prospectos?.telefono_whatsapp ?? "sin contacto"}) subió su comprobante de pago por transferencia. Revísalo en el panel y, si todo está bien, apruébalo para darle acceso al portal.`,
+    ...(base ? { cta: { url: `${base}/panel/alumnos`, label: "Revisar comprobante", icono: "pago" as const } } : {}),
+  }).catch((e) => console.error("subirComprobante: no se pudo avisar al staff", e));
+
   return { ok: true };
 }

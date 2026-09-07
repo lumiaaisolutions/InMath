@@ -1294,3 +1294,32 @@ margin-left:auto (anclado a la derecha) + nav-hdr con flex:0 1 auto /
 min-width:0 (puede encoger); Mathy solo carita ≤1500px; menú SOLO-ÍCONOS
 ≤1300px (el activo conserva etiqueta); HAMBURGUESA ≤980px con etiquetas
 restauradas en el desplegable. Barra con flex-wrap:nowrap y gap menor.
+
+### Corte 07-sep-2026 — Flujo de pago end-to-end + recibo unificado + galería de correos (v91)
+
+**Recibo unificado tipo tarjeta** (ref. Stripe/Anthropic del cliente):
+nuevo bloque `recibo` en el sistema de correo (correo.ts, ReciboEmbebido)
+que pinta una tarjeta con "Recibo de Cursos InMath", monto grande, fecha,
+folio (INM-000123), alumno, método y detalle con Total. Helper único
+`reciboEmbebidoDesdePago` en recibo.ts = fuente de verdad para correo del
+alumno, correo del admin y el PDF adjunto.
+
+**Flujo verificado/implementado:**
+1. Pago MercadoPago → webhook → inscribirPorPago desbloquea el portal y
+   manda al ALUMNO el correo "¡Tu inscripción está activa!" con el recibo
+   embebido + PDF adjunto (ya existía el adjunto; se le sumó la tarjeta).
+2. Portal desbloqueado: bloque "Tu pago" en Mi cuenta con monto, método,
+   fecha, folio, botón "Descargar recibo (PDF)" y "Ver mi comprobante"
+   (nueva ruta /portal/comprobante/[id] con guard de propiedad).
+3. Al ADMIN: nuevo correo "💰 Pago confirmado" con el mismo recibo
+   embebido + PDF adjunto + botón al panel (avisarAdminPagoConfirmado en
+   inscripcion.ts). Descarga del recibo ya existía en la ficha del alumno
+   (/panel/recibo/[id]).
+4. Comprobante subido: correo al alumno "Recibimos tu comprobante" (ya
+   existía) + NUEVO correo al admin "📎 Comprobante recibido" con botón a
+   revisar. El alumno ve su comprobante en Mi cuenta.
+
+**Galería de vista previa de correos** (/panel/correos-preview, admin):
+los 27 correos del sistema renderizados con `plantillaHtml` y datos de
+ejemplo, agrupados (Pagos/Asesorías/Cuenta/Otros), en iframes aislados —
+para revisar y ajustar el diseño. Item nuevo en Administración.

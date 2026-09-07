@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { Icono } from "@/components/Icono";
 import { requiereAlumno } from "@/lib/portal/sesion";
+import { dinero } from "@/lib/panel/formato";
 import { mediaAlumno } from "@/lib/portal/media";
 import { dosFactoresActivo } from "@/lib/portal/dosfactores";
 import { ClienteCuenta, SubirFoto, DatosEditables, DosFactores } from "./ClienteCuenta";
@@ -18,12 +19,17 @@ export default async function CuentaPage() {
   const filaPass = await prisma.alumnos.findUnique({ where: { id: alumno.id }, select: { password_hash: true, email: true } });
   const tienePassword = Boolean(filaPass?.password_hash);
   const correoEnmascarado = (filaPass?.email ?? "tu correo").replace(/^(.{2})[^@]*(@.*)$/, "$1•••$2");
-  const [media, avances, asesorias, dosFA] = await Promise.all([
+  const [media, avances, asesorias, dosFA, pago] = await Promise.all([
     mediaAlumno(alumno.id),
     prisma.avance_alumnos.findFirst({ where: { alumno_id: alumno.id }, orderBy: { fecha: "desc" }, select: { porcentaje: true } }),
     prisma.citas.count({ where: { prospecto_id: alumno.prospecto_id, estado: "completada" } }),
     dosFactoresActivo(alumno.id),
+    prisma.pagos.findFirst({
+      where: { prospecto_id: alumno.prospecto_id, estado: "pagado" }, orderBy: { pagado_en: "desc" },
+      select: { id: true, monto_centavos: true, moneda: true, procesador: true, pagado_en: true, comprobante: true },
+    }),
   ]);
+  const METODO: Record<string, string> = { mercadopago: "MercadoPago", stripe: "Tarjeta", conekta: "Tarjeta", transferencia: "Transferencia", simulado: "Pago manual", efectivo: "Efectivo / OXXO" };
   const inicial = (alumno.nombre.trim()[0] ?? "A").toUpperCase();
   const avance = avances?.porcentaje ?? 0;
 
@@ -90,6 +96,26 @@ export default async function CuentaPage() {
               ))}
             </div>
           </div>
+
+          {/* Tu pago (recibo + comprobante) */}
+          {pago && (
+            <div className="pf-bloque pt-rev pf-bloque-ancho pf-pago" style={{ ["--d" as string]: "150ms" }}>
+              <span className="pf-bloque-tit"><Icono n="card" /> Tu pago</span>
+              <div className="pf-pago-grid">
+                <div className="pf-pago-dato"><small>Monto pagado</small><b className="pf-pago-monto">${dinero(pago.monto_centavos)} {pago.moneda}</b></div>
+                <div className="pf-pago-dato"><small>Método</small><b>{METODO[pago.procesador ?? ""] ?? pago.procesador ?? "—"}</b></div>
+                <div className="pf-pago-dato"><small>Fecha</small><b>{pago.pagado_en ? fecha(pago.pagado_en) : "—"}</b></div>
+                <div className="pf-pago-dato"><small>Folio</small><b>INM-{String(pago.id).padStart(6, "0")}</b></div>
+              </div>
+              <div className="pf-pago-acciones">
+                <a className="boton glow" href={`/portal/recibo/${pago.id}`} target="_blank" rel="noopener"><Icono n="download" /> Descargar recibo (PDF)</a>
+                {pago.comprobante && (
+                  <a className="boton fantasma" href={`/portal/comprobante/${pago.id}`} target="_blank" rel="noopener"><Icono n="file" /> Ver mi comprobante</a>
+                )}
+              </div>
+              {pago.comprobante && <p className="pf-pago-nota"><Icono n="check" /> Recibimos y validamos tu comprobante.</p>}
+            </div>
+          )}
 
           {/* Seguridad */}
           <div className="pf-bloque pt-rev pf-bloque-ancho" style={{ ["--d" as string]: "160ms" }}>

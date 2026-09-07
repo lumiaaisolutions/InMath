@@ -42,8 +42,21 @@ export type Correo = {
   nota?: string;
   /** Tono del acento: azul (default), verde (éxito), ámbar (aviso), coral (alerta). */
   tono?: "azul" | "verde" | "ambar" | "coral";
+  /** Recibo embebido tipo tarjeta (formato unificado de pago) — se pinta en
+   *  el correo del alumno y del admin; el mismo dato genera el PDF adjunto. */
+  recibo?: ReciboEmbebido;
   /** Adjuntos extra (ej. recibo en PDF), además del logo de marca. */
   adjuntos?: { filename: string; content: Buffer }[];
+};
+
+export type ReciboEmbebido = {
+  folio: string;
+  montoTexto: string;       // "$4,000.00 MXN"
+  fechaTexto: string;       // "Pagado el 7 sep 2026"
+  metodo: string;           // "MercadoPago" | "Transferencia"
+  alumno: string;
+  lineas: { concepto: string; detalle?: string; monto: string }[];
+  totalTexto: string;
 };
 
 /** SVG de trazo simple (24×24, currentColor) para el botón principal —
@@ -121,6 +134,41 @@ export function plantillaHtml(c: Correo): string {
     ? `<p style="margin:16px 0 0;font:400 12.5px/1.6 Arial,Helvetica,sans-serif;color:#8a93ab;">${esc(c.nota).replace(/\n/g, "<br/>")}</p>`
     : "";
 
+  // Recibo embebido: tarjeta blanca con encabezado (monto grande + folio +
+  // método) y el detalle de conceptos (formato unificado del comprobante).
+  const r = c.recibo;
+  const reciboBox = r
+    ? `<table role="presentation" width="100%" style="border-collapse:collapse;margin:6px 0 20px;">
+        <tr><td style="border:1px solid #ECEEF6;border-radius:14px;padding:20px 22px;">
+          <div style="font:600 12px/1 Arial,Helvetica,sans-serif;color:#8a93ab;">Recibo de Cursos InMath</div>
+          <div style="font:800 30px/1.15 Arial,Helvetica,sans-serif;color:#1B2F52;margin:6px 0 3px;">${esc(r.montoTexto)}</div>
+          <div style="font:400 12.5px/1 Arial,Helvetica,sans-serif;color:#8a93ab;">${esc(r.fechaTexto)}</div>
+          <table role="presentation" width="100%" style="border-collapse:collapse;margin-top:16px;border-top:1px solid #ECEEF6;">
+            ${[["Folio", r.folio], ["Alumno", r.alumno], ["Método de pago", r.metodo]].map(([k, v]) => `
+              <tr>
+                <td style="padding:8px 0 0;font:400 13px/1.5 Arial,Helvetica,sans-serif;color:#8a93ab;">${esc(k)}</td>
+                <td align="right" style="padding:8px 0 0;font:600 13px/1.5 Arial,Helvetica,sans-serif;color:#1B2F52;">${esc(v)}</td>
+              </tr>`).join("")}
+          </table>
+        </td></tr>
+        <tr><td style="border:1px solid #ECEEF6;border-radius:14px;padding:20px 22px;margin-top:12px;padding-top:20px;">
+          <div style="font:700 14px/1 Arial,Helvetica,sans-serif;color:#1B2F52;margin-bottom:14px;">Detalle</div>
+          <table role="presentation" width="100%" style="border-collapse:collapse;">
+            ${r.lineas.map((l) => `
+              <tr>
+                <td style="padding:6px 0;font:600 13.5px/1.4 Arial,Helvetica,sans-serif;color:#1B2F52;">${esc(l.concepto)}${l.detalle ? `<br/><span style="font:400 12px/1.4 Arial,Helvetica,sans-serif;color:#8a93ab;">${esc(l.detalle)}</span>` : ""}</td>
+                <td align="right" valign="top" style="padding:6px 0;font:600 13.5px/1.4 Arial,Helvetica,sans-serif;color:#1B2F52;">${esc(l.monto)}</td>
+              </tr>`).join("")}
+            <tr><td colspan="2" style="border-top:1px solid #ECEEF6;padding-top:2px;"></td></tr>
+            <tr>
+              <td style="padding:12px 0 0;font:800 15px/1 Arial,Helvetica,sans-serif;color:#1B2F52;">Total pagado</td>
+              <td align="right" style="padding:12px 0 0;font:800 15px/1 Arial,Helvetica,sans-serif;color:#1E9E5E;">${esc(r.totalTexto)}</td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>`
+    : "";
+
   return `<!doctype html>
 <html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="color-scheme" content="light"/></head>
@@ -135,6 +183,7 @@ export function plantillaHtml(c: Correo): string {
           ${parrafos}
           ${codigoBox}
           ${destacadoBox}
+          ${reciboBox}
           ${pasosBox}
           ${ctaBox}
           ${enlaceSecundarioBox}

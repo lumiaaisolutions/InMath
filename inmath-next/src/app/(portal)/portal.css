@@ -895,3 +895,16 @@
 .pt-retro-resp b { display: inline-flex; align-items: center; gap: 6px; font: 700 .74rem var(--cuerpo); color: #0E6E5C; }
 .pt-retro-resp b svg { width: 13px; height: 13px; }
 .pt-retro-resp p { margin: 0; font: 500 .86rem/1.55 var(--cuerpo); color: var(--tinta-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* v91 — Bloque "Tu pago" en Mi cuenta */
+.pf-pago-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 20px; margin: 4px 0 16px; }
+.pf-pago-dato { display: grid; gap: 3px; }
+.pf-pago-dato small { font: 600 .7rem/1 var(--cuerpo); text-transform: uppercase; letter-spacing: .04em; color: var(--tinta-3); }
+.pf-pago-dato b { font: 700 .95rem var(--display); color: var(--tinta); }
+.pf-pago-monto { color: #12855C !important; font-size: 1.15rem !important; }
+.pf-pago-acciones { display: flex; flex-wrap: wrap; gap: 10px; }
+.pf-pago-acciones .boton { display: inline-flex; align-items: center; gap: 8px; }
+.pf-pago-acciones svg { width: 16px; height: 16px; }
+.pf-pago-nota { display: inline-flex; align-items: center; gap: 6px; margin: 12px 0 0; font: 600 .82rem var(--cuerpo); color: #12855C; }
+.pf-pago-nota svg { width: 14px; height: 14px; }
+@media (max-width: 480px) { .pf-pago-grid { grid-template-columns: 1fr; } .pf-pago-acciones .boton { width: 100%; justify-content: center; } }

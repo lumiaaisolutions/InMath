@@ -83,3 +83,12 @@ Cada driver implementa la interfaz `App\Pagos\ProcesadorPago` (2 métodos:
   genera credenciales del alumno: usuario = su WhatsApp, contraseña temporal
   aleatoria (bcrypt) mostrada al asesor una sola vez.
 - MercadoPago: driver listo; faltan credenciales de producción del cliente.
+
+## 07-sep-2026 — Recibo unificado y correos del flujo de pago
+
+- `ReciboEmbebido` (correo.ts) + `reciboEmbebidoDesdePago` (recibo.ts):
+  tarjeta de recibo única para correo del alumno, correo del admin y PDF.
+- Confirmación de pago → correo al alumno (bienvenida+recibo) y al admin
+  (💰 Pago confirmado, con PDF). Comprobante subido → correo al alumno y
+  al admin (📎). Portal: bloque "Tu pago" en Mi cuenta + /portal/comprobante/[id].
+- Revisar el diseño de todos los correos: /panel/correos-preview.

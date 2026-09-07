@@ -4,6 +4,7 @@ import { PdfLienzo } from "./reportes/pdf-lienzo";
 import { dirStorage } from "./reportes/generador";
 import { dinero } from "./panel/formato";
 import { ahoraPared } from "./fechas";
+import type { ReciboEmbebido } from "./correo";
 
 /**
  * Recibo de pago en PDF, estilo "ticket" (folio, monto, fecha, método,
@@ -164,3 +165,33 @@ export async function generarOLeerRecibo(datos: {
   await writeFile(archivo, buf);
   return buf;
 }
+
+const METODO_LABEL: Record<string, string> = {
+  mercadopago: "MercadoPago", stripe: "Tarjeta (Stripe)", conekta: "Tarjeta (Conekta)",
+  transferencia: "Transferencia", simulado: "Pago manual", efectivo: "Efectivo / OXXO",
+};
+
+/** Datos del recibo EMBEBIDO (tarjeta del correo/portal) desde un pago —
+ *  única fuente de verdad para el correo del alumno, el del admin y la
+ *  vista del portal. El PDF usa los mismos campos base. */
+export function reciboEmbebidoDesdePago(p: {
+  id: number; monto_centavos: number; moneda: string; procesador: string | null;
+  pagado_en: Date | null; referencia_externa: string | null;
+}, alumnoNombre: string, cursoNombre: string): ReciboEmbebido {
+  const monto = `$${dinero(p.monto_centavos)} ${p.moneda}`;
+  const fecha = p.pagado_en ?? ahoraPared();
+  return {
+    folio: `INM-${String(p.id).padStart(6, "0")}`,
+    montoTexto: monto,
+    fechaTexto: `Pagado el ${fmtFechaCorta(fecha)}`,
+    metodo: METODO_LABEL[p.procesador ?? ""] ?? (p.procesador ?? "—"),
+    alumno: alumnoNombre,
+    lineas: [{ concepto: cursoNombre, detalle: "Inscripción al curso", monto }],
+    totalTexto: monto,
+  };
+}
+
+const fmtFechaCorta = (d: Date) => {
+  const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  return `${d.getUTCDate()} ${MESES[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+};
