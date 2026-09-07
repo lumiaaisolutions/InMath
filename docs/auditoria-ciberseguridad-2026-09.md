@@ -1,7 +1,11 @@
 # Auditoría de ciberseguridad — septiembre 2026 (EN CURSO, pausada)
 
-**Estado: Fases 0-4 COMPLETADAS (análisis) · REMEDIACIÓN PENDIENTE — ver
-plan de olas al final; la Ola 1 (~6 h) elimina ~80 % del riesgo.** Metodología: skill `ciberseguridad-auditor-integral`
+**Estado: Fases 0-4 COMPLETADAS (análisis) · Ola 1 EJECUTADA el 07-sep-2026**
+(C-01, C-02, A-03 y A-06-InMath resueltos y verificados — ver
+[`seguridad-remediacion-ola1.md`](seguridad-remediacion-ola1.md) para el
+detalle fase por fase y la verificación contra los demás clientes del VPS).
+Quedan abiertos A-04, A-05, A-07, el resto de A-06 (otros clientes), M-08 y
+las Olas 2-3. Metodología: skill `ciberseguridad-auditor-integral`
 (~/Desktop/Claude/Seguridad/Seguridad.md) + prompt del 05-sep (OWASP Top
 10 2021, ASVS, CWE Top 25). Solo análisis estático + lectura de config
 del VPS autorizada. Sin cambios de código ni pruebas activas.
@@ -29,20 +33,21 @@ del VPS autorizada. Sin cambios de código ni pruebas activas.
 
 | ID | Hallazgo | CVSS | Estado |
 |---|---|---|---|
-| C-01 | **Ollama 0.0.0.0:11434 sin auth + UFW inactivo** → uso/borrado de modelos y DoS de CPU del VPS entero desde internet | 8.6 | ABIERTO |
-| C-02 | **Apps accesibles por IP:puerto** (Next :3010, n8n :5678, clientes 3001-3007) → bypass de TLS/nginx/Cloudflare | 7.4 | ABIERTO |
-| A-03 | **SSH :8080 con PasswordAuthentication yes** (usuario deploy con sudo docker, dueño de todo el VPS) | 7.5 | ABIERTO |
+| C-01 | **Ollama 0.0.0.0:11434 sin auth + UFW inactivo** → uso/borrado de modelos y DoS de CPU del VPS entero desde internet | 8.6 | ✅ RESUELTO 07-sep-2026 |
+| C-02 | **Apps accesibles por IP:puerto** (Next :3010, n8n :5678, clientes 3001-3007) → bypass de TLS/nginx/Cloudflare | 7.4 | ✅ RESUELTO 07-sep-2026 |
+| A-03 | **SSH :8080 con PasswordAuthentication yes** (usuario deploy con sudo docker, dueño de todo el VPS) | 7.5 | ✅ RESUELTO 07-sep-2026 |
 | A-04 | **/panel/img sirve `materiales/` y `reactivos/` SIN sesión** (contenido de pago re-compartible; cache public). Código: `src/app/(panel)/panel/img/[...ruta]/route.ts` | 5.3 | ABIERTO |
 | A-05 | **Rate-limit del chat burlable** (toma el 1er valor de X-Forwarded-For, que controla el cliente; nginx usa proxy_add_x_forwarded_for) + `/api/cta` sin límite (spam + upsert de prospectos) | 6.5 | ABIERTO |
-| A-06 | **.env 664 (legible por grupo/otros)** en VPS multi-cliente con usuario único `deploy` → movimiento lateral trivial | 6.7 | ABIERTO |
+| A-06 | **.env 664 (legible por grupo/otros)** en VPS multi-cliente con usuario único `deploy` → movimiento lateral trivial | 6.7 | 🟡 PARCIAL: InMath resuelto (600); otros clientes pendientes (ver Ola 1 doc) |
 | A-07 | **Editor n8n expuesto a internet** con credenciales de varios clientes; sin allowlist/2FA verificado | 6.8 | ABIERTO |
 | M-08 | (adelanto de Fase 2) `aplicarEventoPago`: si MP no reporta monto, el candado de monto se salta (fail-open); no compara moneda | — | ABIERTO |
 
-**Remediación exprés sugerida para C-01/C-02** (~20 min, máxima
-reducción de riesgo): `OLLAMA_HOST=127.0.0.1` + `ufw allow 80,443,8080 &&
-ufw enable` + `HOSTNAME=127.0.0.1` en pm2 + n8n publicado en
-127.0.0.1:5678. A-03: `PasswordAuthentication no` (confirmar llave
-ANTES). A-06: `chmod 600 /var/www/*/.env`.
+**Remediación exprés C-01/C-02/A-03/A-06(InMath) — EJECUTADA el
+07-sep-2026** en 4 fases verificadas (permisos `.env` de InMath → Ollama/n8n
+a loopback → UFW activo → SSH solo llave). Detalle completo, hallazgo
+inesperado (cloud-init anulaba un hardening SSH previo) y verificación
+contra los demás clientes del VPS en
+[`seguridad-remediacion-ola1.md`](seguridad-remediacion-ola1.md).
 
 ## Revisados y NO explotables (no perseguir)
 
