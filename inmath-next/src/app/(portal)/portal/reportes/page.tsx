@@ -37,7 +37,7 @@ export default async function ReportesPage() {
         </header>
 
         <div className="pt-rev" style={{ ["--d" as string]: "60ms", marginBottom: 18 }}>
-          <AvanceCard avance={avance} historial={historial.map((h) => ({
+          <AvanceCard avance={avance} metricas={{ diasContigo: Math.max(0, Math.floor((Date.now() - alumno.inscrito_en.getTime()) / 86400_000)) }} historial={historial.map((h) => ({
             id: h.id, etiqueta: h.examenTitulo ?? h.tema ?? "Práctica",
             fecha: `${String(h.fecha.getUTCDate()).padStart(2,"0")}/${String(h.fecha.getUTCMonth()+1).padStart(2,"0")}/${h.fecha.getUTCFullYear()}`,
             porcentaje: h.porcentaje, correctas: h.correctas, total: h.total,

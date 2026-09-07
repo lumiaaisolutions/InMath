@@ -1381,3 +1381,13 @@ arriba al entrar; tarjetas de desglose exámenes/fases con lift al hover;
 gráfica de barras del historial de intentos (verde ≥80 / ámbar 40-79 /
 azul <40) que crecen animadas y muestran tooltip con %, aciertos,
 tema/examen y fecha al hover/focus. Respeta prefers-reduced-motion.
+
+**v93 — Avance en liquid glass sin blur + eyebrow + iconos**: rediseño de
+la AvanceCard con el sistema de diseño del portal: tarjetas TRANSLÚCIDAS
+(rgba blanco, sin backdrop-filter) con splash de color DIFUSO adentro que
+se desvanece antes de los bordes (menta/durazno/azul, baja opacidad, mucho
+menos saturado); títulos con firma EYEBROW (mayúsculas + letter-spacing);
+íconos SVG del set Icono (nada de emojis). Fila de métricas (días contigo,
+exámenes, aciertos, fases) + mini-tarjetas con donut suave, sparkbars
+pastel y sparkline de área. Verificado con maqueta sobre el fondo splash
+del portal.
