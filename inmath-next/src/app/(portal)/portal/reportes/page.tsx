@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requiereAlumno } from "@/lib/portal/sesion";
 import { tienePagoConfirmado } from "@/lib/portal/auth";
 import { calcularAvance } from "@/lib/avance";
+import { historialDeAlumno } from "@/lib/practica";
 import { AvanceCard } from "../AvanceCard";
 
 export const metadata: Metadata = { title: "Reportes — Portal InMath" };
@@ -18,9 +19,10 @@ function periodo(ini: Date, fin: Date): string {
 export default async function ReportesPage() {
   const alumno = await requiereAlumno();
   if (!(await tienePagoConfirmado(alumno.prospecto_id))) redirect("/portal");
-  const [reportes, avance] = await Promise.all([
+  const [reportes, avance, historial] = await Promise.all([
     prisma.reportes_generados.findMany({ where: { alumno_id: alumno.id }, orderBy: { periodo_inicio: "desc" }, take: 50 }),
     calcularAvance(alumno.id, alumno.curso_id),
+    historialDeAlumno(alumno.id),
   ]);
 
   return (
@@ -34,7 +36,13 @@ export default async function ReportesPage() {
           </div>
         </header>
 
-        <div className="pt-rev" style={{ ["--d" as string]: "60ms", marginBottom: 18 }}><AvanceCard avance={avance} /></div>
+        <div className="pt-rev" style={{ ["--d" as string]: "60ms", marginBottom: 18 }}>
+          <AvanceCard avance={avance} historial={historial.map((h) => ({
+            id: h.id, etiqueta: h.examenTitulo ?? h.tema ?? "Práctica",
+            fecha: `${String(h.fecha.getUTCDate()).padStart(2,"0")}/${String(h.fecha.getUTCMonth()+1).padStart(2,"0")}/${h.fecha.getUTCFullYear()}`,
+            porcentaje: h.porcentaje, correctas: h.correctas, total: h.total,
+          }))} />
+        </div>
 
         <h2 className="pt-sub-tit pt-rev" style={{ ["--d" as string]: "90ms" }}>Reportes semanales en PDF</h2>
         {reportes.length === 0 ? (

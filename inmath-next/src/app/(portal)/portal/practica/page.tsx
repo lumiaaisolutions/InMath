@@ -33,7 +33,13 @@ export default async function PracticaPage() {
             <p className="pt-head-sub">Resuelve preguntas de opción múltiple y mide tu avance.</p>
           </div>
         </header>
-        <div className="pt-rev" style={{ ["--d" as string]: "40ms", marginBottom: 18 }}><AvanceCard avance={avance} /></div>
+        <div className="pt-rev" style={{ ["--d" as string]: "40ms", marginBottom: 18 }}>
+          <AvanceCard avance={avance} historial={historial.map((h) => ({
+            id: h.id, etiqueta: h.examenTitulo ?? h.tema ?? "Práctica",
+            fecha: `${String(h.fecha.getUTCDate()).padStart(2,"0")}/${String(h.fecha.getUTCMonth()+1).padStart(2,"0")}/${h.fecha.getUTCFullYear()}`,
+            porcentaje: h.porcentaje, correctas: h.correctas, total: h.total,
+          }))} />
+        </div>
         <ClientePractica temas={temas} examenes={examenes} conteos={conteos} historialInicial={historial} avatarUrl={(await mediaAlumno(alumno.id)).avatar} nombre={alumno.nombre} />
       </div>
     </section>

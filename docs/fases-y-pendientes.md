@@ -1373,3 +1373,11 @@ entrenamiento. Ej. LUMIA: 2 exámenes en su modalidad, practicó por tema
 - Reportes: tarjeta de avance en vivo (ya no queda vacío) + sección
   "Reportes semanales en PDF" (los PDF siguen dependiendo del cron de
   n8n/generarSemana, pendiente de programar; el avance ya se ve sin él).
+
+**v92.1 — Avance gráfico e interactivo**: la AvanceCard (Práctica y
+Reportes) pasó a componente cliente con: anillo de progreso SVG animado de
+0 al % con color por nivel; % y contadores del desglose que cuentan hacia
+arriba al entrar; tarjetas de desglose exámenes/fases con lift al hover;
+gráfica de barras del historial de intentos (verde ≥80 / ámbar 40-79 /
+azul <40) que crecen animadas y muestran tooltip con %, aciertos,
+tema/examen y fecha al hover/focus. Respeta prefers-reduced-motion.
