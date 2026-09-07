@@ -21,6 +21,7 @@ type DatosRecibo = {
   alumnoNombre: string;
   cursoNombre: string;
   folio: string;
+  lineas: { concepto: string; detalle?: string; monto: string }[];
 };
 
 const PRIMARIO = "2F62F0";
@@ -60,70 +61,64 @@ const centrarX = (pageAncho: number, texto: string, tam: number, negrita = false
 function dibujarRecibo(d: DatosRecibo): Buffer {
   const pdf = new PdfLienzo();
   const A = PdfLienzo.ANCHO;
-  const cajaX = 56, cajaAncho = A - 112, cajaTop = 742;
+  const M = 64;               // margen izq/der
+  const anchoUtil = A - M * 2;
+  const montoTxt = dinero(d.montoCentavos, d.moneda);
 
-  // Header de marca con acento
-  pdf.rect(0, cajaTop, A, 50, PRIMARIO);
-  pdf.rect(0, cajaTop - 4, A, 4, MENTA);
-  pdf.texto(cajaX, cajaTop + 20, 15, "Cursos InMath", true, "FFFFFF");
-  pdf.texto(cajaX, cajaTop + 6, 9, "Recibo de pago — cursosinmath@gmail.com", false, "D9E9FF");
+  // Wordmark de marca (sin franja saturada — como el correo).
+  pdf.texto(M, 748, 15, "Cursos InMath", true, TINTA);
+  pdf.rect(M, 743, 26, 3, PRIMARIO);   // subrayado corto de acento
 
-  // Título centrado
-  const titulo = "¡Gracias! Tu pago se confirmó";
-  pdf.texto(centrarX(A, titulo, 20, true), 668, 20, titulo, true, TINTA);
-  const sub = `Tu inscripción a ${d.cursoNombre} ya está activa.`;
-  pdf.texto(centrarX(A, sub, 11), 648, 11, sub, false, TINTA_2);
-
-  // Caja del "ticket"
-  const boxTop = 618, boxBottom = 150;
-  pdf.rect(cajaX, boxBottom, cajaAncho, boxTop - boxBottom, "F7F9FF");
-  pdf.linea(cajaX, boxTop, cajaX + cajaAncho, boxTop, LINEA, 1.2);
-  pdf.linea(cajaX, boxBottom, cajaX + cajaAncho, boxBottom, LINEA, 1.2);
-  pdf.linea(cajaX, boxBottom, cajaX, boxTop, LINEA, 1.2);
-  pdf.linea(cajaX + cajaAncho, boxBottom, cajaX + cajaAncho, boxTop, LINEA, 1.2);
-
-  let y = boxTop - 34;
-  pdf.texto(cajaX + 24, y, 9, "FOLIO", true, TINTA_2);
-  pdf.texto(A - cajaX - 24 - anchoAprox(fmtFecha(d.fecha), 9), y, 9, "FECHA", true, TINTA_2);
-  y -= 18;
-  pdf.texto(cajaX + 24, y, 13, d.folio, true, TINTA);
-  pdf.texto(A - cajaX - 24 - anchoAprox(fmtFecha(d.fecha), 11), y, 11, fmtFecha(d.fecha), false, TINTA);
-
-  y -= 30;
-  lineaPunteada(pdf, cajaX + 24, A - cajaX - 24, y, "C7D6F5");
-
-  y -= 40;
-  pdf.texto(cajaX + 24, y, 9, "MONTO PAGADO", true, TINTA_2);
-  y -= 30;
-  const monto = `$${dinero(d.montoCentavos, d.moneda).replace(/^\$/, "")}`;
-  pdf.texto(cajaX + 24, y, 30, monto, true, PRIMARIO);
-
+  // ── Tarjeta 1: encabezado del recibo (monto grande + datos) ──
+  const c1Top = 720, c1Bottom = 470;
+  tarjeta(pdf, M, c1Bottom, anchoUtil, c1Top - c1Bottom);
+  let y = c1Top - 30;
+  pdf.texto(M + 24, y, 10, "Recibo de Cursos InMath", false, TINTA_2);
   y -= 34;
-  lineaPunteada(pdf, cajaX + 24, A - cajaX - 24, y, "C7D6F5");
-
+  pdf.texto(M + 24, y, 30, montoTxt, true, TINTA);
+  y -= 20;
+  pdf.texto(M + 24, y, 10, `Pagado el ${fmtFechaCorta(d.fecha)}`, false, "8A93AB");
   y -= 26;
-  pdf.texto(cajaX + 24, y, 9, "ALUMNO", true, TINTA_2);
-  pdf.texto(cajaX + 24, y - 15, 11, d.alumnoNombre, true, TINTA);
-  y -= 40;
-  pdf.texto(cajaX + 24, y, 9, "CURSO", true, TINTA_2);
-  pdf.texto(cajaX + 24, y - 15, 11, d.cursoNombre, false, TINTA);
-  y -= 40;
-  pdf.texto(cajaX + 24, y, 9, "MÉTODO DE PAGO", true, TINTA_2);
-  pdf.texto(cajaX + 24, y - 15, 11, d.metodo, false, TINTA);
+  pdf.linea(M + 24, y, A - M - 24, y, LINEA, 1);
+  // filas Folio / Alumno / Método
+  const filas: [string, string][] = [["Folio", `INM-${d.folio}`], ["Alumno", d.alumnoNombre], ["Método de pago", d.metodo]];
+  for (const [k, v] of filas) {
+    y -= 26;
+    pdf.texto(M + 24, y, 10.5, k, false, "8A93AB");
+    pdf.texto(A - M - 24 - anchoAprox(v, 10.5, true), y, 10.5, v, true, TINTA);
+  }
 
-  y -= 34;
-  lineaPunteada(pdf, cajaX + 24, A - cajaX - 24, y, "C7D6F5");
+  // ── Tarjeta 2: detalle ──
+  const c2Top = 452, c2Bottom = 452 - (60 + d.lineas.length * 34);
+  tarjeta(pdf, M, c2Bottom, anchoUtil, c2Top - c2Bottom);
+  let y2 = c2Top - 28;
+  pdf.texto(M + 24, y2, 12, "Detalle", true, TINTA);
+  y2 -= 26;
+  for (const l of d.lineas) {
+    pdf.texto(M + 24, y2, 11, l.concepto, true, TINTA);
+    pdf.texto(A - M - 24 - anchoAprox(l.monto, 11, true), y2, 11, l.monto, true, TINTA);
+    if (l.detalle) { y2 -= 13; pdf.texto(M + 24, y2, 8.5, l.detalle, false, "8A93AB"); }
+    y2 -= 21;
+  }
+  pdf.linea(M + 24, y2 + 4, A - M - 24, y2 + 4, LINEA, 1);
+  y2 -= 18;
+  pdf.texto(M + 24, y2, 13, "Total pagado", true, TINTA);
+  pdf.texto(A - M - 24 - anchoAprox(montoTxt, 13, true), y2, 13, montoTxt, true, "1E9E5E");
 
-  // Barras decorativas + folio legible
-  barrasDecorativas(pdf, cajaX + 24, boxBottom + 20, cajaAncho - 48, 30, d.pagoId + 7);
-  const folioTxt = `INMATH-${d.folio}`;
-  pdf.texto(centrarX(A, folioTxt, 9), boxBottom + 8, 9, folioTxt, false, TINTA_2);
-
-  // Pie
-  pdf.texto(cajaX, 60, 8.5, "Este recibo confirma tu inscripción a Cursos InMath. Consérvalo como comprobante de pago.", false, "8A93AB");
-  pdf.texto(cajaX, 46, 8.5, "¿Dudas? Escríbenos a cursosinmath@gmail.com", false, "8A93AB");
+  // Pie discreto
+  pdf.texto(M, 90, 8.5, "Este recibo confirma tu inscripción a Cursos InMath. Consérvalo como comprobante de pago.", false, "8A93AB");
+  pdf.texto(M, 76, 8.5, "¿Dudas? Escríbenos a cursosinmath@gmail.com", false, "8A93AB");
 
   return pdf.salida();
+}
+
+/** Tarjeta blanca con borde gris (rect relleno blanco + 4 líneas de borde). */
+function tarjeta(pdf: PdfLienzo, x: number, y: number, ancho: number, alto: number) {
+  pdf.rect(x, y, ancho, alto, "FFFFFF");
+  pdf.linea(x, y + alto, x + ancho, y + alto, "ECEEF6", 1);
+  pdf.linea(x, y, x + ancho, y, "ECEEF6", 1);
+  pdf.linea(x, y, x, y + alto, "ECEEF6", 1);
+  pdf.linea(x + ancho, y, x + ancho, y + alto, "ECEEF6", 1);
 }
 
 const NOMBRE_METODO: Record<string, string> = {
@@ -135,14 +130,15 @@ function dirRecibos(): string {
   return path.join(dirStorage(), "recibos");
 }
 function nombreArchivo(pagoId: number): string {
-  return `recibo-${pagoId}.pdf`;
+  // -v2: nuevo diseño (tarjeta unificada) — invalida los recibos cacheados viejos.
+  return `recibo-${pagoId}-v2.pdf`;
 }
 
 /** Genera (o regresa el ya generado) el recibo del pago; devuelve el Buffer. */
 export async function generarOLeerRecibo(datos: {
   id: number; monto_centavos: number; moneda: string; procesador: string | null;
   pagado_en: Date | null; referencia_externa: string | null;
-  alumnoNombre: string; cursoNombre: string;
+  alumnoNombre: string; cursoNombre: string; precioOriginalCentavos?: number | null;
 }): Promise<Buffer> {
   const dir = dirRecibos();
   const archivo = path.join(dir, nombreArchivo(datos.id));
@@ -151,15 +147,25 @@ export async function generarOLeerRecibo(datos: {
   } catch {
     // no existe aún: se genera
   }
+  const moneda = datos.moneda;
+  const montoTxt = dinero(datos.monto_centavos, moneda);
+  const hayDesc = datos.precioOriginalCentavos != null && datos.precioOriginalCentavos > datos.monto_centavos;
+  const lineas = hayDesc
+    ? [
+        { concepto: datos.cursoNombre, detalle: "Inscripción al curso", monto: dinero(datos.precioOriginalCentavos!, moneda) },
+        { concepto: "Descuento aplicado", detalle: "Promoción vigente", monto: `-${dinero(datos.precioOriginalCentavos! - datos.monto_centavos, moneda)}` },
+      ]
+    : [{ concepto: datos.cursoNombre, detalle: "Inscripción al curso", monto: montoTxt }];
   const buf = dibujarRecibo({
     pagoId: datos.id,
     montoCentavos: datos.monto_centavos,
-    moneda: datos.moneda,
+    moneda,
     metodo: NOMBRE_METODO[datos.procesador ?? ""] ?? "Pago confirmado",
     fecha: datos.pagado_en ?? ahoraPared(),
     alumnoNombre: datos.alumnoNombre,
     cursoNombre: datos.cursoNombre,
     folio: String(datos.id).padStart(6, "0"),
+    lineas,
   });
   await mkdir(dir, { recursive: true });
   await writeFile(archivo, buf);
@@ -182,13 +188,13 @@ export function reciboEmbebidoDesdePago(p: {
   // el recibo muestra el original tachado y el descuento aplicado.
   precioOriginalCentavos?: number | null,
 ): ReciboEmbebido {
-  const monto = `$${dinero(p.monto_centavos)} ${p.moneda}`;
+  const monto = dinero(p.monto_centavos, p.moneda);
   const fecha = p.pagado_en ?? ahoraPared();
   const hayDescuento = precioOriginalCentavos != null && precioOriginalCentavos > p.monto_centavos;
   const lineas: ReciboEmbebido["lineas"] = hayDescuento
     ? [
-        { concepto: cursoNombre, detalle: "Inscripción al curso", monto: `$${dinero(precioOriginalCentavos!)} ${p.moneda}` },
-        { concepto: "Descuento aplicado", detalle: "Promoción vigente", monto: `−$${dinero(precioOriginalCentavos! - p.monto_centavos)} ${p.moneda}` },
+        { concepto: cursoNombre, detalle: "Inscripción al curso", monto: dinero(precioOriginalCentavos!, p.moneda) },
+        { concepto: "Descuento aplicado", detalle: "Promoción vigente", monto: `−${dinero(precioOriginalCentavos! - p.monto_centavos, p.moneda)}` },
       ]
     : [{ concepto: cursoNombre, detalle: "Inscripción al curso", monto }];
   return {

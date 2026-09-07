@@ -11,7 +11,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
   const id = parseInt((await ctx.params).id, 10);
   const pago = await prisma.pagos.findUnique({
     where: { id },
-    include: { prospectos: { select: { nombre: true, telefono_whatsapp: true } }, cursos: { select: { nombre: true } } },
+    include: { prospectos: { select: { nombre: true, telefono_whatsapp: true } }, cursos: { select: { nombre: true, precio_original_centavos: true } } },
   });
   if (!pago || pago.estado !== "pagado") return new Response("Recibo no encontrado", { status: 404 });
 
@@ -19,7 +19,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
     const contenido = await generarOLeerRecibo({
       id: pago.id, monto_centavos: pago.monto_centavos, moneda: pago.moneda,
       procesador: pago.procesador, pagado_en: pago.pagado_en, referencia_externa: pago.referencia_externa,
-      alumnoNombre: pago.prospectos.nombre ?? pago.prospectos.telefono_whatsapp, cursoNombre: pago.cursos.nombre,
+      alumnoNombre: pago.prospectos.nombre ?? pago.prospectos.telefono_whatsapp, cursoNombre: pago.cursos.nombre, precioOriginalCentavos: pago.cursos.precio_original_centavos ?? null,
     });
     return new Response(new Uint8Array(contenido), {
       headers: {

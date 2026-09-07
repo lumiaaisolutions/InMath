@@ -106,10 +106,10 @@ export default async function CuentaPage() {
               <span className="pf-bloque-tit"><Icono n="card" /> Tu pago</span>
               <div className="pf-pago-grid">
                 <div className="pf-pago-dato"><small>Monto pagado</small>
-                  <b className="pf-pago-monto">${dinero(pago.monto_centavos)} {pago.moneda}
-                    {hayDescuento && <s className="pf-pago-antes">${dinero(precioOriginal!)}</s>}
+                  <b className="pf-pago-monto">{dinero(pago.monto_centavos, pago.moneda)}
+                    {hayDescuento && <s className="pf-pago-antes">{dinero(precioOriginal!, pago.moneda)}</s>}
                   </b>
-                  {hayDescuento && <span className="pf-pago-ahorro">Ahorraste ${dinero(precioOriginal! - pago.monto_centavos)} {pago.moneda}</span>}
+                  {hayDescuento && <span className="pf-pago-ahorro">Ahorraste {dinero(precioOriginal! - pago.monto_centavos, pago.moneda)}</span>}
                 </div>
                 <div className="pf-pago-dato"><small>Método</small><b>{METODO[pago.procesador ?? ""] ?? pago.procesador ?? "—"}</b></div>
                 <div className="pf-pago-dato"><small>Fecha</small><b>{pago.pagado_en ? fecha(pago.pagado_en) : "—"}</b></div>

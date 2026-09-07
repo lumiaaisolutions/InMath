@@ -1334,3 +1334,12 @@ para revisar y ajustar el diseño. Item nuevo en Administración.
   "Ahorraste $X".
 - Se ELIMINÓ /panel/correos-preview (ya cumplió su función de revisión):
   página, componente y el item del sidebar.
+
+**v91.2 — Recibo PDF rediseñado (tarjeta unificada)**: el PDF descargable
+(panel Y portal, misma función generarOLeerRecibo) usaba el diseño viejo
+tipo ticket con código de barras. Reescrito para replicar la TARJETA del
+correo: wordmark "Cursos InMath", tarjeta con monto grande, folio/alumno/
+método, detalle con líneas (precio original + descuento cuando hay
+promoción) y Total en verde. Cache invalidado (nombre -v2). Fix del bug
+"MXN MXN" duplicado (dinero() ya incluye la moneda) en PDF, recibo
+embebido del correo y bloque "Tu pago" del portal.
