@@ -1323,3 +1323,14 @@ alumno, correo del admin y el PDF adjunto.
 los 27 correos del sistema renderizados con `plantillaHtml` y datos de
 ejemplo, agrupados (Pagos/Asesorías/Cuenta/Otros), en iframes aislados —
 para revisar y ajustar el diseño. Item nuevo en Administración.
+
+
+**v91.1 — Descuento en el recibo + galería de correos retirada**:
+- El recibo (correo del alumno, del admin y bloque "Tu pago" del portal)
+  ahora muestra el PRECIO ORIGINAL TACHADO y el DESCUENTO cuando el pago se
+  cobró bajo promoción — el original sale de `precio_original_centavos`
+  del curso (config en /panel/precios, ya NO es fijo). Si no hay
+  promoción, una sola línea como antes. Portal: monto con <s> tachado +
+  "Ahorraste $X".
+- Se ELIMINÓ /panel/correos-preview (ya cumplió su función de revisión):
+  página, componente y el item del sidebar.

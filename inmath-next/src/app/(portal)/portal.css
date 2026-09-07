@@ -908,3 +908,7 @@
 .pf-pago-nota { display: inline-flex; align-items: center; gap: 6px; margin: 12px 0 0; font: 600 .82rem var(--cuerpo); color: #12855C; }
 .pf-pago-nota svg { width: 14px; height: 14px; }
 @media (max-width: 480px) { .pf-pago-grid { grid-template-columns: 1fr; } .pf-pago-acciones .boton { width: 100%; justify-content: center; } }
+
+/* v91.1 — precio original tachado + ahorro en el bloque Tu pago */
+.pf-pago-antes { font: 600 .8rem/1 var(--cuerpo); color: var(--tinta-3); text-decoration: line-through; margin-left: 8px; }
+.pf-pago-ahorro { display: block; margin-top: 3px; font: 700 .74rem var(--cuerpo); color: #12855C; }

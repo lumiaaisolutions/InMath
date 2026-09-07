@@ -177,16 +177,27 @@ const METODO_LABEL: Record<string, string> = {
 export function reciboEmbebidoDesdePago(p: {
   id: number; monto_centavos: number; moneda: string; procesador: string | null;
   pagado_en: Date | null; referencia_externa: string | null;
-}, alumnoNombre: string, cursoNombre: string): ReciboEmbebido {
+}, alumnoNombre: string, cursoNombre: string,
+  // Precio de LISTA del curso (config en el panel): si es mayor a lo pagado,
+  // el recibo muestra el original tachado y el descuento aplicado.
+  precioOriginalCentavos?: number | null,
+): ReciboEmbebido {
   const monto = `$${dinero(p.monto_centavos)} ${p.moneda}`;
   const fecha = p.pagado_en ?? ahoraPared();
+  const hayDescuento = precioOriginalCentavos != null && precioOriginalCentavos > p.monto_centavos;
+  const lineas: ReciboEmbebido["lineas"] = hayDescuento
+    ? [
+        { concepto: cursoNombre, detalle: "Inscripción al curso", monto: `$${dinero(precioOriginalCentavos!)} ${p.moneda}` },
+        { concepto: "Descuento aplicado", detalle: "Promoción vigente", monto: `−$${dinero(precioOriginalCentavos! - p.monto_centavos)} ${p.moneda}` },
+      ]
+    : [{ concepto: cursoNombre, detalle: "Inscripción al curso", monto }];
   return {
     folio: `INM-${String(p.id).padStart(6, "0")}`,
     montoTexto: monto,
     fechaTexto: `Pagado el ${fmtFechaCorta(fecha)}`,
     metodo: METODO_LABEL[p.procesador ?? ""] ?? (p.procesador ?? "—"),
     alumno: alumnoNombre,
-    lineas: [{ concepto: cursoNombre, detalle: "Inscripción al curso", monto }],
+    lineas,
     totalTexto: monto,
   };
 }

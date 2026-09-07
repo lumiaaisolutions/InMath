@@ -45,13 +45,13 @@ export async function inscribirPorPago(
   // Acceso al portal + correo de bienvenida (sin admin de por medio en el
   // webhook de tarjeta, así que las credenciales van por correo).
   const cred = await provisionarAccesoAlumno(alumnoId, prospecto);
-  const curso = await prisma.cursos.findUnique({ where: { id: pago.curso_id }, select: { nombre: true } });
+  const curso = await prisma.cursos.findUnique({ where: { id: pago.curso_id }, select: { nombre: true, precio_original_centavos: true } });
   // Se re-consulta el pago completo (el `pago` recibido puede venir de ANTES
   // de marcarlo "pagado") para que el recibo tenga pagado_en/procesador reales.
   const pagoCompleto = await prisma.pagos.findUnique({ where: { id: pago.id } });
   const alumnoNombre = prospecto.nombre ?? `Alumno ${prospecto.telefono_whatsapp}`;
-  await enviarBienvenidaAlumno(prospecto, curso?.nombre ?? "tu curso", cred, pagoCompleto, alumnoNombre);
-  await avisarAdminPagoConfirmado(prospecto, curso?.nombre ?? "tu curso", pagoCompleto, alumnoNombre);
+  await enviarBienvenidaAlumno(prospecto, curso?.nombre ?? "tu curso", cred, pagoCompleto, alumnoNombre, curso?.precio_original_centavos ?? null);
+  await avisarAdminPagoConfirmado(prospecto, curso?.nombre ?? "tu curso", pagoCompleto, alumnoNombre, curso?.precio_original_centavos ?? null);
   return { alumnoId, cred };
 }
 
@@ -65,6 +65,7 @@ export async function inscribirPorPago(
  *  (mismo formato del alumno) y el PDF adjunto, y un botón a la ficha. */
 async function avisarAdminPagoConfirmado(
   prospecto: ProspectoAcceso, cursoNombre: string, pago: PagoParaRecibo, alumnoNombre?: string,
+  precioOriginalCentavos?: number | null,
 ): Promise<void> {
   if (!pago) return;
   const nombre = alumnoNombre ?? prospecto.nombre ?? "Alumno";
@@ -87,7 +88,7 @@ async function avisarAdminPagoConfirmado(
     texto: `${nombre} (${prospecto.correo ?? prospecto.telefono_whatsapp}) completó su pago por ${cursoNombre}. Su cuenta ya quedó inscrita y con acceso al portal.\n\nAdjuntamos el recibo; abajo el mismo detalle.`,
     recibo: reciboEmbebidoDesdePago(
       { id: pago.id, monto_centavos: pago.monto_centavos, moneda: pago.moneda, procesador: pago.procesador, pagado_en: pago.pagado_en, referencia_externa: pago.referencia_externa },
-      nombre, cursoNombre,
+      nombre, cursoNombre, precioOriginalCentavos,
     ),
     ...(base ? { cta: { url: `${base}/panel/alumnos`, label: "Ver en el panel", icono: "pago" as const } } : {}),
     ...(adjuntos ? { adjuntos } : {}),
@@ -130,6 +131,7 @@ export async function enviarBienvenidaAlumno(
   cred: { usuario: string; passTmp: string | null },
   pago?: PagoParaRecibo,
   alumnoNombre?: string,
+  precioOriginalCentavos?: number | null,
 ): Promise<void> {
   if (!prospecto.correo) return;
   const url = (process.env.APP_URL ?? "").replace(/\/$/, "") + "/portal/login";
@@ -157,7 +159,7 @@ export async function enviarBienvenidaAlumno(
   const reciboEmbebido = pago
     ? reciboEmbebidoDesdePago(
         { id: pago.id, monto_centavos: pago.monto_centavos, moneda: pago.moneda, procesador: pago.procesador, pagado_en: pago.pagado_en, referencia_externa: pago.referencia_externa },
-        alumnoNombre ?? prospecto.nombre ?? "Alumno InMath", cursoNombre,
+        alumnoNombre ?? prospecto.nombre ?? "Alumno InMath", cursoNombre, precioOriginalCentavos,
       )
     : undefined;
 

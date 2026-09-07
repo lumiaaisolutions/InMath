@@ -26,10 +26,13 @@ export default async function CuentaPage() {
     dosFactoresActivo(alumno.id),
     prisma.pagos.findFirst({
       where: { prospecto_id: alumno.prospecto_id, estado: "pagado" }, orderBy: { pagado_en: "desc" },
-      select: { id: true, monto_centavos: true, moneda: true, procesador: true, pagado_en: true, comprobante: true },
+      select: { id: true, monto_centavos: true, moneda: true, procesador: true, pagado_en: true, comprobante: true, curso_id: true },
     }),
   ]);
   const METODO: Record<string, string> = { mercadopago: "MercadoPago", stripe: "Tarjeta", conekta: "Tarjeta", transferencia: "Transferencia", simulado: "Pago manual", efectivo: "Efectivo / OXXO" };
+  const cursoPago = pago ? await prisma.cursos.findUnique({ where: { id: pago.curso_id }, select: { precio_original_centavos: true } }) : null;
+  const precioOriginal = cursoPago?.precio_original_centavos ?? null;
+  const hayDescuento = pago != null && precioOriginal != null && precioOriginal > pago.monto_centavos;
   const inicial = (alumno.nombre.trim()[0] ?? "A").toUpperCase();
   const avance = avances?.porcentaje ?? 0;
 
@@ -102,7 +105,12 @@ export default async function CuentaPage() {
             <div className="pf-bloque pt-rev pf-bloque-ancho pf-pago" style={{ ["--d" as string]: "150ms" }}>
               <span className="pf-bloque-tit"><Icono n="card" /> Tu pago</span>
               <div className="pf-pago-grid">
-                <div className="pf-pago-dato"><small>Monto pagado</small><b className="pf-pago-monto">${dinero(pago.monto_centavos)} {pago.moneda}</b></div>
+                <div className="pf-pago-dato"><small>Monto pagado</small>
+                  <b className="pf-pago-monto">${dinero(pago.monto_centavos)} {pago.moneda}
+                    {hayDescuento && <s className="pf-pago-antes">${dinero(precioOriginal!)}</s>}
+                  </b>
+                  {hayDescuento && <span className="pf-pago-ahorro">Ahorraste ${dinero(precioOriginal! - pago.monto_centavos)} {pago.moneda}</span>}
+                </div>
                 <div className="pf-pago-dato"><small>Método</small><b>{METODO[pago.procesador ?? ""] ?? pago.procesador ?? "—"}</b></div>
                 <div className="pf-pago-dato"><small>Fecha</small><b>{pago.pagado_en ? fecha(pago.pagado_en) : "—"}</b></div>
                 <div className="pf-pago-dato"><small>Folio</small><b>INM-{String(pago.id).padStart(6, "0")}</b></div>
