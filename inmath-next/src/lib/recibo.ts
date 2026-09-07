@@ -1,4 +1,5 @@
 import { mkdir, writeFile, readFile } from "node:fs/promises";
+import sharp from "sharp";
 import path from "node:path";
 import { PdfLienzo } from "./reportes/pdf-lienzo";
 import { dirStorage } from "./reportes/generador";
@@ -58,16 +59,51 @@ const anchoAprox = (texto: string, tam: number, negrita = false) => texto.length
 const centrarX = (pageAncho: number, texto: string, tam: number, negrita = false) =>
   (pageAncho - anchoAprox(texto, tam, negrita)) / 2;
 
-function dibujarRecibo(d: DatosRecibo): Buffer {
+
+// Logo de marca convertido a JPEG (DeviceRGB, fondo blanco) para embeberlo en
+// el PDF. Se decodifica una vez y se reutiliza.
+let _logoJpeg: { datos: Buffer; ancho: number; alto: number } | null | undefined;
+async function logoRecibo(): Promise<{ datos: Buffer; ancho: number; alto: number } | null> {
+  if (_logoJpeg !== undefined) return _logoJpeg;
+  try {
+    const ruta = path.join(process.cwd(), "public", "img", "correo-logo.png");
+    const png = await readFile(ruta);
+    const lado = 220;
+    const datos = await sharp(png).resize(lado, lado, { fit: "contain", background: "#ffffff" }).flatten({ background: "#ffffff" }).jpeg({ quality: 92 }).toBuffer();
+    _logoJpeg = { datos, ancho: lado, alto: lado };
+  } catch (e) {
+    console.error("[recibo] no se pudo cargar el logo:", e);
+    _logoJpeg = null;
+  }
+  return _logoJpeg;
+}
+
+async function dibujarRecibo(d: DatosRecibo): Promise<Buffer> {
   const pdf = new PdfLienzo();
   const A = PdfLienzo.ANCHO;
   const M = 64;               // margen izq/der
   const anchoUtil = A - M * 2;
   const montoTxt = dinero(d.montoCentavos, d.moneda);
 
-  // Wordmark de marca (sin franja saturada — como el correo).
-  pdf.texto(M, 748, 15, "Cursos InMath", true, TINTA);
-  pdf.rect(M, 743, 26, 3, PRIMARIO);   // subrayado corto de acento
+  // ── Ondas de acento de marca (suaves, colores del sistema) ──
+  // Onda superior derecha (azul→menta muy claros) y onda inferior izquierda
+  // (durazno claro). Curvas Bézier, sin saturar.
+  pdf.pathRelleno(`612 792 m 612 700 l 470 748 380 726 270 762 c 180 792 l h`, "EAF1FF");
+  pdf.pathRelleno(`612 792 m 612 730 l 480 768 400 752 320 780 c 250 792 l h`, "E4F5EF");
+  pdf.pathRelleno(`0 0 m 0 92 l 150 44 250 70 360 30 c 430 0 l h`, "FDEEE4");
+  pdf.pathRelleno(`0 0 m 0 74 l 130 34 230 54 330 22 c 380 0 l h`, "FBE7DC");
+
+  // Logo real (si cargó) + wordmark
+  const logo = await logoRecibo();
+  if (logo) {
+    pdf.registrarImagen(logo.datos, logo.ancho, logo.alto);
+    pdf.imagen(M, 730, 34, 34);
+    pdf.texto(M + 44, 748, 15, "Cursos InMath", true, TINTA);
+    pdf.texto(M + 44, 734, 8.5, "Recibo de pago oficial", false, "8A93AB");
+  } else {
+    pdf.texto(M, 748, 15, "Cursos InMath", true, TINTA);
+    pdf.rect(M, 743, 26, 3, PRIMARIO);
+  }
 
   // ── Tarjeta 1: encabezado del recibo (monto grande + datos) ──
   const c1Top = 720, c1Bottom = 470;
@@ -156,7 +192,7 @@ export async function generarOLeerRecibo(datos: {
         { concepto: "Descuento aplicado", detalle: "Promoción vigente", monto: `-${dinero(datos.precioOriginalCentavos! - datos.monto_centavos, moneda)}` },
       ]
     : [{ concepto: datos.cursoNombre, detalle: "Inscripción al curso", monto: montoTxt }];
-  const buf = dibujarRecibo({
+  const buf = await dibujarRecibo({
     pagoId: datos.id,
     montoCentavos: datos.monto_centavos,
     moneda,

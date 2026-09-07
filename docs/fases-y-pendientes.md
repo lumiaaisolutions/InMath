@@ -1391,3 +1391,29 @@ menos saturado); títulos con firma EYEBROW (mayúsculas + letter-spacing);
 exámenes, aciertos, fases) + mini-tarjetas con donut suave, sparkbars
 pastel y sparkline de área. Verificado con maqueta sobre el fondo splash
 del portal.
+
+**v94 — Recibo PDF con identidad de marca + avance solo en Reportes**
+(pedido del usuario, rol dev senior, con referencia visual):
+- **Logo real embebido en el comprobante**: se amplió `PdfLienzo` con
+  soporte de imagen JPEG (XObject `/DCTDecode`, objeto 7 con `/Im0` en los
+  Resources de la página) y de paths con curvas Bézier (`pathRelleno`). El
+  recibo (`src/lib/recibo.ts`) ahora carga `public/img/correo-logo.png`,
+  lo aplana sobre blanco y lo convierte a JPEG con `sharp` (cacheado a
+  nivel de módulo), y lo dibuja como isotipo arriba a la izquierda junto al
+  wordmark "Cursos InMath" + subtítulo "Recibo de pago oficial". Si el logo
+  no cargara, cae al wordmark con subrayado (degradación elegante).
+- **Fondo de marca sin saturar**: ondas de acento con curvas Bézier en tonos
+  MUY claros del sistema — azul/menta en la esquina superior derecha y
+  durazno en la inferior izquierda — para dar identidad sin competir con el
+  contenido (colores EAF1FF/E4F5EF arriba, FDEEE4/FBE7DC abajo).
+- **`dibujarRecibo` pasó a async** (por el `await` de sharp); el call site
+  en `generarOLeerRecibo` ahora lo espera. Verificado localmente generando
+  el PDF y rasterizándolo (qlmanage): logo nítido, ondas suaves, montos
+  correctos y descuento (-$500) intactos.
+- **Avance retirado de /portal/practica**: la `AvanceCard` vivía en Práctica
+  y en Reportes; por decisión del usuario el avance debe verse SOLO en
+  Reportes. Se quitó de `practica/page.tsx` (bloque y los imports de
+  `calcularAvance`/`AvanceCard`); Reportes lo conserva sin cambios.
+- El nombre de archivo del recibo sigue en `-v2`; al desplegar hay que
+  correr `rm -f /var/www/inmath/storage/recibos/*.pdf` para regenerar los
+  cacheados con el nuevo diseño.

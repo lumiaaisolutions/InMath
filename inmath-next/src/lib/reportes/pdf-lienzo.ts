@@ -1,13 +1,15 @@
 /**
  * Port de Reportes\PdfLienzo: escritor de PDF mínimo sin dependencias.
- * Texto Helvetica (WinAnsi), rectángulos y líneas. Página carta (612×792 pt),
- * origen abajo-izquierda como manda el formato PDF.
+ * Texto Helvetica (WinAnsi), rectángulos, líneas, paths con curvas Bézier y
+ * una imagen JPEG (para el logo). Página carta (612×792 pt), origen
+ * abajo-izquierda como manda el formato PDF.
  */
 export class PdfLienzo {
   static readonly ANCHO = 612;
   static readonly ALTO = 792;
 
   private contenido = "";
+  private imagenJpeg: { datos: Buffer; ancho: number; alto: number } | null = null;
 
   texto(x: number, y: number, tamano: number, texto: string, negrita = false, colorHex = "000000"): void {
     const fuente = negrita ? "/F2" : "/F1";
@@ -25,16 +27,44 @@ export class PdfLienzo {
     this.contenido += `${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} RG ${grosor.toFixed(2)} w ${x1.toFixed(1)} ${y1.toFixed(1)} m ${x2.toFixed(1)} ${y2.toFixed(1)} l S\n`;
   }
 
+  /** Path RELLENO arbitrario. `comandos` en sintaxis PDF sin el color ni el
+   *  operador final: p. ej. "64 720 m 200 760 400 700 548 740 l ... h".
+   *  Se rellena con `colorHex`. Útil para las ondas de acento. */
+  pathRelleno(comandos: string, colorHex: string): void {
+    const [r, g, b] = rgb(colorHex);
+    this.contenido += `${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} rg ${comandos} f\n`;
+  }
+
+  /** Registra la ÚNICA imagen (JPEG, DeviceRGB) del documento. */
+  registrarImagen(jpeg: Buffer, ancho: number, alto: number): void {
+    this.imagenJpeg = { datos: jpeg, ancho, alto };
+  }
+
+  /** Dibuja la imagen registrada en el rectángulo (x,y,ancho,alto). */
+  imagen(x: number, y: number, ancho: number, alto: number): void {
+    if (!this.imagenJpeg) return;
+    this.contenido += `q ${ancho.toFixed(2)} 0 0 ${alto.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm /Im0 Do Q\n`;
+  }
+
   salida(): Buffer {
     const stream = this.contenido;
-    const objetos = [
+    const hayImg = this.imagenJpeg !== null;
+    const xobjRes = hayImg ? " /XObject << /Im0 7 0 R >>" : "";
+    const objetos: string[] = [
       "<< /Type /Catalog /Pages 2 0 R >>",
       "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PdfLienzo.ANCHO} ${PdfLienzo.ALTO}] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 4 0 R >>`,
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PdfLienzo.ANCHO} ${PdfLienzo.ALTO}] /Resources << /Font << /F1 5 0 R /F2 6 0 R >>${xobjRes} >> /Contents 4 0 R >>`,
       `<< /Length ${stream.length} >>\nstream\n${stream}endstream`,
       "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
       "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
     ];
+    if (hayImg) {
+      const { datos, ancho, alto } = this.imagenJpeg!;
+      const jpegStr = datos.toString("latin1");
+      objetos.push(
+        `<< /Type /XObject /Subtype /Image /Width ${ancho} /Height ${alto} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${datos.length} >>\nstream\n${jpegStr}\nendstream`,
+      );
+    }
 
     let pdf = "%PDF-1.4\n%\xE2\xE3\xCF\xD3\n";
     const offsets: number[] = [];
