@@ -1284,3 +1284,11 @@ borde blanco; inicial en gradiente si no tiene) y su PORTADA como fondo
 del item — difuminada (blur 10px), translúcida (.32) y con velo blanco al
 90% para que el texto jamás pierda contraste. Un lookup de media por
 alumno único, no por mensaje.
+
+**v90.3 — Menú del portal responsive en 3 niveles** (con 7 apartados el
+header se amontonaba y "Salir" se salía de pantalla): base ≥1361px con
+items ligeramente más densos (padding 14); capa COMPACTA 1081-1360px
+(items 9/12px, íconos 16, Mathy solo carita); HAMBURGUESA desde ≤1080px
+(antes solo ≤620) con el menú vertical existente — Salir siempre visible
+dentro del desplegable con su divisor. El texto del logo solo se oculta
+en ≤620.

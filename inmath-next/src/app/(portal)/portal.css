@@ -335,7 +335,7 @@
 .nav-hdr .nav-hdr-item::after { display: none !important; }
 .nav-hdr-item {
   display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
-  padding: 10px 17px; border-radius: 999px;
+  padding: 10px 14px; border-radius: 999px;
   /* CLAVE: sin fondo — .barra nav a.activo le ponía un fondo azul pálido que
      tapaba la burbuja (por eso se veía pálida y el texto lavado). */
   background: none !important;
@@ -376,9 +376,21 @@
  * — antes se apretaba a solo-íconos con scroll horizontal escondido, lo
  * cual se sentía "junto" y poco descubrible; ahora es una lista vertical
  * con texto completo, como el menú del sitio público. */
-@media (max-width: 620px) {
+/* Capa COMPACTA (1081-1360px): con 7 apartados el header necesita ceder —
+ * items más apretados y la píldora de Mathy se queda solo con la carita. */
+@media (max-width: 1360px) {
+  .barra-portal { gap: clamp(8px, 1.5vw, 16px); }
+  .nav-hdr-item { padding: 9px 12px; font-size: .8rem !important; gap: 5px; }
+  .nav-hdr-item svg { width: 16px; height: 16px; }
+  .nav-hdr-salir button { padding: 9px 14px; font-size: .8rem; }
+  .logo-mathy.mathy-toggle .mt-tx { display: none; }
+  .logo-mathy.mathy-toggle { padding: 4px; }
+}
+
+/* Menú de hamburguesa desde 1080px (antes 620: con 7 apartados el header ya
+ * no cabe y "Salir" se salía de pantalla). */
+@media (max-width: 1080px) {
   .barra-portal { gap: 8px; padding-left: 14px; padding-right: 14px; }
-  .barra-portal .logo b { display: none; }
   .nav-hdr-toggle { display: grid; }
 
   .nav-hdr {
@@ -401,7 +413,10 @@
   .nav-hdr-item svg { width: 19px; height: 19px; }
 
   .nav-hdr-salir { margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--linea, #E6ECF7); }
-  .nav-hdr-salir button { width: 100%; justify-content: flex-start; padding: 13px 14px; border: 0; }
+  .nav-hdr-salir button { width: 100%; justify-content: flex-start; padding: 13px 14px; border: 0; font-size: .95rem; }
+}
+@media (max-width: 620px) {
+  .barra-portal .logo b { display: none; }
 }
 
 /* =========================================================================
