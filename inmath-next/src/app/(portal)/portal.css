@@ -310,10 +310,10 @@
    Menú del portal EN EL HEADER (al lado del logo) + burbuja animada que se
    desliza al apartado activo con rebote suave.
    ========================================================================= */
-.barra-portal { justify-content: flex-start; gap: clamp(10px, 3vw, 26px); }
+.barra-portal { justify-content: flex-start; gap: clamp(8px, 1.4vw, 18px); flex-wrap: nowrap; }
 .barra-portal .logo { flex: 0 0 auto; }
 
-.nav-hdr { position: relative; display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(107,159,255,.08); }
+.nav-hdr { position: relative; display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: 999px; background: rgba(107,159,255,.08); flex: 0 1 auto; min-width: 0; }
 .nav-hdr-burbuja {
   position: absolute; top: 3px; bottom: 3px; left: 0; z-index: 0; border-radius: 999px;
   /* azul VÍVIDO sólido (sin tonos claros que la aclaren) → máximo contraste */
@@ -334,26 +334,26 @@
 .nav-hdr .nav-hdr-item { position: relative; z-index: 1; }
 .nav-hdr .nav-hdr-item::after { display: none !important; }
 .nav-hdr-item {
-  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
-  padding: 10px 14px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  padding: 9px 11px; border-radius: 999px;
   /* CLAVE: sin fondo — .barra nav a.activo le ponía un fondo azul pálido que
      tapaba la burbuja (por eso se veía pálida y el texto lavado). */
   background: none !important;
-  font: 700 .88rem/1 var(--cuerpo) !important; color: var(--tinta-2) !important;
+  font: 700 .82rem/1 var(--cuerpo) !important; color: var(--tinta-2) !important;
   /* el relleno del texto/ícono SIEMPRE sigue a `color` (evita el texto
      transparente que hereda de .eyebrow/.pt-kicker en Safari) */
   -webkit-text-fill-color: currentColor !important;
   -webkit-background-clip: border-box !important; background-clip: border-box !important;
   transition: color .25s ease, transform .2s ease;
 }
-.nav-hdr-item svg { width: 18px; height: 18px; transition: transform .3s ease; color: currentColor; }
+.nav-hdr-item svg { width: 16px; height: 16px; transition: transform .3s ease; color: currentColor; flex: 0 0 auto; }
 .nav-hdr-item:hover { color: var(--azul) !important; transform: translateY(-1px); }
 .nav-hdr-item.activo { color: #fff !important; text-shadow: 0 1px 3px rgba(18,31,55,.4); }
 .nav-hdr-item.activo svg { transform: scale(1.12); }
 @media (prefers-reduced-motion: reduce) { .nav-hdr-burbuja { transition: opacity .2s ease; } }
 
 /* Salir en el menú: botón de acción (no lo rastrea la burbuja). */
-.nav-hdr-salir { display: inline-flex; margin: 0; }
+.nav-hdr-salir { display: inline-flex; margin: 0 0 0 auto; flex: 0 0 auto; }
 .nav-hdr-salir button {
   display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; cursor: pointer;
   padding: 10px 16px; border-radius: 999px; border: 1.5px solid var(--linea-2); background: var(--blanco);
@@ -378,20 +378,25 @@
  * con texto completo, como el menú del sitio público. */
 /* Capa COMPACTA (1081-1360px): con 7 apartados el header necesita ceder —
  * items más apretados y la píldora de Mathy se queda solo con la carita. */
-@media (max-width: 1360px) {
-  .barra-portal { gap: clamp(8px, 1.5vw, 16px); }
-  .nav-hdr-item { padding: 9px 12px; font-size: .8rem !important; gap: 5px; }
-  .nav-hdr-item svg { width: 16px; height: 16px; }
-  .nav-hdr-salir button { padding: 9px 14px; font-size: .8rem; }
+@media (max-width: 1500px) {
   .logo-mathy.mathy-toggle .mt-tx { display: none; }
   .logo-mathy.mathy-toggle { padding: 4px; }
+}
+@media (max-width: 1300px) {
+  .nav-hdr-item span { display: none; } /* solo íconos: el menú cabe holgado */
+  .nav-hdr-item { padding: 10px; }
+  .nav-hdr-item.activo span { display: inline; } /* el activo conserva su etiqueta */
+  .barra-portal .logo b { display: none; }
+  .nav-hdr-salir button span { display: none; }
+  .nav-hdr-salir button { padding: 10px; }
 }
 
 /* Menú de hamburguesa desde 1080px (antes 620: con 7 apartados el header ya
  * no cabe y "Salir" se salía de pantalla). */
-@media (max-width: 1080px) {
+@media (max-width: 980px) {
   .barra-portal { gap: 8px; padding-left: 14px; padding-right: 14px; }
   .nav-hdr-toggle { display: grid; }
+  .nav-hdr-item span, .nav-hdr-salir button span { display: inline !important; }
 
   .nav-hdr {
     position: absolute; top: calc(100% + 10px); left: 12px; right: 12px; z-index: 60;

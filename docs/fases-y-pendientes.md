@@ -1285,10 +1285,12 @@ del item — difuminada (blur 10px), translúcida (.32) y con velo blanco al
 90% para que el texto jamás pierda contraste. Un lookup de media por
 alumno único, no por mensaje.
 
-**v90.3 — Menú del portal responsive en 3 niveles** (con 7 apartados el
-header se amontonaba y "Salir" se salía de pantalla): base ≥1361px con
-items ligeramente más densos (padding 14); capa COMPACTA 1081-1360px
-(items 9/12px, íconos 16, Mathy solo carita); HAMBURGUESA desde ≤1080px
-(antes solo ≤620) con el menú vertical existente — Salir siempre visible
-dentro del desplegable con su divisor. El texto del logo solo se oculta
-en ≤620.
+**v90.3/90.4 — Menú del portal responsive real** (con 7 apartados "Salir"
+se salía del viewport porque vive al final de la píldora del menú): la
+CAUSA era el tamaño denso base. Fix definitivo: items compactos POR
+DEFECTO (padding 9/11, font .82, íconos 16) → los 7 + Salir caben a
+1440px con holgura (verificado con maqueta del header real); Salir con
+margin-left:auto (anclado a la derecha) + nav-hdr con flex:0 1 auto /
+min-width:0 (puede encoger); Mathy solo carita ≤1500px; menú SOLO-ÍCONOS
+≤1300px (el activo conserva etiqueta); HAMBURGUESA ≤980px con etiquetas
+restauradas en el desplegable. Barra con flex-wrap:nowrap y gap menor.
