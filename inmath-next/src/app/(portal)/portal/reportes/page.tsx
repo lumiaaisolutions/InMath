@@ -4,6 +4,8 @@ import { Icono } from "@/components/Icono";
 import { redirect } from "next/navigation";
 import { requiereAlumno } from "@/lib/portal/sesion";
 import { tienePagoConfirmado } from "@/lib/portal/auth";
+import { calcularAvance } from "@/lib/avance";
+import { AvanceCard } from "../AvanceCard";
 
 export const metadata: Metadata = { title: "Reportes — Portal InMath" };
 export const dynamic = "force-dynamic";
@@ -16,11 +18,10 @@ function periodo(ini: Date, fin: Date): string {
 export default async function ReportesPage() {
   const alumno = await requiereAlumno();
   if (!(await tienePagoConfirmado(alumno.prospecto_id))) redirect("/portal");
-  const reportes = await prisma.reportes_generados.findMany({
-    where: { alumno_id: alumno.id },
-    orderBy: { periodo_inicio: "desc" },
-    take: 50,
-  });
+  const [reportes, avance] = await Promise.all([
+    prisma.reportes_generados.findMany({ where: { alumno_id: alumno.id }, orderBy: { periodo_inicio: "desc" }, take: 50 }),
+    calcularAvance(alumno.id, alumno.curso_id),
+  ]);
 
   return (
     <section className="pt-panel">
@@ -33,9 +34,12 @@ export default async function ReportesPage() {
           </div>
         </header>
 
+        <div className="pt-rev" style={{ ["--d" as string]: "60ms", marginBottom: 18 }}><AvanceCard avance={avance} /></div>
+
+        <h2 className="pt-sub-tit pt-rev" style={{ ["--d" as string]: "90ms" }}>Reportes semanales en PDF</h2>
         {reportes.length === 0 ? (
-          <div className="pt-vacio pt-rev" style={{ ["--d" as string]: "80ms" }}>
-            Aún no hay reportes. En cuanto tengamos tu primer reporte, aparecerá aquí.
+          <div className="pt-vacio pt-rev" style={{ ["--d" as string]: "100ms" }}>
+            Aún no hay reportes semanales en PDF. Mientras tanto, arriba ves tu avance actualizado en vivo.
           </div>
         ) : (
           <ul className="pt-lista pt-rev" style={{ ["--d" as string]: "80ms" }}>

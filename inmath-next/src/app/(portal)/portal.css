@@ -912,3 +912,26 @@
 /* v91.1 — precio original tachado + ahorro en el bloque Tu pago */
 .pf-pago-antes { font: 600 .8rem/1 var(--cuerpo); color: var(--tinta-3); text-decoration: line-through; margin-left: 8px; }
 .pf-pago-ahorro { display: block; margin-top: 3px; font: 700 .74rem var(--cuerpo); color: #12855C; }
+
+/* v92 — Tarjeta de avance del alumno (Práctica y Reportes) */
+.av-card { background: #fff; border: 1px solid rgba(255,255,255,.65); border-radius: 20px; padding: 22px 24px; box-shadow: 0 18px 44px -24px rgba(27,47,82,.28), 0 2px 10px -4px rgba(27,47,82,.08); }
+.av-card-cab { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.av-card-tit { font: 700 1.02rem var(--display); color: var(--tinta); }
+.av-badge { font: 800 1.1rem var(--display); padding: 4px 14px; border-radius: 999px; }
+.av-badge.alto { background: #E4F5EC; color: #12855C; }
+.av-badge.medio { background: #FFF6E8; color: #B8720F; }
+.av-badge.bajo { background: #EDF3FF; color: #2C4A8A; }
+.av-barra { height: 10px; border-radius: 999px; background: var(--linea, #E6ECF7); overflow: hidden; margin-bottom: 18px; }
+.av-barra i { display: block; height: 100%; border-radius: 999px; transition: width .6s cubic-bezier(.22,.7,.31,1); }
+.av-barra i.alto { background: linear-gradient(90deg, #12855C, #22C1A6); }
+.av-barra i.medio { background: linear-gradient(90deg, #F6A62A, #FFD86B); }
+.av-barra i.bajo { background: linear-gradient(90deg, #4D7FF0, #6B9FFF); }
+.av-desglose { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
+.av-item { display: grid; gap: 2px; padding: 12px 16px; background: var(--crema, #F7F9FF); border-radius: 14px; }
+.av-item-n { font: 800 1.7rem/1 var(--display); color: var(--tinta); font-feature-settings: "tnum" 1; }
+.av-item-n i { font-style: normal; font-size: .55em; font-weight: 600; color: var(--tinta-3); }
+.av-item-etq { font: 600 .8rem var(--cuerpo); color: var(--tinta-2); }
+.av-item-sub { font: 600 .74rem var(--cuerpo); color: #12855C; margin-top: 2px; }
+.av-vacio p { margin: 6px 0 0; font: 500 .88rem/1.55 var(--cuerpo); color: var(--tinta-3); }
+.pt-sub-tit { font: 700 1.05rem var(--display); color: var(--tinta); margin: 0 0 12px; }
+@media (max-width: 480px) { .av-desglose { grid-template-columns: 1fr; } }

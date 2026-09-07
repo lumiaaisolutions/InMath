@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { ahoraPared } from "@/lib/fechas";
 import { Icono } from "@/components/Icono";
 import { mediaAlumno } from "@/lib/portal/media";
+import { calcularAvance } from "@/lib/avance";
 import { requiereAlumno } from "@/lib/portal/sesion";
 import { tienePagoConfirmado } from "@/lib/portal/auth";
 import { leerMateriales } from "@/lib/portal/materiales";
@@ -82,11 +83,7 @@ export default async function PortalInicio() {
       take: 20,
     }),
     leerMateriales(),
-    prisma.avance_alumnos.findMany({
-      where: { alumno_id: alumno.id },
-      orderBy: { fecha: "desc" },
-      take: 2,
-    }),
+    calcularAvance(alumno.id, alumno.curso_id),
     prisma.cursos.findUnique({ where: { id: alumno.curso_id }, select: { duracion_semanas: true } }),
     prisma.citas.count({ where: { prospecto_id: alumno.prospecto_id, estado: "completada" } }),
     prisma.pagos.findFirst({ where: { prospecto_id: alumno.prospecto_id, estado: "pagado" }, orderBy: { pagado_en: "desc" }, select: { id: true } }),
@@ -94,9 +91,8 @@ export default async function PortalInicio() {
   ]);
 
   const primerNombre = alumno.nombre.split(" ")[0];
-  const avance = avances[0]?.porcentaje ?? 0;
-  const avancePrevio = avances[1]?.porcentaje ?? null;
-  const delta = avancePrevio !== null ? avance - avancePrevio : null;
+  const avance = avances.global;
+  const delta = null;
   const semanas = curso?.duracion_semanas ?? null;
 
   // Días desde la inscripción (constancia — refuerzo positivo).
@@ -159,7 +155,9 @@ export default async function PortalInicio() {
             </div>
             <div className="pt-cifra"><AvancePuntos valor={avance} /></div>
             <div className="pt-hero-pie">
-              <span>{avances.length === 0 ? "Tu avance aparece aquí cada semana." : "del curso completado"}</span>
+              <span>{!avances.hayContenido
+                ? "Tu avance aparece aquí conforme resuelvas exámenes y fases."
+                : [avances.examenes && `${avances.examenes.conIntento}/${avances.examenes.total} exámenes`, avances.fases && `${avances.fases.aprobadas}/${avances.fases.total} fases`].filter(Boolean).join(" · ")}</span>
             </div>
           </article>
 

@@ -1343,3 +1343,33 @@ método, detalle con líneas (precio original + descuento cuando hay
 promoción) y Total en verde. Cache invalidado (nombre -v2). Fix del bug
 "MXN MXN" duplicado (dinero() ya incluye la moneda) en PDF, recibo
 embebido del correo y bloque "Tu pago" del portal.
+
+### Corte 07-sep-2026 (2) — Avance del alumno EN VIVO (v92)
+
+Diagnóstico previo: la tabla `avance_alumnos` NUNCA se llenaba (nadie
+escribía en ella) → "Tu avance" siempre 0%. La práctica sí guarda en
+`intentos_practica`, pero no alimentaba el avance. Solución: cálculo EN
+VIVO, sin depender de esa tabla.
+
+**src/lib/avance.ts — calcularAvance(alumnoId, cursoId)** combina:
+1. EXÁMENES disponibles para SU modalidad (examen_cursos): de los N
+   exámenes, el MEJOR % del alumno en cada uno (0 si no lo resolvió) →
+   componente = promedio sobre N. Denominador = total de exámenes de su
+   modalidad; contador conIntento = cuántos ha presentado.
+2. FASES del curso (reutiliza listarFasesConEstado): fases aprobadas / M.
+GLOBAL = promedio de los componentes que existan (si solo hay exámenes,
+solo eso; si hay fases con contenido, se combina; sin contenido, 0).
+
+**Semántica clave**: el avance de exámenes cuenta intentos con examen_id
+(resolver el EXAMEN específico), no la práctica libre por tema — esa es
+entrenamiento. Ej. LUMIA: 2 exámenes en su modalidad, practicó por tema
+(examen_id NULL) → 0/2 hasta que presente un examen; al resolver uno al
+40% → 20% global.
+
+**Dónde se muestra** (AvanceCard, barra + desglose exámenes/fases):
+- Inicio ("Tu avance"): usa calcularAvance en vivo (antes leía la tabla
+  vacía). El subtítulo muestra "X/N exámenes · Y/M fases".
+- Práctica: tarjeta de avance arriba del formulario.
+- Reportes: tarjeta de avance en vivo (ya no queda vacío) + sección
+  "Reportes semanales en PDF" (los PDF siguen dependiendo del cron de
+  n8n/generarSemana, pendiente de programar; el avance ya se ve sin él).
