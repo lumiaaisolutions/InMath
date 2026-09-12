@@ -70,6 +70,8 @@ model citas {
   meet_link               String?      @db.VarChar(255)
   estado                  citas_estado @default(agendada)
   recordatorio_enviado_en DateTime?    @db.DateTime(0)
+  zona_horaria_prospecto  String?      @db.VarChar(60)
+  metadatos               Json?
   creado_en               DateTime     @default(now()) @db.Timestamp(0)
   actualizado_en          DateTime     @default(now()) @db.Timestamp(0)
   usuarios                usuarios     @relation(fields: [asesor_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_citas_asesor")

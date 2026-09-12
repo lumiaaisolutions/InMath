@@ -1,5 +1,6 @@
 import { prisma, config } from "./db";
-import { etiqueta, isoMinuto, diaSemanaN, isoDia, ahoraPared, paredDesde } from "./fechas";
+import { etiqueta, isoMinuto, diaSemanaN, isoDia, ahoraPared, paredDesde, zonaValida, horaEnZona, TZ_NEGOCIO_ETIQUETA, cuandoProspecto } from "./fechas";
+import { ventanasVencidasAlCrear } from "./citas-recordatorios";
 import { lunesDe, lunesEnRango, overridesDe } from "./disponibilidad";
 import { enviarCorreo, CORREO_CONTACTO } from "./correo";
 import { crearEventoDirecto, borrarEventoDirecto } from "./google-calendar";
@@ -124,8 +125,10 @@ export async function conseguirLinkCita(cita: { id: number; asesor_id: number; i
 /** Correo al prospecto CON su link de Meet — se usa al agendar (si el link
  *  nació a tiempo) y también cuando el link llega DESPUÉS (reintento
  *  automático o pegado a mano en el panel): el sistema se lo reenvía solo,
- *  sin depender de que alguien se acuerde. */
-export async function correoLinkProspecto(correo: string, nombre: string | null, cuando: string, meetLink: string, tardio = false) {
+ *  sin depender de que alguien se acuerde. Si `horaLocal` viene (el
+ *  prospecto agendó desde otra zona), se lo destaca aparte para que no haya
+ *  ambigüedad de a qué hora unirse. */
+export async function correoLinkProspecto(correo: string, nombre: string | null, cuando: string, meetLink: string, tardio = false, horaLocal?: string | null) {
   await enviarCorreo({
     para: [correo],
     asunto: tardio ? "El enlace de tu asesoría — Cursos InMath" : "Tu asesoría está confirmada — Cursos InMath",
@@ -133,6 +136,7 @@ export async function correoLinkProspecto(correo: string, nombre: string | null,
     texto: tardio
       ? `Hola ${nombre ?? ""},\n\nAquí está el enlace de tu asesoría en línea del ${cuando}. Guárdalo y únete en ese horario con un clic.`
       : `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. Toca el botón para unirte a tu asesoría en línea en ese horario.`,
+    ...(horaLocal ? { destacado: `Tu hora local es ${horaLocal} — el horario de arriba está en ${TZ_NEGOCIO_ETIQUETA}.` } : {}),
     cta: { url: meetLink, label: "Unirme a mi asesoría en línea", icono: "calendario" as const },
   }).catch((e) => console.error("correoLinkProspecto: no se pudo enviar", e));
 }
@@ -143,24 +147,26 @@ export async function correoLinkProspecto(correo: string, nombre: string | null,
  *  (staff) que hay una asesoría nueva, con el mismo enlace de Meet, para
  *  que el asesor no dependa de revisar el panel para enterarse. */
 async function confirmarCitaPorCorreo(
-  cita: { id: number; asesor_id: number; inicio: Date; fin: Date },
+  cita: { id: number; asesor_id: number; inicio: Date; fin: Date; zona_horaria_prospecto?: string | null },
   correo: string,
   nombre: string | null,
   telefono: string | null,
 ) {
   const { link: meetLink } = await conseguirLinkCita(cita, nombre);
   if (meetLink) await prisma.citas.update({ where: { id: cita.id }, data: { meet_link: meetLink } });
-  const cuando = etiqueta(cita.inicio);
+  const cuando = cuandoProspecto(cita.inicio);
+  const horaLocal = horaEnZona(cita.inicio, cita.zona_horaria_prospecto);
 
   const [asesor] = await Promise.all([
     prisma.usuarios.findUnique({ where: { id: cita.asesor_id }, select: { nombre: true } }),
     meetLink
-      ? correoLinkProspecto(correo, nombre, cuando, meetLink)
+      ? correoLinkProspecto(correo, nombre, cuando, meetLink, false, horaLocal)
       : enviarCorreo({
           para: [correo],
           asunto: "Tu asesoría está confirmada — Cursos InMath",
           preheader: "Tu cita quedó agendada, en breve te compartimos el enlace.",
           texto: `Hola ${nombre ?? ""},\n\nTu asesoría quedó agendada para el ${cuando}. En unos minutos te llega otro correo con el enlace de tu asesoría en línea — si no llega, un asesor te lo comparte antes de tu cita.`,
+          ...(horaLocal ? { destacado: `Tu hora local es ${horaLocal} — el horario de arriba está en ${TZ_NEGOCIO_ETIQUETA}.` } : {}),
         }).catch((e) => console.error("confirmarCitaPorCorreo: no se pudo enviar el correo", e)),
   ]);
 
@@ -184,7 +190,7 @@ async function confirmarCitaPorCorreo(
 export async function repararLinkCita(citaId: number): Promise<{ ok: boolean; link?: string; error?: string }> {
   const cita = await prisma.citas.findUnique({
     where: { id: citaId },
-    select: { id: true, asesor_id: true, inicio: true, fin: true, meet_link: true, estado: true, prospectos: { select: { nombre: true, correo: true } } },
+    select: { id: true, asesor_id: true, inicio: true, fin: true, meet_link: true, estado: true, zona_horaria_prospecto: true, prospectos: { select: { nombre: true, correo: true } } },
   });
   if (!cita) return { ok: false, error: "Cita no encontrada" };
   if (cita.meet_link) return { ok: true, link: cita.meet_link };
@@ -196,7 +202,7 @@ export async function repararLinkCita(citaId: number): Promise<{ ok: boolean; li
   await prisma.citas.update({ where: { id: citaId }, data: { meet_link: link } });
   const correo = cita.prospectos?.correo;
   if (correo && CORREO_RE.test(correo)) {
-    await correoLinkProspecto(correo, cita.prospectos?.nombre ?? null, etiqueta(cita.inicio), link, true);
+    await correoLinkProspecto(correo, cita.prospectos?.nombre ?? null, cuandoProspecto(cita.inicio), link, true, horaEnZona(cita.inicio, cita.zona_horaria_prospecto));
   }
   // Cierra el ciclo con el STAFF: si hubo aviso urgente, este correo lo
   // resuelve — ya no tienen que revisar el panel para saber que se arregló.
@@ -216,13 +222,13 @@ export async function repararLinkCita(citaId: number): Promise<{ ok: boolean; li
 export async function guardarLinkManual(citaId: number, link: string): Promise<{ ok: boolean; error?: string }> {
   const cita = await prisma.citas.findUnique({
     where: { id: citaId },
-    select: { id: true, inicio: true, estado: true, prospectos: { select: { nombre: true, correo: true } } },
+    select: { id: true, inicio: true, estado: true, zona_horaria_prospecto: true, prospectos: { select: { nombre: true, correo: true } } },
   });
   if (!cita) return { ok: false, error: "Cita no encontrada" };
   await prisma.citas.update({ where: { id: citaId }, data: { meet_link: link } });
   const correo = cita.prospectos?.correo;
   if (correo && CORREO_RE.test(correo)) {
-    await correoLinkProspecto(correo, cita.prospectos?.nombre ?? null, etiqueta(cita.inicio), link, true);
+    await correoLinkProspecto(correo, cita.prospectos?.nombre ?? null, cuandoProspecto(cita.inicio), link, true, horaEnZona(cita.inicio, cita.zona_horaria_prospecto));
   }
   await enviarCorreo({
     para: [CORREO_CONTACTO],
@@ -235,7 +241,7 @@ export async function guardarLinkManual(citaId: number, link: string): Promise<{
 }
 
 /** Port fiel de crearCita: transacción con FOR UPDATE + UNIQUE como última defensa. */
-async function crearCita(prospectoId: number, asesorId: number, inicio: Date, fin: Date, correo: string) {
+async function crearCita(prospectoId: number, asesorId: number, inicio: Date, fin: Date, correo: string, zonaHoraria: string | null = null) {
   const prospecto = await prisma.prospectos.findUnique({ where: { id: prospectoId }, select: { id: true, etapa: true, nombre: true, telefono_whatsapp: true } });
   if (!prospecto) return { error: "Prospecto no encontrado", codigo: 404 } as const;
   try {
@@ -246,7 +252,18 @@ async function crearCita(prospectoId: number, asesorId: number, inicio: Date, fi
           AND inicio < ${fin} AND fin > ${inicio}
         FOR UPDATE`;
       if (traslape.length) return { error: "El asesor ya tiene una cita en ese horario", codigo: 409 } as const;
-      const cita = await tx.citas.create({ data: { prospecto_id: prospectoId, asesor_id: asesorId, inicio, fin } });
+      // Ventanas de recordatorio ya vencidas al momento de agendar (ej. cita
+      // creada con 30 min de anticipación) se marcan de una vez como
+      // "enviadas" para que el cron nunca mande un recordatorio retroactivo
+      // sin sentido ("es mañana" cuando ya está por empezar).
+      const avisosVencidos = ventanasVencidasAlCrear(inicio, ahoraPared());
+      const cita = await tx.citas.create({
+        data: {
+          prospecto_id: prospectoId, asesor_id: asesorId, inicio, fin,
+          zona_horaria_prospecto: zonaValida(zonaHoraria),
+          ...(avisosVencidos.length ? { metadatos: { avisos: avisosVencidos } } : {}),
+        },
+      });
       if (prospecto.etapa === "prospecto" || prospecto.etapa === "calificado") {
         await tx.prospectos.update({ where: { id: prospectoId }, data: { etapa: "cita_agendada" } });
         await tx.bitacora_pipeline.create({
@@ -265,8 +282,11 @@ async function crearCita(prospectoId: number, asesorId: number, inicio: Date, fi
 }
 
 /** Port fiel de agendar: valida, elige asesor de menor carga y reintenta en carrera.
- *  `correo` es obligatorio — ahí llega el enlace real de la videollamada. */
-export async function agendar(prospectoId: number, inicioStr: string, correo: string, asesorId: number | null = null) {
+ *  `correo` es obligatorio — ahí llega el enlace real de la videollamada.
+ *  `zonaHoraria` es la del NAVEGADOR de quien agenda (IANA, ej.
+ *  "America/Hermosillo"), detectada en el cliente y opcional — se usa solo
+ *  para mostrarle su hora local en el correo, nunca para reprogramar nada. */
+export async function agendar(prospectoId: number, inicioStr: string, correo: string, asesorId: number | null = null, zonaHoraria: string | null = null) {
   const inicio = paredDesde(inicioStr);
   if (!inicio || inicio.getTime() < ahoraPared().getTime()) return { error: "Horario inválido o en el pasado", codigo: 422 } as const;
   const correoLimpio = correo.trim().toLowerCase();
@@ -274,7 +294,7 @@ export async function agendar(prospectoId: number, inicioStr: string, correo: st
   const duracionMin = parseInt(await config("duracion_cita_minutos", "30"), 10);
   const fin = new Date(inicio.getTime() + duracionMin * 60_000);
 
-  if (asesorId !== null) return crearCita(prospectoId, asesorId, inicio, fin, correoLimpio);
+  if (asesorId !== null) return crearCita(prospectoId, asesorId, inicio, fin, correoLimpio, zonaHoraria);
 
   const candidatos = await prisma.$queryRaw<{ id: number }[]>`
     SELECT u.id FROM usuarios u
@@ -282,7 +302,7 @@ export async function agendar(prospectoId: number, inicioStr: string, correo: st
     WHERE u.es_asesor = 1 AND u.activo = 1
     GROUP BY u.id ORDER BY COUNT(c.id) ASC, u.id ASC`;
   for (const cand of candidatos) {
-    const r = await crearCita(prospectoId, Number(cand.id), inicio, fin, correoLimpio);
+    const r = await crearCita(prospectoId, Number(cand.id), inicio, fin, correoLimpio, zonaHoraria);
     if (!("error" in r) || r.codigo !== 409) return r;
   }
   return { error: "Ningún asesor tiene libre ese horario", codigo: 409 } as const;

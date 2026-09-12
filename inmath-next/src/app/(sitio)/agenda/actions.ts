@@ -1,6 +1,7 @@
 "use server";
 import { prisma } from "@/lib/db";
-import { agendar, etiqueta } from "@/lib/agenda";
+import { agendar } from "@/lib/agenda";
+import { cuandoProspecto } from "@/lib/fechas";
 import { upsertPorTelefono, normalizaTelefono } from "@/lib/prospectos";
 
 export type EstadoAgenda = { ok?: string; error?: string };
@@ -12,6 +13,7 @@ export async function agendarAccion(_prev: EstadoAgenda, fd: FormData): Promise<
   const telefono = normalizaTelefono(String(fd.get("telefono") ?? ""));
   const correo = String(fd.get("correo") ?? "").trim();
   const inicio = String(fd.get("slot") ?? "");
+  const zonaHoraria = String(fd.get("zona_horaria") ?? "").trim() || null;
   if (!nombre || !telefono) return { error: "Escribe tu nombre y un teléfono de WhatsApp válido (10 dígitos)." };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return { error: "Escribe un correo válido — ahí te llega el enlace de tu asesoría en línea." };
   if (!/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(inicio)) return { error: "Elige uno de los horarios disponibles." };
@@ -21,7 +23,7 @@ export async function agendarAccion(_prev: EstadoAgenda, fd: FormData): Promise<
   if (!prospecto.nombre && nombre) cambios.nombre = nombre;
   if (prospecto.correo !== correo.toLowerCase()) cambios.correo = correo.toLowerCase();
   if (Object.keys(cambios).length) await prisma.prospectos.update({ where: { id: prospecto.id }, data: cambios });
-  const r = await agendar(prospecto.id, inicio, correo);
+  const r = await agendar(prospecto.id, inicio, correo, null, zonaHoraria);
   if ("error" in r) return { error: "Ese horario acaba de ocuparse. Elige otro, por favor." };
-  return { ok: etiqueta(r.cita.inicio) };
+  return { ok: cuandoProspecto(r.cita.inicio) };
 }

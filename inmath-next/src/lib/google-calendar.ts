@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { isoMinuto } from "@/lib/fechas";
 
 /**
  * Respaldo DIRECTO de Google Calendar + Meet (sin pasar por n8n).
@@ -75,11 +76,10 @@ async function accessTokenCalendar(): Promise<string | null> {
 export async function crearEventoDirecto(cita: { id: number; inicio: Date; fin: Date }, prospectoNombre: string | null): Promise<{ link: string; eventId: string | null } | null> {
   const token = await accessTokenCalendar();
   if (!token) return null;
-  // Las horas de la agenda son hora local de México sin zona; se la declaramos.
-  const iso = (d: Date) => {
-    const p = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:00`;
-  };
+  // Las horas de la agenda son "pared-UTC" (ver fechas.ts): SIEMPRE se leen
+  // con getUTC*, nunca con getters locales — si no, el resultado depende de
+  // en qué TZ corra el proceso Node y puede desfasarse silenciosamente.
+  const iso = (d: Date) => `${isoMinuto(d).replace(" ", "T")}:00`;
   try {
     const res = await fetch(
       "https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1",

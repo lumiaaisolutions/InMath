@@ -1,8 +1,9 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { Icono } from "@/components/Icono";
 import { agendarAccion, type EstadoAgenda } from "./actions";
+import { TZ_NEGOCIO, TZ_NEGOCIO_ETIQUETA, horaEnZona, paredDesde } from "@/lib/fechas";
 
 export type DiaRango = { dia: string; num: string; sem: string; semLarga: string; mes: string; disp: boolean };
 export type GrupoDia = { dia: string; horas: { inicio: string; hora: string }[] };
@@ -20,6 +21,16 @@ export function AgendaForm({ rangoDias, grupos, prefill = null }: {
   const [interactuo, setInteractuo] = useState(false);
   const activo = rangoDias.find((r) => r.dia === diaActivo);
   const grupo = grupos.find((g) => g.dia === diaActivo);
+
+  // Zona horaria del visitante (detectada en el navegador, nunca en el
+  // primer render del servidor — evita descuadres de hidratación). Si no
+  // coincide con la del negocio, cada horario muestra también su hora local
+  // para que nadie agende pensando que "10:00" es su propia hora.
+  const [zonaVisitante, setZonaVisitante] = useState("");
+  useEffect(() => {
+    try { setZonaVisitante(Intl.DateTimeFormat().resolvedOptions().timeZone); } catch { /* sin soporte, se omite la conversión */ }
+  }, []);
+  const distinta = zonaVisitante && zonaVisitante !== TZ_NEGOCIO;
 
   if (estado.ok) {
     return (
@@ -39,6 +50,7 @@ export function AgendaForm({ rangoDias, grupos, prefill = null }: {
       <div className="tarjeta-form">
         <form action={accion} className="formulario">
           <input type="text" name="sitio_web" defaultValue="" style={{ display: "none" }} tabIndex={-1} autoComplete="off" />
+          <input type="hidden" name="zona_horaria" value={zonaVisitante} />
           <div className="campo">
             <label htmlFor="nombre"><Icono n="user" /> Nombre completo</label>
             <input type="text" id="nombre" name="nombre" required defaultValue={prefill?.nombre ?? ""} />
@@ -54,6 +66,7 @@ export function AgendaForm({ rangoDias, grupos, prefill = null }: {
           </div>
           <div className="campo">
             <label><Icono n="calendar" /> Fechas disponibles</label>
+            <small>Horarios en {TZ_NEGOCIO_ETIQUETA} (CDMX){distinta ? " — también te mostramos tu hora local" : ""}.</small>
             <div className="cal-widget">
               <div className="cal-cab">
                 <div className="cal-titulo">
@@ -78,12 +91,15 @@ export function AgendaForm({ rangoDias, grupos, prefill = null }: {
                 {grupo && (
                   <div key={grupo.dia} className={`cal-grupo${interactuo ? " anima" : ""}`} data-dia={grupo.dia}>
                     <div className="slots">
-                      {grupo.horas.map((h) => (
-                        <button key={h.inicio} type="button" role="radio" aria-checked={slot === h.inicio}
-                          className={`slot${slot === h.inicio ? " on" : ""}`} onClick={() => setSlot(h.inicio)}>
-                          <span>{h.hora}</span>
-                        </button>
-                      ))}
+                      {grupo.horas.map((h) => {
+                        const local = distinta ? horaEnZona(paredDesde(h.inicio)!, zonaVisitante) : null;
+                        return (
+                          <button key={h.inicio} type="button" role="radio" aria-checked={slot === h.inicio}
+                            className={`slot${slot === h.inicio ? " on" : ""}`} onClick={() => setSlot(h.inicio)}>
+                            <span>{h.hora}{local ? <small style={{ display: "block", opacity: .75, fontWeight: 400 }}>{local} tu hora</small> : null}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                     <input type="hidden" name="slot" value={slot} />
                   </div>

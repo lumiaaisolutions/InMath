@@ -1,5 +1,11 @@
 # Citas y links de Meet — arquitectura completa (03/04-sep-2026)
 
+> **12-sep-2026**: se agregó etiquetado/conversión de zona horaria en
+> `/agenda` y recordatorios por correo (1d/3h/1h/10min antes) — ver
+> [`zona-horaria-y-recordatorios-citas.md`](zona-horaria-y-recordatorios-citas.md).
+> Incluye un fix de un desfase de 6h latente en `google-calendar.ts` (ruta de
+> respaldo) que complementa la sección de bugs históricos de abajo.
+
 Documento único del subsistema que garantiza que **toda cita agendada tenga su
 evento en Google Calendar, su link de Meet y sus correos** — construido y
 endurecido en la sesión maratónica del 03-sep-2026 (commits v65–v73).

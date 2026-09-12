@@ -1417,3 +1417,32 @@ del portal.
 - El nombre de archivo del recibo sigue en `-v2`; al desplegar hay que
   correr `rm -f /var/www/inmath/storage/recibos/*.pdf` para regenerar los
   cacheados con el nuevo diseño.
+
+### Corte 12-sep-2026 — Zona horaria en /agenda + recordatorios de asesoría por correo (v95)
+
+Reporte del cliente: una asesoría se agendó con 1 hora de desfase para un
+prospecto en Sonora. Investigación completa antes de tocar código (con
+preguntas al usuario para no asumir), documentada en
+[`zona-horaria-y-recordatorios-citas.md`](zona-horaria-y-recordatorios-citas.md).
+Resumen:
+
+- **Fix de bug real**: `google-calendar.ts` (ruta de respaldo de Calendar)
+  usaba getters de hora LOCAL sobre una fecha "pared-UTC" — con el proceso
+  Node del VPS corriendo en `TZ=America/Mexico_City` (no UTC, confirmado por
+  SSH), esto desfasaba el evento 6 horas si esa ruta se activaba. Corregido
+  con `isoMinuto()` (getters UTC), igual que el resto del sistema.
+- **`/agenda` ahora etiqueta y convierte zona horaria**: siempre dice "Hora
+  del Centro de México (CDMX)"; si detecta que el navegador del visitante
+  está en otra zona, muestra también la conversión por horario (estilo
+  Calendly), sin pedirle nada al prospecto. El correo de confirmación y los
+  de link tardío hacen lo mismo.
+- **Recordatorios de asesoría por correo, 1 día/3h/1h/10min antes**, a
+  prospecto Y asesor — mismo patrón que los avisos de vencimiento de pago
+  (`citas.metadatos.avisos`, sin tabla nueva), mismo diseño de correo de
+  siempre. Cron cada 5 min (`scripts/recordatorios-citas.sh`).
+- Migración aditiva: `citas.zona_horaria_prospecto`, `citas.metadatos`.
+- Verificado en producción con datos reales (no fabricados): `/agenda` con
+  captura de pantalla, correo renderizado con la plantilla real, y dos
+  corridas de cron consecutivas confirmando que el anti-duplicado funciona
+  (la segunda corrida mandó 0 correos para la misma cita que ya había
+  recibido su primer aviso).
