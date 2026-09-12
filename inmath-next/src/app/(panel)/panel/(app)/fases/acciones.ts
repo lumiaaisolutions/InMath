@@ -6,6 +6,7 @@ import path from "node:path";
 import { prisma } from "@/lib/db";
 import { requiereModulo } from "@/lib/panel/sesion";
 import { dirImgPanel } from "@/lib/panel/media";
+import { contenidoCoincideConExtension } from "@/lib/magic-bytes";
 
 export type Resultado = { ok?: string; error?: string };
 
@@ -127,12 +128,16 @@ export async function faseVideoSubirAccion(fd: FormData): Promise<{ ok?: { nombr
   if (archivo.size > MAX_VIDEO) return { error: "El video pesa más de 200 MB" };
   const ext = path.extname(archivo.name).toLowerCase();
   if (!EXT_VIDEO.includes(ext)) return { error: `Formato de video no permitido (${ext || "sin extensión"}) — usa .mp4, .mov o .webm` };
+  const contenido = Buffer.from(await archivo.arrayBuffer());
+  if (!contenidoCoincideConExtension(ext, contenido)) {
+    return { error: `El archivo no parece ser un ${ext} real (revisa que no esté corrupto o renombrado)` };
+  }
   const dir = path.join(dirImgPanel(), "fases");
   await mkdir(dir, { recursive: true });
   const base = path.basename(archivo.name, ext).replace(/[^a-zA-Z0-9-_]/g, "").slice(0, 40) || "video";
   const nombreArchivo = `${base}-${randomBytes(4).toString("hex")}${ext}`;
   try {
-    await writeFile(path.join(dir, nombreArchivo), Buffer.from(await archivo.arrayBuffer()));
+    await writeFile(path.join(dir, nombreArchivo), contenido);
   } catch { return { error: "No pudimos guardar el video" }; }
   return { ok: { nombre: archivo.name, url: `/panel/img/fases/${nombreArchivo}` } };
 }
@@ -147,12 +152,16 @@ export async function faseDocumentoSubirAccion(fd: FormData): Promise<{ ok?: { n
   const ext = path.extname(archivo.name).toLowerCase();
   const EXT_DOC = [".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".zip", ".jpg", ".jpeg", ".png", ".webp"];
   if (!EXT_DOC.includes(ext)) return { error: `Tipo de archivo no permitido (${ext || "sin extensión"})` };
+  const contenido = Buffer.from(await archivo.arrayBuffer());
+  if (!contenidoCoincideConExtension(ext, contenido)) {
+    return { error: `El archivo no parece ser un ${ext} real (revisa que no esté corrupto o renombrado)` };
+  }
   const dir = path.join(dirImgPanel(), "fases");
   await mkdir(dir, { recursive: true });
   const base = path.basename(archivo.name, ext).replace(/[^a-zA-Z0-9-_]/g, "").slice(0, 40) || "documento";
   const nombreArchivo = `${base}-${randomBytes(4).toString("hex")}${ext}`;
   try {
-    await writeFile(path.join(dir, nombreArchivo), Buffer.from(await archivo.arrayBuffer()));
+    await writeFile(path.join(dir, nombreArchivo), contenido);
   } catch { return { error: "No pudimos guardar el archivo" }; }
   return { ok: { nombre: archivo.name, url: `/panel/img/fases/${nombreArchivo}` } };
 }

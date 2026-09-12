@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { upsertPorTelefono, normalizaTelefono } from "@/lib/prospectos";
 import { enviarCorreo, CORREO_CONTACTO } from "@/lib/correo";
+import { limiteExcedido, ipConfiable } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const ip = ipConfiable(req);
+  if (await limiteExcedido(`cta:${ip}`, 5, 600_000)) {
+    return NextResponse.json({ error: "Muchas solicitudes seguidas. Espera unos minutos." }, { status: 429 });
+  }
   const fd = await req.formData();
   const nombre = String(fd.get("nombre") ?? "").trim();
   const telefono = normalizaTelefono(String(fd.get("telefono") ?? ""));

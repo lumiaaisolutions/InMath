@@ -4,6 +4,7 @@ import path from "node:path";
 import { prisma, config } from "./db";
 import { ahoraPared } from "./fechas";
 import { procesadorActivo } from "./pagos-drivers";
+import { contenidoCoincideConExtension } from "./magic-bytes";
 
 /**
  * Flujo de /pago del sitio (port de pago.php): intenta el link con el
@@ -127,14 +128,6 @@ export function tokenPagoValido(pagoId: number, token: string): boolean {
   return dado.length === esperado.length && timingSafeEqual(esperado, dado);
 }
 
-const TIPOS_OK: Record<string, (b: Buffer) => boolean> = {
-  jpg: (b) => b.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff])),
-  jpeg: (b) => b.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff])),
-  png: (b) => b.subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47])),
-  webp: (b) => b.subarray(0, 4).toString("latin1") === "RIFF" && b.subarray(8, 12).toString("latin1") === "WEBP",
-  pdf: (b) => b.subarray(0, 4).toString("latin1") === "%PDF",
-};
-
 /**
  * Guarda el comprobante en el MISMO directorio que usa el panel PHP
  * (backend/storage/comprobantes) para que siga viéndolo durante el strangler.
@@ -146,7 +139,7 @@ export async function guardarComprobante(pagoId: number, archivo: File): Promise
   }
   const ext = (archivo.name.split(".").pop() ?? "").toLowerCase();
   const contenido = Buffer.from(await archivo.arrayBuffer());
-  if (!TIPOS_OK[ext] || !TIPOS_OK[ext](contenido)) {
+  if (!["jpg", "jpeg", "png", "webp", "pdf"].includes(ext) || !contenidoCoincideConExtension(ext, contenido)) {
     return { error: "Solo aceptamos JPG, PNG, WebP o PDF." };
   }
   const dir = process.env.COMPROBANTES_DIR ?? path.resolve(process.cwd(), "../backend/storage/comprobantes");

@@ -3,9 +3,15 @@
 Sigue a `auditoria-ciberseguridad-2026-09.md` y `seguridad-remediacion-ola1.md`
 (que ya resolvió C-01, C-02, A-03, A-06-InMath y parcialmente A-07). Este plan
 cubre lo que quedó fuera: **investigado línea por línea el 12-sep-2026** (no
-son descripciones genéricas — cada punto tiene el código real detrás). Nada
-de esto se ha implementado todavía; es el plan para decidir qué atacar y
-cuándo.
+son descripciones genéricas — cada punto tiene el código real detrás).
+
+> **✅ Ejecutados el 12-sep-2026** (los 4 marcados de menor riesgo del orden
+> sugerido): B-15, A-05, A-04 (acotado a `materiales`/`reactivos`) y B-16.
+> Verificados en producción con datos reales. Detalle de cada uno abajo, en
+> su propia sección, junto al plan original. Se paró ANTES de M-08 (fail-open
+> del webhook de pagos) porque implica un cambio de comportamiento de negocio
+> (un pago legítimo raro podría quedar pendiente de revisión manual en vez de
+> confirmarse solo) que requiere tu confirmación antes de tocarlo.
 
 Formato por punto: **qué es** → **riesgo si no se hace** → **qué pasa si SÍ
 se hace (impacto/quién se ve afectado)** → **cómo lo haría** → **esfuerzo**.
@@ -17,7 +23,7 @@ se hace (impacto/quién se ve afectado)** → **cómo lo haría** → **esfuerzo
 Los tres viven en el mismo archivo/flujo (`/panel/img` y sus uploads), así
 que conviene atacarlos juntos.
 
-### A-04 — `/panel/img` sirve materiales de pago sin sesión
+### A-04 — `/panel/img` sirve materiales de pago sin sesión ✅ EJECUTADO 12-sep-2026
 
 **Qué es**: `src/app/(panel)/panel/img/[...ruta]/route.ts` no tiene NINGÚN
 guard de sesión — solo valida que la carpeta esté en una whitelist
@@ -74,7 +80,19 @@ estilo de código).
 **Esfuerzo**: ~2h (incluye probar login del panel, práctica de alumno y
 preview de staff no se rompan).
 
-### B-15 — SVG servible como documento ejecutable
+**Quedó así**: se implementó exactamente el gate de `materiales` y
+`reactivos` (staff O alumno con pago confirmado). **`avatars` y `alertas` se
+dejaron SIN TOCAR** (ni siquiera el cambio de bajo riesgo sugerido en
+`avatars`) — la incertidumbre sobre `alertas` (¿se ve en páginas públicas?)
+y la falta de certeza sobre si `avatars` mezcla fotos de staff y de alumnos
+en el mismo directorio hacían que tocarlas sin confirmar antes fuera
+innecesariamente arriesgado para el beneficio marginal. `login` sigue
+pública, sin cambios, como debía ser. Verificado en producción:
+`/panel/img/materiales/*` → 404 sin sesión; `/panel/img/avatars/*` y
+`/panel/img/login/*` sin cambio de comportamiento (código no tocado en esas
+ramas).
+
+### B-15 — SVG servible como documento ejecutable ✅ EJECUTADO 12-sep-2026
 
 **Qué es**: el mismo route sirve `.svg` con `Content-Type: image/svg+xml`.
 Un SVG puede llevar `<script>` embebido que se ejecuta si se abre/incrusta
@@ -96,7 +114,11 @@ vez de `inline`.
 
 **Esfuerzo**: 5 minutos.
 
-### B-16 — uploads validados solo por extensión, no por contenido real
+**Quedó así**: exactamente como se planeó — una línea quitada del mapa
+`MIME`, sin `Content-Disposition` adicional (no hizo falta, no hay ningún
+`.svg` real en las carpetas hoy).
+
+### B-16 — uploads validados solo por extensión, no por contenido real ✅ EJECUTADO 12-sep-2026
 
 **Qué es**: `materiales/acciones.ts`, `reactivos/acciones.ts` y
 `fases/acciones.ts` validan el tipo de archivo con `path.extname(nombre)`
@@ -122,11 +144,22 @@ desde las 3 acciones de upload antes de `writeFile`.
 
 **Esfuerzo**: ~2h (incluye probar cada tipo de archivo real).
 
+**Quedó así**: nuevo `src/lib/magic-bytes.ts` (extraído de `pagos.ts`, sin
+cambiar su comportamiento) con firmas para `jpg/jpeg/png/webp/pdf` (las que
+ya existían) + `mp4/mov` (`ftyp` en el byte 4), `webm` (EBML), `mp3`
+(`ID3` o frame MPEG), `doc/xls/ppt` (OLE2) y `docx/xlsx/pptx/zip` (ZIP).
+Probado con 10 casos positivos (firma real de cada formato) y 2 casos que
+DEBEN fallar (un `.pdf` con contenido HTML, un `.jpg` con cabecera de
+ejecutable) — los 12 se comportaron como se esperaba. Aplicado en las 3
+acciones de upload del panel (`materiales`, `reactivos`, `fases` ×2) antes
+de `writeFile`, y en `guardarComprobante` de `pagos.ts` (mismo
+comportamiento de antes, ahora vía el helper compartido).
+
 ---
 
 ## Grupo B — Abuso y spam (A-05)
 
-### A-05 — rate-limit del chat burlable + `/api/cta` sin límite
+### A-05 — rate-limit del chat burlable + `/api/cta` sin límite ✅ EJECUTADO 12-sep-2026
 
 **Qué es**: dos problemas separados en el mismo hallazgo:
 1. `src/app/api/agente/route.ts` limita 20 msj/10min con un `Map` en
@@ -161,6 +194,20 @@ chat en local.
   tiene nada).
 
 **Esfuerzo**: ~1.5h.
+
+**Quedó así**: el limitador de login (`loginBloqueado`/`registrarFalloLogin`)
+resultó tener semántica distinta (bloqueo progresivo tras FALLOS, pensado
+para intentos de contraseña) — no encajaba para "N mensajes por ventana".
+Se agregó una función genérica nueva al mismo archivo,
+`limiteExcedido(clave, max, ventanaMs)`, con el mismo mecanismo de
+persistencia (JSON en `configuraciones`, clave separada
+`rate_limit_ventanas` para no mezclar datos) y `ipConfiable(req)` con la
+cadena `cf-connecting-ip → x-real-ip → x-forwarded-for → "local"`. Aplicado
+en `api/agente/route.ts` (20/10min, igual que antes) y `api/cta/route.ts`
+(nuevo, 5/10min). Probado en aislado contra la BD local (4 intentos con
+límite 3: los primeros 3 pasan, el 4° se bloquea) y en producción con
+requests inválidos reales contra `/api/cta` (5 pasan a validación, el 6°
+recibe 429) — sin disparar ningún correo real.
 
 ---
 
@@ -398,13 +445,15 @@ de auth) en vez de solo el mensaje de error.
 
 ## Orden sugerido si se decide avanzar
 
-1. **B-15 (quitar .svg)** — 5 minutos, cero riesgo, hazlo ya.
-2. **A-05 (rate-limit real)** — bajo riesgo, cierra un abuso activo hoy.
-3. **A-04 (gate de materiales)** — el de mayor impacto de negocio (contenido
-   de pago protegido), cuidado con no romper el login del panel.
-4. **B-16 (magic bytes)** — reusa código que ya existe, bajo esfuerzo.
-5. **M-08 (fail-closed en webhook)** — protege dinero, pero definir bien el
-   aviso a staff antes de desplegar.
+1. ✅ **B-15 (quitar .svg)** — 5 minutos, cero riesgo, hazlo ya. HECHO.
+2. ✅ **A-05 (rate-limit real)** — bajo riesgo, cierra un abuso activo hoy. HECHO.
+3. ✅ **A-04 (gate de materiales)** — el de mayor impacto de negocio (contenido
+   de pago protegido), cuidado con no romper el login del panel. HECHO
+   (acotado a materiales/reactivos).
+4. ✅ **B-16 (magic bytes)** — reusa código que ya existe, bajo esfuerzo. HECHO.
+5. ⏸️ **M-08 (fail-closed en webhook)** — protege dinero, pero definir bien el
+   aviso a staff antes de desplegar. **AQUÍ SE PARÓ** (12-sep-2026): cambia
+   comportamiento de negocio, requiere confirmación antes de continuar.
 6. **M-12/B-17 (throttles persistentes)** — bajo riesgo, reusa patrón 2FA.
 7. **B-14 (expirar tokenPago)** — bajo riesgo, cuidado con links ya enviados.
 8. **M-11 (revocación de sesión)** — el más disruptivo de esta lista (fuerza

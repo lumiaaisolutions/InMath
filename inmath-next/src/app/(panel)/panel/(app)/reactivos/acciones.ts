@@ -6,6 +6,7 @@ import path from "node:path";
 import { prisma } from "@/lib/db";
 import { requiereModulo } from "@/lib/panel/sesion";
 import { dirImgPanel } from "@/lib/panel/media";
+import { contenidoCoincideConExtension } from "@/lib/magic-bytes";
 
 export type Resultado = { ok?: string; error?: string };
 
@@ -249,12 +250,16 @@ export async function reactivoAdjuntoSubirAccion(fd: FormData): Promise<{ ok?: {
   if (archivo.size > MAX_ADJUNTO) return { error: "El archivo pesa más de 60 MB" };
   const ext = path.extname(archivo.name).toLowerCase();
   if (!EXT_PERMITIDAS.includes(ext)) return { error: `Tipo de archivo no permitido (${ext || "sin extensión"})` };
+  const contenido = Buffer.from(await archivo.arrayBuffer());
+  if (!contenidoCoincideConExtension(ext, contenido)) {
+    return { error: `El archivo no parece ser un ${ext} real (revisa que no esté corrupto o renombrado)` };
+  }
   const dir = path.join(dirImgPanel(), "reactivos");
   await mkdir(dir, { recursive: true });
   const base = path.basename(archivo.name, ext).replace(/[^a-zA-Z0-9-_]/g, "").slice(0, 40) || "adjunto";
   const nombreArchivo = `${base}-${randomBytes(4).toString("hex")}${ext}`;
   try {
-    await writeFile(path.join(dir, nombreArchivo), Buffer.from(await archivo.arrayBuffer()));
+    await writeFile(path.join(dir, nombreArchivo), contenido);
   } catch { return { error: "No pudimos guardar el archivo" }; }
   const tipo = ext === ".mp4" ? "video" : ext === ".pdf" ? "documento" : "imagen";
   return { ok: { nombre: archivo.name, url: `/panel/img/reactivos/${nombreArchivo}`, tipo } };

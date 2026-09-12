@@ -5,9 +5,7 @@ import { upsertPorTelefono, normalizaTelefono } from "@/lib/prospectos";
 import { type Turno } from "@/lib/gemini";
 import { responderIA } from "@/lib/ia";
 import { sistemaAgenteSitio } from "@/lib/agente-sitio";
-
-// Rate limit en memoria por IP: 20 mensajes / 10 min (port del PHP por sesión).
-const hits = new Map<string, number[]>();
+import { limiteExcedido, ipConfiable } from "@/lib/rate-limit";
 
 /** Pregunta fija del flujo determinístico — también sirve de MARCADOR de
  *  estado: si el último mensaje del bot empieza así, la siguiente respuesta
@@ -20,11 +18,10 @@ const NOMBRE_RE = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-zÁÉÍÓÚÜÑá�
 const NO_ES_NOMBRE = /\b(equivoc\w*|correct\w*|incorrect\w*|error|cambi\w*|perd[oó]n|disculpa|quise|mal|ayuda|hola|gracias|quiero|puse|env[ií]\w*|mand[eé]\w*|correo|whatsapp|tel[eé]fono|horario|agendar?|cita|favor|espera)\b/i;
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "local";
-  const ahora = Date.now();
-  const previos = (hits.get(ip) ?? []).filter((t) => t > ahora - 600_000);
-  if (previos.length >= 20) return NextResponse.json({ error: "Muchos mensajes seguidos. Espera unos minutos." }, { status: 429 });
-  previos.push(ahora); hits.set(ip, previos);
+  const ip = ipConfiable(req);
+  if (await limiteExcedido(`chat:${ip}`, 20, 600_000)) {
+    return NextResponse.json({ error: "Muchos mensajes seguidos. Espera unos minutos." }, { status: 429 });
+  }
 
   const body = await req.json().catch(() => null);
   const mensaje = String(body?.mensaje ?? "").trim();

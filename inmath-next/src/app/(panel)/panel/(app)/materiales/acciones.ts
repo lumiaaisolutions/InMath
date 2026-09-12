@@ -7,6 +7,7 @@ import sharp from "sharp";
 import { requiereAdmin } from "@/lib/panel/sesion";
 import { dirImgPanel } from "@/lib/panel/media";
 import { guardarMateriales, type Material } from "@/lib/portal/materiales";
+import { contenidoCoincideConExtension } from "@/lib/magic-bytes";
 
 export type ResultadoMateriales = { ok?: string; error?: string };
 
@@ -28,11 +29,15 @@ export async function materialArchivoSubirAccion(fd: FormData): Promise<{ ok?: {
   if (archivo.size > MAX_ARCHIVO) return { error: "El archivo pesa más de 60 MB" };
   const ext = path.extname(archivo.name).toLowerCase();
   if (!EXT_PERMITIDAS.includes(ext)) return { error: `Tipo de archivo no permitido (${ext || "sin extensión"})` };
+  const contenido = Buffer.from(await archivo.arrayBuffer());
+  if (!contenidoCoincideConExtension(ext, contenido)) {
+    return { error: `El archivo no parece ser un ${ext} real (revisa que no esté corrupto o renombrado)` };
+  }
   const dir = path.join(dirImgPanel(), "materiales");
   await mkdir(dir, { recursive: true });
   const nombreArchivo = nombreUnico(archivo.name);
   try {
-    await writeFile(path.join(dir, nombreArchivo), Buffer.from(await archivo.arrayBuffer()));
+    await writeFile(path.join(dir, nombreArchivo), contenido);
   } catch { return { error: "No pudimos guardar el archivo" }; }
   return { ok: { nombre: archivo.name, url: `/panel/img/materiales/${nombreArchivo}`, tamanoBytes: archivo.size } };
 }
