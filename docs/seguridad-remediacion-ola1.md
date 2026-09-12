@@ -134,12 +134,34 @@ Tras las 4 fases, en una sola pasada:
 
 Ningún cliente del VPS quedó afectado por los cambios.
 
-## Pendiente (fuera del alcance de hoy, requiere más info o es de otro cliente)
+## Fase 5 (12-sep-2026) — A-07 parcial: rate-limit en el login de n8n
 
-- **A-07** (n8n con credenciales de varios clientes, sin allowlist/2FA
-  verificado): no se tocó — requiere decidir qué IPs/usuarios tienen
-  legítimo acceso al editor antes de restringir, y afecta a más clientes
-  que solo InMath. Pendiente de una conversación aparte.
+Al investigar A-07 se encontró que el hallazgo original era menos grave de
+lo que sonaba: n8n **ya exige su propio login** (pantalla "Sign in", no el
+editor abierto a cualquiera) — confirmado navegando a
+`n8n.lumiaaisolutions.com` y viendo la redirección a `/signin`. Lo que
+faltaba era una capa extra contra fuerza bruta, ya que nginx no aplicaba
+ningún límite y no hay fail2ban para ese login (a diferencia de SSH).
+
+Aplicado (con confirmación explícita del usuario, ya que toca nginx
+compartido con otros clientes del VPS):
+- `/etc/nginx/conf.d/limit-req-n8n-login.conf`: zona
+  `limit_req_zone $binary_remote_addr zone=n8n_login:10m rate=5r/m;`
+- En el vhost de n8n, nuevo `location = /rest/login` (ANTES del `location /`
+  general) con `limit_req zone=n8n_login burst=3 nodelay;` — limita a ~5
+  intentos de login por minuto por IP, sin afectar el uso normal del editor
+  ya autenticado (el límite solo aplica a la ruta de login).
+- Backup del vhost original:
+  `/etc/nginx/sites-available/n8n.lumiaaisolutions.com.bak-2026-09-12`.
+- Verificado: `nginx -t` válido, `systemctl reload nginx` (no restart),
+  `n8n.lumiaaisolutions.com` sigue en 200, y 4 sitios de muestra de otros
+  clientes del VPS sin afectar.
+
+**Sigue pendiente de A-07** (requiere decisión del dueño, no solo código):
+
+- **Allowlist de IPs o 2FA para el login de n8n** — quién tiene acceso
+  legítimo al editor antes de restringir por IP; afecta a más clientes que
+  solo InMath. Pendiente de una conversación aparte.
 - **`.env` de otros clientes** (`lumia-hq`, `clicktodo-api`,
   `clicktobarber-api`): no se tocaron por el riesgo de romper procesos
   PHP-FPM que corren como `www-data` y leen el `.env` directo. Antes de

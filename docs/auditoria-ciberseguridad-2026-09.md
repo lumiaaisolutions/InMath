@@ -39,7 +39,7 @@ del VPS autorizada. Sin cambios de código ni pruebas activas.
 | A-04 | **/panel/img sirve `materiales/` y `reactivos/` SIN sesión** (contenido de pago re-compartible; cache public). Código: `src/app/(panel)/panel/img/[...ruta]/route.ts` | 5.3 | ABIERTO |
 | A-05 | **Rate-limit del chat burlable** (toma el 1er valor de X-Forwarded-For, que controla el cliente; nginx usa proxy_add_x_forwarded_for) + `/api/cta` sin límite (spam + upsert de prospectos) | 6.5 | ABIERTO |
 | A-06 | **.env 664 (legible por grupo/otros)** en VPS multi-cliente con usuario único `deploy` → movimiento lateral trivial | 6.7 | 🟡 PARCIAL: InMath resuelto (600); otros clientes pendientes (ver Ola 1 doc) |
-| A-07 | **Editor n8n expuesto a internet** con credenciales de varios clientes; sin allowlist/2FA verificado | 6.8 | ABIERTO |
+| A-07 | **Editor n8n expuesto a internet** con credenciales de varios clientes; sin allowlist/2FA verificado | 6.8 | 🟡 PARCIAL: ya exige login propio + rate-limit agregado (12-sep); falta allowlist/2FA (ver `seguridad-remediacion-ola1.md`) |
 | M-08 | (adelanto de Fase 2) `aplicarEventoPago`: si MP no reporta monto, el candado de monto se salta (fail-open); no compara moneda | — | ABIERTO |
 
 **Remediación exprés C-01/C-02/A-03/A-06(InMath) — EJECUTADA el
