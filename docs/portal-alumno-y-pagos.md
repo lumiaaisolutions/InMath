@@ -130,10 +130,14 @@ servidor. Lib: `src/lib/portal/materiales.ts`.
 
 | Variable | Para qué | Estado |
 |---|---|---|
-| `GOOGLE_CLIENT_ID` | Login con Google del portal | Falta (cliente) |
-| `GOOGLE_CLIENT_SECRET` | Login con Google del portal | Falta (cliente) |
-| `MERCADOPAGO_ACCESS_TOKEN` | Cobro con tarjeta | Falta (cliente) |
+| `GOOGLE_CLIENT_ID` | Login con Google del portal | ✅ Resuelto |
+| `GOOGLE_CLIENT_SECRET` | Login con Google del portal | ✅ Resuelto |
+| `MERCADOPAGO_ACCESS_TOKEN` | Cobro con tarjeta | ✅ Resuelto (producción desde 22-ago-2026) |
 | `MERCADOPAGO_WEBHOOK_SECRET` | Verificar firma del webhook | Opcional |
+
+> **Actualización 12-sep-2026**: tabla y sección "Pendiente de n8n" de abajo
+> quedaron desactualizadas — las 4 credenciales de esta tabla ya están
+> resueltas. Ver `fases-y-pendientes.md` para el estado vivo.
 
 Todas degradan con gracia: si faltan, la función queda oculta/inactiva y el resto
 del sistema funciona igual (transferencia, login por usuario/contraseña).
@@ -153,8 +157,17 @@ del sistema funciona igual (transferencia, login por usuario/contraseña).
 
 ## Pendiente de n8n (tareas interactivas del dueño — no las puede hacer Claude)
 
-Estas dos requieren credenciales y consentimiento interactivo DENTRO de la UI de
-n8n; no se pueden completar por código. Ver también `n8n-conexion.md`.
+> **✅ Ambas RESUELTAS.** (1) Google Calendar OAuth: el flujo 03 de n8n está
+> activo y verificado end-to-end desde el 31-ago-2026 (ver
+> `citas-y-links-meet.md` y `n8n-conexion.md`). (2) SMTP en n8n para reportes:
+> ya no hace falta — el cron nativo de Next.js
+> (`scripts/reportes-semanales.sh`, lunes 8:00) se instaló y quedó activo el
+> 12-sep-2026, tal como se planteó en "Cierre de las tareas de n8n POR
+> CÓDIGO" más abajo. Se deja el texto original de esta sección como
+> referencia histórica de lo que se pedía hacer.
+
+Estas dos requerían credenciales y consentimiento interactivo DENTRO de la UI
+de n8n; no se podían completar por código. Ver también `n8n-conexion.md`.
 
 1. **Google Calendar OAuth (flujo 03):** en la UI de n8n
    (`http://2.24.123.93:5678`), crear una credencial **Google Calendar OAuth2 API**
@@ -189,10 +202,14 @@ por código:
   autenticado); marca `enviado_en`. Reusa `enviarCorreo` (noreply Hostinger).
 - Verificado en local: `{"generados":3,"enviados":1,"sinCorreo":3}` y rechaza
   sin API key (401).
-- **Al desplegar**, instalar el cron semanal en el VPS (lunes 8:00), igual que
-  los otros: un script `scripts/reportes-semanales.sh` que hace `curl` al
-  endpoint con la `x-api-key`, y `0 8 * * 1` en el crontab. Esto **sustituye al
-  flujo 08 de n8n**; ya no hace falta la credencial SMTP dentro de n8n.
+- ✅ **Instalado en producción el 12-sep-2026**: `scripts/reportes-semanales.sh`
+  (hace `curl` al endpoint con la `x-api-key`) + `0 8 * * 1` en el crontab del
+  VPS. Esto **sustituye al flujo 08 de n8n**; ya no hace falta la credencial
+  SMTP dentro de n8n. Nota: `generarSemana()` sin argumento usa la semana que
+  EMPIEZA ese lunes (no la que acaba de terminar) — si se quiere que el
+  reporte resuma la semana recién concluida, hay que decidir si cambiar el
+  horario del cron (ej. domingo por la noche) o el cálculo por defecto de
+  `generarSemana`.
 
 **2. Meet link → campo manual al crear la cita (sin Google Calendar):**
 - El alta manual de cita (`/panel/citas`) ahora tiene un campo opcional

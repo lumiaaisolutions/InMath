@@ -31,13 +31,24 @@ de dónde se aplica cada respuesta en los demás documentos de esta carpeta.
    mismo precio: **Premium 8 meses** e **Intensivo 3 meses** (para examen en
    noviembre). Aplicado en tabla `cursos` (2 filas), landing (tachado $4,500)
    y prompt de Mathy.
-2. **Pagos:** Mercado Pago + depósito OXXO. PENDIENTE del cliente: credenciales
-   de Mercado Pago y referencia OXXO (texto provisional en `datos_pago`).
+2. **Pagos:** Mercado Pago + depósito OXXO. ✅ Credenciales de Mercado Pago
+   RESUELTO — en producción desde el 22/23-ago-2026 (webhook verificado con
+   pago real, ver `pagos.md`). La referencia OXXO sigue con texto
+   provisional en `datos_pago` (confirmado aún pendiente el 12-sep-2026) —
+   no bloquea el cobro: MercadoPago genera su propio código de barras OXXO
+   automáticamente al elegir esa opción, el placeholder es solo texto
+   informativo adicional.
 3. **WhatsApp:** 7224709235 → `WHATSAPP_NUMERO=5217224709235` en backend/.env.
 4. **Bot:** FAQs oficiales integradas al prompt (costo, duración, virtual,
    material incluido, asesorías 1h); lo que no está confirmado (fecha de
    inicio, escuelas/carreras, costo de asesorías extra) el bot NO lo inventa —
    invita a la asesoría o a WhatsApp. Tono: cálido, algo formal, de tú.
+   **Actualización 12-sep-2026**: confirmado que la regla de "fecha de
+   inicio" es DEFINITIVA, no temporal — los cursos son de inscripción
+   continua, no hay fecha de arranque. Las asesorías extra SÍ se cobrarán
+   aparte de la gratuita (monto y mecanismo de cobro aún por definir); el
+   bot sigue derivando solo a la gratuita mientras tanto. Ver
+   `fases-y-pendientes.md`.
 5. **Horario de citas:** todos los días 8:00–21:00, citas de 30 min (aplicado
    en `horario_atencion`). Asesoría personalizada de alumnos: 1 hora (nota
    para Fase 5).

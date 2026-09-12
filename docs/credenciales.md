@@ -123,18 +123,27 @@ MERCADOPAGO_WEBHOOK_SECRET=
 
 ## Credenciales que faltan (producción)
 
-Estas dependen del cliente y aún no existen (ver [`fases-y-pendientes.md`](fases-y-pendientes.md)):
+> **Actualización 12-sep-2026**: de las 4 líneas de abajo, solo la de
+> WhatsApp sigue realmente pendiente. Google Calendar OAuth, MercadoPago y
+> SMTP para reportes ya se resolvieron (semanas después de escrita esta
+> sección) — se dejan tachadas en vez de borradas para no perder el
+> historial. Ver [`fases-y-pendientes.md`](fases-y-pendientes.md) para el
+> estado vivo siempre actualizado.
 
 - WhatsApp Business Cloud API de Meta: `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`,
-  `WHATSAPP_VERIFY_TOKEN` (se configuran en n8n). Pendiente explícitamente —
+  `WHATSAPP_VERIFY_TOKEN` (se configuran en n8n). **Sigue pendiente** —
   sin esto el bot (ya conectado a Gemini) no recibe tráfico real.
-- Google Calendar OAuth (en n8n). Pendiente explícitamente.
-- `MERCADOPAGO_ACCESS_TOKEN` y `MERCADOPAGO_WEBHOOK_SECRET` — procesador
-  elegido (MercadoPago), driver ya implementado (`DriverMercadoPago`), solo
-  falta que el cliente genere las credenciales de producción. Ver [`pagos.md`](pagos.md).
-- SMTP para el envío de reportes por correo (en n8n) — pendiente
-  explícitamente; el nodo de envío ya existe en el flujo, solo falta la
-  credencial.
+- ~~Google Calendar OAuth (en n8n). Pendiente explícitamente.~~ ✅ RESUELTO
+  — flujo 03 de n8n activo y verificado end-to-end desde el 31-ago-2026.
+- ~~`MERCADOPAGO_ACCESS_TOKEN` y `MERCADOPAGO_WEBHOOK_SECRET` — falta que el
+  cliente genere las credenciales de producción.~~ ✅ RESUELTO — en
+  producción desde el 22/23-ago-2026, webhook verificado con pago real. Ver
+  [`pagos.md`](pagos.md).
+- ~~SMTP para el envío de reportes por correo (en n8n) — pendiente la
+  credencial.~~ ✅ RESUELTO, pero por otra vía: en vez de la credencial SMTP
+  de n8n, se instaló un cron nativo de Next.js
+  (`scripts/reportes-semanales.sh`, lunes 8:00, 12-sep-2026) que reusa el
+  SMTP que ya funciona en la app — el flujo 08 de n8n quedó innecesario.
 
 ## Checklist de endurecimiento antes de producción
 
@@ -163,29 +172,19 @@ Estas dependen del cliente y aún no existen (ver [`fases-y-pendientes.md`](fase
 - Generar una API key nueva desde [Google AI Studio](https://aistudio.google.com/apikey)
   si hay que rotarla.
 
-## Pendiente: color de acento del branding de reportes PDF en producción
+## ✅ RESUELTO: color de acento del branding de reportes PDF en producción
 
-El seed `004_reportes_fase6.sql` usa `ON DUPLICATE KEY UPDATE clave = clave`
-(no-op), así que corregir el archivo del seed **no** actualiza una fila que ya
-existe en producción. La fila `reporte_branding` en la tabla `configuraciones`
-de producción todavía tiene `color_acento_b: "8B6FF0"` (morado, valor viejo);
-el código y el seed ya usan `1E9EB8`. Falta correr a mano en phpMyAdmin
-(`auth-db943.hstgr.io`, base `u221820910_inmath`):
-
-```sql
-UPDATE configuraciones
-SET valor = JSON_SET(valor, '$.color_acento_b', '1E9EB8')
-WHERE clave = 'reporte_branding';
-```
-
-No se pudo ejecutar en esta sesión porque la pestaña de phpMyAdmin ya logueada
-expiró y pide contraseña de nuevo (no se puede reautenticar sin la contraseña
-de la cuenta). Solo afecta el color de acento secundario en el pie del PDF de
-reporte semanal — cosmético, no bloquea nada.
+Esta sección describía un pendiente de la era Hostinger/phpMyAdmin
+(`auth-db943.hstgr.io`), previa a la migración a Next.js/VPS. **Verificado el
+12-sep-2026** directamente contra la BD real de producción (VPS,
+`127.0.0.1:3306`): la fila `reporte_branding` en `configuraciones` ya tiene
+`color_acento_b: "1E9EB8"` — el valor correcto. Quedó resuelto en algún punto
+de la migración; no requiere ninguna acción.
 
 ## Variables nuevas (ago 2026)
 
-- `WHATSAPP_NUMERO` — número wa.me del sitio (vacío = botón oculto). PENDIENTE real.
+- `WHATSAPP_NUMERO` — número wa.me del sitio (vacío = botón oculto). ✅ Resuelto
+  (`5217224709235`, verificado en el `.env` de producción el 12-sep-2026).
 - `PANEL_URL` — URL del panel para el botón "Entrar" del sitio (local :8124).
 - Credenciales de alumnos: se generan al aprobar su pago (usuario = WhatsApp,
   contraseña temporal bcrypt en `alumnos.password_hash`); se usarán en Fase 5.

@@ -1,5 +1,13 @@
 # Pagos — capa configurable de procesadores
 
+> **✅ Actualización 12-sep-2026**: este documento describe el diseño original
+> del driver (incluye referencias a la clase PHP `App\Pagos\DriverMercadoPago`
+> de antes de la migración a Next.js — el contrato se portó igual). El estado
+> real hoy: **MercadoPago está en producción desde el 22/23-ago-2026**, con
+> webhook verificado con un pago real end-to-end. Las secciones de abajo que
+> dicen "falta credenciales del cliente" quedaron desactualizadas tras esa
+> resolución — ver `fases-y-pendientes.md` para el estado vivo.
+
 El procesador se elige con la configuración `procesador_pago_activo`
 (`stripe` | `conekta` | `mercadopago` | `simulado`) sin tocar código. Toda la
 mecánica del embudo ya funciona con el driver `simulado`:
@@ -15,7 +23,7 @@ mecánica del embudo ya funciona con el driver `simulado`:
    `recuperacion_carrito_horas`) + flujo 07 de n8n → recordatorio por WhatsApp y
    marca `recordatorio_enviado_en` (un solo recordatorio por pago).
 
-## Estado: MercadoPago elegido — driver real implementado, falta credenciales
+## Estado: MercadoPago elegido — ✅ RESUELTO, credenciales en producción
 
 El cliente eligió **MercadoPago**. `App\Pagos\DriverMercadoPago` ya implementa la
 interfaz completa (`crearLink`, `verificarWebhook`) contra la documentación oficial
@@ -82,7 +90,8 @@ Cada driver implementa la interfaz `App\Pagos\ProcesadorPago` (2 métodos:
   aprobación) marca pagado, inscribe vía `InscripcionServicio::porPago` y
   genera credenciales del alumno: usuario = su WhatsApp, contraseña temporal
   aleatoria (bcrypt) mostrada al asesor una sola vez.
-- MercadoPago: driver listo; faltan credenciales de producción del cliente.
+- MercadoPago: ✅ driver listo y credenciales de producción en vivo desde el
+  22/23-ago-2026 (ver banner de estado al inicio del documento).
 
 ## 07-sep-2026 — Recibo unificado y correos del flujo de pago
 

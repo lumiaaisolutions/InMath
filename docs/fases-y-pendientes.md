@@ -78,9 +78,18 @@ versión de n8n instalada.
   pago real end-to-end el 23-ago-2026).
 - ✅ UI de es_asesor en Panel→Usuarios (interruptor en el asistente de edición).
 - ⬜ Fotos reales de la sesión (landing + carrusel del login) — sigue en
-  manos del cliente.
-- ⬜ Confirmar con cliente: fecha de inicio del curso y política de asesorías
-  extra (el bot hoy los deriva a la asesoría gratuita).
+  manos del cliente (confirmado 12-sep-2026: aún no están listas, sin fecha).
+- ✅ **Fecha de inicio del curso — RESUELTO (decisión de producto, 12-sep-2026):
+  NO hay fecha de inicio fija.** Los cursos son de inscripción continua
+  (rolling enrollment): el alumno puede empezar en cualquier momento tras
+  pagar. El bot ya tenía la regla de no inventar una fecha (prompt v4,
+  `sistema_bot`) — queda confirmado que esa regla es definitiva y no una
+  omisión temporal.
+- 🟡 **Política de asesorías extra — decisión parcial (12-sep-2026): SÍ se
+  cobran aparte** de la asesoría gratuita que ya ofrece el bot. Falta definir
+  el monto y el mecanismo de cobro (¿link de pago suelto vía MercadoPago,
+  paquete de N sesiones, etc.?) antes de poder ofrecerlas activamente; el bot
+  sigue derivando solo a la asesoría gratuita mientras tanto.
 
 ### Lote de mejoras del panel solicitado el 13-ago (COMPLETADO — auditado 03-sep-2026)
 1. ✅ Logo protagonista en sitio, panel, login, carga y agente (v30 CSS).
