@@ -1,7 +1,7 @@
 "use client";
 import { useActionState, useMemo, useState } from "react";
 import { IconoPanel } from "@/components/IconoPanel";
-import { alumnoCrearAccion, alumnoEditarAccion, alumnoBajaAccion, registroEliminarAccion, pagoAprobarAccion, pagoCancelarAccion, type Resultado } from "../acciones";
+import { alumnoCrearAccion, alumnoEditarAccion, alumnoBajaAccion, alumnoReenviarAccesoAccion, registroEliminarAccion, pagoAprobarAccion, pagoCancelarAccion, type Resultado } from "../acciones";
 import { ConfirmarDialogo, Velo, useToastResultado, EnBody, Segmentado, SelectorDesplegable, BotonMagnetico } from "../ClientePanel";
 
 
@@ -118,6 +118,27 @@ function AccionesPagoReal({ pago, onCerrar }: { pago: Pago; onCerrar?: () => voi
         }}
       />
     </>
+  );
+}
+
+/* ── Reenviar acceso (crear nueva contraseña) ────────────────────────────
+ * Para cuando un alumno YA activo dice que no puede entrar — normalmente
+ * porque perdió o nunca vio su contraseña temporal. Antes staff no tenía
+ * ninguna herramienta para esto sin pedirle ayuda a un desarrollador. */
+function BotonReenviarAcceso({ alumnoId }: { alumnoId: number }) {
+  const [enCurso, setEnCurso] = useState(false);
+  const toast = useToastResultado();
+  return (
+    <button type="button" className="boton mini" disabled={enCurso} onClick={() => {
+      setEnCurso(true);
+      (async () => {
+        const r = await alumnoReenviarAccesoAccion(alumnoId);
+        toast(r);
+        setEnCurso(false);
+      })();
+    }}>
+      <IconoPanel n="correo" cls="ic-sm" /> {enCurso ? "Enviando…" : "Reenviar acceso"}
+    </button>
   );
 }
 
@@ -329,6 +350,11 @@ function FichaDetalle({ fila, onCerrar }: { fila: Fila; onCerrar: () => void }) 
           )}
 
           {pagoActivo && <AccionesPagoReal pago={pagoActivo} onCerrar={onCerrar} />}
+          {fila.alumno?.estado === "activo" && fila.correo && (
+            <div className="pg-acciones">
+              <BotonReenviarAcceso alumnoId={fila.alumno.id} />
+            </div>
+          )}
           {fila.alumno?.puedeDarBaja && (
             <div className="pg-acciones">
               <BotonBaja alumnoId={fila.alumno.id} onListo={onCerrar} />

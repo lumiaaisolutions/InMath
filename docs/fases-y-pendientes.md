@@ -1502,3 +1502,42 @@ esfuerzo estimado. **Ejecutados el mismo día** (los 4 de menor riesgo):
 Se detuvo antes de **M-08** (fail-open del webhook de pagos si MercadoPago
 no reporta el monto) por ser un cambio de comportamiento de negocio que
 requiere confirmación — ver el plan para Ola 2/3 completas (M-08 a B-18).
+
+### Corte 17-sep-2026 — Alumna pagada sin poder entrar: investigado, sin bug
+de datos, pero se encontró y cerró un hueco real de herramientas de staff (v97)
+
+**Reporte**: Andrea Monroy Miranda (prospecto #31) pagó su curso, el panel
+la muestra ACTIVO/PAGADO, pero decía que no podía acceder al portal.
+
+**Investigación (contra datos REALES de producción, por SSH, solo lectura)**:
+- `prospectos.id=31`: pago #14 (fallido, intento inicial) y pago #15
+  (pagado, MercadoPago approved, `pagado_en` 14-sep 22:03) — vinculado
+  correctamente a `alumnos.id=10` (`usuario`/`email` =
+  monroymirandaandrea@gmail.com, `estado="activo"`).
+- Corridas EN VIVO contra producción: `tienePagoConfirmado(31)` → `true`;
+  `resolverLoginEmail(correo)` → `{tipo:"alumno", id:10}` (acceso concedido).
+  Sin prospectos/alumnos duplicados bajo variantes de teléfono.
+- Revisado el orden de `fila.pagos` en la ficha del panel
+  (`orderBy: creado_en desc`) — el pago pagado SÍ aparece primero, no hay
+  bug de visualización tampoco.
+- **Conclusión: no hay ningún bug de datos ni de lógica** — con la
+  información actual, el sistema le daría acceso sin problema. La causa más
+  probable es que perdió/nunca vio su contraseña temporal (se muestra UNA
+  sola vez, por correo) y no conocía el enlace "¿Olvidaste tu contraseña?"
+  del login unificado (`/panel/login/recuperar`, sí cubre alumnos).
+
+**Hueco real encontrado y cerrado**: la ficha de un alumno YA PAGADO
+(`AccionesPagoReal`, `ClienteAlumnos.tsx`) no mostraba NINGÚN botón de
+acción — `if (pago.estado !== "pendiente") return null`. Es decir, ante
+exactamente este caso (alumno activo con problemas de acceso), **staff no
+tenía ninguna herramienta** salvo pedirle a un desarrollador que interviniera
+a mano en la BD. Nuevo:
+- `alumnoReenviarAccesoAccion` (`acciones.ts`) — reusa `solicitarReset()`
+  (el mismo flujo ya probado de autoservicio), ahora disparable por staff
+  desde la ficha del alumno.
+- Botón **"Reenviar acceso"** en la ficha, visible para cualquier alumno
+  `estado="activo"` con correo registrado (no solo los recién pagados) —
+  manda el enlace de "crear nueva contraseña", vigente 30 min.
+- Verificado con `npm run build` limpio y desplegado; no se disparó el
+  correo real sin confirmar primero con el usuario (es una acción real
+  hacia un cliente).

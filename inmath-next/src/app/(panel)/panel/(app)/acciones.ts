@@ -17,6 +17,7 @@ import { cerrarSesion, requiereSesion, requiereAdmin, requiereModulo } from "@/l
 import { dirImgPanel } from "@/lib/panel/media";
 import { inscribirPorPago } from "@/lib/inscripcion";
 import { enviarCorreo } from "@/lib/correo";
+import { solicitarReset } from "@/lib/panel/reset";
 
 export type Resultado = { ok?: string; error?: string };
 
@@ -200,6 +201,22 @@ export async function alumnoEditarAccion(_prev: Resultado, fd: FormData): Promis
   await prisma.alumnos.updateMany({ where: { prospecto_id: prospectoId }, data: { nombre, telefono, email: correo || null } });
   revalidatePath("/panel/alumnos");
   return { ok: "Datos actualizados" };
+}
+
+/** Le manda al alumno el enlace de "crear nueva contraseña" (mismo flujo que
+ *  el autoservicio de /panel/login/recuperar) — para cuando un alumno YA
+ *  pagado dice que no puede entrar (típicamente perdió o nunca vio su
+ *  contraseña temporal): antes staff no tenía ninguna herramienta para esto
+ *  sin pedirle ayuda a un desarrollador. No revela ni cambia nada por sí
+ *  sola — el alumno sigue teniendo que abrir el correo y crear su contraseña. */
+export async function alumnoReenviarAccesoAccion(alumnoId: number): Promise<Resultado> {
+  await requiereModulo("alumnos");
+  const alumno = await prisma.alumnos.findUnique({ where: { id: alumnoId }, select: { email: true, estado: true } });
+  if (!alumno) return { error: "Alumno no encontrado" };
+  if (alumno.estado !== "activo") return { error: "Este alumno no está activo" };
+  if (!alumno.email) return { error: "Este alumno no dejó correo — comparte el acceso por WhatsApp desde su ficha de pago." };
+  await solicitarReset(alumno.email);
+  return { ok: `Enlace enviado a ${alumno.email}. Válido por 30 minutos.` };
 }
 
 /** Cancela un pago pendiente a mano (el admin verificó que no se completó). */
