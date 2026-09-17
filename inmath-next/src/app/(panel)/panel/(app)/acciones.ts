@@ -194,6 +194,14 @@ export async function alumnoEditarAccion(_prev: Resultado, fd: FormData): Promis
   const otro = await prisma.prospectos.findFirst({ where: { telefono_whatsapp: telefono, id: { not: prospectoId } }, select: { id: true } });
   if (otro) return { error: "Ese WhatsApp ya pertenece a otro registro" };
 
+  // `alumnos.email` es UNIQUE (evita ambigüedad de login: dos cuentas no
+  // pueden compartir el mismo correo) — se valida ANTES de guardar para dar
+  // un error claro, en vez de que se caiga con un error crudo de la BD.
+  if (correo) {
+    const otroAlumno = await prisma.alumnos.findFirst({ where: { email: correo, prospecto_id: { not: prospectoId } }, select: { id: true } });
+    if (otroAlumno) return { error: "Ese correo ya está en uso por otro alumno — usa uno distinto para no mezclar el acceso de las dos cuentas." };
+  }
+
   await prisma.prospectos.update({
     where: { id: prospectoId },
     data: { nombre, telefono_whatsapp: telefono, correo: correo || null },

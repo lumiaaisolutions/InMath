@@ -14,8 +14,8 @@ model alumnos {
   curso_id           Int                   @db.UnsignedInt
   nombre             String                @db.VarChar(120)
   telefono           String                @db.VarChar(20)
-  email              String?               @db.VarChar(190)
-  usuario            String?               @db.VarChar(60)
+  email              String?               @unique(map: "uq_alumnos_email") @db.VarChar(190)
+  usuario            String?               @unique(map: "uq_alumnos_usuario") @db.VarChar(60)
   password_hash      String?               @db.VarChar(255)
   canal_reporte      alumnos_canal_reporte @default(whatsapp)
   estado             alumnos_estado        @default(activo)

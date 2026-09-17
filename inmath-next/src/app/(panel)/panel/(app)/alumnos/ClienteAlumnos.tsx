@@ -351,7 +351,7 @@ function FichaDetalle({ fila, onCerrar }: { fila: Fila; onCerrar: () => void }) 
 
           {pagoActivo && <AccionesPagoReal pago={pagoActivo} onCerrar={onCerrar} />}
           {fila.alumno?.estado === "activo" && fila.correo && (
-            <div className="pg-acciones">
+            <div className="pg-acciones pg-acciones-ficha">
               <BotonReenviarAcceso alumnoId={fila.alumno.id} />
             </div>
           )}

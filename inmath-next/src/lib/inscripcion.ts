@@ -95,6 +95,8 @@ async function avisarAdminPagoConfirmado(
   }).catch((e) => console.error("avisarAdminPagoConfirmado:", e));
 }
 
+const esConflicto = (e: unknown) => (e as { code?: string })?.code === "P2002";
+
 export async function provisionarAccesoAlumno(
   alumnoId: number,
   prospecto: ProspectoAcceso,
@@ -103,19 +105,39 @@ export async function provisionarAccesoAlumno(
   if (!alumno) throw new Error(`Alumno ${alumnoId} no existe`);
 
   // El correo permite el login con Google (enlace por correo con un pago real).
-  if (!alumno.email && prospecto.correo) {
-    await prisma.alumnos.update({ where: { id: alumnoId }, data: { email: prospecto.correo } });
+  // `email` es UNIQUE (evita que dos cuentas ambiguas compartan login): si otro
+  // alumno ya lo usa (dato repetido/familiar), esta cuenta simplemente se queda
+  // sin correo propio — sigue teniendo acceso completo por `usuario`/contraseña,
+  // nunca se bloquea un pago real por esto.
+  let email = alumno.email;
+  if (!email && prospecto.correo) {
+    try {
+      await prisma.alumnos.update({ where: { id: alumnoId }, data: { email: prospecto.correo } });
+      email = prospecto.correo;
+    } catch (e) {
+      if (!esConflicto(e)) throw e;
+      console.error(`provisionarAccesoAlumno: correo "${prospecto.correo}" ya en uso por otra cuenta — alumno ${alumnoId} se queda sin correo propio`);
+    }
   }
   if (alumno.usuario) return { usuario: alumno.usuario, passTmp: null };
 
-  // Usuario = correo (dato principal de acceso); WhatsApp solo de respaldo.
-  const usuario = alumno.email ?? prospecto.correo ?? prospecto.telefono_whatsapp;
+  // Usuario = correo (dato principal de acceso); WhatsApp de respaldo — y si
+  // por algún choque IMPROBABLE el correo también estuviera tomado como
+  // `usuario` de otra cuenta, cae al WhatsApp, que es único por construcción
+  // (1 prospecto = 1 teléfono = 1 alumno), así que SIEMPRE hay un usuario
+  // disponible sin bloquear la inscripción de un pago real.
   const passTmp = randomBytes(8).toString("base64url").replace(/[-_]/g, "x").slice(0, 10);
-  await prisma.alumnos.update({
-    where: { id: alumnoId },
-    data: { usuario, password_hash: await bcrypt.hash(passTmp, 12) },
-  });
-  return { usuario, passTmp };
+  const passwordHash = await bcrypt.hash(passTmp, 12);
+  const candidatos = [...new Set([email, prospecto.correo, prospecto.telefono_whatsapp].filter((v): v is string => !!v))];
+  for (const candidato of candidatos) {
+    try {
+      await prisma.alumnos.update({ where: { id: alumnoId }, data: { usuario: candidato, password_hash: passwordHash } });
+      return { usuario: candidato, passTmp };
+    } catch (e) {
+      if (!esConflicto(e)) throw e;
+    }
+  }
+  throw new Error(`provisionarAccesoAlumno: no se pudo asignar un usuario único para el alumno ${alumnoId}`);
 }
 
 type PagoParaRecibo = {

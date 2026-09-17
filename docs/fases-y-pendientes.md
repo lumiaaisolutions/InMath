@@ -1541,3 +1541,51 @@ a mano en la BD. Nuevo:
 - Verificado con `npm run build` limpio y desplegado; no se disparó el
   correo real sin confirmar primero con el usuario (es una acción real
   hacia un cliente).
+
+### Corte 17-sep-2026 (2) — Cierre del hueco de cuentas duplicadas + fix de
+diseño del botón "Reenviar acceso" (v98)
+
+**Pregunta del usuario que abrió esto**: "¿el problema de Andrea puede
+volver a pasar (dar acceso desde el panel y que igual le pida el pago)?"
+Se verificó primero el caso concreto que trajo como evidencia (Pérez Mario
+viendo "Falta completar tu pago"): **no era un bug** — su pago seguía
+genuinamente `pendiente` (creado ~1h antes), así que ese bloqueo era el
+comportamiento correcto y esperado (login permitido sin pago, portal
+bloqueado hasta pagar — diseño intencional de `auth-unificado.ts`).
+
+**El riesgo real distinto que sí se cerró**: `alumnos.usuario` y
+`alumnos.email` no tenían restricción de unicidad en la BD. Combinado con
+que el teléfono no siempre se normaliza igual entre distintos puntos de
+captura, era estructuralmente *posible* (no había pasado, verificado con
+consulta real: 0 duplicados en producción) que dos cuentas terminaran
+compartiendo el mismo correo/usuario — y el login por correo (`findFirst`
+sin desempate) podría resolver a la cuenta equivocada (la que no pagó) en
+vez de la correcta.
+
+**Cómo se cerró, cuidando no romper el flujo automático de pagos**:
+- `prisma/schema.prisma`: `alumnos.email` y `alumnos.usuario` ahora
+  `@unique`. Migración aditiva aplicada en producción (verificado antes:
+  cero duplicados existentes, migración sin riesgo de pérdida de datos).
+- `provisionarAccesoAlumno` (`inscripcion.ts`, corre en CADA webhook de
+  pago automático): un choque de correo/usuario **ya no puede tumbar la
+  confirmación de un pago real**. Si el correo ya está en uso por otra
+  cuenta, esta simplemente se queda sin correo propio (sigue con acceso
+  completo por usuario/contraseña). Si el usuario derivado del correo
+  choca, cae al WhatsApp como usuario — único por construcción (1
+  prospecto = 1 teléfono = 1 alumno), así que SIEMPRE hay un usuario
+  disponible sin bloquear la inscripción.
+- `alumnoEditarAccion` (edición manual desde el panel): valida ANTES de
+  guardar si el correo ya pertenece a otro alumno, con un error claro en
+  vez de que se caiga con un error crudo de la base de datos.
+- Verificado: build limpio, sin duplicados existentes en producción (local
+  y remoto), y los registros reales de Andrea y Pérez Mario intactos y
+  funcionando después de aplicar la migración.
+
+**Fix de diseño reportado por el usuario** (capturas de pantalla): el botón
+"Reenviar acceso" (agregado en el corte anterior) se veía pegado/mal
+distribuido bajo "Aprobar e inscribir"/"Cancelar pago" cuando ambos grupos
+de acciones aparecían juntos (alumno activo CON pago pendiente, como Pérez
+Mario). Causa: mi contenedor usaba la clase `.pg-acciones` (sin separación)
+en vez de `.pg-acciones-ficha` (borde superior + padding, la que ya usan
+los otros botones de la ficha) — corregido para usar la misma clase y
+quedar visualmente consistente.
