@@ -24,8 +24,9 @@ archivo: cada tema vive en su propio `.md`.
 | [`zona-horaria-y-recordatorios-citas.md`](zona-horaria-y-recordatorios-citas.md) | **Zona horaria en /agenda + recordatorios de asesoría por correo** (1d/3h/1h/10min a prospecto y asesor) — diagnóstico del desfase de Sonora y fix |
 | [`portal-alumno-y-pagos.md`](portal-alumno-y-pagos.md) | **Portal del alumno (Fases 3–4)**: login validado por pago, login con Google, pago con tarjeta listo, material del curso, y lo que falta en n8n |
 | [`sistema-de-diseno.md`](sistema-de-diseno.md) | Identidad visual, tokens, regla 60-30-10, animaciones, skills |
-| [`auditoria-ciberseguridad-2026-09.md`](auditoria-ciberseguridad-2026-09.md) | **Auditoría de seguridad**: análisis completo, Ola 1 ejecutada (ver `seguridad-remediacion-ola1.md`), plan de lo que falta en `plan-seguridad-olas-2-3.md` |
-| [`plan-seguridad-olas-2-3.md`](plan-seguridad-olas-2-3.md) | **Plan de implementación** de A-04, A-05 y Olas 2-3: código exacto investigado, impacto de cada fix y cómo se haría — nada ejecutado todavía |
+| [`auditoria-ciberseguridad-2026-09.md`](auditoria-ciberseguridad-2026-09.md) | **Auditoría de seguridad**: análisis completo, hallazgos con estado vivo (RESUELTO/PARCIAL/ABIERTO) |
+| [`seguridad-remediacion-ola1.md`](seguridad-remediacion-ola1.md) | **Ola 1 ejecutada** (12-sep): C-01, C-02, A-03, A-06-InMath, A-07 parcial (rate-limit login n8n) |
+| [`plan-seguridad-olas-2-3.md`](plan-seguridad-olas-2-3.md) | **Plan de implementación** de A-04, A-05 y Olas 2-3 — código investigado, impacto y forma de cada fix. B-15/A-05/A-04(parcial)/B-16 ya ejecutados (12-sep); resto pendiente |
 | [`fases-y-pendientes.md`](fases-y-pendientes.md) | Estado de las 7 fases y lo que falta por decidir/credenciales |
 | [`migracion-vps-exposicion-api.md`](migracion-vps-exposicion-api.md) | Migración al VPS: por qué `backend/public/index.php` no quedó expuesto por HTTP y si hace falta |
 | [`despliegue-vps.md`](despliegue-vps.md) | **F4 de la migración Next.js**: mapa real de producción (VPS/Cloudflare/BD) y procedimiento de deploy/corte/retiro del PHP |

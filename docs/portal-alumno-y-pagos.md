@@ -1,5 +1,19 @@
 # Portal del alumno + pago con tarjeta (Fases 3 y 4) — 19-ago-2026
 
+> **⚠️ Actualización 17-sep-2026 — el mecanismo de login CAMBIÓ desde que se
+> escribió este doc.** Ya NO es cierto que "el pago valida el LOGIN" (sección
+> de abajo) — desde `src/lib/auth-unificado.ts` (login único staff+alumnos),
+> **el login se permite aunque no haya pagado**; es el PORTAL quien bloquea
+> el contenido hasta que se confirme el pago (`tienePagoConfirmado()` se
+> revisa en `/portal` y cada sub-página, no en el login). `tienePagoConfirmado`
+> sigue siendo la función y la idea correctas, solo cambió DÓNDE se aplica.
+> Además: `alumnos.email`/`usuario` ahora son `UNIQUE` (evita ambigüedad de
+> login entre cuentas), hay un flujo de "¿Olvidaste tu contraseña?" unificado
+> (`/panel/login/recuperar`, cubre alumnos también) y un botón "Reenviar
+> acceso" para que staff lo dispare desde la ficha del alumno. Ver el corte
+> "17-sep-2026" en `fases-y-pendientes.md` para el detalle completo de la
+> investigación y el fix.
+
 Desarrollado en local (aún NO desplegado a producción por indicación del dueño).
 Build limpio y verificado end-to-end con Playwright (emulación iPhone 13) contra
 un servidor de desarrollo con datos sembrados y luego limpiados.
