@@ -1455,3 +1455,50 @@ Resumen:
   corridas de cron consecutivas confirmando que el anti-duplicado funciona
   (la segunda corrida mandó 0 correos para la misma cita que ya había
   recibido su primer aviso).
+
+### Corte 12-sep-2026 (2) — Auditoría de seguridad: pendientes operativos
+cerrados + plan detallado para lo que falta (v96)
+
+A petición del usuario, barrido de "qué falta al sistema" cruzando toda la
+documentación (detecté y corregí varios docs desincronizados: `pagos.md`,
+`portal-alumno-y-pagos.md` y `credenciales.md` seguían diciendo "falta
+MercadoPago/Google Calendar OAuth/SMTP" semanas después de haberse
+resuelto). Ver detalle completo en cada doc referenciado.
+
+**Cerrado por código/infra:**
+- Cron de reportes semanales en PDF programado (lunes 8am,
+  `scripts/reportes-semanales.sh`) — el endpoint ya existía, solo faltaba
+  agendarlo.
+- Rate-limit agregado al login de n8n (A-07 parcial) — resultó que n8n YA
+  exige su propio login (no tan abierto como sonaba el hallazgo); se
+  agregó un límite de 5 intentos/min por IP contra fuerza bruta. Ver
+  `seguridad-remediacion-ola1.md`.
+- Verificado (no de memoria, contra BD/env reales de producción): color de
+  branding del PDF ya correcto, `WHATSAPP_NUMERO` ya configurado, píxel de
+  Meta disparando correctamente (confirmado con Network real en el
+  navegador).
+- Decisiones de negocio documentadas: sin fecha de inicio fija (inscripción
+  continua), asesorías extra se cobrarán aparte (monto por definir); fotos
+  reales y referencia OXXO siguen pendientes sin fecha.
+
+**Plan de seguridad detallado** (`plan-seguridad-olas-2-3.md`) — cada punto
+con código real investigado (archivo:línea), impacto de implementarlo y
+esfuerzo estimado. **Ejecutados el mismo día** (los 4 de menor riesgo):
+- **B-15**: quitado `.svg` de lo servible en `/panel/img`.
+- **A-05**: rate-limit del chat y `/api/cta` — antes era un `Map` en memoria
+  que confiaba en un header falsificable por el visitante; ahora es
+  persistente (`rate-limit.ts`) y usa `CF-Connecting-IP` (confirmado que
+  nginx no filtra `X-Forwarded-For`, así que Cloudflare es la única fuente
+  confiable de la IP real).
+- **A-04**: `/panel/img/materiales` y `/reactivos` ahora exigen sesión
+  (panel o alumno con pago confirmado) — cierra una evasión real encontrada
+  en la investigación: `/portal/material` sí exigía pago, pero sus enlaces
+  de descarga apuntaban directo a la URL sin sesión. `avatars`/`login`/
+  `alertas` se dejaron sin tocar a propósito (incertidumbre de contexto).
+- **B-16**: nuevo `src/lib/magic-bytes.ts`, valida el contenido REAL de los
+  archivos subidos (no solo la extensión del nombre) en los 3 flujos de
+  upload del panel.
+
+Se detuvo antes de **M-08** (fail-open del webhook de pagos si MercadoPago
+no reporta el monto) por ser un cambio de comportamiento de negocio que
+requiere confirmación — ver el plan para Ola 2/3 completas (M-08 a B-18).
