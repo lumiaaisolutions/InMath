@@ -36,8 +36,8 @@ del VPS autorizada. Sin cambios de código ni pruebas activas.
 | C-01 | **Ollama 0.0.0.0:11434 sin auth + UFW inactivo** → uso/borrado de modelos y DoS de CPU del VPS entero desde internet | 8.6 | ✅ RESUELTO 07-sep-2026 |
 | C-02 | **Apps accesibles por IP:puerto** (Next :3010, n8n :5678, clientes 3001-3007) → bypass de TLS/nginx/Cloudflare | 7.4 | ✅ RESUELTO 07-sep-2026 |
 | A-03 | **SSH :8080 con PasswordAuthentication yes** (usuario deploy con sudo docker, dueño de todo el VPS) | 7.5 | ✅ RESUELTO 07-sep-2026 |
-| A-04 | **/panel/img sirve `materiales/` y `reactivos/` SIN sesión** (contenido de pago re-compartible; cache public). Código: `src/app/(panel)/panel/img/[...ruta]/route.ts` | 5.3 | ABIERTO |
-| A-05 | **Rate-limit del chat burlable** (toma el 1er valor de X-Forwarded-For, que controla el cliente; nginx usa proxy_add_x_forwarded_for) + `/api/cta` sin límite (spam + upsert de prospectos) | 6.5 | ABIERTO |
+| A-04 | **/panel/img sirve `materiales/` y `reactivos/` SIN sesión** (contenido de pago re-compartible; cache public). Código: `src/app/(panel)/panel/img/[...ruta]/route.ts` | 5.3 | 🟡 PARCIAL: materiales/reactivos ya gateados (12-sep); avatars/login/alertas sin tocar a propósito (ver `plan-seguridad-olas-2-3.md`) |
+| A-05 | **Rate-limit del chat burlable** (toma el 1er valor de X-Forwarded-For, que controla el cliente; nginx usa proxy_add_x_forwarded_for) + `/api/cta` sin límite (spam + upsert de prospectos) | 6.5 | ✅ RESUELTO 12-sep-2026 (rate-limit persistente + IP real vía CF-Connecting-IP) |
 | A-06 | **.env 664 (legible por grupo/otros)** en VPS multi-cliente con usuario único `deploy` → movimiento lateral trivial | 6.7 | 🟡 PARCIAL: InMath resuelto (600); otros clientes pendientes (ver Ola 1 doc) |
 | A-07 | **Editor n8n expuesto a internet** con credenciales de varios clientes; sin allowlist/2FA verificado | 6.8 | 🟡 PARCIAL: ya exige login propio + rate-limit agregado (12-sep); falta allowlist/2FA (ver `seguridad-remediacion-ola1.md`) |
 | M-08 | (adelanto de Fase 2) `aplicarEventoPago`: si MP no reporta monto, el candado de monto se salta (fail-open); no compara moneda | — | ABIERTO |
@@ -85,10 +85,12 @@ dangerouslySetInnerHTML (solo íconos estáticos), CSP enforzada, bcrypt
 - **M-12** Código de cambio de contraseña del portal sin throttle propio.
 - **M-13** LFPDPPP: PII (incl. menores) sin cifrado de campo; refresh
   token de Google en claro en configuraciones. Aviso de privacidad ✓.
-- **B-14** tokenPago sin expiración · **B-15** SVG inline desde /panel/img
-  (stored XSS solo-staff) · **B-16** materiales sin magic-bytes ·
-  **B-17** throttle del reset en memoria · **B-18** higiene de logs de
-  APIs externas.
+- **B-14** tokenPago sin expiración (ABIERTO) · ~~**B-15** SVG inline desde
+  /panel/img (stored XSS solo-staff)~~ ✅ RESUELTO 12-sep (quitado del MIME
+  servible) · ~~**B-16** materiales sin magic-bytes~~ ✅ RESUELTO 12-sep
+  (`src/lib/magic-bytes.ts`) · **B-17** throttle del reset en memoria
+  (ABIERTO) · **B-18** higiene de logs de APIs externas (ABIERTO, sin
+  investigar a detalle todavía).
 - Revisados NO explotables: liquid-gooey (sin eval/red), CSRF de Server
   Actions (Origin check de Next), logout POST, reset endurecido, 2FA tras
   contraseña, prompts sin secretos, cookies bien flaggeadas, fotos de
