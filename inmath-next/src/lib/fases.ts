@@ -1,6 +1,6 @@
 import { prisma } from "./db";
 import { ahoraPared } from "./fechas";
-import type { OpcionesReactivo, RespuestaDetalle, ResultadoIntento } from "./practica";
+import { adjuntarLecturas, type OpcionesReactivo, type RespuestaDetalle, type ResultadoIntento } from "./practica";
 
 export type FaseRecurso = { id: number; tipo: string; titulo: string; url: string };
 export type FaseExamenEstado = { examenId: number; titulo: string; aprobado: boolean; mejorPorcentaje: number | null };
@@ -73,9 +73,12 @@ export async function reactivosDeFaseExamen(faseId: number, examenId: number) {
   const filas = await prisma.reactivos.findMany({
     where: { examen_id: examenId, activo: true },
     orderBy: { orden: "asc" },
-    select: { id: true, tema: true, enunciado: true, opciones: true },
+    select: {
+      id: true, tema: true, enunciado: true, opciones: true, orden: true,
+      examen_id: true, adjunto_url: true, adjunto_tipo: true,
+    },
   });
-  return filas.map((f) => ({ id: f.id, tema: f.tema, enunciado: f.enunciado, opciones: f.opciones as OpcionesReactivo }));
+  return adjuntarLecturas(filas);
 }
 
 /** Igual que calificarIntento (practica.ts) pero etiquetado con fase_id/examen_id
@@ -96,18 +99,21 @@ export async function calificarIntentoFase(
   const ids = respuestas.map((r) => r.reactivo_id);
   const reactivos = await prisma.reactivos.findMany({ where: { id: { in: ids }, examen_id: examenId } });
   const porId = new Map(reactivos.map((r) => [r.id, r]));
+  const lecturaPorId = new Map((await adjuntarLecturas(reactivos)).map((r) => [r.id, r]));
 
   const detalle: RespuestaDetalle[] = [];
   let correctas = 0;
   for (const r of respuestas) {
     const reactivo = porId.get(r.reactivo_id);
     if (!reactivo) continue;
+    const extra = lecturaPorId.get(reactivo.id);
     const correcta = r.respuesta_dada !== null && r.respuesta_dada === reactivo.respuesta_correcta;
     if (correcta) correctas++;
     detalle.push({
       reactivo_id: reactivo.id, enunciado: reactivo.enunciado, opciones: reactivo.opciones as OpcionesReactivo,
       respuesta_dada: r.respuesta_dada, respuesta_correcta: reactivo.respuesta_correcta,
       correcta, explicacion: reactivo.explicacion,
+      adjuntoUrl: extra?.adjuntoUrl ?? null, adjuntoTipo: extra?.adjuntoTipo ?? null, lectura: extra?.lectura ?? null,
     });
   }
   const total = detalle.length;

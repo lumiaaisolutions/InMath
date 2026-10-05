@@ -9,8 +9,37 @@ type FaseConEstado = {
   id: number; titulo: string; descripcion: string | null; porcentajeMinimo: number;
   desbloqueada: boolean; aprobada: boolean; recursos: FaseRecurso[]; examenes: FaseExamenEstado[];
 };
-type ReactivoParaAlumno = { id: number; tema: string | null; enunciado: string; opciones: string[] };
+type LecturaAdjunto = { id: number; tipo: string; nombre: string; url: string };
+type ReactivoParaAlumno = {
+  id: number; tema: string | null; enunciado: string; opciones: string[];
+  adjuntoUrl: string | null; adjuntoTipo: string | null; lectura: LecturaAdjunto | null;
+};
 type ResultadoIntento = EstadoCalificarFase["resultado"];
+
+/** Material de lectura (imagen/video/documento) compartido por un rango de
+ *  preguntas — se muestra una sola vez, antes de la primera pregunta que lo usa. */
+function BloqueLectura({ lectura }: { lectura: LecturaAdjunto }) {
+  return (
+    <div className="pt-practica-lectura">
+      {lectura.tipo === "imagen" && <img src={lectura.url} alt="" />}
+      {lectura.tipo === "video" && <video controls src={lectura.url} />}
+      {lectura.tipo === "documento" && (
+        <a href={lectura.url} target="_blank" rel="noopener"><Icono n="file" /> {lectura.nombre}</a>
+      )}
+    </div>
+  );
+}
+
+/** Adjunto propio de una pregunta (p. ej. un diagrama), distinto de la lectura compartida. */
+function AdjuntoPregunta({ url, tipo }: { url: string; tipo: string | null }) {
+  if (tipo === "imagen" || /\.(png|jpe?g|webp|gif)$/i.test(url)) {
+    return <img className="pt-practica-pregunta-img" src={url} alt="" />;
+  }
+  if (tipo === "video" || /\.mp4$/i.test(url)) {
+    return <video className="pt-practica-pregunta-img" controls src={url} />;
+  }
+  return <a className="pt-practica-pregunta-archivo" href={url} target="_blank" rel="noopener"><Icono n="file" /> Ver material</a>;
+}
 
 function urlEmbebible(url: string): string | null {
   const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
@@ -76,17 +105,21 @@ function PantallaResolverExamen({ faseId, examenId, reactivos, onCalificado, onC
     >
       <div className="pt-practica-progreso">{contestadas} de {reactivos.length} contestadas</div>
       {reactivos.map((r, i) => (
-        <div className="pt-practica-pregunta" key={r.id}>
-          <b>{i + 1}. {r.enunciado}</b>
-          <div className="pt-practica-opciones">
-            {r.opciones.map((op, oi) => (
-              <button key={oi} type="button" role="radio" aria-checked={respuestas[r.id] === oi}
-                className={`pt-practica-opcion${respuestas[r.id] === oi ? " sel" : ""}`}
-                onClick={() => setRespuestas((prev) => ({ ...prev, [r.id]: oi }))}>
-                <span className="pt-practica-punto" aria-hidden="true" />
-                {op}
-              </button>
-            ))}
+        <div key={r.id}>
+          {r.lectura && r.lectura.id !== (reactivos[i - 1]?.lectura?.id ?? null) && <BloqueLectura lectura={r.lectura} />}
+          <div className="pt-practica-pregunta">
+            <b>{i + 1}. {r.enunciado}</b>
+            {r.adjuntoUrl && <AdjuntoPregunta url={r.adjuntoUrl} tipo={r.adjuntoTipo} />}
+            <div className="pt-practica-opciones">
+              {r.opciones.map((op, oi) => (
+                <button key={oi} type="button" role="radio" aria-checked={respuestas[r.id] === oi}
+                  className={`pt-practica-opcion${respuestas[r.id] === oi ? " sel" : ""}`}
+                  onClick={() => setRespuestas((prev) => ({ ...prev, [r.id]: oi }))}>
+                  <span className="pt-practica-punto" aria-hidden="true" />
+                  {op}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       ))}
@@ -117,16 +150,20 @@ function PantallaResultadoExamen({ resultado, porcentajeMinimo, onVolver }: {
       </div>
       <div className="pt-practica-revision">
         {resultado.detalle.map((d, i) => (
-          <div key={d.reactivo_id} className={`pt-practica-pregunta rev ${d.correcta ? "ok" : "mal"}`}>
-            <b>{i + 1}. {d.enunciado}</b>
-            <div className="pt-practica-opciones">
-              {d.opciones.map((op, oi) => (
-                <div key={oi} className={`pt-practica-opcion estatica${oi === d.respuesta_correcta ? " correcta" : ""}${oi === d.respuesta_dada && oi !== d.respuesta_correcta ? " incorrecta" : ""}`}>
-                  {op}
-                </div>
-              ))}
+          <div key={d.reactivo_id}>
+            {d.lectura && d.lectura.id !== (resultado.detalle[i - 1]?.lectura?.id ?? null) && <BloqueLectura lectura={d.lectura} />}
+            <div className={`pt-practica-pregunta rev ${d.correcta ? "ok" : "mal"}`}>
+              <b>{i + 1}. {d.enunciado}</b>
+              {d.adjuntoUrl && <AdjuntoPregunta url={d.adjuntoUrl} tipo={d.adjuntoTipo} />}
+              <div className="pt-practica-opciones">
+                {d.opciones.map((op, oi) => (
+                  <div key={oi} className={`pt-practica-opcion estatica${oi === d.respuesta_correcta ? " correcta" : ""}${oi === d.respuesta_dada && oi !== d.respuesta_correcta ? " incorrecta" : ""}`}>
+                    {op}
+                  </div>
+                ))}
+              </div>
+              {d.explicacion && <p className="pt-practica-explicacion">{d.explicacion}</p>}
             </div>
-            {d.explicacion && <p className="pt-practica-explicacion">{d.explicacion}</p>}
           </div>
         ))}
       </div>

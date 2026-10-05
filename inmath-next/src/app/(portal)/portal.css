@@ -614,6 +614,21 @@
   width: var(--p, 0%); transition: width .45s cubic-bezier(.22,.7,.31,1);
 }
 .pt-practica-resolver { display: grid; gap: 18px; }
+
+/* Material de lectura compartido por un rango de preguntas (comprensión
+ * lectora): imagen, video o documento — se muestra una sola vez antes del
+ * primer reactivo que lo usa. */
+.pt-practica-lectura {
+  padding: 16px; border-radius: 18px; background: var(--fondo-2, #F5F7FC);
+  border: 1px solid var(--linea); display: grid; gap: 10px;
+}
+.pt-practica-lectura img, .pt-practica-lectura video { width: 100%; border-radius: 12px; display: block; }
+.pt-practica-lectura a { display: inline-flex; align-items: center; gap: 8px; font: 600 .88rem var(--cuerpo); color: var(--azul-tinta, #4C7EF0); }
+
+/* Adjunto propio de una pregunta puntual (p. ej. un diagrama). */
+.pt-practica-pregunta-img { width: 100%; border-radius: 12px; margin: 10px 0; display: block; }
+.pt-practica-pregunta-archivo { display: inline-flex; align-items: center; gap: 8px; margin: 10px 0; font: 600 .85rem var(--cuerpo); color: var(--azul-tinta, #4C7EF0); }
+
 /* Tarjeta de pregunta: glass blanco pulido con número de pregunta en chip */
 .pt-practica-pregunta {
   position: relative; padding: 20px; border-radius: 20px;

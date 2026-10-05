@@ -3,12 +3,48 @@ import { ahoraPared } from "./fechas";
 
 export type OpcionesReactivo = string[];
 
+/** Imagen/video/documento de apoyo — material de lectura compartido por un
+ *  rango de preguntas consecutivas (p. ej. un texto de comprensión lectora). */
+export type LecturaAdjunto = { id: number; tipo: string; nombre: string; url: string };
+
 export type ReactivoParaAlumno = {
   id: number;
   tema: string | null;
   enunciado: string;
   opciones: OpcionesReactivo;
+  /** Adjunto propio de esta pregunta (p. ej. un diagrama), distinto de la lectura compartida. */
+  adjuntoUrl: string | null;
+  adjuntoTipo: string | null;
+  /** Material de lectura del examen que cubre esta pregunta, si aplica. */
+  lectura: LecturaAdjunto | null;
 };
+
+type FilaReactivoConOrden = {
+  id: number; tema: string | null; enunciado: string; opciones: unknown;
+  orden: number | null; examen_id: number | null;
+  adjunto_url: string | null; adjunto_tipo: string | null;
+};
+
+/** Cruza cada reactivo con el material de lectura de su examen (si lo hay):
+ *  el `orden` guardado en el reactivo (0-indexado) + 1 debe caer dentro del
+ *  rango `desde_orden..hasta_orden` del adjunto, dentro del MISMO examen. */
+export async function adjuntarLecturas(filas: FilaReactivoConOrden[]): Promise<ReactivoParaAlumno[]> {
+  const examenIds = [...new Set(filas.map((f) => f.examen_id).filter((id): id is number => id !== null))];
+  const adjuntos = examenIds.length
+    ? await prisma.examen_adjuntos.findMany({ where: { examen_id: { in: examenIds } } })
+    : [];
+  return filas.map((f) => {
+    const posicion = f.orden !== null ? f.orden + 1 : null;
+    const a = posicion !== null && f.examen_id !== null
+      ? adjuntos.find((x) => x.examen_id === f.examen_id && x.desde_orden <= posicion && posicion <= x.hasta_orden)
+      : undefined;
+    return {
+      id: f.id, tema: f.tema, enunciado: f.enunciado, opciones: f.opciones as OpcionesReactivo,
+      adjuntoUrl: f.adjunto_url, adjuntoTipo: f.adjunto_tipo,
+      lectura: a ? { id: a.id, tipo: a.tipo, nombre: a.nombre, url: a.url } : null,
+    };
+  });
+}
 
 const filtroCurso = (cursoId: number) => ({
   OR: [
@@ -43,7 +79,10 @@ export async function elegirReactivos(
       ...(tema ? { tema } : {}),
       ...(examenId ? { examen_id: examenId } : filtroCurso(cursoId)),
     },
-    select: { id: true, tema: true, enunciado: true, opciones: true, orden: true },
+    select: {
+      id: true, tema: true, enunciado: true, opciones: true, orden: true,
+      examen_id: true, adjunto_url: true, adjunto_tipo: true,
+    },
     ...(ordenFijo ? { orderBy: { orden: "asc" as const } } : {}),
   });
 
@@ -54,9 +93,7 @@ export async function elegirReactivos(
       [filas[i], filas[j]] = [filas[j], filas[i]];
     }
   }
-  return filas.slice(0, cantidad).map((f) => ({
-    id: f.id, tema: f.tema, enunciado: f.enunciado, opciones: f.opciones as OpcionesReactivo,
-  }));
+  return adjuntarLecturas(filas.slice(0, cantidad));
 }
 
 /** Lista de temas distintos con reactivos activos en el curso (para el filtro). */
@@ -102,6 +139,9 @@ export type RespuestaDetalle = {
   respuesta_correcta: number;
   correcta: boolean;
   explicacion: string | null;
+  adjuntoUrl: string | null;
+  adjuntoTipo: string | null;
+  lectura: LecturaAdjunto | null;
 };
 
 export type ResultadoIntento = {
@@ -134,18 +174,21 @@ export async function calificarIntento(
     examenId ? prisma.examenes.findUnique({ where: { id: examenId }, select: { porcentaje_minimo: true } }) : null,
   ]);
   const porId = new Map(reactivos.map((r) => [r.id, r]));
+  const lecturaPorId = new Map((await adjuntarLecturas(reactivos)).map((r) => [r.id, r]));
 
   const detalle: RespuestaDetalle[] = [];
   let correctas = 0;
   for (const r of respuestas) {
     const reactivo = porId.get(r.reactivo_id);
     if (!reactivo) continue; // ignora ids que no pertenecen al curso (payload manipulado)
+    const extra = lecturaPorId.get(reactivo.id);
     const correcta = r.respuesta_dada !== null && r.respuesta_dada === reactivo.respuesta_correcta;
     if (correcta) correctas++;
     detalle.push({
       reactivo_id: reactivo.id, enunciado: reactivo.enunciado, opciones: reactivo.opciones as OpcionesReactivo,
       respuesta_dada: r.respuesta_dada, respuesta_correcta: reactivo.respuesta_correcta,
       correcta, explicacion: reactivo.explicacion,
+      adjuntoUrl: extra?.adjuntoUrl ?? null, adjuntoTipo: extra?.adjuntoTipo ?? null, lectura: extra?.lectura ?? null,
     });
   }
 
