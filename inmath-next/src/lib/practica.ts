@@ -56,7 +56,9 @@ const filtroCurso = (cursoId: number) => ({
 /** Elige hasta `cantidad` reactivos activos del curso — filtrados por tema o
  *  por un examen específico (no ambos a la vez). Si viene de un examen y ese
  *  examen tiene `orden_aleatorio=false`, respeta el orden que definió el
- *  admin; si no, siempre se baraja (Fisher-Yates, sin sesgo). */
+ *  admin; si no, se baraja (Fisher-Yates, sin sesgo) — pero por GRUPOS: una
+ *  lectura y las preguntas que la comparten viajan juntas, nunca se separan
+ *  ni la lectura queda "suelta" en medio del barajeo. */
 export async function elegirReactivos(
   cursoId: number,
   tema: string | null,
@@ -83,17 +85,37 @@ export async function elegirReactivos(
       id: true, tema: true, enunciado: true, opciones: true, orden: true,
       examen_id: true, adjunto_url: true, adjunto_tipo: true,
     },
-    ...(ordenFijo ? { orderBy: { orden: "asc" as const } } : {}),
+    // Orden ascendente SIEMPRE (incluso si luego se baraja): así, dentro de
+    // cada grupo de lectura compartida, las preguntas quedan en su secuencia
+    // original (1, 2, 3…) en vez de en el orden crudo en que las devuelva la BD.
+    orderBy: { orden: "asc" },
   });
 
-  if (!ordenFijo) {
-    // Fisher-Yates: orden aleatorio sin sesgo.
-    for (let i = filas.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [filas[i], filas[j]] = [filas[j], filas[i]];
+  const reactivos = await adjuntarLecturas(filas);
+  if (ordenFijo) return reactivos.slice(0, cantidad);
+
+  // Agrupa: cada lectura compartida con sus preguntas es un grupo; cada
+  // pregunta sin lectura es su propio grupo de 1. Se baraja el ORDEN DE LOS
+  // GRUPOS (no las preguntas sueltas dentro de un grupo).
+  const grupos: ReactivoParaAlumno[][] = [];
+  const porLectura = new Map<number, ReactivoParaAlumno[]>();
+  for (const r of reactivos) {
+    if (r.lectura) {
+      const existente = porLectura.get(r.lectura.id);
+      if (existente) { existente.push(r); continue; }
+      const nuevo = [r];
+      porLectura.set(r.lectura.id, nuevo);
+      grupos.push(nuevo);
+    } else {
+      grupos.push([r]);
     }
   }
-  return adjuntarLecturas(filas.slice(0, cantidad));
+  // Fisher-Yates sobre los grupos: orden aleatorio sin sesgo.
+  for (let i = grupos.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [grupos[i], grupos[j]] = [grupos[j], grupos[i]];
+  }
+  return grupos.flat().slice(0, cantidad);
 }
 
 /** Lista de temas distintos con reactivos activos en el curso (para el filtro). */
