@@ -14,7 +14,7 @@ declare global {
   interface Window { fbq?: (...args: unknown[]) => void }
 }
 
-export function MetaPixel() {
+export function MetaPixel({ nonce }: { nonce?: string | null }) {
   const pathname = usePathname();
   const primera = useRef(true);
 
@@ -26,7 +26,10 @@ export function MetaPixel() {
 
   return (
     <>
-      <Script id="meta-pixel" strategy="afterInteractive">
+      {/* nonce viene de src/proxy.ts vía headers() en (sitio)/layout.tsx —
+          es el único <script> con contenido inline propio del proyecto;
+          sin el nonce, el CSP (M-10) lo bloquea. */}
+      <Script id="meta-pixel" strategy="afterInteractive" nonce={nonce ?? undefined}>
         {`!function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};

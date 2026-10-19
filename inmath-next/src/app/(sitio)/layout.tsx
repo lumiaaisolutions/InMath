@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./inmath.css";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { Icono } from "@/components/Icono";
 import { OverlayCarga } from "@/components/OverlayCarga";
 import { MetaPixel } from "@/components/MetaPixel";
@@ -34,7 +35,13 @@ const WHATSAPP_URL = WHATSAPP
   ? `https://wa.me/${WHATSAPP}?text=${encodeURIComponent("Hola, me interesa el Curso Propedéutico InMath. ¿Me dan más información?")}`
   : "";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Nonce por request (lo genera src/proxy.ts) — este layout es el único que
+  // necesita leerlo, porque MetaPixel es el único <script> inline propio del
+  // proyecto. Leer headers() aquí también vuelve dinámico todo este grupo de
+  // rutas (antes algunas, como /terminos o /privacidad, eran estáticas) —
+  // es requisito de Next.js para que el nonce por request sea correcto.
+  const nonce = (await headers()).get("x-nonce");
   return (
     <html lang="es">
       <head>
@@ -43,7 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body>
-        <MetaPixel />
+        <MetaPixel nonce={nonce} />
         <OverlayCarga marca="sitio" />
         <header className="barra">
           <Link className="logo" href="/"><img src="/img/inmath.svg" alt="" width={58} height={58} /><b>Cursos <span>Inmath</span></b></Link>

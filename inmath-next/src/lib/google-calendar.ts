@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { isoMinuto } from "@/lib/fechas";
+import { cifrar, descifrar, estaCifrado } from "@/lib/cifrado";
 
 /**
  * Respaldo DIRECTO de Google Calendar + Meet (sin pasar por n8n).
@@ -17,6 +18,14 @@ import { isoMinuto } from "@/lib/fechas";
  * la tabla `configuraciones` (clave google_calendar_refresh) al pulsar
  * "Conectar Google Calendar" en /panel/configuracion — es un paso ÚNICO que
  * hace el dueño con la cuenta cursosinmath@gmail.com.
+ *
+ * M-13 (auditoría 2026-09): el refresh token se guarda CIFRADO (AES-256-GCM,
+ * ver src/lib/cifrado.ts) en vez de texto plano. Credenciales guardadas
+ * ANTES de este cambio siguen en texto plano en la BD — accessTokenCalendar()
+ * detecta el formato (prefijo "enc:v1:" = cifrado) y acepta ambos mientras
+ * dure la transición. Para migrar un valor viejo basta con volver a pulsar
+ * "Conectar Google Calendar" en /panel/configuracion (reemplaza la fila con
+ * la versión cifrada) — no hace falta tocar la BD a mano.
  */
 
 const CLAVE_REFRESH = "google_calendar_refresh";
@@ -39,13 +48,23 @@ export async function guardarCredencialCalendar(refreshToken: string, cuenta: st
     update: { valor, actualizado_por: usuarioId },
     create: { clave, valor, tipo: "texto" as const, descripcion, actualizado_por: usuarioId },
   });
-  await prisma.configuraciones.upsert(datos(CLAVE_REFRESH, refreshToken, "Refresh token OAuth para crear eventos de Calendar/Meet (respaldo directo sin n8n)"));
+  await prisma.configuraciones.upsert(datos(CLAVE_REFRESH, cifrar(refreshToken), "Refresh token OAuth para crear eventos de Calendar/Meet (respaldo directo sin n8n) — cifrado (M-13)"));
   await prisma.configuraciones.upsert(datos(CLAVE_CUENTA, cuenta, "Cuenta de Google conectada para el calendario de asesorías"));
 }
 
 async function accessTokenCalendar(): Promise<string | null> {
   const fila = await prisma.configuraciones.findUnique({ where: { clave: CLAVE_REFRESH } });
   if (!fila?.valor) return null;
+  // M-13: valores nuevos están cifrados (prefijo "enc:v1:"); valores viejos
+  // guardados antes de este cambio siguen en texto plano — se aceptan tal
+  // cual hasta que alguien repita "Conectar Google Calendar".
+  let refreshToken: string;
+  try {
+    refreshToken = estaCifrado(fila.valor) ? descifrar(fila.valor) : fila.valor;
+  } catch (e) {
+    console.error("google-calendar: no se pudo descifrar el refresh token guardado", e);
+    return null;
+  }
   try {
     const res = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
@@ -53,7 +72,7 @@ async function accessTokenCalendar(): Promise<string | null> {
       body: new URLSearchParams({
         client_id: process.env.GOOGLE_CLIENT_ID ?? "",
         client_secret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-        refresh_token: fila.valor,
+        refresh_token: refreshToken,
         grant_type: "refresh_token",
       }).toString(),
       signal: AbortSignal.timeout(15_000),

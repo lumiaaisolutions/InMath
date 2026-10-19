@@ -1,37 +1,12 @@
 import type { NextConfig } from "next";
 
-/** Content-Security-Policy (enforcing). Inventario real de recursos externos:
- *  Google Fonts (hoja de estilo + woff2) y el beacon de Cloudflare (que el
- *  proxy de Cloudflare inyecta automáticamente en todo el sitio, fuera de
- *  nuestro control — dominio oficial de Cloudflare, sin riesgo real).
- *  `unsafe-inline` en script-src es necesario para los scripts de hidratación
- *  de Next.js (sin infra de nonce); aún así la CSP bloquea TODA carga de
- *  scripts externos no listados, iframes, objetos y form-actions externos. */
-// React (solo en desarrollo) usa eval() para reconstruir callstacks; con la
-// CSP enforzada eso pinta un error en consola y el badge "1 Issue" del dev
-// overlay. En producción React no usa eval jamás, así que 'unsafe-eval' NUNCA
-// se emite en el build de producción.
-const esDesarrollo = process.env.NODE_ENV !== "production";
-const csp = [
-  "default-src 'self'",
-  // connect.facebook.net = script del píxel de Meta (fbevents.js); los
-  // beacons del píxel van a www.facebook.com/tr (img-src y connect-src).
-  `script-src 'self' 'unsafe-inline'${esDesarrollo ? " 'unsafe-eval'" : ""} https://static.cloudflareinsights.com https://connect.facebook.net`,
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https://www.facebook.com",
-  "media-src 'self'",
-  "connect-src 'self' https://cloudflareinsights.com https://www.facebook.com https://connect.facebook.net",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "frame-ancestors 'none'",
-  "form-action 'self'",
-  "upgrade-insecure-requests",
-].join("; ");
-
-/** Cabeceras de seguridad (hardening N2). Se aplican a todas las respuestas. */
+/** Cabeceras de seguridad (hardening N2). Se aplican a todas las respuestas.
+ *  El Content-Security-Policy YA NO vive aquí: se mueve a src/proxy.ts
+ *  porque ahora lleva un nonce distinto por request (reemplaza el
+ *  `'unsafe-inline'` de script-src — ver M-10 en
+ *  docs/auditoria-ciberseguridad-2026-09.md). Las cabeceras estáticas que
+ *  no dependen del request se quedan en next.config.ts como antes. */
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: csp },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },

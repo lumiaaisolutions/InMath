@@ -2,6 +2,10 @@ import Link from "next/link";
 import "./(sitio)/inmath.css";
 
 export const metadata = { title: "Página no encontrada — Cursos InMath" };
+// Forzado a dynamic rendering: con el CSP de src/proxy.ts (nonce por
+// request, M-10) una página estática no recibe nonce en build time y sus
+// <script> de hidratación quedarían bloqueados.
+export const dynamic = "force-dynamic";
 
 /** 404 global con la identidad de marca (eyebrow + número en degradado). */
 export default function NotFound() {

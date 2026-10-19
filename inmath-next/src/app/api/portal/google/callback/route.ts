@@ -6,7 +6,7 @@ import { googleConfigurado } from "@/lib/portal/auth";
 import { resolverLoginEmail } from "@/lib/auth-unificado";
 import { crearSesion } from "@/lib/panel/sesion";
 import { crearSesionAlumno } from "@/lib/portal/sesion";
-import { dosFactoresActivo, emitirCodigo2fa, tokenReto } from "@/lib/portal/dosfactores";
+import { dosFactoresActivo, emitirCodigo2fa, tokenReto, emitirCodigo2faStaff, tokenRetoStaff } from "@/lib/portal/dosfactores";
 
 /** Callback de Google (login ÚNICO): valida state, canjea el code y abre la
  *  sesión correcta — staff → /panel, alumno (con pago) → /portal. */
@@ -50,7 +50,11 @@ export async function GET(req: NextRequest) {
     return irA(`/pago?${q.toString()}`);
   }
 
+  // Staff: 2FA OBLIGATORIO también por este camino (si no, Google sería un
+  // bypass del 2FA del panel) — mismo reto firmado que usa el login normal.
   if (acceso.tipo === "staff") {
+    const enviado = await emitirCodigo2faStaff(acceso.id);
+    if (enviado) return irA(`/panel/login?reto2fa=${encodeURIComponent(tokenRetoStaff(acceso.id))}`);
     await crearSesion(acceso.id);
     return irA("/panel");
   }
