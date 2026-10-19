@@ -3,4 +3,4 @@
 node_modules/
 vendor/
 .DS_Store
-backend/storage/
+respaldo/php-legacy/backend/storage/
