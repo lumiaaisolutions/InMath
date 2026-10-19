@@ -77,7 +77,11 @@ Cada driver implementa la interfaz `App\Pagos\ProcesadorPago` (2 métodos:
 
 - `procesador_pago_activo = simulado`
 - Webhook firmado con HMAC-SHA256: header `X-Firma-Simulada = hmac_sha256(cuerpo, PAGO_WEBHOOK_SECRET)`
-- Cuerpo: `{"referencia_externa": "SIM-...", "estado": "pagado|fallido"}`
+- Cuerpo: `{"referencia_externa": "SIM-...", "estado": "pagado|fallido", "monto_centavos"?: number, "moneda"?: string}`
+- `monto_centavos`/`moneda` son opcionales pero necesarios para ejercitar el
+  candado de monto/moneda de `aplicarEventoPago` (fix M-08, 19-oct-2026): si
+  el webhook simulado no los manda, el candado rechaza por "no se reportó el
+  monto" — ya NO aprueba por default como antes.
 
 ## Fase 3.2/3.3 — Transferencia con comprobante y credenciales (ago 2026)
 
