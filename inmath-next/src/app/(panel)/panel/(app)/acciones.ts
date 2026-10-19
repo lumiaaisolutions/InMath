@@ -505,7 +505,12 @@ export async function usuarioGuardarAccion(_prev: Resultado, fd: FormData): Prom
   const password = String(fd.get("password") ?? "");
   if (password !== "") {
     if (password.length < 8) return { error: "La contraseña nueva debe tener al menos 8 caracteres" };
-    await prisma.usuarios.update({ where: { id: uid }, data: { password_hash: await bcrypt.hash(password, 12) } });
+    // session_version++ (M-11): un admin reseteando el acceso de alguien
+    // invalida de golpe cualquier sesión ya abierta de esa cuenta.
+    await prisma.usuarios.update({
+      where: { id: uid },
+      data: { password_hash: await bcrypt.hash(password, 12), session_version: { increment: 1 } },
+    });
   }
   revalidatePath("/panel/usuarios");
   return { ok: "Usuario actualizado" };
@@ -570,7 +575,13 @@ export async function perfilGuardarAccion(_prev: Resultado, fd: FormData): Promi
   if (p1 !== "") {
     if (p1.length < 8) return { error: "La contraseña nueva debe tener al menos 8 caracteres" };
     if (p1 !== String(fd.get("password2") ?? "")) return { error: "Las contraseñas no coinciden" };
-    await prisma.usuarios.update({ where: { id: yo.id }, data: { password_hash: await bcrypt.hash(p1, 12) } });
+    // session_version++ (M-11): invalida de golpe cualquier otra sesión
+    // abierta con esta cuenta (ej. una cookie robada) en cuanto cambia la
+    // contraseña.
+    await prisma.usuarios.update({
+      where: { id: yo.id },
+      data: { password_hash: await bcrypt.hash(p1, 12), session_version: { increment: 1 } },
+    });
   }
   revalidatePath("/panel/configuracion");
   return { ok: "Perfil actualizado" };

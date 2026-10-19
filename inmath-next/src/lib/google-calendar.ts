@@ -59,7 +59,9 @@ async function accessTokenCalendar(): Promise<string | null> {
       signal: AbortSignal.timeout(15_000),
     });
     if (res.status !== 200) {
-      console.error("google-calendar: refresh rechazado", res.status, await res.text().catch(() => ""));
+      // B-18: solo el código de estado — el cuerpo de la respuesta de Google
+      // no se loguea completo (podría traer detalles de la cuenta/token).
+      console.error("google-calendar: refresh rechazado, status", res.status);
       return null;
     }
     const datos = await res.json().catch(() => ({}));
@@ -97,7 +99,8 @@ export async function crearEventoDirecto(cita: { id: number; inicio: Date; fin: 
       },
     );
     if (res.status < 200 || res.status >= 300) {
-      console.error("google-calendar: crear evento falló", res.status, await res.text().catch(() => ""));
+      // B-18: idem — solo status, sin el cuerpo completo de la respuesta.
+      console.error("google-calendar: crear evento falló, status", res.status);
       return null;
     }
     const evento = await res.json().catch(() => ({}));

@@ -9,6 +9,7 @@ import { enviarCorreo, CORREO_CONTACTO } from "@/lib/correo";
 import { requiereAlumno } from "@/lib/portal/sesion";
 import { asegurarDirPortal } from "@/lib/portal/media";
 import { activarDosFactores, emitirCodigoPassword, verificarCodigoPassword } from "@/lib/portal/dosfactores";
+import { limiteExcedido } from "@/lib/rate-limit";
 
 export type EstadoCuenta = { ok?: string; error?: string };
 
@@ -83,6 +84,13 @@ export async function cambiarPasswordAlumnoAccion(_prev: EstadoCuenta, fd: FormD
   if (nueva.length < 8) return { error: "La nueva contraseña debe tener al menos 8 caracteres." };
   if (nueva !== confirma) return { error: "Las contraseñas nuevas no coinciden." };
 
+  // Freno PERSISTENTE (M-12): máx. 5 intentos cada 15 min por alumno — en BD
+  // (misma técnica que A-05/B-17), para que no se pueda adivinar la
+  // contraseña actual a fuerza bruta usando una sesión ya abierta/robada.
+  if (await limiteExcedido(`cambiar-password:${alumno.id}`, 5, 15 * 60_000)) {
+    return { error: "Demasiados intentos. Espera unos minutos e intenta de nuevo." };
+  }
+
   const fila = await prisma.alumnos.findUnique({ where: { id: alumno.id }, select: { password_hash: true } });
   if (!fila?.password_hash || !(await bcrypt.compare(actual, fila.password_hash))) {
     await new Promise((r) => setTimeout(r, 600));
@@ -92,7 +100,12 @@ export async function cambiarPasswordAlumnoAccion(_prev: EstadoCuenta, fd: FormD
     return { error: "La nueva contraseña debe ser distinta a la actual." };
   }
 
-  await prisma.alumnos.update({ where: { id: alumno.id }, data: { password_hash: await bcrypt.hash(nueva, 12) } });
+  // session_version++ (M-11): invalida de golpe cualquier otra sesión abierta
+  // con esta cuenta (ej. una cookie robada) en cuanto cambia la contraseña.
+  await prisma.alumnos.update({
+    where: { id: alumno.id },
+    data: { password_hash: await bcrypt.hash(nueva, 12), session_version: { increment: 1 } },
+  });
   return { ok: "¡Listo! Tu contraseña se actualizó." };
 }
 
@@ -122,7 +135,12 @@ export async function cambiarPasswordConCodigoAccion(_prev: EstadoCuenta, fd: Fo
   if (fila?.password_hash && (await bcrypt.compare(nueva, fila.password_hash))) {
     return { error: "Esa ya es tu contraseña actual — elige una diferente." };
   }
-  await prisma.alumnos.update({ where: { id: alumno.id }, data: { password_hash: await bcrypt.hash(nueva, 12) } });
+  // session_version++ (M-11): invalida de golpe cualquier otra sesión abierta
+  // con esta cuenta (ej. una cookie robada) en cuanto cambia la contraseña.
+  await prisma.alumnos.update({
+    where: { id: alumno.id },
+    data: { password_hash: await bcrypt.hash(nueva, 12), session_version: { increment: 1 } },
+  });
   return { ok: "¡Listo! Tu contraseña quedó guardada. Ya puedes entrar con ella (además de Google)." };
 }
 

@@ -17,6 +17,11 @@ model alumnos {
   email              String?               @unique(map: "uq_alumnos_email") @db.VarChar(190)
   usuario            String?               @unique(map: "uq_alumnos_usuario") @db.VarChar(60)
   password_hash      String?               @db.VarChar(255)
+  // M-11 (auditoría 2026-09): se incrementa al cambiar la contraseña o al
+  // resetear el acceso — invalida de golpe cualquier cookie de sesión vieja
+  // (ver src/lib/portal/sesion.ts). Default 1 = las sesiones existentes no
+  // se pierden al agregar esta columna.
+  session_version    Int                   @default(1) @db.UnsignedInt
   canal_reporte      alumnos_canal_reporte @default(whatsapp)
   estado             alumnos_estado        @default(activo)
   inscrito_en        DateTime              @db.DateTime(0)
@@ -439,6 +444,11 @@ model usuarios {
   nombre             String            @db.VarChar(120)
   email              String            @unique(map: "email") @db.VarChar(190)
   password_hash      String            @db.VarChar(255)
+  // M-11 (auditoría 2026-09): se incrementa al cambiar la contraseña o al
+  // resetear el acceso — invalida de golpe cualquier cookie de sesión vieja
+  // (ver src/lib/panel/sesion.ts). Default 1 = las sesiones existentes no
+  // se pierden al agregar esta columna.
+  session_version    Int               @default(1) @db.UnsignedInt
   rol                usuarios_rol      @default(asesor)
   es_asesor          Boolean           @default(false)
   modulos            Json?

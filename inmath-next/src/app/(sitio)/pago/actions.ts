@@ -47,7 +47,11 @@ export async function registrarAlumnoAccion(fd: FormData): Promise<EstadoRegistr
   const hash = esGoogle ? null : await bcrypt.hash(password, 12);
   const existente = await prisma.alumnos.findUnique({ where: { prospecto_id: prospecto.id } });
   if (existente) {
-    await prisma.alumnos.update({ where: { id: existente.id }, data: { nombre, email: correo, usuario: correo, ...(hash ? { password_hash: hash } : {}), estado: "activo" } });
+    // session_version++ (M-11) SOLO si de verdad se está fijando una
+    // contraseña nueva (hash truthy) — invalida cualquier sesión abierta
+    // con la contraseña anterior. El login con Google (hash null) no toca
+    // la contraseña, así que tampoco debe invalidar nada.
+    await prisma.alumnos.update({ where: { id: existente.id }, data: { nombre, email: correo, usuario: correo, ...(hash ? { password_hash: hash, session_version: { increment: 1 } } : {}), estado: "activo" } });
   } else {
     await prisma.alumnos.create({
       data: { prospecto_id: prospecto.id, curso_id: curso.id, nombre, telefono, email: correo, usuario: correo, password_hash: hash, estado: "activo", inscrito_en: ahoraPared() },

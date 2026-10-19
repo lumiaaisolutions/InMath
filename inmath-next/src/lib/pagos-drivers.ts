@@ -4,9 +4,9 @@ import { ahoraPared } from "./fechas";
 import { inscribirPorPago } from "./inscripcion";
 
 /** Evento neutro que produce un webhook verificado (port de ProcesadorPago).
- *  `monto_centavos` es lo que el procesador reporta como REALMENTE cobrado —
- *  cuando viene, aplicarEventoPago lo compara contra lo que se debía. */
-export type EventoPago = { referencia_externa: string; estado: "pagado" | "fallido"; monto_centavos?: number; metadatos?: Record<string, unknown> };
+ *  `monto_centavos` y `moneda` son lo que el procesador reporta como
+ *  REALMENTE cobrado — aplicarEventoPago los compara contra lo que se debía. */
+export type EventoPago = { referencia_externa: string; estado: "pagado" | "fallido"; monto_centavos?: number; moneda?: string; metadatos?: Record<string, unknown> };
 export type LinkPago = { link: string; referencia_externa: string };
 
 type PagoFila = { id: number; monto_centavos: number; moneda: string };
@@ -31,12 +31,16 @@ const driverSimulado: ProcesadorPago = {
     const esperada = createHmac("sha256", secreto).update(cuerpoCrudo).digest("hex");
     const dada = Buffer.from(firma);
     if (dada.length !== Buffer.from(esperada).length || !timingSafeEqual(Buffer.from(esperada), dada)) return null;
-    let datos: { referencia_externa?: string; estado?: string };
+    let datos: { referencia_externa?: string; estado?: string; monto_centavos?: number; moneda?: string };
     try { datos = JSON.parse(cuerpoCrudo); } catch { return null; }
     if (!datos.referencia_externa) return null;
     return {
       referencia_externa: String(datos.referencia_externa),
       estado: datos.estado === "pagado" ? "pagado" : "fallido",
+      // Opcionales: el simulador de pruebas puede incluirlos en el cuerpo
+      // para ejercitar el candado de monto/moneda de aplicarEventoPago.
+      ...(typeof datos.monto_centavos === "number" ? { monto_centavos: datos.monto_centavos } : {}),
+      ...(typeof datos.moneda === "string" ? { moneda: datos.moneda } : {}),
       metadatos: { origen: "simulado" },
     };
   },
@@ -119,12 +123,14 @@ const driverMercadoPago: ProcesadorPago = {
     const pago = await res.json().catch(() => ({}));
     if (!pago.external_reference) return null;
     const montoReal = Number(pago.transaction_amount);
+    const monedaReal = typeof pago.currency_id === "string" ? pago.currency_id : undefined;
     return {
       // Debe coincidir EXACTO con lo que crearLink() guarda en referencia_externa.
       referencia_externa: String(pago.external_reference),
       estado: pago.status === "approved" ? "pagado" : "fallido",
-      // Lo que MP reporta como cobrado de verdad (en pesos → centavos).
+      // Lo que MP reporta como cobrado de verdad (en pesos → centavos) y en qué moneda.
       ...(Number.isFinite(montoReal) && montoReal > 0 ? { monto_centavos: Math.round(montoReal * 100) } : {}),
+      ...(monedaReal ? { moneda: monedaReal } : {}),
       metadatos: { origen: "mercadopago", mp_payment_id: pagoId, mp_status: pago.status ?? null, mp_monto: Number.isFinite(montoReal) ? montoReal : null },
     };
   },
@@ -159,14 +165,27 @@ export async function aplicarEventoPago(evento: EventoPago): Promise<{ ok: boole
   if (pago.estado === "pagado") return { ok: true, mensaje: "Pago ya estaba confirmado (webhook duplicado)" };
 
   if (evento.estado === "pagado") {
-    // Defensa: lo cobrado debe cubrir lo que se debía por ESTE pago. Sin este
-    // candado, un cobro parcial/manipulado de (p. ej.) $10 marcaría "pagado"
-    // un pago de $4,000 y desbloquearía el portal completo del alumno.
-    if (evento.monto_centavos != null && evento.monto_centavos < pago.monto_centavos) {
+    // Defensa: lo cobrado debe cubrir lo que se debía por ESTE pago, en la
+    // misma moneda. Si el procesador NO reporta el monto, no se asume que
+    // está bien — se rechaza (fail-closed): un webhook sin monto no es
+    // prueba de que se cobró lo correcto. Sin este candado, un cobro
+    // parcial/manipulado de (p. ej.) $10, o uno sin monto, marcaría
+    // "pagado" un pago de $4,000 y desbloquearía el portal del alumno.
+    if (evento.monto_centavos == null) {
+      console.error(`[pagos] webhook sin monto para pago #${pago.id} — NO se confirma (fail-closed)`);
+      return { ok: false, mensaje: "El webhook no reportó el monto cobrado — no se confirma" };
+    }
+    if (evento.monto_centavos < pago.monto_centavos) {
       console.error(
         `[pagos] webhook con monto insuficiente para pago #${pago.id}: cobrado ${evento.monto_centavos}¢, se debían ${pago.monto_centavos}¢ — NO se confirma`,
       );
       return { ok: false, mensaje: "Monto cobrado menor al monto del pago — no se confirma" };
+    }
+    if (evento.moneda != null && evento.moneda !== pago.moneda) {
+      console.error(
+        `[pagos] webhook con moneda distinta para pago #${pago.id}: cobrado en ${evento.moneda}, se debía en ${pago.moneda} — NO se confirma`,
+      );
+      return { ok: false, mensaje: "Moneda cobrada distinta a la esperada — no se confirma" };
     }
     const n = await prisma.pagos.updateMany({
       where: { id: pago.id, estado: { not: "pagado" } },

@@ -10,7 +10,7 @@ import { dinero } from "./panel/formato";
  * Los avisos ya enviados se guardan en pagos.metadatos.avisos (JSON) para no
  * repetirlos — sin migrar el esquema.
  */
-const VIGENCIA_HORAS = 72;
+export const VIGENCIA_HORAS = 72;
 const AVISO_24H_DESDE_HORAS = VIGENCIA_HORAS - 24; // 48h
 const AVISO_3H_DESDE_HORAS = VIGENCIA_HORAS - 3; // 69h
 

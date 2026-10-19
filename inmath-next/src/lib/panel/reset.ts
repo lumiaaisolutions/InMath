@@ -96,11 +96,14 @@ export async function restablecerConToken(token: string, password: string): Prom
   delete mapa[h];
   await guardarMapa(mapa);
   const hash = await bcrypt.hash(password, 12);
+  // session_version++ (M-11): invalida de golpe cualquier otra sesión abierta
+  // con esta cuenta (ej. una cookie robada) en cuanto se restablece la
+  // contraseña por este flujo.
   if (entrada.tipo === "alumno") {
-    await prisma.alumnos.update({ where: { id: entrada.id }, data: { password_hash: hash } });
+    await prisma.alumnos.update({ where: { id: entrada.id }, data: { password_hash: hash, session_version: { increment: 1 } } });
   } else {
     // legacy sin tipo = staff
-    await prisma.usuarios.update({ where: { id: entrada.id }, data: { password_hash: hash } });
+    await prisma.usuarios.update({ where: { id: entrada.id }, data: { password_hash: hash, session_version: { increment: 1 } } });
   }
   return true;
 }

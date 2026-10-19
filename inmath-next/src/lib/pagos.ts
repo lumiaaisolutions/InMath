@@ -5,6 +5,7 @@ import { prisma, config } from "./db";
 import { ahoraPared } from "./fechas";
 import { procesadorActivo } from "./pagos-drivers";
 import { contenidoCoincideConExtension } from "./magic-bytes";
+import { VIGENCIA_HORAS } from "./pagos-vencimiento";
 
 /**
  * Flujo de /pago del sitio (port de pago.php): intenta el link con el
@@ -113,18 +114,34 @@ export async function asegurarLinkDePago(pagoId: number): Promise<string | null>
   }
 }
 
-/** Reemplazo del $_SESSION['pagos_propios'] del PHP: token HMAC por pago. */
+/**
+ * Reemplazo del $_SESSION['pagos_propios'] del PHP: token HMAC por pago.
+ * Incluye expiración (misma vigencia de 72h del flujo de vencimiento en
+ * pagos-vencimiento.ts, para no inventar otro plazo) en formato "exp.firma"
+ * — igual que las cookies de sesión del panel — para que un token que quedó
+ * abierto en una pestaña vieja no sirva para siempre.
+ */
 function secreto(): string {
   const s = process.env.APP_SECRET ?? "";
   if (!s) throw new Error("Falta APP_SECRET en .env");
   return s;
 }
+const VIGENCIA_TOKEN_PAGO_MS = VIGENCIA_HORAS * 3600_000;
+
+function firmaTokenPago(pagoId: number, exp: number): string {
+  return createHmac("sha256", secreto()).update(`pago:${pagoId}:${exp}`).digest("hex");
+}
 export function tokenPago(pagoId: number): string {
-  return createHmac("sha256", secreto()).update(`pago:${pagoId}`).digest("hex");
+  const exp = Date.now() + VIGENCIA_TOKEN_PAGO_MS;
+  return `${exp}.${firmaTokenPago(pagoId, exp)}`;
 }
 export function tokenPagoValido(pagoId: number, token: string): boolean {
-  const esperado = Buffer.from(tokenPago(pagoId));
-  const dado = Buffer.from(token);
+  const [expStr, firma] = token.split(".");
+  if (!expStr || !firma) return false;
+  const exp = Number(expStr);
+  if (!Number.isFinite(exp) || Date.now() > exp) return false;
+  const esperado = Buffer.from(firmaTokenPago(pagoId, exp));
+  const dado = Buffer.from(firma);
   return dado.length === esperado.length && timingSafeEqual(esperado, dado);
 }
 
