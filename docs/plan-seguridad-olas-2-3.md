@@ -12,6 +12,24 @@ son descripciones genéricas — cada punto tiene el código real detrás).
 > del webhook de pagos) porque implica un cambio de comportamiento de negocio
 > (un pago legítimo raro podría quedar pendiente de revisión manual en vez de
 > confirmarse solo) que requiere tu confirmación antes de tocarlo.
+>
+> **✅ Ola 2 completa + Ola 3 (parte de código) ejecutadas el 19/20-oct-2026**
+> (commits `fe72c4b`, `cd432b0` y uno aparte para nodemailer — ver
+> `auditoria-ciberseguridad-2026-09.md`, secciones Fase 1/2/3/4, para el
+> detalle fino de cada hallazgo). Resumen: M-08, M-09 (parcial), M-10, M-11
+> (con una desviación de diseño sobre el re-login general — pendiente de que
+> Fernando la confirme), M-12, B-14, B-17, B-18, el cifrado del refresh
+> token de Google (M-13 parte 1) y el 2FA del staff (ítem 16) quedaron
+> resueltos y desplegados, revisados a mano antes de cada deploy. De
+> regalo, revisando dependencias, se encontró y corrigió una vulnerabilidad
+> CRÍTICA de Next.js (RCE no autenticado) que no estaba en este plan
+> original. **Lo que SIGUE pendiente**: M-13 parte 2 (cifrar PII de
+> alumnos/prospectos — requiere decisión explícita, hay plan documentado
+> pero nada implementado), A-07 (allowlist+2FA del editor n8n — es
+> cross-cliente, no solo de Inmath), y toda la parte de infraestructura de
+> Ola 3 (usuario de sistema por app, rotación de secretos, CI con
+> semgrep/Renovate — también cross-cliente, quedan como proyecto aparte de
+> LUMIA, no se improvisaron a medias dentro de esta sesión de Inmath).
 
 Formato por punto: **qué es** → **riesgo si no se hace** → **qué pasa si SÍ
 se hace (impacto/quién se ve afectado)** → **cómo lo haría** → **esfuerzo**.

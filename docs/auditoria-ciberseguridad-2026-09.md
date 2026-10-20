@@ -1,14 +1,24 @@
-# Auditoría de ciberseguridad — septiembre 2026 (EN CURSO, pausada)
+# Auditoría de ciberseguridad — septiembre 2026 (Olas 1-2-3 de código EJECUTADAS)
 
-**Estado: Fases 0-4 COMPLETADAS (análisis) · Ola 1 EJECUTADA el 07-sep-2026**
+**Estado: Fases 0-4 COMPLETADAS (análisis) · Ola 1 EJECUTADA el 07-sep-2026
+· Ola 2 EJECUTADA el 19-oct-2026 · Ola 3 (parte de código) EJECUTADA el
+19/20-oct-2026**
 (C-01, C-02, A-03 y A-06-InMath resueltos y verificados — ver
 [`seguridad-remediacion-ola1.md`](seguridad-remediacion-ola1.md) para el
-detalle fase por fase y la verificación contra los demás clientes del VPS).
-Quedan abiertos A-04, A-05, A-07, el resto de A-06 (otros clientes), M-08 y
-las Olas 2-3. Metodología: skill `ciberseguridad-auditor-integral`
+detalle fase por fase y la verificación contra los demás clientes del VPS;
+Olas 2-3 revisadas línea por línea y desplegadas, ver bitácora de LUMIA
+19/20-oct-2026 y las notas por hallazgo más abajo).
+Quedan abiertos A-04 y A-07 (parciales, por decisión deliberada — A-07 es
+cross-cliente, no solo de Inmath), el resto de A-06 (otros clientes), M-13
+parte 2 (PII de alumnos, requiere decisión del dueño antes de tocar datos
+de posibles menores), y la parte de INFRAESTRUCTURA de la Ola 3 (usuario de
+sistema por app, rotación de secretos — cross-cliente, proyecto aparte).
+Metodología: skill `ciberseguridad-auditor-integral`
 (~/Desktop/Claude/Seguridad/Seguridad.md) + prompt del 05-sep (OWASP Top
 10 2021, ASVS, CWE Top 25). Solo análisis estático + lectura de config
-del VPS autorizada. Sin cambios de código ni pruebas activas.
+del VPS autorizada. Sin cambios de código ni pruebas activas (análisis
+original); las Olas 2-3 sí cambiaron código, revisado a mano y verificado
+en vivo antes de desplegar.
 
 ## Fase 0 — Reconocimiento (hecho)
 
@@ -40,7 +50,8 @@ del VPS autorizada. Sin cambios de código ni pruebas activas.
 | A-05 | **Rate-limit del chat burlable** (toma el 1er valor de X-Forwarded-For, que controla el cliente; nginx usa proxy_add_x_forwarded_for) + `/api/cta` sin límite (spam + upsert de prospectos) | 6.5 | ✅ RESUELTO 12-sep-2026 (rate-limit persistente + IP real vía CF-Connecting-IP) |
 | A-06 | **.env 664 (legible por grupo/otros)** en VPS multi-cliente con usuario único `deploy` → movimiento lateral trivial | 6.7 | 🟡 PARCIAL: InMath resuelto (600); otros clientes pendientes (ver Ola 1 doc) |
 | A-07 | **Editor n8n expuesto a internet** con credenciales de varios clientes; sin allowlist/2FA verificado | 6.8 | 🟡 PARCIAL: ya exige login propio + rate-limit agregado (12-sep); falta allowlist/2FA (ver `seguridad-remediacion-ola1.md`) |
-| M-08 | (adelanto de Fase 2) `aplicarEventoPago`: si MP no reporta monto, el candado de monto se salta (fail-open); no compara moneda | — | ABIERTO |
+| M-08 | (adelanto de Fase 2) `aplicarEventoPago`: si MP no reporta monto, el candado de monto se salta (fail-open); no compara moneda | — | ✅ RESUELTO 19-oct-2026 (fail-closed real + compara moneda) |
+| — | **(no estaba en el análisis original)** Next.js 16.3.0 con RCE no autenticado (9 CVEs) — encontrado de rebote revisando dependencias para M-09 | crítico | ✅ RESUELTO 19-oct-2026 (subido a 16.4.2, mismo rango, sin cambio mayor) |
 
 **Remediación exprés C-01/C-02/A-03/A-06(InMath) — EJECUTADA el
 07-sep-2026** en 4 fases verificadas (permisos `.env` de InMath → Ollama/n8n
@@ -74,41 +85,97 @@ dangerouslySetInnerHTML (solo íconos estáticos), CSP enforzada, bcrypt
    PII NO existe — evaluar; aviso de privacidad ya publicado ✓).
 
 
-## Fase 2 — Medios y bajos (05-sep, hecha)
+## Fase 2 — Medios y bajos (05-sep, hecha; remediación 19/20-oct-2026)
 
-- **M-08** Webhook pagos: fail-open si MP no reporta monto + moneda sin
-  comparar (pagos-drivers.ts, aplicarEventoPago).
-- **M-09** CVE High en deepmerge-ts vía prisma CLI (solo tooling).
-- **M-10** CSP con unsafe-inline en script-src (nonces = backlog).
-- **M-11** Sesiones sin revocación (panel 7d, portal 30d); guard sí
-  re-verifica activo en BD (mitiga bloqueos, no robo de cookie).
-- **M-12** Código de cambio de contraseña del portal sin throttle propio.
+- ~~**M-08** Webhook pagos: fail-open si MP no reporta monto + moneda sin
+  comparar~~ ✅ RESUELTO 19-oct-2026 (pagos-drivers.ts, `aplicarEventoPago`
+  ahora rechaza fail-closed si falta el monto; compara moneda).
+- **M-09** CVE High en deepmerge-ts vía prisma CLI (solo tooling) —
+  🟡 PARCIAL: `npm audit fix` sin `--force` resolvió sharp, js-yaml,
+  source-map-js, brace-expansion (19-oct); deepmerge-ts/prisma CLI sigue
+  abierto porque el fix bajaría Prisma de 6.19.3 a 6.12.0 (downgrade real,
+  no se forzó). De paso, revisando dependencias apareció algo no listado
+  aquí originalmente y más grave: **Next.js 16.3.0 tenía RCE no
+  autenticado (9 CVEs)** — ✅ RESUELTO 19-oct-2026 (subido a 16.4.2, ver
+  tabla de Fase 1 arriba). nodemailer también tenía CVEs reportados (fuga
+  de credenciales SMTP entre transportes, entre otros) — ✅ RESUELTO
+  20-oct-2026 (9.1.1→10.1.7; único breaking change real es requerir
+  Node 20+, ya se cumplía).
+- ~~**M-10** CSP con unsafe-inline en script-src (nonces = backlog)~~
+  ✅ RESUELTO 19-oct-2026 (nonces por-request vía `src/proxy.ts` — Next 16
+  renombró `middleware.ts`; forzó dynamic rendering en 8 rutas que antes
+  eran estáticas, verificado sin romper el píxel de Meta).
+- ~~**M-11** Sesiones sin revocación (panel 7d, portal 30d)~~ ✅ RESUELTO
+  19-oct-2026 (`session_version` en la firma de la cookie — cambiar
+  contraseña o resetear acceso invalida de golpe las demás sesiones.
+  Decisión de diseño: cookies retrocompatibles, SIN forzar el re-login
+  general que proponía el plan original de Ola 2 — pendiente de que
+  Fernando confirme si esa desviación le parece bien. Portal bajó de 30 a
+  14 días de vigencia).
+- ~~**M-12** Código de cambio de contraseña del portal sin throttle
+  propio~~ ✅ RESUELTO 19-oct-2026 (junto con B-17, ver abajo).
 - **M-13** LFPDPPP: PII (incl. menores) sin cifrado de campo; refresh
-  token de Google en claro en configuraciones. Aviso de privacidad ✓.
-- **B-14** tokenPago sin expiración (ABIERTO) · ~~**B-15** SVG inline desde
-  /panel/img (stored XSS solo-staff)~~ ✅ RESUELTO 12-sep (quitado del MIME
-  servible) · ~~**B-16** materiales sin magic-bytes~~ ✅ RESUELTO 12-sep
-  (`src/lib/magic-bytes.ts`) · **B-17** throttle del reset en memoria
-  (ABIERTO) · **B-18** higiene de logs de APIs externas (ABIERTO, sin
-  investigar a detalle todavía).
+  token de Google en claro en configuraciones. Aviso de privacidad ✓. —
+  🟡 PARCIAL: refresh token de Google ✅ CIFRADO 19-oct-2026 (AES-256-GCM,
+  `src/lib/cifrado.ts`, retrocompatible con el valor viejo). PII de
+  alumnos/prospectos (nombre, teléfono, correo, teléfono de WhatsApp) SIGUE
+  SIN CIFRAR — hay un plan de dos fases documentado (tensión entre AES-GCM
+  y columnas buscables por igualdad en SQL: email/usuario/telefono_whatsapp
+  necesitarían un hash determinista aparte) pero NO implementado, requiere
+  decisión explícita de Fernando antes de tocar datos reales de alumnos.
+- ~~**B-14** tokenPago sin expiración~~ ✅ RESUELTO 19-oct-2026 (expira a
+  72h, mismo plazo que el vencimiento de pagos) · ~~**B-15** SVG inline
+  desde /panel/img (stored XSS solo-staff)~~ ✅ RESUELTO 12-sep (quitado
+  del MIME servible) · ~~**B-16** materiales sin magic-bytes~~ ✅ RESUELTO
+  12-sep (`src/lib/magic-bytes.ts`) · ~~**B-17** throttle del reset en
+  memoria~~ ✅ RESUELTO 19-oct-2026 (throttle persistente en BD para
+  reset de contraseña Y cambio de contraseña del portal — M-12, reusa el
+  mecanismo que ya resolvió A-05) · ~~**B-18** higiene de logs de APIs
+  externas~~ ✅ RESUELTO 19-oct-2026 (investigado a fondo: único hallazgo
+  real fue `google-calendar.ts` logueando el cuerpo completo de respuestas
+  de error de Google — recortado a solo el status; el resto — Gemini,
+  Ollama, MercadoPago, el chat — ya solo loguea status/montos, nunca
+  payloads completos).
+- **(nuevo, no tenía ID — "ítem 16" en el plan de Ola 3 de Fase 4)**
+  2FA del STAFF del panel — ✅ RESUELTO 19-oct-2026: obligatorio para
+  TODO rol (admin y asesor, sin excepción), por correo, en login con
+  contraseña y con Google (el agente que lo implementó encontró y cerró de
+  paso un bypass real: Google hubiera saltado el 2FA si no se tocaba el
+  callback). Sin "recordar dispositivo" (decisión explícita).
 - Revisados NO explotables: liquid-gooey (sin eval/red), CSRF de Server
   Actions (Origin check de Next), logout POST, reset endurecido, 2FA tras
   contraseña, prompts sin secretos, cookies bien flaggeadas, fotos de
   alumnos re-encodadas con sharp.
 
-## Fase 3 — Deuda técnica (05-sep, hecha)
+## Fase 3 — Deuda técnica (05-sep, hecha; ejecutada 19-oct-2026)
 
-- BORRAR SEGURO: screenshots/PHOTO versionados en raíz, CSS huérfano
-  pw-config (0 refs), .DS_Store, JSONs de flujos n8n desactualizados
-  (marcar como históricos).
-- VALIDAR ANTES: árbol PHP (muerto en VPS — nginx solo proxy y storage
-  overrideado por env — pero los DEFAULTS de dev del Next apuntan a
-  ../backend y ../panel: mover a storage-dev/ primero); /api/asesores
-  (consumidor eliminado del flujo 03 el 02-sep — confirmar en n8n);
-  Módulos_específicos_carreras.docx (insumo del CLIENTE — decidir
-  destino); docs históricos del PHP (cabecera "HISTÓRICO").
-- CONSERVAR: /api/cta (lo usa ClienteSitio:351), ChatConversacion
-  (decisión de producto), cero .bak/código comentado.
+- ✅ BORRADO/MOVIDO 19-oct-2026: screenshots/PHOTO versionados y
+  `Módulos_específicos_carreras.docx` (insumo del cliente) movidos a
+  `respaldo/archivos-raiz/` en el repo (no se borraron, solo se sacaron de
+  la raíz). `.DS_Store` borrado (no estaba trackeado). CSS huérfano
+  `pw-config` (0 refs confirmadas) eliminado de `panel.css`. JSONs de
+  flujos n8n desactualizados: sin tocar (bajo impacto, no se llegó a esa
+  limpieza puntual).
+- ✅ VALIDADO 19-oct-2026: árbol PHP — confirmado muerto en el VPS antes de
+  mover (nginx solo hace proxy a :3010, las imágenes/materiales/reportes
+  reales viven en carpetas separadas del servidor, nada cambiaba desde
+  mediados de agosto) y movido a `respaldo/php-legacy/` en el repo (en vez
+  de a una carpeta `storage-dev/` separada como se planeaba aquí — mismo
+  resultado práctico: nada se borró, queda en git/GitHub, y se documentó en
+  `respaldo/README.md` el aviso sobre los defaults de dev que apuntaban a
+  `../backend`/`../panel`). La copia equivalente en el servidor (VPS) sigue
+  pendiente de que el dueño la borre — es un borrado irreversible, el modo
+  automático de Claude Code lo bloquea.
+  **`/api/asesores`: ESTA NOTA ESTABA EQUIVOCADA** — decía "consumidor
+  eliminado del flujo 03 el 02-sep". Verificado 19-oct-2026 contra los
+  LOGS REALES de nginx del VPS (no solo el código): hay peticiones GET de
+  n8n a esa ruta tan recientes como el 12-oct-2026, 200 OK — el flujo
+  sigue usándola activamente. No se tocó el endpoint. Lección: no dar por
+  buena una afirmación de "esto ya no se usa" sin verificar contra
+  evidencia real (logs), un comentario en el código puede quedar
+  desactualizado sin que nadie se dé cuenta.
+- CONSERVAR (sin cambios): /api/cta (lo usa ClienteSitio:351),
+  ChatConversacion (decisión de producto), cero .bak/código comentado.
 
 ## Fase 4 — Plan de implementación (05-sep, hecho)
 
@@ -120,20 +187,40 @@ en /api/cta [A-05, 1.5h]; (6) sesión en /panel/img para
 materiales/reactivos/avatars [A-04, 2h]; (7) allowlist para editor n8n +
 2FA owner [A-07, 1.5h].
 
-**Ola 2 · Endurecimiento 2-4 semanas (~8 h)**: M-08 monto/moneda; M-11
-sesiones revocables (session_version en la firma; portal 14d — re-login
-general al desplegar); M-12+B-17 throttles persistentes; M-09 subir
-Prisma; B-14/15/16/18.
+**Ola 2 · Endurecimiento — ✅ EJECUTADA 19-oct-2026** (commit `fe72c4b`,
+revisada a mano archivo por archivo antes de desplegar, 3 agentes en
+paralelo + verificación cruzada): M-08 monto/moneda ✅; M-11 sesiones
+revocables ✅ (session_version en la firma; portal bajado a 14d — pero SIN
+forzar el re-login general que se planeaba aquí, ver nota en Fase 2, queda
+pendiente de confirmación de Fernando); M-12+B-17 throttles persistentes
+✅; M-09 dependencias (sharp/js-yaml/etc. sin --force) 🟡 parcial; B-14
+✅. De regalo, revisando dependencias: Next.js crítico (RCE) ✅ resuelto
+el mismo día.
 
-**Ola 3 · Sostenimiento (backlog ~20 h)**: limpieza F3 (storage-dev → rama
-legacy-php → borrar de main; fecha de retiro del rollback PHP del VPS);
-M-13 cifrado de PII/refresh-token + retención; M-10 CSP con nonces; 2FA
-para STAFF del panel (ítem 16). Controles preventivos: semgrep+npm audit
-en CI, Renovate, rotación semestral de secretos y API key por consumidor,
-fail2ban, usuario de sistema por app, respaldos cifrados off-site (sacar
-backup-*.sql de /var/www/inmath), política "n8n solo por editor+Publish".
+**Ola 3 · Sostenimiento — parte de CÓDIGO ✅ EJECUTADA 19/20-oct-2026**
+(commit `cd432b0` + nodemailer en commit aparte 20-oct, igual revisada a
+mano antes de desplegar): M-13 cifrado del refresh token de Google ✅
+(PII de alumnos queda como plan, NO implementado, pendiente de decisión);
+M-10 CSP con nonces ✅; 2FA para STAFF del panel (ítem 16) ✅; B-18 ✅;
+nodemailer actualizado (CVEs reportados en M-09) ✅. Limpieza de Fase 3
+✅ (ver arriba) salvo el borrado final en el VPS del PHP (pendiente del
+dueño). **Parte de INFRAESTRUCTURA de Ola 3 — SIN EJECUTAR, fuera de
+alcance deliberado**: semgrep+npm audit en CI, Renovate, rotación
+semestral de secretos y API key por consumidor, usuario de sistema por
+app, respaldos cifrados off-site genérico, política "n8n solo por
+editor+Publish" — son cambios que afectan a TODOS los clientes del VPS
+compartido, no solo a Inmath, quedan como proyecto aparte de LUMIA.
+fail2ban: ya estaba activo y bien configurado (jail sshd, maxretry 3,
+bantime 1h) sin que nadie lo pidiera — nada que hacer ahí. Respaldo de
+MySQL de Inmath específicamente: ✅ resuelto 19-oct-2026 (cron diario,
+usuario de MySQL dedicado solo-lectura creado para esto, sin tocar
+credenciales existentes de la app — off-site con Backblaze B2 sigue
+apagado porque ningún cliente del VPS tiene cuenta B2 todavía).
 
-**Riesgo residual**: usuario único multi-tenant hasta separar (lateral
-persiste mitigado); n8n como concentrador de credenciales (aceptado con
-auto-update); XSS teórico hasta nonces; PII en claro hasta M-13; DDoS
-volumétrico delegado a Cloudflare; phishing a staff (mitigar con ítem 16).
+**Riesgo residual (actualizado 20-oct-2026)**: usuario único multi-tenant
+sin separar — PENDIENTE, cross-cliente; n8n como concentrador de
+credenciales — PENDIENTE allowlist+2FA del owner, cross-cliente; XSS
+teórico — RESUELTO (nonces); PII en claro — PARCIAL (refresh token de
+Google resuelto, PII de alumnos pendiente de decisión); DDoS volumétrico
+delegado a Cloudflare (sin cambio); phishing a staff — MITIGADO (2FA
+obligatorio, ítem 16, ya no es solo "mitigar con" — ya está implementado).
